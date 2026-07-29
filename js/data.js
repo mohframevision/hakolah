@@ -37,6 +37,17 @@ const SITE_DATA = {
     title: "مطاعم",
     icon: "🍽️",
     items: [
+      {
+        id: "rs-joodys",
+        icon: "🥪",
+        title: "جوديز (Joody's)",
+        desc: "سندويشات ووجبات سريعة — \"Eat good, feel jood\". يوفر توصيل وقائمة متنوعة.",
+        tags: ["سندويشات", "وجبات سريعة", "السهلة الشمالية"],
+        links: {
+          maps: "https://maps.app.goo.gl/TvduhLy2wiTjxkrp9",
+          instagram: "https://www.instagram.com/joodys_bh/"
+        }
+      },
       { id: "rs1", icon: "🍕", title: "بيتزا الحي", desc: "بيتزا إيطالية أصلية بعجينة طازجة يومياً.", tags: ["إيطالي", "بيتزا"], url: "#" },
       { id: "rs2", icon: "🍔", title: "برجر هاوس", desc: "برجر لحم طازج مع صوصات منزلية مميزة.", tags: ["برجر", "سريع"], url: "#" },
       { id: "rs3", icon: "🍣", title: "طوكيو سوشي", desc: "أطباق سوشي وياباني طازج يحضّر أمام الزبون.", tags: ["ياباني", "سوشي"], url: "#" },

@@ -50,6 +50,26 @@ function toggleFavorite(section, id) {
   return isFavorite(section, id);
 }
 
+/* ===== أزرار الروابط (يدعم رابط واحد قديم item.url أو عدة روابط item.links) ===== */
+const LINK_META = {
+  website: { icon: "🌐", label: "زيارة" },
+  maps: { icon: "📍", label: "الموقع" },
+  instagram: { icon: "📷", label: "إنستقرام" },
+  menu: { icon: "📋", label: "القائمة" },
+};
+
+function buildActionsHtml(item) {
+  const links = item.links || (item.url ? { website: item.url } : {});
+  return Object.entries(links)
+    .map(([key, url], i) => {
+      const meta = LINK_META[key] || { icon: "🔗", label: "رابط" };
+      const label = key === "website" && item.cta ? item.cta : meta.label;
+      const cls = i === 0 ? "btn" : "btn secondary";
+      return `<a class="${cls}" href="${url}" target="_blank" rel="noopener noreferrer">${meta.icon} ${label}</a>`;
+    })
+    .join("");
+}
+
 /* ===== بناء بطاقة عنصر واحدة ===== */
 function buildItemCard(section, item, index = 0) {
   const card = document.createElement("div");
@@ -74,7 +94,7 @@ function buildItemCard(section, item, index = 0) {
       ${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}
     </div>
     <div class="item-actions">
-      <a class="btn" href="${item.url || "#"}" target="_blank" rel="noopener noreferrer">${item.cta || "زيارة"}</a>
+      ${buildActionsHtml(item)}
     </div>
   `;
 
