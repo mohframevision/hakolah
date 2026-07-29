@@ -7,22 +7,22 @@
   {% if description %}<meta name="description" content="{{ description }}" />{% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/style.css?v={{ buildVersion }}" />
+  <link rel="stylesheet" href="css/style.css?v={{ buildVersion }}" />
 </head>
 <body>
 
   <header class="site-header">
     <div class="header-inner">
-      <a href="/" class="logo"><span class="dot">●</span><span class="logo-word">هكو<span class="logo-tail">له</span></span></a>
+      <a href="index.html" class="logo"><span class="dot">●</span><span class="logo-word">هكو<span class="logo-tail">له</span></span></a>
       <button class="nav-toggle" aria-label="فتح القائمة">☰</button>
       <nav class="main-nav">
-        <a href="/"{% if navActive == "home" %} class="active"{% endif %}>الرئيسية</a>
-        <a href="/links-tools.html"{% if navActive == "links-tools" %} class="active"{% endif %}>روابط وأدوات</a>
-        <a href="/accounts.html"{% if navActive == "accounts" %} class="active"{% endif %}>حسابات مفيدة</a>
-        <a href="/restaurants.html"{% if navActive == "restaurants" %} class="active"{% endif %}>مطاعم</a>
-        <a href="/stores.html"{% if navActive == "stores" %} class="active"{% endif %}>متاجر</a>
-        <a href="/creators.html"{% if navActive == "creators" %} class="active"{% endif %}>صناع محتوى</a>
-        <a href="/favorites.html"{% if navActive == "favorites" %} class="active"{% endif %}>المفضلة</a>
+        <a href="index.html"{% if navActive == "home" %} class="active"{% endif %}>الرئيسية</a>
+        <a href="links-tools.html"{% if navActive == "links-tools" %} class="active"{% endif %}>روابط وأدوات</a>
+        <a href="accounts.html"{% if navActive == "accounts" %} class="active"{% endif %}>حسابات مفيدة</a>
+        <a href="restaurants.html"{% if navActive == "restaurants" %} class="active"{% endif %}>مطاعم</a>
+        <a href="stores.html"{% if navActive == "stores" %} class="active"{% endif %}>متاجر</a>
+        <a href="creators.html"{% if navActive == "creators" %} class="active"{% endif %}>صناع محتوى</a>
+        <a href="favorites.html"{% if navActive == "favorites" %} class="active"{% endif %}>المفضلة</a>
       </nav>
     </div>
   </header>
@@ -35,14 +35,14 @@
     <div class="container footer-inner">
       <span>© 2026 هكوله. جميع الحقوق محفوظة.</span>
       <div class="footer-links">
-        <a href="/about.html">عن الموقع</a>
-        <a href="/privacy-policy.html">سياسة الخصوصية</a>
+        <a href="about.html">عن الموقع</a>
+        <a href="privacy-policy.html">سياسة الخصوصية</a>
       </div>
     </div>
   </footer>
 
-  <script src="/js/data.js?v={{ buildVersion }}"></script>
-  <script src="/js/main.js?v={{ buildVersion }}"></script>
+  <script src="js/data.js?v={{ buildVersion }}"></script>
+  <script src="js/main.js?v={{ buildVersion }}"></script>
   {% if section %}<script>renderSection("{{ section }}");</script>{% endif %}
   {% if isFavoritesPage %}<script>renderFavoritesPage();</script>{% endif %}
 </body>

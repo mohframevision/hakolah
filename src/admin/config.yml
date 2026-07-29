@@ -4,7 +4,7 @@ backend:
   branch: main
 
 media_folder: "src/assets/uploads"
-public_folder: "/assets/uploads"
+public_folder: "/hakolah/assets/uploads"
 
 collections:
   - name: "restaurants"
