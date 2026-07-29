@@ -1,6 +1,7 @@
 # هكوله — موقع كل شيء مفيد في مكان واحد
 
-موقع ثابت (HTML/CSS/JS بدون أي إطار عمل) يجمع:
+موقع مبني بـ [Eleventy](https://www.11ty.dev) (مولّد مواقع ثابتة) مع لوحة تحكم [Sveltia CMS](https://github.com/sveltia/sveltia-cms)
+تسمح بإضافة/تعديل المحتوى بدون لمس أي كود، ونشر تلقائي عبر GitHub Actions على GitHub Pages. يجمع:
 
 - 🔗 روابط وأدوات مفيدة
 - 💳 حسابات واشتراكات مفيدة
@@ -9,83 +10,103 @@
 - 🎥 صناع محتوى
 - ❤️ مفضلة (تُحفظ محلياً في المتصفح عبر `localStorage`، بدون تسجيل دخول حالياً)
 
-## تشغيل الموقع محلياً
+## تشغيل الموقع محلياً (للتطوير)
 
-الموقع ثابت بالكامل (Static)، يكفي فتح `index.html` مباشرة في المتصفح، أو تشغيل خادم محلي بسيط:
+يحتاج [Node.js](https://nodejs.org) مثبّت على جهازك (نسخة LTS).
 
 ```bash
-# باستخدام بايثون (موجود غالباً على ويندوز/ماك/لينكس)
-python -m http.server 8000
+npm install
+npm start
 ```
 
-ثم افتح `http://localhost:8000` في المتصفح.
+يفتح الموقع على `http://localhost:8080`. أي تعديل بملفات `src/` ينعكس فوراً.
+
+للبناء فقط بدون تشغيل خادم (نفس اللي يسويه GitHub Actions تلقائياً):
+
+```bash
+npm run build
+```
+
+الناتج يطلع بمجلد `_site/` (غير مرفوع لـ Git، يُبنى تلقائياً في كل نشر).
 
 ## هيكل المشروع
 
 ```
-index.html            الصفحة الرئيسية
-links-tools.html      قسم الروابط والأدوات
-accounts.html         قسم الحسابات والاشتراكات
-restaurants.html      قسم المطاعم
-stores.html           قسم المتاجر
-creators.html         قسم صناع المحتوى
-favorites.html        صفحة المفضلة
-about.html            عن الموقع
-privacy-policy.html   سياسة الخصوصية (مسودة أولية، عدّلها قبل النشر)
-css/style.css         التنسيقات المشتركة (يدعم RTL والوضع الليلي تلقائياً)
-js/data.js            كل محتوى الأقسام (عدّل/أضف عناصر هنا مباشرة)
-js/main.js            منطق البحث، الفلاتر، المفضلة، وقائمة الجوال
+.eleventy.js              إعدادات Eleventy
+package.json              الاعتماديات وأوامر npm
+.github/workflows/deploy.yml   يبني وينشر الموقع تلقائياً على GitHub Pages بعد أي push
+
+src/
+  _includes/base.njk       القالب المشترك (هيدر/فوتر/نافيجيشن) لكل الصفحات
+  _data/sections.js         عناوين/أيقونات الأقسام الخمسة
+  _data/buildVersion.js     رقم نسخة يُولَّد تلقائياً بكل بناء (لكسر الكاش، بدون تدخل يدوي)
+  index.njk                 الصفحة الرئيسية
+  links-tools.njk / accounts.njk / restaurants.njk / stores.njk / creators.njk   صفحات الأقسام
+  favorites.njk              صفحة المفضلة
+  about.md / privacy-policy.md   صفحتان نصيتان (قابلتان للتعديل من لوحة التحكم)
+  data.js.11ty.js            يبني js/data.js تلقائياً من محتوى المجموعات أدناه
+  version.json.11ty.js       يبني version.json تلقائياً (نسخة كل بناء)
+
+  restaurants/*.md          كل مطعم = ملف مستقل (عنوان، وصف، تصنيفات، روابط)
+  stores/*.md                كل متجر = ملف مستقل
+  links-tools/*.md           كل أداة/رابط = ملف مستقل
+  accounts/*.md               كل حساب/اشتراك = ملف مستقل
+  creators/*.md                كل صانع محتوى = ملف مستقل
+
+  css/style.css              التنسيقات المشتركة (RTL + وضع ليلي + أنيميشنات)
+  js/main.js                  البحث، الفلاتر، المفضلة، القائمة، التحديث التلقائي
+
+  admin/index.html            تحميل لوحة تحكم Sveltia CMS
+  admin/config.yml            تعريف كل "المجموعات" وحقولها للوحة التحكم
 ```
 
-## تعديل المحتوى
+## إضافة/تعديل المحتوى — بدون كود
 
-كل عناصر الأقسام موجودة في ملف واحد: [js/data.js](js/data.js).
-كل عنصر بهذا الشكل:
+### الطريقة الأسهل: لوحة التحكم
 
-```js
-{ id: "lt1", icon: "🖼️", title: "اسم العنصر", desc: "وصف قصير.", tags: ["تصنيف"], url: "https://example.com" }
+1. افتح `https://mohframevision.github.io/hakolah/admin/` (بعد نشر هذا التحديث).
+2. سجّل دخولك برمز (Token) من GitHub (Settings → Developer settings → Personal access tokens،
+   صلاحية `repo` كافية).
+3. اختر المجموعة (مطاعم/متاجر/أدوات/حسابات/صناع محتوى)، اضغط **New** لإضافة عنصر جديد
+   عبر فورم (اسم، أيقونة، وصف، تصنيفات، روابط)، أو افتح عنصر موجود لتعديله.
+4. اضغط **Save** ثم **Publish** — الموقع يتحدث تلقائياً خلال دقيقة أو دقيقتين (GitHub Action
+   يبني وينشر تلقائياً).
+
+قسم "صفحات الموقع الثابتة" في نفس اللوحة يتيح تعديل نص صفحتي "عن الموقع" و"سياسة الخصوصية"
+بفورم كتابة (Markdown) بدون لمس HTML.
+
+### الطريقة اليدوية (لمن يفضّل الكود)
+
+كل عنصر هو ملف مستقل داخل `src/<القسم>/اسم-الملف.md`، مثلاً `src/restaurants/joodys.md`:
+
+```md
+---
+title: "جوديز (Joody's)"
+icon: "🥪"
+desc: "وصف قصير."
+categories: ["سندويشات", "وجبات سريعة"]
+links: {"maps": "https://maps.app.goo.gl/...", "instagram": "https://instagram.com/..."}
+---
 ```
 
-أضف أو عدّل أو احذف عناصر داخل المصفوفة المناسبة (`links-tools`, `accounts`, `restaurants`, `stores`, `creators`)
-وستظهر التغييرات مباشرة في الصفحة المرتبطة دون الحاجة لتعديل HTML.
+أضف ملف `.md` جديد بنفس الشكل داخل مجلد القسم المناسب (`restaurants`, `stores`, `links-tools`,
+`accounts`, `creators`) وارفعه (commit + push) — يظهر تلقائياً بالموقع بعد النشر، بدون الحاجة
+لتعديل `js/data.js` (يُبنى تلقائياً).
 
-## تحديث تلقائي (حل مشكلة الكاش)
+## النشر على GitHub Pages (عبر GitHub Actions)
 
-المتصفح أحياناً يخزّن ملفات الموقع (CSS/JS) مؤقتاً، فلو كان أحد فاتح الموقع بتبويب من قبل
-ونشرت تحديث، ما يشوف الجديد إلا بعد تحديث يدوي (Ctrl+F5). لحل هذا:
+المستودع مربوط مسبقاً بـ [github.com/mohframevision/hakolah](https://github.com/mohframevision/hakolah).
+إعداد GitHub Pages مطلوب مرة واحدة فقط:
 
-- كل صفحة تتحقق من ملف [version.json](version.json) بدون كاش (`cache: "no-store"`) كل 5 دقائق
-  وكل مرة يرجع فيها المستخدم لتبويب الموقع، ولو لقت رقم نسخة مختلف عن اللي شافه هذا التبويب
-  تعيد تحميل الصفحة تلقائياً (الكود في `initAutoUpdateCheck` بملف [js/main.js](js/main.js)).
-- روابط `css/style.css` و`js/data.js` و`js/main.js` في كل صفحة فيها `?v=2` في آخرها — هذا
-  يجبر المتصفح يحمّل نسخة جديدة من الملف بدل القديمة المخزّنة.
+**Settings → Pages → Build and deployment → Source** اختر **GitHub Actions** (بدل "Deploy from a branch").
 
-**عند كل تحديث حقيقي على الموقع، لازم ترفع رقم النسخة في مكانين:**
-
-1. `version.json` — غيّر `"version": "2"` لرقم أعلى.
-2. في كل ملفات HTML — بدّل `?v=2` لنفس الرقم الجديد، بأمر واحد مثلاً:
-   ```bash
-   for f in *.html; do sed -i 's/?v=2/?v=3/g' "$f"; done
-   ```
-   (بدّل `2` و`3` بالرقمين الصح كل مرة)
-
-## النشر مجاناً على GitHub Pages
-
-1. أنشئ مستودع (Repository) جديد على GitHub.
-2. من داخل هذا المجلد:
-   ```bash
-   git remote add origin <رابط-المستودع>
-   git branch -M main
-   git push -u origin main
-   ```
-3. في إعدادات المستودع على GitHub: **Settings → Pages → Source** اختر الفرع `main` والمجلد `/ (root)`.
-4. سيصبح الموقع متاحاً على رابط مثل: `https://<username>.github.io/<repo-name>/`.
-
-لا يحتاج هذا الأسلوب أي سيرفر أو تكلفة شهرية.
+بعدها أي `push` لفرع `main` (سواء منك مباشرة أو من لوحة التحكم) يشغّل `.github/workflows/deploy.yml`
+تلقائياً: يبني الموقع بـ Eleventy وينشره على GitHub Pages. لا يحتاج أي سيرفر أو تكلفة شهرية —
+GitHub Actions مجاني بالكامل للمستودعات العامة (Public).
 
 ## خطوات لاحقة (عند الرغبة)
 
 - **تسجيل الدخول + مزامنة المفضلة بين الأجهزة**: يحتاج قاعدة بيانات (مثل Supabase المجاني في البداية) — حالياً المفضلة تعمل بدون تسجيل دخول عبر `localStorage` في نفس المتصفح فقط.
-- **تفعيل الإعلانات**: التسجيل في [Google AdSense](https://adsense.google.com)، ثم لصق كود `adsbygoogle` مكان التعليقات الموجودة في كل صفحة (`<!-- مكان إعلانات Google AdSense -->`) وفي `.ad-slot`.
-- **ربط دومين خاص**: شراء دومين (مثال: `dalili.com`) وربطه بإعدادات GitHub Pages.
-- **استبدال المحتوى التجريبي** ببيانات حقيقية (مطاعم/متاجر/حسابات فعلية) في `js/data.js`.
+- **تفعيل الإعلانات**: التسجيل في [Google AdSense](https://adsense.google.com)، ثم لصق كود `adsbygoogle` في `src/_includes/base.njk` وفي `.ad-slot`.
+- **ربط دومين خاص**: شراء دومين وربطه بإعدادات GitHub Pages.
+- **استبدال المحتوى التجريبي** المتبقي (حسابات/متاجر/أدوات/صناع محتوى) بمحتوى حقيقي — إما عبر لوحة التحكم أو يدوياً.
