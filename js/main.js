@@ -3,7 +3,19 @@ function initNavToggle() {
   const toggle = document.querySelector(".nav-toggle");
   const nav = document.querySelector(".main-nav");
   if (!toggle || !nav) return;
-  toggle.addEventListener("click", () => nav.classList.toggle("open"));
+  toggle.addEventListener("click", () => {
+    nav.classList.toggle("open");
+    toggle.classList.toggle("open");
+  });
+}
+
+/* ===== ظل الهيدر عند التمرير ===== */
+function initHeaderScroll() {
+  const header = document.querySelector(".site-header");
+  if (!header) return;
+  const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 8);
+  document.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
 }
 
 /* ===== المفضلة (تُحفظ محلياً في المتصفح عبر localStorage - لا تحتاج تسجيل دخول) ===== */
@@ -39,9 +51,10 @@ function toggleFavorite(section, id) {
 }
 
 /* ===== بناء بطاقة عنصر واحدة ===== */
-function buildItemCard(section, item) {
+function buildItemCard(section, item, index = 0) {
   const card = document.createElement("div");
   card.className = "item-card";
+  card.style.animationDelay = `${Math.min(index, 10) * 45}ms`;
   card.dataset.title = item.title.toLowerCase();
   card.dataset.desc = (item.desc || "").toLowerCase();
   card.dataset.tags = (item.tags || []).join(",").toLowerCase();
@@ -70,6 +83,9 @@ function buildItemCard(section, item) {
     const nowFav = toggleFavorite(section, item.id);
     favBtn.classList.toggle("active", nowFav);
     favBtn.textContent = nowFav ? "♥" : "♡";
+    favBtn.classList.remove("pop");
+    void favBtn.offsetWidth;
+    favBtn.classList.add("pop");
   });
 
   return card;
@@ -147,7 +163,7 @@ function renderSection(section) {
       return;
     }
 
-    filtered.forEach((item) => grid.appendChild(buildItemCard(section, item)));
+    filtered.forEach((item, index) => grid.appendChild(buildItemCard(section, item, index)));
   }
 
   renderFilters();
@@ -187,7 +203,10 @@ function renderFavoritesPage() {
     return;
   }
 
-  collected.forEach(({ section, item }) => grid.appendChild(buildItemCard(section, item)));
+  collected.forEach(({ section, item }, index) => grid.appendChild(buildItemCard(section, item, index)));
 }
 
-document.addEventListener("DOMContentLoaded", initNavToggle);
+document.addEventListener("DOMContentLoaded", () => {
+  initNavToggle();
+  initHeaderScroll();
+});
