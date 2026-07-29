@@ -48,12 +48,59 @@ const SITE_DATA = {
           instagram: "https://www.instagram.com/joodys_bh/"
         }
       },
-      { id: "rs1", icon: "🍕", title: "بيتزا الحي", desc: "بيتزا إيطالية أصلية بعجينة طازجة يومياً.", tags: ["إيطالي", "بيتزا"], url: "#" },
-      { id: "rs2", icon: "🍔", title: "برجر هاوس", desc: "برجر لحم طازج مع صوصات منزلية مميزة.", tags: ["برجر", "سريع"], url: "#" },
-      { id: "rs3", icon: "🍣", title: "طوكيو سوشي", desc: "أطباق سوشي وياباني طازج يحضّر أمام الزبون.", tags: ["ياباني", "سوشي"], url: "#" },
-      { id: "rs4", icon: "🥙", title: "بيت الشاورما", desc: "شاورما دجاج ولحم بخبز طازج وصلصات متنوعة.", tags: ["شرقي", "مشاوي"], url: "#" },
-      { id: "rs5", icon: "☕", title: "مقهى الزاوية", desc: "قهوة مختصة وحلويات منزلية بأجواء هادئة.", tags: ["كافيه", "حلويات"], url: "#" },
-      { id: "rs6", icon: "🍛", title: "مطبخ الهند", desc: "أطباق هندية وكاري أصلية بمستويات حرارة متعددة.", tags: ["هندي"], url: "#" }
+      {
+        id: "rs-jazeera-bakery",
+        icon: "🥖",
+        title: "مخبز الجزيرة",
+        desc: "مخبز يقدم خبز ومعجنات طازجة.",
+        tags: ["مخبز", "معجنات"],
+        links: {
+          maps: "https://maps.app.goo.gl/XU2brWkaTsKL3yTHA"
+        }
+      },
+      {
+        id: "rs-khan-baghdad",
+        icon: "🍢",
+        title: "خان بغداد",
+        desc: "مطعم عراقي متخصص بالمشاوي، يقدم القوزي العراقي والكباب والقيمة النجفية.",
+        tags: ["عراقي", "مشاوي"],
+        links: {
+          maps: "https://maps.app.goo.gl/DRLjU5CY3Nxcqrhn8",
+          instagram: "https://www.instagram.com/khan_bghdad"
+        }
+      },
+      {
+        id: "rs-adam-subs-1",
+        icon: "🍔",
+        title: "آدم سابز (بلاضول القديم)",
+        desc: "برجر وسندويشات (Subs) متنوعة، مع خدمة توصيل عبر عدة تطبيقات.",
+        tags: ["برجر", "سندويشات"],
+        links: {
+          maps: "https://maps.app.goo.gl/tKwmtVSJeEhnRWdG7",
+          instagram: "https://www.instagram.com/adamsubs/"
+        }
+      },
+      {
+        id: "rs-adam-subs-2",
+        icon: "🍔",
+        title: "آدم سابز (الدراز)",
+        desc: "فرع الدراز — نفس قائمة البرجر والسندويشات مع خدمة توصيل.",
+        tags: ["برجر", "سندويشات"],
+        links: {
+          maps: "https://maps.app.goo.gl/AemmJZfhNhMAGPrU6",
+          instagram: "https://www.instagram.com/adamsubs/"
+        }
+      },
+      {
+        id: "rs-karbabad-beach",
+        icon: "🌅",
+        title: "ساحل كرباباد",
+        desc: "ساحل يجمع عربات طعام متنوعة مع منظر بحري جميل — مكان رائع لسهرة أو عشاء خفيف.",
+        tags: ["عربات طعام", "شاطئ", "إطلالة"],
+        links: {
+          maps: "https://maps.app.goo.gl/ynCiWn1kEQo7wrXz7"
+        }
+      }
     ]
   },
 
