@@ -18,6 +18,37 @@ function initHeaderScroll() {
   onScroll();
 }
 
+/* ===== تحديث تلقائي: يكتشف نسخة جديدة من الموقع ويعيد التحميل بدون تدخل المستخدم =====
+   المشكلة: المتصفح يخزّن الصفحة/الملفات مؤقتاً (Cache)، فلو كان تبويب الموقع مفتوح
+   عند المستخدم ونشرنا تحديث، ما يشوفه إلا بعد تحديث يدوي. هذا يتحقق من version.json
+   بدون كاش، ولو تغيّرت النسخة عن آخر مرة شافها هالتبويب، يعيد التحميل تلقائياً. */
+function initAutoUpdateCheck() {
+  const SEEN_KEY = "site_seen_version";
+
+  async function checkVersion() {
+    try {
+      const res = await fetch(`version.json?_=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      const seen = sessionStorage.getItem(SEEN_KEY);
+      if (seen && data.version && seen !== data.version) {
+        sessionStorage.setItem(SEEN_KEY, data.version);
+        location.reload();
+        return;
+      }
+      if (data.version) sessionStorage.setItem(SEEN_KEY, data.version);
+    } catch (e) {
+      /* تجاهل أي خطأ شبكة، نحاول مرة ثانية بالفحص القادم */
+    }
+  }
+
+  checkVersion();
+  setInterval(checkVersion, 5 * 60 * 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkVersion();
+  });
+}
+
 /* ===== المفضلة (تُحفظ محلياً في المتصفح عبر localStorage - لا تحتاج تسجيل دخول) ===== */
 const FAVORITES_KEY = "site_favorites_v1";
 
@@ -229,4 +260,5 @@ function renderFavoritesPage() {
 document.addEventListener("DOMContentLoaded", () => {
   initNavToggle();
   initHeaderScroll();
+  initAutoUpdateCheck();
 });
