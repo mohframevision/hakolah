@@ -6,7 +6,7 @@ permalink: privacy-policy.html
 
 <article class="prose">
 
-<p class="banner-note">هذه مسودة أولية لسياسة الخصوصية. راجعها وعدّلها لتناسب موقعك فعلياً قبل نشرها، خصوصاً بعد تفعيل الإعلانات أو تسجيل الدخول.</p>
+<p class="banner-note">2026.</p>
 
 # سياسة الخصوصية
 
