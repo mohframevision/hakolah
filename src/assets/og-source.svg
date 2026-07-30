@@ -9,7 +9,9 @@
 
   <rect x="470" y="120" width="260" height="260" rx="56" fill="#ffffff" />
   <circle cx="672" cy="164" r="22" fill="#f59e0b" />
-  <text x="600" y="300" font-family="Tahoma, Arial, sans-serif" font-size="130" font-weight="900" fill="#2563eb" text-anchor="middle">ه</text>
+  <g fill="#2563eb">
+    <g transform="translate(467.903 355.775) scale(0.556833)"><path d="M424 0L32.50 0L32.50-60L76.50-60Q66-69.50 59.25-86.75Q52.50-104 52.50-130Q52.50-159 68-185Q83.50-210.50 110-225.25Q136.50-240 167-240Q201-240 226.25-226Q251.50-212 265.75-187.50Q280-163 280-131L280-60L349.50-60L349.50-152.50Q349.50-216.50 318-250.25Q286.50-284 227-284Q189.50-284 161-279.50Q132.50-275 105.50-265L88.50-322Q123-334 156-339Q189-344 227-344Q325.50-344 374.75-296.50Q424-249 424-159L424 0M189.50-60L205.50-60L205.50-128Q205.50-154 196.50-165.75Q187.50-177.50 167.50-177.50Q150.50-177.50 139.75-163.25Q129-149 129-127Q129-60 189.50-60" /></g>
+  </g>
 
   <text x="600" y="470" font-family="Tahoma, Arial, sans-serif" font-size="90" font-weight="800" fill="#ffffff" text-anchor="middle">هكوله</text>
   <text x="600" y="530" font-family="Tahoma, Arial, sans-serif" font-size="34" font-weight="600" fill="#dbeafe" text-anchor="middle">كل شيء مفيد… في موقع واحد</text>

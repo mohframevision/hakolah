@@ -1,6 +1,7 @@
 // أداة لمرة واحدة لتوليد الأيقونات وصورة og-image من ملفات الـ SVG المصدرية.
-// sharp مش من ضمن devDependencies (تُستخدم فقط عند الحاجة لإعادة توليد الصور):
-//   npm install sharp --no-save && node scripts/generate-icons.js
+// sharp و opentype.js مش من ضمن devDependencies (تُستخدمان فقط عند الحاجة لإعادة توليد الصور):
+//   npm install sharp opentype.js --no-save && node scripts/generate-icons.js
+// (opentype.js مطلوبة من heh-glyph.js لاستخراج شكل حرف "ه" كمسار ثابت بخط Kufi)
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
