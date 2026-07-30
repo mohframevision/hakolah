@@ -241,6 +241,10 @@ img {
   }
   .header-inner {
     flex-wrap: wrap;
+    justify-content: space-between; /* توزيع متساوي بين الشعار وزر المظهر وزر القائمة، يتمدد ويتقلص مع عرض الشاشة */
+  }
+  .main-nav {
+    margin-inline-start: 0; /* على الجوال ما نحتاج الدفع للطرف، الصف الأول يتوزع بـ space-between */
   }
 }
 
