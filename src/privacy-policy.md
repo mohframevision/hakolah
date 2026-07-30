@@ -24,6 +24,6 @@ permalink: privacy-policy.html
 
 ## التواصل معنا
 
-لأي استفسار بخصوص هذه السياسة، يمكنك التواصل عبر [contact.html](contact.html) أو مباشرة على البريد الإلكتروني: [mohframevision@outlook.com](mailto:mohframevision@outlook.com)
+لأي استفسار بخصوص هذه السياسة، يمكنك التواصل عبر [contact.html]({{ '/contact.html' | url }}) أو مباشرة على البريد الإلكتروني: [mohframevision@outlook.com](mailto:mohframevision@outlook.com)
 
 </article>

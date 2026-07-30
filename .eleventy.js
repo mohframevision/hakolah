@@ -60,6 +60,10 @@ module.exports = function (eleventyConfig) {
       includes: "_includes",
       data: "_data",
     },
+    // الموقع منشور تحت مسار فرعي (mohframevision.github.io/hakolah/) وليس على جذر
+    // النطاق مباشرة — هذا يجعل فلتر url ينتج روابط صحيحة بغض النظر عن عمق الصفحة
+    // (مثال: places/karbabad-beach.html) بدل روابط نسبية تنكسر بالصفحات المتداخلة.
+    pathPrefix: "/hakolah/",
     templateFormats: ["njk", "md", "11ty.js"],
     htmlTemplateEngine: "njk",
     markdownTemplateEngine: "njk",
