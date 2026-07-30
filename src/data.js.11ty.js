@@ -7,8 +7,8 @@ exports.render = function (data) {
   const sections = data.sections;
   const out = {};
 
-  for (const [key, meta] of Object.entries(sections)) {
-    const items = (data.collections[meta.tag] || []).map((entry) => {
+  for (const meta of sections) {
+    const items = (data.collections[meta.slug] || []).map((entry) => {
       return {
         id: entry.fileSlug,
         icon: entry.data.icon || "⭐",
@@ -19,7 +19,7 @@ exports.render = function (data) {
       };
     });
 
-    out[key] = { title: meta.title, icon: meta.icon, items };
+    out[meta.slug] = { title: meta.title, icon: meta.icon, items };
   }
 
   return (

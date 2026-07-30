@@ -1,0 +1,25 @@
+---
+pagination:
+  data: "sections"
+  size: 1
+  alias: "sectionEntry"
+layout: "base.njk"
+eleventyComputed:
+  permalink: "{{ sectionEntry.slug }}.html"
+  title: "{{ sectionEntry.title }} | هكوله"
+  description: "{{ sectionEntry.description }}"
+  navActive: "{{ sectionEntry.slug }}"
+  section: "{{ sectionEntry.slug }}"
+---
+<div class="breadcrumb"><a href="index.html">الرئيسية</a> / {{ sectionEntry.title }}</div>
+<section class="page-header">
+  <h1>{{ sectionEntry.icon }} {{ sectionEntry.title }}</h1>
+  <p>{{ sectionEntry.description }}</p>
+</section>
+
+<input type="text" class="search-box" placeholder="{{ sectionEntry.searchPlaceholder }}" />
+<div class="filters"></div>
+
+<div class="card-grid"></div>
+
+<div class="ad-slot">مساحة إعلانية (Google AdSense) — ستُفعَّل لاحقاً</div>

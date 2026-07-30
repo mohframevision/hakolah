@@ -20,11 +20,9 @@
       <button class="nav-toggle" aria-label="فتح القائمة">☰</button>
       <nav class="main-nav">
         <a href="index.html"{% if navActive == "home" %} class="active"{% endif %}>الرئيسية</a>
-        <a href="links-tools.html"{% if navActive == "links-tools" %} class="active"{% endif %}>روابط وأدوات</a>
-        <a href="accounts.html"{% if navActive == "accounts" %} class="active"{% endif %}>حسابات مفيدة</a>
-        <a href="restaurants.html"{% if navActive == "restaurants" %} class="active"{% endif %}>مطاعم</a>
-        <a href="stores.html"{% if navActive == "stores" %} class="active"{% endif %}>متاجر</a>
-        <a href="creators.html"{% if navActive == "creators" %} class="active"{% endif %}>صناع محتوى</a>
+        {% for entry in sections %}
+        <a href="{{ entry.slug }}.html"{% if navActive == entry.slug %} class="active"{% endif %}>{{ entry.navLabel }}</a>
+        {% endfor %}
         <a href="favorites.html"{% if navActive == "favorites" %} class="active"{% endif %}>المفضلة</a>
       </nav>
     </div>
