@@ -491,6 +491,102 @@ function renderFavoritesPage() {
   collected.forEach(({ section, item }, index) => grid.appendChild(buildItemCard(section, item, index)));
 }
 
+/* ===== اختار لي: اختيار عشوائي من أي قسم بأنيميشن سلوت مشين ===== */
+function spawnConfetti(container) {
+  const emojis = ["🎉", "✨", "⭐", "💫", "🎊"];
+  for (let i = 0; i < 14; i++) {
+    const el = document.createElement("span");
+    el.className = "confetti-piece";
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.setProperty("--x", `${(Math.random() - 0.5) * 240}px`);
+    el.style.setProperty("--rot", `${(Math.random() - 0.5) * 360}deg`);
+    el.style.animationDelay = `${Math.random() * 0.15}s`;
+    container.appendChild(el);
+    el.addEventListener("animationend", () => el.remove());
+  }
+}
+
+function initRandomPicker() {
+  const categoriesWrap = document.getElementById("pickerCategories");
+  const spinBtn = document.getElementById("pickerSpinBtn");
+  const stage = document.getElementById("pickerStage");
+  if (!categoriesWrap || !spinBtn || !stage) return;
+
+  const sectionKeys = Object.keys(SITE_DATA).filter((key) => (SITE_DATA[key].items || []).length > 0);
+  let selectedSection = null;
+
+  categoriesWrap.innerHTML = sectionKeys
+    .map(
+      (key) => `
+      <button class="picker-category" data-section="${key}">
+        <span class="picker-category-icon">${SITE_DATA[key].icon}</span>
+        <span>${SITE_DATA[key].title}</span>
+      </button>`
+    )
+    .join("");
+
+  categoriesWrap.querySelectorAll(".picker-category").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      categoriesWrap.querySelectorAll(".picker-category").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedSection = btn.dataset.section;
+      spinBtn.disabled = false;
+      stage.innerHTML = "";
+    });
+  });
+
+  function reveal(item) {
+    stage.innerHTML = "";
+    const card = buildItemCard(selectedSection, item, 0);
+    card.classList.add("picker-result");
+    stage.appendChild(card);
+    spawnConfetti(stage);
+
+    const retryBtn = document.createElement("button");
+    retryBtn.className = "btn secondary picker-retry-btn";
+    retryBtn.textContent = "🔄 جرّب مرة ثانية";
+    retryBtn.addEventListener("click", () => spin());
+    stage.appendChild(retryBtn);
+
+    spinBtn.disabled = false;
+  }
+
+  function spin() {
+    if (!selectedSection) return;
+    const items = SITE_DATA[selectedSection].items;
+    if (!items || items.length === 0) return;
+
+    spinBtn.disabled = true;
+    stage.innerHTML = `<div class="picker-slot" id="pickerSlot"></div>`;
+    const slot = document.getElementById("pickerSlot");
+
+    const finalItem = items[Math.floor(Math.random() * items.length)];
+    const startTime = Date.now();
+    const duration = 1800;
+    let delay = 60;
+
+    function tick() {
+      const randomItem = items[Math.floor(Math.random() * items.length)];
+      slot.innerHTML = `<span class="picker-slot-icon">${randomItem.icon || "⭐"}</span><span class="picker-slot-title">${randomItem.title}</span>`;
+      slot.classList.remove("pulse");
+      void slot.offsetWidth;
+      slot.classList.add("pulse");
+
+      const elapsed = Date.now() - startTime;
+      if (elapsed >= duration) {
+        reveal(finalItem);
+        return;
+      }
+      delay = Math.min(delay * 1.15, 350);
+      setTimeout(tick, delay);
+    }
+
+    tick();
+  }
+
+  spinBtn.addEventListener("click", spin);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
   initNavToggle();

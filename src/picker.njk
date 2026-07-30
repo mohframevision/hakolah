@@ -1,0 +1,20 @@
+---
+layout: base.njk
+permalink: "picker.html"
+title: "اختار لي 🎲 | هكوله"
+description: "محتار وش تختار؟ خلّي هكوله يختار لك عشوائياً من أي قسم تحبه."
+navActive: "picker"
+---
+<div class="breadcrumb"><a href="{{ '/index.html' | url }}">الرئيسية</a> / اختار لي</div>
+<section class="page-header">
+  <h1>🎲 اختار لي</h1>
+  <p>محتار وين تروح أو وش تختار؟ اختر القسم واضغط الزر، وخلّي هكوله يقرر بدالك!</p>
+</section>
+
+<div class="picker-categories" id="pickerCategories"></div>
+
+<div class="picker-action">
+  <button id="pickerSpinBtn" class="btn picker-spin-btn" disabled>🎲 اختر لي!</button>
+</div>
+
+<div class="picker-stage" id="pickerStage"></div>
