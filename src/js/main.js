@@ -1,3 +1,109 @@
+/* ===== بحث ذكي متسامح مع الأخطاء الإملائية ===== */
+function levenshtein(a, b) {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+
+  let prevRow = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const currRow = [i];
+    for (let j = 1; j <= n; j++) {
+      currRow[j] =
+        a[i - 1] === b[j - 1]
+          ? prevRow[j - 1]
+          : 1 + Math.min(prevRow[j], currRow[j - 1], prevRow[j - 1]);
+    }
+    prevRow = currRow;
+  }
+  return prevRow[n];
+}
+
+function fuzzyIncludes(haystack, query) {
+  const hay = (haystack || "").toLowerCase();
+  const q = (query || "").trim().toLowerCase();
+  if (!q) return true;
+  if (hay.includes(q)) return true;
+
+  const hayWords = hay.split(/\s+/).filter(Boolean);
+  const qWords = q.split(/\s+/).filter(Boolean);
+
+  return qWords.every((qw) => {
+    if (qw.length < 2) return hay.includes(qw);
+    const maxDist = qw.length <= 4 ? 1 : 2;
+    return hayWords.some((hw) => hw.includes(qw) || levenshtein(hw, qw) <= maxDist);
+  });
+}
+
+/* ===== قائمة اقتراحات تظهر أثناء الكتابة بصندوق البحث ===== */
+function initSearchSuggestions(searchInput, items, onSelect) {
+  if (!searchInput) return;
+
+  let wrap = searchInput.closest(".search-wrap");
+  if (!wrap) {
+    wrap = document.createElement("div");
+    wrap.className = "search-wrap";
+    searchInput.parentNode.insertBefore(wrap, searchInput);
+    wrap.appendChild(searchInput);
+  }
+
+  let dropdown = wrap.querySelector(".search-suggestions");
+  if (!dropdown) {
+    dropdown = document.createElement("div");
+    dropdown.className = "search-suggestions";
+    wrap.appendChild(dropdown);
+  }
+
+  function close() {
+    dropdown.classList.remove("open");
+    dropdown.innerHTML = "";
+  }
+
+  function renderSuggestions() {
+    const query = searchInput.value.trim();
+    if (!query) {
+      close();
+      return;
+    }
+
+    const matches = items
+      .filter((item) => fuzzyIncludes(item.title, query))
+      .slice(0, 6);
+
+    if (matches.length === 0) {
+      close();
+      return;
+    }
+
+    dropdown.innerHTML = matches
+      .map(
+        (item) =>
+          `<div class="search-suggestion" data-id="${item.id}">
+            <span>${item.icon || "⭐"}</span>
+            <span>${item.title}</span>
+          </div>`
+      )
+      .join("");
+    dropdown.classList.add("open");
+
+    dropdown.querySelectorAll(".search-suggestion").forEach((el, i) => {
+      el.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        searchInput.value = matches[i].title;
+        close();
+        onSelect();
+      });
+    });
+  }
+
+  searchInput.addEventListener("input", renderSuggestions);
+  searchInput.addEventListener("focus", renderSuggestions);
+  searchInput.addEventListener("blur", close);
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+}
+
 /* ===== نموذج تواصل معنا (Web3Forms) ===== */
 function initContactForm() {
   const form = document.getElementById("contactForm");
@@ -226,6 +332,8 @@ function buildItemCard(section, item, index = 0) {
   card.dataset.tags = (item.tags || []).join(",").toLowerCase();
 
   const fav = isFavorite(section, item.id);
+  const desc = item.desc || "";
+  const isLongDesc = desc.length > 100;
 
   card.innerHTML = `
     <div class="item-top">
@@ -235,7 +343,8 @@ function buildItemCard(section, item, index = 0) {
       </button>
     </div>
     <h3>${item.title}</h3>
-    <p class="item-desc">${item.desc || ""}</p>
+    <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
+    ${isLongDesc ? `<button class="desc-toggle">اقرأ المزيد</button>` : ""}
     <div class="item-meta">
       ${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}
     </div>
@@ -253,6 +362,15 @@ function buildItemCard(section, item, index = 0) {
     void favBtn.offsetWidth;
     favBtn.classList.add("pop");
   });
+
+  const descToggle = card.querySelector(".desc-toggle");
+  if (descToggle) {
+    const descEl = card.querySelector(".item-desc");
+    descToggle.addEventListener("click", () => {
+      const expanded = descEl.classList.toggle("clamped") === false;
+      descToggle.textContent = expanded ? "اقرأ أقل" : "اقرأ المزيد";
+    });
+  }
 
   return card;
 }
@@ -309,13 +427,13 @@ function renderSection(section) {
   }
 
   function renderGrid() {
-    const query = (searchInput?.value || "").trim().toLowerCase();
+    const query = (searchInput?.value || "").trim();
     grid.innerHTML = "";
 
     const filtered = data.items.filter((item) => {
       const matchesTag = activeTag === "all" || (item.tags || []).includes(activeTag);
-      const haystack = (item.title + " " + (item.desc || "") + " " + (item.tags || []).join(" ")).toLowerCase();
-      const matchesQuery = !query || haystack.includes(query);
+      const haystack = item.title + " " + (item.desc || "") + " " + (item.tags || []).join(" ");
+      const matchesQuery = fuzzyIncludes(haystack, query);
       return matchesTag && matchesQuery;
     });
 
@@ -337,6 +455,7 @@ function renderSection(section) {
 
   if (searchInput) {
     searchInput.addEventListener("input", renderGrid);
+    initSearchSuggestions(searchInput, data.items, renderGrid);
   }
 }
 
