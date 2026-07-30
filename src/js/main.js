@@ -163,7 +163,7 @@ function initContactForm() {
       const result = await res.json();
 
       if (result.success) {
-        showMessage("success", "✅ تم إرسال رسالتك بنجاح! بنرد عليك أقرب وقت ممكن.");
+        showMessage("success", "✅ تم إرسال رسالتك بنجاح! بنرد عليك بأقرب وقت ممكن.");
         form.reset();
       } else {
         showMessage("error", "❌ عذراً، صار خطأ أثناء الإرسال. حاول مرة ثانية أو راسلنا مباشرة بالإيميل.");
@@ -327,9 +327,6 @@ function buildItemCard(section, item, index = 0) {
   const card = document.createElement("div");
   card.className = "item-card";
   card.style.animationDelay = `${Math.min(index, 10) * 45}ms`;
-  card.dataset.title = item.title.toLowerCase();
-  card.dataset.desc = (item.desc || "").toLowerCase();
-  card.dataset.tags = (item.tags || []).join(",").toLowerCase();
 
   const fav = isFavorite(section, item.id);
   const desc = item.desc || "";
@@ -338,7 +335,7 @@ function buildItemCard(section, item, index = 0) {
   card.innerHTML = `
     <div class="item-top">
       <span class="item-icon">${item.icon || "⭐"}</span>
-      <button class="fav-btn ${fav ? "active" : ""}" title="إضافة للمفضلة" aria-label="إضافة للمفضلة">
+      <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}" aria-label="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
         ${fav ? "♥" : "♡"}
       </button>
     </div>
@@ -358,6 +355,9 @@ function buildItemCard(section, item, index = 0) {
     const nowFav = toggleFavorite(section, item.id);
     favBtn.classList.toggle("active", nowFav);
     favBtn.textContent = nowFav ? "♥" : "♡";
+    const label = nowFav ? "إزالة من المفضلة" : "إضافة للمفضلة";
+    favBtn.title = label;
+    favBtn.setAttribute("aria-label", label);
     favBtn.classList.remove("pop");
     void favBtn.offsetWidth;
     favBtn.classList.add("pop");

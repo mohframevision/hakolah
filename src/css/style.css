@@ -109,7 +109,7 @@ img {
 .header-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 14px 20px;
   max-width: var(--max-width);
   margin: 0 auto;
@@ -158,6 +158,7 @@ img {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
+  margin-inline-start: auto; /* يدفع القائمة للطرف البعيد، فيتجمع الشعار وزر المظهر وزر الجوال معاً بدل ما يطفون بمنتصف الهيدر */
 }
 
 .main-nav a {
@@ -345,15 +346,12 @@ img {
   box-shadow: var(--shadow-card-hover);
 }
 
-.section-card .icon {
-  transition: transform 0.25s ease;
-}
-
 .section-card:hover .icon {
   transform: scale(1.15) rotate(-4deg);
 }
 
 .section-card .icon {
+  transition: transform 0.25s ease;
   font-size: 2rem;
   margin-bottom: 10px;
   display: block;

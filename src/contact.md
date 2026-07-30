@@ -33,13 +33,9 @@ navActive: "contact"
 
   <div class="form-group">
     <label for="request_type">نوع الطلب</label>
-    <select id="request_type" name="request_type">
-      <option value="إضافة مطعم">إضافة مطعم</option>
-      <option value="إضافة متجر">إضافة متجر</option>
-      <option value="إضافة أداة أو رابط">إضافة أداة أو رابط</option>
-      <option value="إضافة صانع محتوى">إضافة صانع محتوى</option>
-      <option value="استفسار عام">استفسار عام</option>
-    </select>
+    <select id="request_type" name="request_type">{%- for entry in sections %}
+<option value="إضافة إلى {{ entry.title }}">إضافة إلى {{ entry.title }}</option>{%- endfor %}
+<option value="استفسار عام">استفسار عام</option></select>
   </div>
 
   <div class="form-group">

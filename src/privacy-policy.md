@@ -2,6 +2,7 @@
 title: سياسة الخصوصية | هكو له
 layout: base.njk
 permalink: privacy-policy.html
+description: سياسة الخصوصية الخاصة بموقع هكوله وكيفية التعامل مع بياناتك وملفات تعريف الارتباط.
 ---
 
 <article class="prose">
