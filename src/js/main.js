@@ -185,6 +185,7 @@ function initThemeToggle() {
 
   const KEY = "site_theme_pref";
   const ICONS = { auto: "🌓", light: "☀️", dark: "🌙" };
+  const SHORT_LABELS = { auto: "تلقائي", light: "نهاري", dark: "ليلي" };
   const LABELS = { auto: "تلقائي (يتبع النظام)", light: "فاتح", dark: "داكن" };
   const NEXT = { auto: "light", light: "dark", dark: "auto" };
 
@@ -199,7 +200,7 @@ function initThemeToggle() {
     } else {
       document.documentElement.setAttribute("data-theme", pref);
     }
-    btn.textContent = ICONS[pref];
+    btn.textContent = `${ICONS[pref]} ${SHORT_LABELS[pref]}`;
     btn.title = `المظهر الحالي: ${LABELS[pref]} — اضغط للتبديل`;
   }
 

@@ -28,8 +28,6 @@
   <header class="site-header">
     <div class="header-inner">
       <a href="{{ '/index.html' | url }}" class="logo"><span class="dot">●</span><span class="logo-word">هكو<span class="logo-tail">له</span></span></a>
-      <button class="theme-toggle" aria-label="تبديل المظهر (فاتح/داكن/تلقائي)" title="تبديل المظهر"></button>
-      <button class="nav-toggle" aria-label="فتح القائمة">☰</button>
       <nav class="main-nav">
         <a href="{{ '/index.html' | url }}"{% if navActive == "home" %} class="active"{% endif %}>الرئيسية</a>
         {% for entry in sections %}
@@ -38,6 +36,8 @@
         <a href="{{ '/favorites.html' | url }}"{% if navActive == "favorites" %} class="active"{% endif %}>المفضلة</a>
         <a href="{{ '/picker.html' | url }}"{% if navActive == "picker" %} class="active"{% endif %}>🎲 اختار لي</a>
       </nav>
+      <button class="theme-toggle" aria-label="تبديل المظهر (فاتح/داكن/تلقائي)" title="تبديل المظهر"></button>
+      <button class="nav-toggle" aria-label="فتح القائمة">☰</button>
     </div>
   </header>
 
