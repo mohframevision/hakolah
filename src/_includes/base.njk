@@ -99,9 +99,15 @@
         <a href="{{ '/about.html' | url }}">عن الموقع</a>
         <a href="{{ '/contact.html' | url }}">تواصل معنا</a>
         <a href="{{ '/privacy-policy.html' | url }}">سياسة الخصوصية</a>
+        <a href="{{ '/terms.html' | url }}">شروط الاستخدام</a>
       </div>
     </div>
   </footer>
+
+  <div class="cookie-banner" id="cookie-banner" role="region" aria-label="إشعار ملفات تعريف الارتباط">
+    <p>نستخدم ملفات تعريف الارتباط (Cookies) لحفظ تفضيلاتك (كالمظهر والمفضلة) ولعرض إعلانات Google. بمتابعة تصفح الموقع فأنت توافق على <a href="{{ '/privacy-policy.html' | url }}">سياسة الخصوصية</a>.</p>
+    <button type="button" class="btn cookie-accept" id="cookie-accept">موافق</button>
+  </div>
 
   <script src="{{ '/js/data.js' | url }}?v={{ buildVersion }}"></script>
   <script src="{{ '/js/main.js' | url }}?v={{ buildVersion }}"></script>

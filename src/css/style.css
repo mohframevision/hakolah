@@ -674,6 +674,43 @@ img {
   color: var(--color-primary);
 }
 
+/* ===== إشعار الكوكيز ===== */
+.cookie-banner {
+  display: none;
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 60;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.cookie-banner.open {
+  display: flex;
+}
+
+.cookie-banner p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  max-width: 640px;
+}
+
+.cookie-banner a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.cookie-accept {
+  flex-shrink: 0;
+}
+
 /* ===== صفحات نصية (سياسة الخصوصية / حول) ===== */
 .prose {
   max-width: 760px;

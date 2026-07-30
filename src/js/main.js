@@ -217,6 +217,23 @@ function initThemeToggle() {
   });
 }
 
+/* ===== إشعار الكوكيز ===== */
+function initCookieConsent() {
+  const KEY = "cookie_consent";
+  const banner = document.getElementById("cookie-banner");
+  const acceptBtn = document.getElementById("cookie-accept");
+  if (!banner || !acceptBtn) return;
+
+  if (!localStorage.getItem(KEY)) {
+    banner.classList.add("open");
+  }
+
+  acceptBtn.addEventListener("click", () => {
+    localStorage.setItem(KEY, "accepted");
+    banner.classList.remove("open");
+  });
+}
+
 /* ===== قائمة الجوال ===== */
 function initNavToggle() {
   const toggle = document.querySelector(".nav-toggle");
@@ -594,6 +611,7 @@ function initRandomPicker() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
+  initCookieConsent();
   initNavToggle();
   initHeaderScroll();
   initAutoUpdateCheck();
