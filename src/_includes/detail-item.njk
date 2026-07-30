@@ -6,3 +6,18 @@ layout: base.njk
   <h1>{{ icon }} {{ title }}</h1>
 </section>
 {{ content | safe }}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ title | json | safe }},
+  "description": {{ desc | json | safe }},
+  "inLanguage": "ar",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": {{ site.name | json | safe }},
+    "url": {{ (site.origin + ('/index.html' | url)) | json | safe }}
+  }
+}
+</script>
