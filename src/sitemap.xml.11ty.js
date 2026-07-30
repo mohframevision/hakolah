@@ -6,7 +6,7 @@ exports.data = {
 const SITE_URL = "https://mohframevision.github.io/hakolah";
 
 exports.render = function (data) {
-  const staticPages = ["", "favorites.html", "about.html", "privacy-policy.html"];
+  const staticPages = ["", "favorites.html", "about.html", "contact.html", "privacy-policy.html"];
   const sectionPages = data.sections.map((s) => `${s.slug}.html`);
   const urls = [...staticPages, ...sectionPages];
 

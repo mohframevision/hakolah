@@ -1,3 +1,77 @@
+/* ===== نموذج تواصل معنا (Web3Forms) ===== */
+function initContactForm() {
+  const form = document.getElementById("contactForm");
+  if (!form) return;
+
+  const formMessage = document.getElementById("formMessage");
+  const submitBtn = document.getElementById("submitBtn");
+  const btnText = document.getElementById("btnText");
+  const btnLoading = document.getElementById("btnLoading");
+
+  function showMessage(type, text) {
+    if (!formMessage) return;
+    formMessage.textContent = text;
+    formMessage.className = `form-message ${type}`;
+    formMessage.style.display = "block";
+    formMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function validate() {
+    const name = form.querySelector('[name="name"]');
+    const email = form.querySelector('[name="email"]');
+    const message = form.querySelector('[name="message"]');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (name && name.value.trim().length < 2) {
+      showMessage("error", "❌ يرجى إدخال اسم صحيح (على الأقل حرفين).");
+      name.focus();
+      return false;
+    }
+    if (email && !emailRegex.test(email.value.trim())) {
+      showMessage("error", "❌ يرجى إدخال بريد إلكتروني صحيح.");
+      email.focus();
+      return false;
+    }
+    if (message && message.value.trim().length < 5) {
+      showMessage("error", "❌ يرجى كتابة رسالة أطول.");
+      message.focus();
+      return false;
+    }
+    return true;
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!validate()) return;
+
+    if (submitBtn) submitBtn.disabled = true;
+    if (btnText) btnText.style.display = "none";
+    if (btnLoading) btnLoading.style.display = "inline";
+    if (formMessage) formMessage.style.display = "none";
+
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: new FormData(form),
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        showMessage("success", "✅ تم إرسال رسالتك بنجاح! بنرد عليك أقرب وقت ممكن.");
+        form.reset();
+      } else {
+        showMessage("error", "❌ عذراً، صار خطأ أثناء الإرسال. حاول مرة ثانية أو راسلنا مباشرة بالإيميل.");
+      }
+    } catch (err) {
+      showMessage("error", "❌ عذراً، صار خطأ بالاتصال. تأكد من الإنترنت وحاول مرة ثانية.");
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      if (btnText) btnText.style.display = "inline";
+      if (btnLoading) btnLoading.style.display = "none";
+    }
+  });
+}
+
 /* ===== تبديل المظهر: تلقائي (يتبع النظام) / فاتح / داكن ===== */
 function initThemeToggle() {
   const btn = document.querySelector(".theme-toggle");
@@ -300,4 +374,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initNavToggle();
   initHeaderScroll();
   initAutoUpdateCheck();
+  initContactForm();
 });
