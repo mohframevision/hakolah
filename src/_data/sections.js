@@ -30,6 +30,14 @@ module.exports = () => {
       navLabel: data.navLabel || data.title || slug,
       order: typeof data.order === "number" ? data.order : 999,
       hasDetailPages: Boolean(data.hasDetailPages),
+      iconOptions:
+        Array.isArray(data.iconOptions) && data.iconOptions.length
+          ? data.iconOptions
+          : ["⭐", "📍", "🔗", "🎯"],
+      categoryOptions:
+        Array.isArray(data.categoryOptions) && data.categoryOptions.length
+          ? data.categoryOptions
+          : ["عام"],
     };
   });
 

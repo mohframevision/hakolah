@@ -5,24 +5,32 @@ exports.data = {
   eleventyExcludeFromCollections: true,
 };
 
-function itemFields(defaultIcon, hasDetailPages) {
+function itemFields(entry) {
   const fields = [
     { label: "الاسم", name: "title", widget: "string" },
-    { label: "أيقونة (إيموجي)", name: "icon", widget: "string", default: defaultIcon },
     {
-      label: hasDetailPages ? "ملخّص قصير (يظهر بكرت القائمة)" : "الوصف",
+      label: "أيقونة",
+      name: "icon",
+      widget: "select",
+      options: entry.iconOptions,
+      default: entry.iconOptions[0],
+    },
+    {
+      label: entry.hasDetailPages ? "ملخّص قصير (يظهر بكرت القائمة)" : "الوصف",
       name: "desc",
       widget: "text",
     },
     {
-      label: "التصنيفات",
+      label: "التصنيفات (اختر واحد أو أكثر)",
       name: "categories",
-      widget: "list",
-      field: { label: "تصنيف", name: "tag", widget: "string" },
+      widget: "select",
+      multiple: true,
+      options: entry.categoryOptions,
+      required: false,
     },
   ];
 
-  if (hasDetailPages) {
+  if (entry.hasDetailPages) {
     fields.push({
       label: "المقال الكامل (نبذة، طريقة الوصول، نصائح...)",
       name: "body",
@@ -53,7 +61,7 @@ exports.render = function (data) {
     folder: `src/${entry.slug}`,
     create: true,
     slug: "{{slug}}",
-    fields: itemFields(entry.icon, entry.hasDetailPages),
+    fields: itemFields(entry),
   }));
 
   const sectionsMetaCollection = {
@@ -71,7 +79,7 @@ exports.render = function (data) {
       },
       { label: "اسم القسم (يظهر للزوار)", name: "title", widget: "string" },
       { label: "اسم مختصر للقائمة العلوية", name: "navLabel", widget: "string" },
-      { label: "أيقونة (إيموجي)", name: "icon", widget: "string", default: "⭐" },
+      { label: "أيقونة القسم (إيموجي)", name: "icon", widget: "string", default: "⭐" },
       { label: "وصف قصير", name: "description", widget: "text" },
       {
         label: "نص placeholder لصندوق البحث",
@@ -90,6 +98,18 @@ exports.render = function (data) {
         name: "hasDetailPages",
         widget: "boolean",
         default: false,
+      },
+      {
+        label: "الأيقونات المتاحة لعناصر هذا القسم (تُعبّى مرة وحدة هنا، وبعدها تختار منها بدل ما تكتب كل مرة)",
+        name: "iconOptions",
+        widget: "list",
+        field: { label: "أيقونة", name: "value", widget: "string" },
+      },
+      {
+        label: "التصنيفات المتاحة لعناصر هذا القسم (تُعبّى مرة وحدة هنا، وبعدها تختار منها بدل ما تكتب كل مرة)",
+        name: "categoryOptions",
+        widget: "list",
+        field: { label: "تصنيف", name: "value", widget: "string" },
       },
     ],
   };
