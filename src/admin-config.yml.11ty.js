@@ -5,18 +5,31 @@ exports.data = {
   eleventyExcludeFromCollections: true,
 };
 
-function itemFields(defaultIcon) {
-  return [
+function itemFields(defaultIcon, hasDetailPages) {
+  const fields = [
     { label: "الاسم", name: "title", widget: "string" },
     { label: "أيقونة (إيموجي)", name: "icon", widget: "string", default: defaultIcon },
-    { label: "الوصف", name: "desc", widget: "text" },
+    {
+      label: hasDetailPages ? "ملخّص قصير (يظهر بكرت القائمة)" : "الوصف",
+      name: "desc",
+      widget: "text",
+    },
     {
       label: "التصنيفات",
       name: "categories",
       widget: "list",
       field: { label: "تصنيف", name: "tag", widget: "string" },
     },
-    {
+  ];
+
+  if (hasDetailPages) {
+    fields.push({
+      label: "المقال الكامل (نبذة، طريقة الوصول، نصائح...)",
+      name: "body",
+      widget: "markdown",
+    });
+  } else {
+    fields.push({
       label: "الروابط",
       name: "links",
       widget: "object",
@@ -25,8 +38,10 @@ function itemFields(defaultIcon) {
         { label: "إنستقرام", name: "instagram", widget: "string", required: false },
         { label: "موقع إلكتروني", name: "website", widget: "string", required: false },
       ],
-    },
-  ];
+    });
+  }
+
+  return fields;
 }
 
 exports.render = function (data) {
@@ -38,7 +53,7 @@ exports.render = function (data) {
     folder: `src/${entry.slug}`,
     create: true,
     slug: "{{slug}}",
-    fields: itemFields(entry.icon),
+    fields: itemFields(entry.icon, entry.hasDetailPages),
   }));
 
   const sectionsMetaCollection = {
@@ -69,6 +84,12 @@ exports.render = function (data) {
         name: "order",
         widget: "number",
         default: 999,
+      },
+      {
+        label: "كل عنصر له صفحة مقال مفصّلة خاصة به (بدل روابط خارجية فقط)",
+        name: "hasDetailPages",
+        widget: "boolean",
+        default: false,
       },
     ],
   };

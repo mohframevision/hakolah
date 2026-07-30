@@ -9,14 +9,19 @@ exports.render = function (data) {
 
   for (const meta of sections) {
     const items = (data.collections[meta.slug] || []).map((entry) => {
-      return {
+      const item = {
         id: entry.fileSlug,
         icon: entry.data.icon || "⭐",
         title: entry.data.title,
         desc: entry.data.desc || "",
         tags: entry.data.categories || [],
-        links: entry.data.links || {},
       };
+      if (meta.hasDetailPages) {
+        item.detailUrl = `${meta.slug}/${entry.fileSlug}.html`;
+      } else {
+        item.links = entry.data.links || {};
+      }
+      return item;
     });
 
     out[meta.slug] = { title: meta.title, icon: meta.icon, items };

@@ -23,16 +23,21 @@ function ensureSectionFolders() {
     const dirDataFile = path.join(contentDir, `${slug}.json`);
 
     if (!fs.existsSync(contentDir)) fs.mkdirSync(contentDir, { recursive: true });
-    if (!fs.existsSync(dirDataFile)) {
-      fs.writeFileSync(
-        dirDataFile,
-        JSON.stringify(
-          { tags: slug, permalink: false, eleventyExcludeFromCollections: false },
-          null,
-          2
-        ) + "\n"
-      );
-    }
+
+    const dirData = data.hasDetailPages
+      ? {
+          tags: slug,
+          eleventyExcludeFromCollections: false,
+          layout: "detail-item.njk",
+          navActive: slug,
+          sectionSlug: slug,
+          sectionTitle: data.title || slug,
+          permalink: `${slug}/{{ page.fileSlug }}.html`,
+        }
+      : { tags: slug, permalink: false, eleventyExcludeFromCollections: false };
+
+    // يُعاد إنشاؤه في كل مرة عمداً (مُشتق بالكامل من sections/*.md، لا يُعدَّل يدوياً)
+    fs.writeFileSync(dirDataFile, JSON.stringify(dirData, null, 2) + "\n");
   });
 }
 

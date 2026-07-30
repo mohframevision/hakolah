@@ -202,6 +202,9 @@ const LINK_META = {
 };
 
 function buildActionsHtml(item) {
+  if (item.detailUrl) {
+    return `<a class="btn" href="${item.detailUrl}">📖 اقرأ التفاصيل</a>`;
+  }
   const links = item.links || (item.url ? { website: item.url } : {});
   return Object.entries(links)
     .map(([key, url], i) => {

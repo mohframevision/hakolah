@@ -29,6 +29,7 @@ module.exports = () => {
       searchPlaceholder: data.searchPlaceholder || "ابحث…",
       navLabel: data.navLabel || data.title || slug,
       order: typeof data.order === "number" ? data.order : 999,
+      hasDetailPages: Boolean(data.hasDetailPages),
     };
   });
 
