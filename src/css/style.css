@@ -605,6 +605,10 @@ img {
   animation: favPop 0.35s ease;
 }
 
+.text-center {
+  text-align: center;
+}
+
 .empty-state {
   text-align: center;
   padding: 60px 20px;
