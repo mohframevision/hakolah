@@ -27,6 +27,27 @@
   }
 }
 
+/* تفعيل يدوي من زر تبديل الوضع — يتغلب على تفضيل النظام */
+:root[data-theme="dark"] {
+  --color-bg: #0f1320;
+  --color-surface: #171c2b;
+  --color-text: #e9ecf5;
+  --color-text-muted: #9aa3b8;
+  --color-border: #2a3145;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="light"] {
+  --color-bg: #f7f8fb;
+  --color-surface: #ffffff;
+  --color-text: #1c2130;
+  --color-text-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 8px 20px rgba(0, 0, 0, 0.10);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -152,6 +173,26 @@ img {
 .main-nav a.active {
   background: var(--color-primary);
   color: #fff;
+}
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-primary);
+}
+
+.theme-toggle:active {
+  transform: scale(0.92);
 }
 
 .nav-toggle {

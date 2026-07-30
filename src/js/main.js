@@ -1,3 +1,41 @@
+/* ===== تبديل المظهر: تلقائي (يتبع النظام) / فاتح / داكن ===== */
+function initThemeToggle() {
+  const btn = document.querySelector(".theme-toggle");
+  if (!btn) return;
+
+  const KEY = "site_theme_pref";
+  const ICONS = { auto: "🌓", light: "☀️", dark: "🌙" };
+  const LABELS = { auto: "تلقائي (يتبع النظام)", light: "فاتح", dark: "داكن" };
+  const NEXT = { auto: "light", light: "dark", dark: "auto" };
+
+  function getPref() {
+    const stored = localStorage.getItem(KEY);
+    return stored === "light" || stored === "dark" ? stored : "auto";
+  }
+
+  function apply(pref) {
+    if (pref === "auto") {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      document.documentElement.setAttribute("data-theme", pref);
+    }
+    btn.textContent = ICONS[pref];
+    btn.title = `المظهر الحالي: ${LABELS[pref]} — اضغط للتبديل`;
+  }
+
+  apply(getPref());
+
+  btn.addEventListener("click", () => {
+    const next = NEXT[getPref()];
+    if (next === "auto") {
+      localStorage.removeItem(KEY);
+    } else {
+      localStorage.setItem(KEY, next);
+    }
+    apply(next);
+  });
+}
+
 /* ===== قائمة الجوال ===== */
 function initNavToggle() {
   const toggle = document.querySelector(".nav-toggle");
@@ -258,6 +296,7 @@ function renderFavoritesPage() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  initThemeToggle();
   initNavToggle();
   initHeaderScroll();
   initAutoUpdateCheck();
