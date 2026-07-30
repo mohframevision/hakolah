@@ -370,10 +370,8 @@ function buildItemCard(section, item, index = 0) {
       const expanded = descEl.classList.toggle("clamped") === false;
       descToggle.textContent = expanded ? "اقرأ أقل" : "اقرأ المزيد";
       if (expanded) {
-        card.classList.remove("just-expanded");
-        void card.offsetWidth;
         card.classList.add("just-expanded");
-        setTimeout(() => card.classList.remove("just-expanded"), 1100);
+        setTimeout(() => card.classList.remove("just-expanded"), 900);
       }
     });
   }
