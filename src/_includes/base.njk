@@ -16,6 +16,7 @@
   {% set metaDescription = description or desc %}
   {% set pageUrl = site.origin + (page.url | url) %}
   {% set ogType = "article" if sectionSlug else "website" %}
+  {% set ogImageUrl = site.origin + image if image else site.origin + ('/assets/og-image.png' | url) %}
   <title>{{ title }}</title>
   {% if metaDescription %}<meta name="description" content="{{ metaDescription }}" />{% endif %}
   <link rel="canonical" href="{{ pageUrl }}" />
@@ -34,14 +35,16 @@
   <meta property="og:url" content="{{ pageUrl }}" />
   <meta property="og:title" content="{{ title }}" />
   {% if metaDescription %}<meta property="og:description" content="{{ metaDescription }}" />{% endif %}
-  <meta property="og:image" content="{{ site.origin }}{{ '/assets/og-image.png' | url }}" />
+  <meta property="og:image" content="{{ ogImageUrl }}" />
+  {% if not image %}
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  {% endif %}
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="{{ title }}" />
   {% if metaDescription %}<meta name="twitter:description" content="{{ metaDescription }}" />{% endif %}
-  <meta name="twitter:image" content="{{ site.origin }}{{ '/assets/og-image.png' | url }}" />
+  <meta name="twitter:image" content="{{ ogImageUrl }}" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />

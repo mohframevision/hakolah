@@ -439,6 +439,14 @@ img {
   margin-bottom: 10px;
 }
 
+.detail-hero-photo {
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  margin-top: 8px;
+}
+
 /* ===== الفلاتر ===== */
 .filters {
   display: flex;
@@ -513,6 +521,14 @@ img {
 .item-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-card-hover);
+}
+
+.item-card .item-photo {
+  width: calc(100% + 36px);
+  margin: -18px -18px 4px;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .item-card .item-top {

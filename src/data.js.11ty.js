@@ -14,6 +14,7 @@ exports.render = function (data) {
         icon: entry.data.icon || "⭐",
         title: entry.data.title,
         desc: entry.data.desc || "",
+        image: entry.data.image || null,
         tags: [...(entry.data.categories || []), ...(entry.data.categoriesCustom || [])],
       };
       if (meta.hasDetailPages) {

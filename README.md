@@ -116,10 +116,15 @@ src/
 title: "جوديز (Joody's)"
 icon: "🥪"
 desc: "وصف قصير."
+image: "/hakolah/assets/uploads/joodys.jpg"
 categories: ["سندويشات", "وجبات سريعة"]
 links: { "maps": "https://maps.app.goo.gl/...", "instagram": "https://instagram.com/..." }
 ---
 ```
+
+`image` اختياري — لو موجود يظهر بدل الأيقونة بكرت العنصر (وبأعلى المقال لو القسم من نوع
+"صفحات مقال مفصّلة"). عبر لوحة التحكم يكفي رفع الصورة من حقل "صورة" مباشرة. يدوياً، ارفع
+الصورة داخل `src/assets/uploads/` واكتب مسارها بنفس الصيغة أعلاه.
 
 أضف ملف `.md` جديد بنفس الشكل داخل مجلد القسم المناسب (`restaurants`, `stores`, `links-tools`,
 `accounts`, `creators`) وارفعه (commit + push) — يظهر تلقائياً بالموقع بعد النشر، بدون الحاجة

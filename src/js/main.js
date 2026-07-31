@@ -354,6 +354,7 @@ function buildItemCard(section, item, index = 0) {
   const isLongDesc = desc.length > 100;
 
   card.innerHTML = `
+    ${item.image ? `<img class="item-photo" src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" />` : ""}
     <div class="item-top">
       <span class="item-icon">${item.icon || "⭐"}</span>
       <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}" aria-label="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">

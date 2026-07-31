@@ -21,6 +21,12 @@ function itemFields(entry) {
       widget: "text",
     },
     {
+      label: "صورة (اختياري — لو ضفتها بتظهر بدل الأيقونة بكرت العنصر وبأعلى المقال)",
+      name: "image",
+      widget: "image",
+      required: false,
+    },
+    {
       label: "التصنيفات (اختر واحد أو أكثر من القائمة الجاهزة)",
       name: "categories",
       widget: "select",
