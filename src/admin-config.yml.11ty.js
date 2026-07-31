@@ -21,12 +21,19 @@ function itemFields(entry) {
       widget: "text",
     },
     {
-      label: "التصنيفات (اختر واحد أو أكثر)",
+      label: "التصنيفات (اختر واحد أو أكثر من القائمة الجاهزة)",
       name: "categories",
       widget: "select",
       multiple: true,
       options: entry.categoryOptions,
       required: false,
+    },
+    {
+      label: "تصنيفات جديدة (ما تلقى تصنيفك بالقائمة؟ اكتبه هنا واضغط Enter — بيضاف تلقائياً)",
+      name: "categoriesCustom",
+      widget: "list",
+      required: false,
+      default: [],
     },
   ];
 

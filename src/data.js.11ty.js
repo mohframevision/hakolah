@@ -14,7 +14,7 @@ exports.render = function (data) {
         icon: entry.data.icon || "⭐",
         title: entry.data.title,
         desc: entry.data.desc || "",
-        tags: entry.data.categories || [],
+        tags: [...(entry.data.categories || []), ...(entry.data.categoriesCustom || [])],
       };
       if (meta.hasDetailPages) {
         item.detailUrl = `${meta.slug}/${entry.fileSlug}.html`;
