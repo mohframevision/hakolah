@@ -13,9 +13,7 @@ const SECTIONS_DIR = path.join(__dirname, "..", "sections");
 module.exports = () => {
   if (!fs.existsSync(SECTIONS_DIR)) return [];
 
-  const files = fs
-    .readdirSync(SECTIONS_DIR)
-    .filter((f) => f.endsWith(".md"));
+  const files = fs.readdirSync(SECTIONS_DIR).filter((f) => f.endsWith(".md"));
 
   const entries = files.map((file) => {
     const raw = fs.readFileSync(path.join(SECTIONS_DIR, file), "utf8");

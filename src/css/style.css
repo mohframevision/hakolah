@@ -10,7 +10,7 @@
   --color-border: #e5e7eb;
   --color-danger: #ef4444;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 8px 20px rgba(0, 0, 0, 0.10);
+  --shadow-card-hover: 0 8px 20px rgba(0, 0, 0, 0.1);
   --radius: 14px;
   --max-width: 1180px;
 }
@@ -45,7 +45,7 @@
   --color-text-muted: #6b7280;
   --color-border: #e5e7eb;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 8px 20px rgba(0, 0, 0, 0.10);
+  --shadow-card-hover: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -185,7 +185,9 @@ img {
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--color-text-muted);
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .main-nav a:hover,
@@ -206,7 +208,10 @@ img {
   color: var(--color-text);
   cursor: pointer;
   white-space: nowrap;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .theme-toggle:hover {
@@ -226,7 +231,9 @@ img {
   font-size: 1.1rem;
   color: var(--color-text);
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
 }
 
 .nav-toggle.open {
@@ -249,7 +256,10 @@ img {
     overflow: hidden;
     pointer-events: none;
     padding-top: 0;
-    transition: max-height 0.35s ease, opacity 0.25s ease, padding-top 0.25s ease;
+    transition:
+      max-height 0.35s ease,
+      opacity 0.25s ease,
+      padding-top 0.25s ease;
   }
   .main-nav.open {
     max-height: 400px;
@@ -355,17 +365,31 @@ img {
   border-radius: var(--radius);
   padding: 26px 22px;
   box-shadow: var(--shadow-card);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   display: block;
   animation: cardIn 0.5s ease both;
 }
 
-.section-card:nth-child(1) { animation-delay: 0.02s; }
-.section-card:nth-child(2) { animation-delay: 0.07s; }
-.section-card:nth-child(3) { animation-delay: 0.12s; }
-.section-card:nth-child(4) { animation-delay: 0.17s; }
-.section-card:nth-child(5) { animation-delay: 0.22s; }
-.section-card:nth-child(6) { animation-delay: 0.27s; }
+.section-card:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.section-card:nth-child(2) {
+  animation-delay: 0.07s;
+}
+.section-card:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.section-card:nth-child(4) {
+  animation-delay: 0.17s;
+}
+.section-card:nth-child(5) {
+  animation-delay: 0.22s;
+}
+.section-card:nth-child(6) {
+  animation-delay: 0.27s;
+}
 
 .section-card:hover {
   transform: translateY(-6px);
@@ -432,7 +456,11 @@ img {
   cursor: pointer;
   color: var(--color-text-muted);
   font-family: inherit;
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.15s ease;
 }
 
 .filter-chip:active {
@@ -477,7 +505,9 @@ img {
   gap: 8px;
   position: relative;
   animation: cardIn 0.45s ease both;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .item-card:hover {
@@ -530,7 +560,9 @@ img {
 .item-card.just-expanded {
   /* توهج بالانتقال (transition) لا بـ animation عمداً، حتى لا يتعارض مع
      animation الدخول (cardIn) الموجودة على .item-card ويعيد تشغيلها من الصفر */
-  box-shadow: var(--shadow-card), 0 0 0 3px rgba(37, 99, 235, 0.32);
+  box-shadow:
+    var(--shadow-card),
+    0 0 0 3px rgba(37, 99, 235, 0.32);
 }
 
 .desc-toggle {
@@ -585,7 +617,9 @@ img {
   border: none;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.18s ease, transform 0.12s ease;
+  transition:
+    background 0.18s ease,
+    transform 0.12s ease;
 }
 
 .btn:hover {
@@ -610,7 +644,9 @@ img {
   color: var(--color-text-muted);
   line-height: 1;
   padding: 4px;
-  transition: color 0.18s ease, transform 0.15s ease;
+  transition:
+    color 0.18s ease,
+    transform 0.15s ease;
 }
 
 .fav-btn:hover {
@@ -622,9 +658,15 @@ img {
 }
 
 @keyframes favPop {
-  0% { transform: scale(1); }
-  35% { transform: scale(1.35); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .fav-btn.pop {
@@ -865,7 +907,10 @@ img {
   font-size: 0.92rem;
   cursor: pointer;
   font-family: inherit;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .picker-category-icon {
@@ -893,7 +938,10 @@ img {
   padding: 16px 42px;
   border-radius: 999px;
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.18s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.18s ease;
 }
 
 .picker-spin-btn:not(:disabled):hover {

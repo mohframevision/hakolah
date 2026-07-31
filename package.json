@@ -5,11 +5,22 @@
   "description": "موقع هكوله — Eleventy + Sveltia CMS",
   "scripts": {
     "start": "eleventy --serve",
-    "build": "eleventy"
+    "build": "eleventy && node scripts/minify.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",
+    "@eslint/js": "^10.0.1",
+    "clean-css": "^5.3.3",
+    "eslint": "^10.8.0",
+    "globals": "^17.8.0",
     "gray-matter": "^4.0.3",
-    "js-yaml": "^4.1.0"
+    "html-minifier-terser": "^7.2.0",
+    "js-yaml": "^4.1.0",
+    "prettier": "^3.9.6",
+    "terser": "^5.49.0"
   }
 }

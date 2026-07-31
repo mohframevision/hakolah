@@ -66,9 +66,7 @@ function initSearchSuggestions(searchInput, items, onSelect) {
       return;
     }
 
-    const matches = items
-      .filter((item) => fuzzyIncludes(item.title, query))
-      .slice(0, 6);
+    const matches = items.filter((item) => fuzzyIncludes(item.title, query)).slice(0, 6);
 
     if (matches.length === 0) {
       close();
@@ -166,9 +164,12 @@ function initContactForm() {
         showMessage("success", "✅ تم إرسال رسالتك بنجاح! بنرد عليك بأقرب وقت ممكن.");
         form.reset();
       } else {
-        showMessage("error", "❌ عذراً، صار خطأ أثناء الإرسال. حاول مرة ثانية أو راسلنا مباشرة بالإيميل.");
+        showMessage(
+          "error",
+          "❌ عذراً، صار خطأ أثناء الإرسال. حاول مرة ثانية أو راسلنا مباشرة بالإيميل."
+        );
       }
-    } catch (err) {
+    } catch {
       showMessage("error", "❌ عذراً، صار خطأ بالاتصال. تأكد من الإنترنت وحاول مرة ثانية.");
     } finally {
       if (submitBtn) submitBtn.disabled = false;
@@ -275,7 +276,7 @@ function initAutoUpdateCheck() {
         return;
       }
       if (data.version) sessionStorage.setItem(SEEN_KEY, data.version);
-    } catch (e) {
+    } catch {
       /* تجاهل أي خطأ شبكة، نحاول مرة ثانية بالفحص القادم */
     }
   }
@@ -293,7 +294,7 @@ const FAVORITES_KEY = "site_favorites_v1";
 function getFavorites() {
   try {
     return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || {};
-  } catch (e) {
+  } catch {
     return {};
   }
 }
@@ -517,7 +518,9 @@ function renderFavoritesPage() {
     return;
   }
 
-  collected.forEach(({ section, item }, index) => grid.appendChild(buildItemCard(section, item, index)));
+  collected.forEach(({ section, item }, index) =>
+    grid.appendChild(buildItemCard(section, item, index))
+  );
 }
 
 /* ===== اختار لي: اختيار عشوائي من أي قسم بأنيميشن سلوت مشين ===== */
@@ -541,7 +544,9 @@ function initRandomPicker() {
   const stage = document.getElementById("pickerStage");
   if (!categoriesWrap || !spinBtn || !stage) return;
 
-  const sectionKeys = Object.keys(SITE_DATA).filter((key) => (SITE_DATA[key].items || []).length > 0);
+  const sectionKeys = Object.keys(SITE_DATA).filter(
+    (key) => (SITE_DATA[key].items || []).length > 0
+  );
   let selectedSection = null;
 
   categoriesWrap.innerHTML = sectionKeys
