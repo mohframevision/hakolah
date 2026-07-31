@@ -1,0 +1,9 @@
+{
+  "tags": "guides",
+  "eleventyExcludeFromCollections": false,
+  "layout": "detail-item.njk",
+  "navActive": "guides",
+  "sectionSlug": "guides",
+  "sectionTitle": "مقالات وأدلة",
+  "permalink": "guides/{{ page.fileSlug }}.html"
+}
