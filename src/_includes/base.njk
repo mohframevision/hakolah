@@ -72,10 +72,12 @@
 </head>
 <body>
 
+  <a href="#main-content" class="skip-link">تخطّي إلى المحتوى</a>
+
   <header class="site-header">
     <div class="header-inner">
       <a href="{{ '/index.html' | url }}" class="logo"><span class="dot">●</span><span class="logo-word">هكو<span class="logo-tail">له</span></span></a>
-      <nav class="main-nav">
+      <nav class="main-nav" id="main-nav">
         <a href="{{ '/index.html' | url }}"{% if navActive == "home" %} class="active"{% endif %}>الرئيسية</a>
         {% for entry in sections %}
         <a href="{{ ('/' + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active"{% endif %}>{{ entry.navLabel }}</a>
@@ -84,11 +86,11 @@
         <a href="{{ '/picker.html' | url }}"{% if navActive == "picker" %} class="active"{% endif %}>🎲 اختار لي</a>
       </nav>
       <button class="theme-toggle" aria-label="تبديل المظهر (فاتح/داكن/تلقائي)" title="تبديل المظهر"></button>
-      <button class="nav-toggle" aria-label="فتح القائمة">☰</button>
+      <button class="nav-toggle" aria-label="فتح القائمة" aria-expanded="false" aria-controls="main-nav">☰</button>
     </div>
   </header>
 
-  <main class="container">
+  <main class="container" id="main-content">
     {{ content | safe }}
   </main>
 

@@ -240,8 +240,10 @@ function initNavToggle() {
   const nav = document.querySelector(".main-nav");
   if (!toggle || !nav) return;
   toggle.addEventListener("click", () => {
-    nav.classList.toggle("open");
-    toggle.classList.toggle("open");
+    const isOpen = nav.classList.toggle("open");
+    toggle.classList.toggle("open", isOpen);
+    toggle.setAttribute("aria-expanded", String(isOpen));
+    toggle.setAttribute("aria-label", isOpen ? "إغلاق القائمة" : "فتح القائمة");
   });
 }
 
@@ -359,7 +361,7 @@ function buildItemCard(section, item, index = 0) {
     </div>
     <h3>${item.title}</h3>
     <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
-    ${isLongDesc ? `<button class="desc-toggle">اقرأ المزيد</button>` : ""}
+    ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">اقرأ المزيد</button>` : ""}
     <div class="item-meta">
       ${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}
     </div>
@@ -387,6 +389,7 @@ function buildItemCard(section, item, index = 0) {
     descToggle.addEventListener("click", () => {
       const expanded = descEl.classList.toggle("clamped") === false;
       descToggle.textContent = expanded ? "اقرأ أقل" : "اقرأ المزيد";
+      descToggle.setAttribute("aria-expanded", String(expanded));
       if (expanded) {
         card.classList.add("just-expanded");
         setTimeout(() => card.classList.remove("just-expanded"), 900);
@@ -420,6 +423,7 @@ function renderSection(section) {
     const allChip = document.createElement("button");
     allChip.className = "filter-chip active";
     allChip.textContent = "الكل";
+    allChip.setAttribute("aria-pressed", "true");
     allChip.addEventListener("click", () => {
       activeTag = "all";
       updateActiveChip();
@@ -431,6 +435,7 @@ function renderSection(section) {
       const chip = document.createElement("button");
       chip.className = "filter-chip";
       chip.textContent = tag;
+      chip.setAttribute("aria-pressed", "false");
       chip.addEventListener("click", () => {
         activeTag = tag;
         updateActiveChip();
@@ -444,7 +449,9 @@ function renderSection(section) {
     if (!filtersWrap) return;
     [...filtersWrap.children].forEach((chip) => {
       const isAll = chip.textContent === "الكل";
-      chip.classList.toggle("active", isAll ? activeTag === "all" : chip.textContent === activeTag);
+      const isActive = isAll ? activeTag === "all" : chip.textContent === activeTag;
+      chip.classList.toggle("active", isActive);
+      chip.setAttribute("aria-pressed", String(isActive));
     });
   }
 
@@ -540,7 +547,7 @@ function initRandomPicker() {
   categoriesWrap.innerHTML = sectionKeys
     .map(
       (key) => `
-      <button class="picker-category" data-section="${key}">
+      <button class="picker-category" data-section="${key}" aria-pressed="false">
         <span class="picker-category-icon">${SITE_DATA[key].icon}</span>
         <span>${SITE_DATA[key].title}</span>
       </button>`
@@ -549,8 +556,12 @@ function initRandomPicker() {
 
   categoriesWrap.querySelectorAll(".picker-category").forEach((btn) => {
     btn.addEventListener("click", () => {
-      categoriesWrap.querySelectorAll(".picker-category").forEach((b) => b.classList.remove("active"));
+      categoriesWrap.querySelectorAll(".picker-category").forEach((b) => {
+        b.classList.remove("active");
+        b.setAttribute("aria-pressed", "false");
+      });
       btn.classList.add("active");
+      btn.setAttribute("aria-pressed", "true");
       selectedSection = btn.dataset.section;
       spinBtn.disabled = false;
       stage.innerHTML = "";
