@@ -355,20 +355,22 @@ function buildItemCard(section, item, index = 0) {
 
   card.innerHTML = `
     ${item.image ? `<img class="item-photo" src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" />` : ""}
-    <div class="item-top">
-      <span class="item-icon">${item.icon || "⭐"}</span>
-      <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}" aria-label="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
-        ${fav ? "♥" : "♡"}
-      </button>
-    </div>
-    <h3>${item.title}</h3>
-    <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
-    ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">اقرأ المزيد</button>` : ""}
-    <div class="item-meta">
-      ${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}
-    </div>
-    <div class="item-actions">
-      ${buildActionsHtml(item)}
+    <div class="item-body">
+      <div class="item-top">
+        <span class="item-icon">${item.icon || "⭐"}</span>
+        <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}" aria-label="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
+          ${fav ? "♥" : "♡"}
+        </button>
+      </div>
+      <h3>${item.title}</h3>
+      <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
+      ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">اقرأ المزيد</button>` : ""}
+      <div class="item-meta">
+        ${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}
+      </div>
+      <div class="item-actions">
+        ${buildActionsHtml(item)}
+      </div>
     </div>
   `;
 

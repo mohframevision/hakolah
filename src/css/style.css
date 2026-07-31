@@ -506,11 +506,9 @@ img {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 18px;
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
-  gap: 8px;
   position: relative;
   overflow: hidden;
   animation: cardIn 0.45s ease both;
@@ -525,11 +523,18 @@ img {
 }
 
 .item-card .item-photo {
-  width: calc(100% + 36px);
-  margin: -18px -18px 4px;
+  display: block;
+  width: 100%;
   aspect-ratio: 16 / 10;
   object-fit: cover;
-  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.item-card .item-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
 }
 
 .item-card .item-top {
