@@ -392,7 +392,7 @@ function toggleFavorite(section, id) {
 /* ===== أزرار الروابط (يدعم رابط واحد قديم item.url أو عدة روابط item.links) ===== */
 const LINK_META = {
   website: { icon: "🌐", label: "زيارة" },
-  phone: { icon: "📞", label: "نسخ الرقم" },
+  phone: { icon: "📞", label: "نسخ الهاتف" },
   maps: { icon: "📍", label: "الخريطة" },
   instagram: { icon: "📷", label: "إنستقرام" },
 };
