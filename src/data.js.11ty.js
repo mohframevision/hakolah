@@ -21,6 +21,7 @@ exports.render = function (data) {
         item.detailUrl = `${meta.slug}/${entry.fileSlug}.html`;
       } else {
         item.links = entry.data.links || {};
+        item.cta = entry.data.cta || null;
       }
       return item;
     });

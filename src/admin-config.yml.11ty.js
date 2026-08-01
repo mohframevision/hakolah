@@ -50,21 +50,29 @@ function itemFields(entry) {
       widget: "markdown",
     });
   } else {
-    fields.push({
-      label: "الروابط",
-      name: "links",
-      widget: "object",
-      fields: [
-        {
-          label: "موقع إلكتروني (يظهر أول زر وبارز)",
-          name: "website",
-          widget: "string",
-          required: false,
-        },
-        { label: "خرائط قوقل", name: "maps", widget: "string", required: false },
-        { label: "إنستقرام", name: "instagram", widget: "string", required: false },
-      ],
-    });
+    fields.push(
+      {
+        label: "نص زر الموقع (اختياري، افتراضي: زيارة — مثال: اطلب الآن)",
+        name: "cta",
+        widget: "string",
+        required: false,
+      },
+      {
+        label: "الروابط",
+        name: "links",
+        widget: "object",
+        fields: [
+          {
+            label: "موقع إلكتروني (يظهر أول زر وبارز)",
+            name: "website",
+            widget: "string",
+            required: false,
+          },
+          { label: "خرائط قوقل", name: "maps", widget: "string", required: false },
+          { label: "إنستقرام", name: "instagram", widget: "string", required: false },
+        ],
+      }
+    );
   }
 
   return fields;

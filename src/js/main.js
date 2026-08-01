@@ -325,12 +325,11 @@ const LINK_META = {
   website: { icon: "🌐", label: "زيارة" },
   maps: { icon: "📍", label: "الخريطة" },
   instagram: { icon: "📷", label: "إنستقرام" },
-  menu: { icon: "📋", label: "القائمة" },
 };
 
 // ترتيب ثابت للأزرار بغض النظر عن ترتيب الحقول باللوحة — رابط الموقع (website)
 // دايماً أول زر وبتنسيق أساسي (بارز)، والباقي أزرار ثانوية بعده
-const LINK_ORDER = ["website", "maps", "instagram", "menu"];
+const LINK_ORDER = ["website", "maps", "instagram"];
 
 function buildActionsHtml(item) {
   if (item.detailUrl) {
@@ -479,7 +478,15 @@ function renderSection(section) {
     });
 
     if (filtered.length === 0) {
-      grid.innerHTML = `
+      const isSectionEmpty = data.items.length === 0;
+      grid.innerHTML = isSectionEmpty
+        ? `
+        <div class="empty-state" style="grid-column: 1/-1;">
+          <span class="icon">🧭</span>
+          <p>ما فيه عناصر بهذا القسم بعد — ترقّبنا قريباً!</p>
+        </div>
+      `
+        : `
         <div class="empty-state" style="grid-column: 1/-1;">
           <span class="icon">🔍</span>
           <p>لا توجد نتائج مطابقة لبحثك.</p>

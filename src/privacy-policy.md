@@ -1,5 +1,5 @@
 ---
-title: سياسة الخصوصية | هكو له
+title: سياسة الخصوصية | هكوله
 layout: base.njk
 permalink: privacy-policy.html
 description: سياسة الخصوصية الخاصة بموقع هكوله وكيفية التعامل مع بياناتك وملفات تعريف الارتباط.
@@ -23,6 +23,6 @@ description: سياسة الخصوصية الخاصة بموقع هكوله وك
 
 ## التواصل معنا
 
-لأي استفسار بخصوص هذه السياسة، يمكنك التواصل عبر [contact.html]({{ '/contact.html' | url }}) أو مباشرة على البريد الإلكتروني: [mohframevision@outlook.com](mailto:mohframevision@outlook.com)
+لأي استفسار بخصوص هذه السياسة، يمكنك التواصل عبر [صفحة التواصل]({{ '/contact.html' | url }}) أو مباشرة على البريد الإلكتروني: [mohframevision@outlook.com](mailto:mohframevision@outlook.com)
 
 </article>

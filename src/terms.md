@@ -1,5 +1,5 @@
 ---
-title: شروط الاستخدام | هكو له
+title: شروط الاستخدام | هكوله
 layout: base.njk
 permalink: terms.html
 description: شروط استخدام موقع هكوله — طبيعة الخدمة، حدود المسؤولية، وحقوق المحتوى.
@@ -33,6 +33,6 @@ description: شروط استخدام موقع هكوله — طبيعة الخد
 
 ## التواصل معنا
 
-لأي استفسار بخصوص هذه الشروط، تواصل عبر [contact.html]({{ '/contact.html' | url }}) أو مباشرة على البريد الإلكتروني: [mohframevision@outlook.com](mailto:mohframevision@outlook.com)
+لأي استفسار بخصوص هذه الشروط، تواصل عبر [صفحة التواصل]({{ '/contact.html' | url }}) أو مباشرة على البريد الإلكتروني: [mohframevision@outlook.com](mailto:mohframevision@outlook.com)
 
 </article>

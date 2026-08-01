@@ -6,7 +6,8 @@ exports.data = {
 exports.render = function () {
   return (
     "User-agent: *\n" +
-    "Allow: /\n\n" +
+    "Allow: /\n" +
+    "Disallow: /admin/\n\n" +
     "Sitemap: https://mohframevision.github.io/hakolah/sitemap.xml\n"
   );
 };
