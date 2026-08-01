@@ -783,6 +783,32 @@ img {
   color: var(--color-primary);
 }
 
+/* ===== رسالة تأكيد عابرة (Toast) ===== */
+.toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translate(-50%, -20px);
+  z-index: 80;
+  background: var(--color-text);
+  color: var(--color-bg);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-card-hover);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.toast.open {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 /* ===== إشعار الكوكيز ===== */
 .cookie-banner {
   display: none;

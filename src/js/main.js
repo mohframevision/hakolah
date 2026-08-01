@@ -392,13 +392,14 @@ function toggleFavorite(section, id) {
 /* ===== أزرار الروابط (يدعم رابط واحد قديم item.url أو عدة روابط item.links) ===== */
 const LINK_META = {
   website: { icon: "🌐", label: "زيارة" },
+  phone: { icon: "📞", label: "نسخ الرقم" },
   maps: { icon: "📍", label: "الخريطة" },
   instagram: { icon: "📷", label: "إنستقرام" },
 };
 
 // ترتيب ثابت للأزرار بغض النظر عن ترتيب الحقول باللوحة — رابط الموقع (website)
 // دايماً أول زر وبتنسيق أساسي (بارز)، والباقي أزرار ثانوية بعده
-const LINK_ORDER = ["website", "maps", "instagram"];
+const LINK_ORDER = ["website", "phone", "maps", "instagram"];
 
 function buildActionsHtml(item) {
   if (item.detailUrl) {
@@ -412,11 +413,30 @@ function buildActionsHtml(item) {
     .map((key, i) => {
       const url = links[key];
       const meta = LINK_META[key] || { icon: "🔗", label: "رابط" };
-      const label = key === "website" && item.cta ? item.cta : meta.label;
       const cls = i === 0 ? "btn" : "btn secondary";
+      if (key === "phone") {
+        return `<button type="button" class="${cls} phone-copy-btn" data-phone="${url}">${meta.icon} ${meta.label}</button>`;
+      }
+      const label = key === "website" && item.cta ? item.cta : meta.label;
       return `<a class="${cls}" href="${url}" target="_blank" rel="noopener noreferrer">${meta.icon} ${label}</a>`;
     })
     .join("");
+}
+
+/* ===== رسالة تأكيد عابرة (Toast) ===== */
+let toastTimer = null;
+function showToast(message) {
+  let toast = document.getElementById("site-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "site-toast";
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add("open");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("open"), 2000);
 }
 
 /* ===== بناء بطاقة عنصر واحدة ===== */
@@ -463,6 +483,21 @@ function buildItemCard(section, item, index = 0) {
     favBtn.classList.add("pop");
     playClickSound();
   });
+
+  const phoneBtn = card.querySelector(".phone-copy-btn");
+  if (phoneBtn) {
+    phoneBtn.addEventListener("click", async () => {
+      const phone = phoneBtn.dataset.phone;
+      try {
+        await navigator.clipboard.writeText(phone);
+      } catch {
+        showToast("تعذّر نسخ الرقم، انسخه يدوياً: " + phone);
+        return;
+      }
+      showToast("تم نسخ رقم الهاتف");
+      playClickSound();
+    });
+  }
 
   const descToggle = card.querySelector(".desc-toggle");
   if (descToggle) {

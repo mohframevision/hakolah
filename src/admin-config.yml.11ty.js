@@ -68,6 +68,12 @@ function itemFields(entry) {
             widget: "string",
             required: false,
           },
+          {
+            label: "رقم الهاتف (يُنسخ عند الضغط بدل ما يفتح رابط)",
+            name: "phone",
+            widget: "string",
+            required: false,
+          },
           { label: "خرائط قوقل", name: "maps", widget: "string", required: false },
           { label: "إنستقرام", name: "instagram", widget: "string", required: false },
         ],
