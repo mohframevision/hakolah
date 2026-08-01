@@ -509,6 +509,17 @@ img {
   border-color: var(--color-primary);
 }
 
+.filter-chip.filter-toggle {
+  border-style: dashed;
+  font-weight: 700;
+}
+
+.filter-chip.filter-toggle:hover {
+  background: var(--color-bg);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
 /* ===== شبكة البطاقات ===== */
 .card-grid {
   display: grid;

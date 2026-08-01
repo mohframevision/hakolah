@@ -533,6 +533,8 @@ function renderSection(section) {
   data.items.forEach((item) => (item.tags || []).forEach((t) => allTags.add(t)));
 
   let activeTag = "all";
+  let filtersExpanded = false;
+  const FILTER_CHIP_LIMIT = 10;
 
   function renderFilters() {
     if (!filtersWrap) return;
@@ -549,7 +551,11 @@ function renderSection(section) {
     });
     filtersWrap.appendChild(allChip);
 
-    allTags.forEach((tag) => {
+    const tagsList = [...allTags];
+    const hasMore = tagsList.length > FILTER_CHIP_LIMIT;
+    const visibleTags = filtersExpanded ? tagsList : tagsList.slice(0, FILTER_CHIP_LIMIT);
+
+    visibleTags.forEach((tag) => {
       const chip = document.createElement("button");
       chip.className = "filter-chip";
       chip.textContent = tag;
@@ -562,6 +568,22 @@ function renderSection(section) {
       });
       filtersWrap.appendChild(chip);
     });
+
+    if (hasMore) {
+      const toggleChip = document.createElement("button");
+      toggleChip.className = "filter-chip filter-toggle";
+      toggleChip.textContent = filtersExpanded
+        ? "عرض أقل ▲"
+        : `عرض المزيد (+${tagsList.length - FILTER_CHIP_LIMIT}) ▼`;
+      toggleChip.setAttribute("aria-expanded", String(filtersExpanded));
+      toggleChip.addEventListener("click", () => {
+        filtersExpanded = !filtersExpanded;
+        renderFilters();
+        updateActiveChip();
+        playClickSound();
+      });
+      filtersWrap.appendChild(toggleChip);
+    }
   }
 
   function updateActiveChip() {
