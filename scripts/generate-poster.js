@@ -9,7 +9,8 @@ const { fitGlyphInRect } = require("./heh-glyph.js");
 
 const SIZE = 1080;
 const SITE_URL = "https://mohframevision.github.io/hakolah/";
-const outDir = "C:\\Users\\Computia.ME\\AppData\\Local\\Temp\\claude\\D-----------\\79ddc704-5480-4e31-b983-b66d3efa52e6\\scratchpad";
+const outDir =
+  "C:\\Users\\Computia.ME\\AppData\\Local\\Temp\\claude\\D-----------\\79ddc704-5480-4e31-b983-b66d3efa52e6\\scratchpad";
 
 function pill(x, y, w, h, icon, label) {
   const cx = x + w / 2;

@@ -323,18 +323,26 @@ function toggleFavorite(section, id) {
 /* ===== أزرار الروابط (يدعم رابط واحد قديم item.url أو عدة روابط item.links) ===== */
 const LINK_META = {
   website: { icon: "🌐", label: "زيارة" },
-  maps: { icon: "📍", label: "الموقع" },
+  maps: { icon: "📍", label: "الخريطة" },
   instagram: { icon: "📷", label: "إنستقرام" },
   menu: { icon: "📋", label: "القائمة" },
 };
+
+// ترتيب ثابت للأزرار بغض النظر عن ترتيب الحقول باللوحة — رابط الموقع (website)
+// دايماً أول زر وبتنسيق أساسي (بارز)، والباقي أزرار ثانوية بعده
+const LINK_ORDER = ["website", "maps", "instagram", "menu"];
 
 function buildActionsHtml(item) {
   if (item.detailUrl) {
     return `<a class="btn" href="${item.detailUrl}">📖 اقرأ التفاصيل</a>`;
   }
   const links = item.links || (item.url ? { website: item.url } : {});
-  return Object.entries(links)
-    .map(([key, url], i) => {
+  const orderedKeys = Object.keys(links).sort(
+    (a, b) => LINK_ORDER.indexOf(a) - LINK_ORDER.indexOf(b)
+  );
+  return orderedKeys
+    .map((key, i) => {
+      const url = links[key];
       const meta = LINK_META[key] || { icon: "🔗", label: "رابط" };
       const label = key === "website" && item.cta ? item.cta : meta.label;
       const cls = i === 0 ? "btn" : "btn secondary";

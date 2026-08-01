@@ -55,9 +55,14 @@ function itemFields(entry) {
       name: "links",
       widget: "object",
       fields: [
+        {
+          label: "موقع إلكتروني (يظهر أول زر وبارز)",
+          name: "website",
+          widget: "string",
+          required: false,
+        },
         { label: "خرائط قوقل", name: "maps", widget: "string", required: false },
         { label: "إنستقرام", name: "instagram", widget: "string", required: false },
-        { label: "موقع إلكتروني", name: "website", widget: "string", required: false },
       ],
     });
   }
