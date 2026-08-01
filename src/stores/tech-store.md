@@ -6,6 +6,6 @@ categories:
   - إلكترونيات
 links:
   maps: ''
-  instagram: ''
+  instagram: https://www.instagram.com/cazasouq/
   website: https://cazasouq.idevaffiliate.com/692.html
 ---
