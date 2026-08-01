@@ -6,6 +6,9 @@ image: ''
 categories:
   - إلكترونيات
   - إكسسوارات
+  - معدات التصوير واكسسوارته
+  - عدسات
+  - كاميرات
 categoriesCustom: []
 cta: ''
 links:
