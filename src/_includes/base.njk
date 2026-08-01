@@ -19,6 +19,7 @@
   {% set ogImageUrl = site.origin + image if image else site.origin + ('/assets/og-image.png' | url) %}
   <title>{{ title }}</title>
   {% if metaDescription %}<meta name="description" content="{{ metaDescription }}" />{% endif %}
+  {% if noindex %}<meta name="robots" content="noindex, nofollow" />{% endif %}
   <link rel="canonical" href="{{ pageUrl }}" />
   <meta name="theme-color" content="#2563eb" />
 
@@ -51,6 +52,15 @@
   <link rel="stylesheet" href="{{ '/css/style.css' | url }}?v={{ buildVersion }}" />
   {% if adsense.publisherId %}
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense.publisherId }}" crossorigin="anonymous"></script>
+  {% endif %}
+  {% if analytics.measurementId %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics.measurementId }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "{{ analytics.measurementId }}");
+  </script>
   {% endif %}
 
   <script type="application/ld+json">

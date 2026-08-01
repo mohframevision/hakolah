@@ -793,6 +793,21 @@ img {
   flex-shrink: 0;
 }
 
+/* ===== صفحة الإحصائيات ===== */
+.stats-embed {
+  width: 100%;
+  max-width: 960px;
+  margin: 20px auto 60px;
+  aspect-ratio: 16 / 10;
+}
+
+.stats-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
 /* ===== صفحات نصية (سياسة الخصوصية / حول) ===== */
 .prose {
   max-width: 760px;
