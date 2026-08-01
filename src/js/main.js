@@ -179,6 +179,73 @@ function initContactForm() {
   });
 }
 
+/* ===== مؤثرات صوتية خفيفة عند التفاعل (اختيارية، معطّلة افتراضياً) =====
+   تُولَّد بـ Web Audio API مباشرة (بدون ملفات صوت خارجية) — نغمة قصيرة وخافتة
+   لأزرار التفاعل العادية، ونغمتين متتاليتين لحظة "اختار لي" احتفالاً بالنتيجة. */
+const SOUND_KEY = "site_sound_pref";
+let audioCtx = null;
+
+function isSoundEnabled() {
+  return localStorage.getItem(SOUND_KEY) === "on";
+}
+
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContextClass();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function playTone(freq, duration, delay = 0) {
+  if (!isSoundEnabled()) return;
+  const ctx = getAudioContext();
+  const startTime = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.05, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + duration);
+}
+
+function playClickSound() {
+  playTone(650, 0.07);
+}
+
+function playSuccessSound() {
+  playTone(660, 0.1);
+  playTone(880, 0.12, 0.08);
+}
+
+function initSoundToggle() {
+  const btn = document.querySelector(".sound-toggle");
+  if (!btn) return;
+
+  function apply(enabled) {
+    btn.classList.toggle("active", enabled);
+    btn.textContent = enabled ? "🔊" : "🔇";
+    btn.setAttribute("aria-label", enabled ? "إيقاف المؤثرات الصوتية" : "تفعيل المؤثرات الصوتية");
+    btn.title = enabled
+      ? "المؤثرات الصوتية: مفعّلة — اضغط للإيقاف"
+      : "المؤثرات الصوتية: متوقفة — اضغط للتفعيل";
+  }
+
+  apply(isSoundEnabled());
+
+  btn.addEventListener("click", () => {
+    const next = !isSoundEnabled();
+    localStorage.setItem(SOUND_KEY, next ? "on" : "off");
+    apply(next);
+    if (next) playClickSound();
+  });
+}
+
 /* ===== تبديل المظهر: تلقائي (يتبع النظام) / فاتح / داكن ===== */
 function initThemeToggle() {
   const btn = document.querySelector(".theme-toggle");
@@ -215,6 +282,7 @@ function initThemeToggle() {
       localStorage.setItem(KEY, next);
     }
     apply(next);
+    playClickSound();
   });
 }
 
@@ -245,6 +313,7 @@ function initNavToggle() {
     toggle.classList.toggle("open", isOpen);
     toggle.setAttribute("aria-expanded", String(isOpen));
     toggle.setAttribute("aria-label", isOpen ? "إغلاق القائمة" : "فتح القائمة");
+    playClickSound();
   });
 }
 
@@ -392,6 +461,7 @@ function buildItemCard(section, item, index = 0) {
     favBtn.classList.remove("pop");
     void favBtn.offsetWidth;
     favBtn.classList.add("pop");
+    playClickSound();
   });
 
   const descToggle = card.querySelector(".desc-toggle");
@@ -405,6 +475,7 @@ function buildItemCard(section, item, index = 0) {
         card.classList.add("just-expanded");
         setTimeout(() => card.classList.remove("just-expanded"), 900);
       }
+      playClickSound();
     });
   }
 
@@ -439,6 +510,7 @@ function renderSection(section) {
       activeTag = "all";
       updateActiveChip();
       renderGrid();
+      playClickSound();
     });
     filtersWrap.appendChild(allChip);
 
@@ -451,6 +523,7 @@ function renderSection(section) {
         activeTag = tag;
         updateActiveChip();
         renderGrid();
+        playClickSound();
       });
       filtersWrap.appendChild(chip);
     });
@@ -588,6 +661,7 @@ function initRandomPicker() {
       selectedSection = btn.dataset.section;
       spinBtn.disabled = false;
       stage.innerHTML = "";
+      playClickSound();
     });
   });
 
@@ -597,11 +671,15 @@ function initRandomPicker() {
     card.classList.add("picker-result");
     stage.appendChild(card);
     spawnConfetti(stage);
+    playSuccessSound();
 
     const retryBtn = document.createElement("button");
     retryBtn.className = "btn secondary picker-retry-btn";
     retryBtn.textContent = "🔄 جرّب مرة ثانية";
-    retryBtn.addEventListener("click", () => spin());
+    retryBtn.addEventListener("click", () => {
+      playClickSound();
+      spin();
+    });
     stage.appendChild(retryBtn);
 
     spinBtn.disabled = false;
@@ -640,11 +718,15 @@ function initRandomPicker() {
     tick();
   }
 
-  spinBtn.addEventListener("click", spin);
+  spinBtn.addEventListener("click", () => {
+    playClickSound();
+    spin();
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
+  initSoundToggle();
   initCookieConsent();
   initNavToggle();
   initHeaderScroll();
