@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 # بعد إنشاء KV Namespace (خطوة بالإعداد)، حط الـ id هنا
 kv_namespaces = [
-  { binding = "SUBSCRIPTIONS", id = "REPLACE_WITH_KV_NAMESPACE_ID" }
+  { binding = "SUBSCRIPTIONS", id = "01387183c9ba4c6bb59dd19322c03bc9" }
 ]
 
 # يومياً الساعة 5:00 UTC = 8:00 صباحاً بتوقيت البحرين (UTC+3)
