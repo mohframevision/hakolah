@@ -5,8 +5,9 @@ desc: متجر إلكتروني بحريني متخصص في معدات التص
 image: ''
 categories:
   - إلكترونيات
-categoriesCustom:
-  - معدات التصوير واكسسوارته
+  - إكسسوارات
+categoriesCustom: []
+cta: ''
 links:
   website: https://www.zoom.bh/
   maps: https://maps.app.goo.gl/9jugpBTCkaTnB6jh8
