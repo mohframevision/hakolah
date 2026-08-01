@@ -405,9 +405,9 @@ function buildActionsHtml(item) {
     return `<a class="btn" href="${item.detailUrl}">📖 اقرأ التفاصيل</a>`;
   }
   const links = item.links || (item.url ? { website: item.url } : {});
-  const orderedKeys = Object.keys(links).sort(
-    (a, b) => LINK_ORDER.indexOf(a) - LINK_ORDER.indexOf(b)
-  );
+  const orderedKeys = Object.keys(links)
+    .filter((key) => links[key])
+    .sort((a, b) => LINK_ORDER.indexOf(a) - LINK_ORDER.indexOf(b));
   return orderedKeys
     .map((key, i) => {
       const url = links[key];
