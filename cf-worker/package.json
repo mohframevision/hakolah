@@ -1,0 +1,17 @@
+{
+  "name": "hakolah-push-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker مستقل يخزّن اشتراكات الإشعارات ويرسل اختيار اليوم يومياً — منفصل تماماً عن موقع هكوله الرئيسي",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "secret:vapid": "wrangler secret put VAPID_PRIVATE_KEY"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

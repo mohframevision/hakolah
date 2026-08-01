@@ -702,6 +702,70 @@ function renderFeaturedPick() {
   container.appendChild(buildItemCard(section, item, 0));
 }
 
+/* ===== إشعار "اختيار اليوم" اليومي (اختياري، معطّل حتى المستخدم يفعّله بنفسه) =====
+   الاشتراك يُخزَّن على Cloudflare Worker خاص بنا فقط — بدون أي طرف ثالث. */
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+async function initPushNotifications() {
+  const btn = document.getElementById("notifyToggle");
+  const config = window.PUSH_CONFIG;
+  if (!btn || !config || !config.workerUrl) return;
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+
+  btn.style.display = "";
+
+  const registration = await navigator.serviceWorker.register("/hakolah/sw.js");
+  let subscription = await registration.pushManager.getSubscription();
+
+  function apply(subscribed) {
+    btn.classList.toggle("active", subscribed);
+    btn.textContent = subscribed ? "🔔 الإشعارات مفعّلة" : "🔕 نبّهني كل يوم";
+  }
+  apply(Boolean(subscription));
+
+  btn.addEventListener("click", async () => {
+    if (subscription) {
+      await fetch(`${config.workerUrl}/unsubscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      });
+      await subscription.unsubscribe();
+      subscription = null;
+      apply(false);
+      showToast("تم إيقاف الإشعارات");
+      playClickSound();
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      showToast("لازم توافق على الإذن من إعدادات المتصفح");
+      return;
+    }
+
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(config.vapidPublicKey),
+    });
+
+    await fetch(`${config.workerUrl}/subscribe`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscription),
+    });
+
+    apply(true);
+    showToast("تفعّلت الإشعارات — بنذكّرك بـ اختيار اليوم");
+    playClickSound();
+  });
+}
+
 /* ===== اختار لي: اختيار عشوائي من أي قسم بأنيميشن سلوت مشين ===== */
 function spawnConfetti(container) {
   const emojis = ["🎉", "✨", "⭐", "💫", "🎊"];

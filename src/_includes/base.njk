@@ -125,11 +125,14 @@
     <button type="button" class="btn cookie-accept" id="cookie-accept">موافق</button>
   </div>
 
+  <script>
+    window.PUSH_CONFIG = { workerUrl: {{ push.workerUrl | json | safe }}, vapidPublicKey: {{ push.vapidPublicKey | json | safe }} };
+  </script>
   <script src="{{ '/js/data.js' | url }}?v={{ buildVersion }}"></script>
   <script src="{{ '/js/main.js' | url }}?v={{ buildVersion }}"></script>
   {% if section %}<script>renderSection("{{ section }}");</script>{% endif %}
   {% if isFavoritesPage %}<script>renderFavoritesPage();</script>{% endif %}
   {% if navActive == "picker" %}<script>initRandomPicker();</script>{% endif %}
-  {% if navActive == "home" %}<script>renderFeaturedPick();</script>{% endif %}
+  {% if navActive == "home" %}<script>renderFeaturedPick();initPushNotifications();</script>{% endif %}
 </body>
 </html>

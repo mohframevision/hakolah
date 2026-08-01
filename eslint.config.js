@@ -4,7 +4,8 @@ const globals = require("globals");
 module.exports = [
   js.configs.recommended,
   {
-    ignores: ["_site/**", "node_modules/**"],
+    // cf-worker مشروع Cloudflare Worker مستقل تماماً بأدوات وتشغيل خاصة فيه (wrangler)
+    ignores: ["_site/**", "node_modules/**", "cf-worker/**"],
   },
   {
     // كود المتصفح (يعمل عبر <script> عادي، بدون نظام وحدات)
@@ -25,9 +26,18 @@ module.exports = [
         "error",
         {
           varsIgnorePattern:
-            "^(renderSection|renderFavoritesPage|initRandomPicker|renderFeaturedPick)$",
+            "^(renderSection|renderFavoritesPage|initRandomPicker|renderFeaturedPick|initPushNotifications)$",
         },
       ],
+    },
+  },
+  {
+    // Service Worker (نطاق عالمي مختلف عن المتصفح العادي — self بدل window، لا يوجد DOM)
+    files: ["src/sw.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "script",
+      globals: globals.serviceworker,
     },
   },
   {
