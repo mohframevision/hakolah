@@ -671,6 +671,37 @@ function renderFavoritesPage() {
   );
 }
 
+/* ===== اختيار اليوم: عنصر واحد ثابت طوال اليوم، يتغيّر تلقائياً كل يوم
+   (نفس الاختيار لكل الزوار بنفس اليوم — يعتمد على تاريخ اليوم كبذرة ثابتة،
+   بدون عشوائية حقيقية ولا خادم، فيدور على كل العناصر بالتناوب بمرور الأيام) ===== */
+function renderFeaturedPick() {
+  const container = document.getElementById("featuredPick");
+  if (!container) return;
+
+  const allItems = [];
+  Object.keys(SITE_DATA).forEach((section) => {
+    (SITE_DATA[section].items || []).forEach((item) => {
+      allItems.push({ section, item });
+    });
+  });
+
+  if (allItems.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <span class="icon">🎯</span>
+        <p>ترقّبنا قريباً!</p>
+      </div>
+    `;
+    return;
+  }
+
+  const daysSinceEpoch = Math.floor(Date.now() / 86400000);
+  const { section, item } = allItems[daysSinceEpoch % allItems.length];
+
+  container.innerHTML = "";
+  container.appendChild(buildItemCard(section, item, 0));
+}
+
 /* ===== اختار لي: اختيار عشوائي من أي قسم بأنيميشن سلوت مشين ===== */
 function spawnConfetti(container) {
   const emojis = ["🎉", "✨", "⭐", "💫", "🎊"];

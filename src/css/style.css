@@ -326,6 +326,29 @@ img {
   max-width: 520px;
 }
 
+/* ===== اختيار اليوم (الصفحة الرئيسية) ===== */
+.featured-pick-section {
+  padding: 8px 0 32px;
+}
+
+.featured-pick-title {
+  text-align: center;
+  font-size: 1.25rem;
+  margin: 0 0 16px;
+}
+
+.featured-pick-card {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 3px;
+  border-radius: calc(var(--radius) + 3px);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+}
+
+.featured-pick-card .item-card {
+  margin: 0;
+}
+
 /* ===== صندوق البحث ===== */
 .search-box {
   width: 100%;

@@ -10,6 +10,11 @@ navActive: "home"
   <p>روابط وأدوات، حسابات واشتراكات، مطاعم، متاجر، وصناع محتوى — مُجمَّعة ومنظّمة لتوفّر وقتك.</p>
 </section>
 
+<section class="featured-pick-section">
+  <h2 class="featured-pick-title">🎯 اختيار اليوم</h2>
+  <div class="featured-pick-card" id="featuredPick"></div>
+</section>
+
 <section class="section-grid">
   {% for entry in sections %}
   <a class="section-card" href="{{ ('/' + entry.slug + '.html') | url }}">

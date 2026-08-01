@@ -18,11 +18,15 @@ module.exports = [
       },
     },
     rules: {
-      // renderSection/renderFavoritesPage/initRandomPicker تُستدعى من <script> مضمّن
-      // بقوالب Nunjucks (base.njk) وليس من داخل main.js نفسه، فتبدو "غير مستخدمة" لـ ESLint
+      // renderSection/renderFavoritesPage/initRandomPicker/renderFeaturedPick تُستدعى من
+      // <script> مضمّن بقوالب Nunjucks (base.njk) وليس من داخل main.js نفسه، فتبدو "غير
+      // مستخدمة" لـ ESLint
       "no-unused-vars": [
         "error",
-        { varsIgnorePattern: "^(renderSection|renderFavoritesPage|initRandomPicker)$" },
+        {
+          varsIgnorePattern:
+            "^(renderSection|renderFavoritesPage|initRandomPicker|renderFeaturedPick)$",
+        },
       ],
     },
   },
