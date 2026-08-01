@@ -1,8 +1,9 @@
 ---
 title: زمن الطيبين
 icon: "🍽️"
-desc: مطعم بمنطقة سند، مأكولات شرقية وغربية.
+desc: مطعم مشاوي شعبي بمنطقة سند، معروف بالريوق والتكة والرقبة المشوية.
 categories:
+  - مشاوي
   - سند
 links:
   maps: https://maps.app.goo.gl/8o6ofPq4ZZzP1fRf7

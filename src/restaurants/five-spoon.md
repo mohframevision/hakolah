@@ -1,8 +1,11 @@
 ---
 title: فايف سبون
 icon: "🍽️"
-desc: مطعم بمنطقة جد علي.
+desc: مطعم يقدم مأكولات إيطالية وصينية وأمريكية، بمنطقة جد علي.
 categories:
+  - إيطالي
+  - آسيوي
+  - مطعم عائلي
   - جد علي
 links:
   maps: https://maps.app.goo.gl/TBc1YaDmkNdwhKh69

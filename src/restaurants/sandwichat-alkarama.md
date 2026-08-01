@@ -4,6 +4,8 @@ icon: "🥪"
 desc: سندويشات وعصائر بمنطقة جد علي.
 categories:
   - سندويشات
+  - برجر
+  - وجبات سريعة
   - جد علي
 links:
   maps: https://maps.app.goo.gl/m1kyKmWBfP9gAM1Z7
