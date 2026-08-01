@@ -7,7 +7,7 @@ desc: |-
   ☎️ / واتساب: +973 6662 2110
 categories: []
 links:
-  maps: ''
+  maps: https://maps.app.goo.gl/ZdovdZp5jBGBA2nE8
   instagram: ''
   website: https://www.lechocolatbh.com/
 ---
