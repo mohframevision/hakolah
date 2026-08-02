@@ -16,6 +16,7 @@ iconOptions:
   - "🏛️"
   - "🌳"
   - "🎡"
+  - "🛍️"
 categoryOptions:
   - "شاطئ"
   - "عربات طعام"
