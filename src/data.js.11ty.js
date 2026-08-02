@@ -15,6 +15,7 @@ exports.render = function (data) {
         title: entry.data.title,
         desc: entry.data.desc || "",
         image: entry.data.image || null,
+        featured: Boolean(entry.data.featured),
         tags: [...(entry.data.categories || []), ...(entry.data.categoriesCustom || [])],
       };
       if (meta.hasDetailPages) {

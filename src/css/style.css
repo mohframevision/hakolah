@@ -593,6 +593,29 @@ img {
   box-shadow: var(--shadow-card-hover);
 }
 
+/* عنصر مميز (featured) — يبرز بإطار ملوّن ويترتّب أول القائمة، مو نفس ميزة
+   "اختيار اليوم" (featured-pick-*) اللي بالصفحة الرئيسية — ميزتان مختلفتان */
+.item-card.featured {
+  border-color: var(--color-accent);
+  box-shadow:
+    0 0 0 2px rgba(245, 158, 11, 0.3),
+    var(--shadow-card);
+}
+
+.featured-badge {
+  position: absolute;
+  top: 12px;
+  inset-inline-start: 12px;
+  z-index: 5;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
 .item-card .item-photo {
   display: block;
   width: 100%;

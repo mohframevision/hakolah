@@ -442,7 +442,7 @@ function showToast(message) {
 /* ===== بناء بطاقة عنصر واحدة ===== */
 function buildItemCard(section, item, index = 0) {
   const card = document.createElement("div");
-  card.className = "item-card";
+  card.className = item.featured ? "item-card featured" : "item-card";
   card.style.animationDelay = `${Math.min(index, 10) * 45}ms`;
 
   const fav = isFavorite(section, item.id);
@@ -451,6 +451,7 @@ function buildItemCard(section, item, index = 0) {
 
   card.innerHTML = `
     ${item.image ? `<img class="item-photo" src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" />` : ""}
+    ${item.featured ? `<span class="featured-badge">⭐ مميز</span>` : ""}
     <div class="item-body">
       <div class="item-top">
         <span class="item-icon">${item.icon || "⭐"}</span>
@@ -600,12 +601,14 @@ function renderSection(section) {
     const query = (searchInput?.value || "").trim();
     grid.innerHTML = "";
 
-    const filtered = data.items.filter((item) => {
-      const matchesTag = activeTag === "all" || (item.tags || []).includes(activeTag);
-      const haystack = item.title + " " + (item.desc || "") + " " + (item.tags || []).join(" ");
-      const matchesQuery = fuzzyIncludes(haystack, query);
-      return matchesTag && matchesQuery;
-    });
+    const filtered = data.items
+      .filter((item) => {
+        const matchesTag = activeTag === "all" || (item.tags || []).includes(activeTag);
+        const haystack = item.title + " " + (item.desc || "") + " " + (item.tags || []).join(" ");
+        const matchesQuery = fuzzyIncludes(haystack, query);
+        return matchesTag && matchesQuery;
+      })
+      .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
 
     if (filtered.length === 0) {
       const isSectionEmpty = data.items.length === 0;

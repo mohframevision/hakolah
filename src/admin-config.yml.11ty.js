@@ -27,6 +27,14 @@ function itemFields(entry) {
       required: false,
     },
     {
+      label:
+        "عنصر مميز (يظهر بارز بإطار ملوّن ويترتّب أول القائمة — استخدمه بحذر لعنصر واحد أو اثنين بالقسم بس)",
+      name: "featured",
+      widget: "boolean",
+      required: false,
+      default: false,
+    },
+    {
       label: "التصنيفات (اختر واحد أو أكثر من القائمة الجاهزة)",
       name: "categories",
       widget: "select",
