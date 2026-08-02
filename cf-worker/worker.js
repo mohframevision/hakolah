@@ -9,9 +9,13 @@ const DATA_URL = `${SITE_ORIGIN}/hakolah/js/data.js`;
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": SITE_ORIGIN,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
+}
+
+function todayKey() {
+  return `visits:day:${new Date().toISOString().slice(0, 10)}`;
 }
 
 async function keyFor(endpoint) {
@@ -40,6 +44,34 @@ export default {
       const { endpoint } = await request.json();
       if (endpoint) await env.SUBSCRIPTIONS.delete(await keyFor(endpoint));
       return new Response("OK", { headers: corsHeaders() });
+    }
+
+    // عدّاد زيارات بسيط (مو دقيق زي Google Analytics، بس كافي لعرض تقريبي —
+    // بياناته عندنا بس، بدون أي طرف ثالث)
+    if ((request.method === "GET" || request.method === "POST") && url.pathname === "/track") {
+      const dayKey = todayKey();
+      const [total, today] = await Promise.all([
+        env.SUBSCRIPTIONS.get("visits:total"),
+        env.SUBSCRIPTIONS.get(dayKey),
+      ]);
+      await Promise.all([
+        env.SUBSCRIPTIONS.put("visits:total", String((Number(total) || 0) + 1)),
+        env.SUBSCRIPTIONS.put(dayKey, String((Number(today) || 0) + 1), {
+          expirationTtl: 60 * 60 * 24 * 7,
+        }),
+      ]);
+      return new Response("OK", { headers: corsHeaders() });
+    }
+
+    if (request.method === "GET" && url.pathname === "/stats") {
+      const [total, today] = await Promise.all([
+        env.SUBSCRIPTIONS.get("visits:total"),
+        env.SUBSCRIPTIONS.get(todayKey()),
+      ]);
+      return new Response(
+        JSON.stringify({ total: Number(total) || 0, today: Number(today) || 0 }),
+        { headers: { ...corsHeaders(), "Content-Type": "application/json" } }
+      );
     }
 
     return new Response("Not found", { status: 404, headers: corsHeaders() });

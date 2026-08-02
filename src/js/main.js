@@ -636,6 +636,9 @@ function renderSection(section) {
 
   if (searchInput) {
     searchInput.addEventListener("input", renderGrid);
+    searchInput.addEventListener("input", () => {
+      checkVisitSecretCode(searchInput.value, searchInput, renderGrid);
+    });
     initSearchSuggestions(searchInput, data.items, renderGrid);
   }
 }
@@ -703,6 +706,32 @@ function renderFeaturedPick() {
 
   container.innerHTML = "";
   container.appendChild(buildItemCard(section, item, 0));
+}
+
+/* ===== عدّاد زيارات بسيط (خاص بنا فقط، نفس Cloudflare Worker حق الإشعارات) =====
+   يعد كل تحميل صفحة بصمت، ويظهر الرقم بس لمن يكتب كود سري بصندوق البحث —
+   عمداً غير ظاهر لعامة الزوار لأن الأرقام لسا صغيرة بمرحلة الموقع الحالية. */
+function trackVisit() {
+  const config = window.PUSH_CONFIG;
+  if (!config || !config.workerUrl) return;
+  fetch(`${config.workerUrl}/track`, { keepalive: true }).catch(() => {});
+}
+
+const VISIT_SECRET_CODE = "2005 moo";
+
+async function checkVisitSecretCode(value, searchInput, onReset) {
+  if (value.trim().toLowerCase() !== VISIT_SECRET_CODE) return;
+  const config = window.PUSH_CONFIG;
+  searchInput.value = "";
+  onReset();
+  if (!config || !config.workerUrl) return;
+  try {
+    const res = await fetch(`${config.workerUrl}/stats`);
+    const data = await res.json();
+    showToast(`👀 زيارات اليوم: ${data.today} — الإجمالي: ${data.total}`);
+  } catch {
+    showToast("تعذّر جلب الإحصائيات");
+  }
 }
 
 /* ===== إشعار "اختيار اليوم" اليومي (اختياري، معطّل حتى المستخدم يفعّله بنفسه) =====
@@ -887,4 +916,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initHeaderScroll();
   initAutoUpdateCheck();
   initContactForm();
+  trackVisit();
 });
