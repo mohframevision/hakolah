@@ -401,6 +401,19 @@ const LINK_META = {
 // دايماً أول زر وبتنسيق أساسي (بارز)، والباقي أزرار ثانوية بعده
 const LINK_ORDER = ["website", "phone", "maps", "instagram"];
 
+/* ===== مشاركة عبر واتساب ===== */
+const SITE_ORIGIN = "https://mohframevision.github.io/hakolah/";
+
+function buildShareUrl(section, item) {
+  const relPath = item.detailUrl || `${section}.html?q=${encodeURIComponent(item.title)}`;
+  return SITE_ORIGIN + relPath;
+}
+
+function buildShareText(section, item) {
+  const url = buildShareUrl(section, item);
+  return `${item.title} — على موقع هكوله 👇\n${url}`;
+}
+
 function buildActionsHtml(item) {
   if (item.detailUrl) {
     return `<a class="btn" href="${item.detailUrl}">📖 اقرأ التفاصيل</a>`;
@@ -455,9 +468,12 @@ function buildItemCard(section, item, index = 0) {
     <div class="item-body">
       <div class="item-top">
         <span class="item-icon">${item.icon || "⭐"}</span>
-        <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}" aria-label="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
-          ${fav ? "♥" : "♡"}
-        </button>
+        <div class="item-top-actions">
+          <button class="share-btn" title="مشاركة عبر واتساب" aria-label="مشاركة عبر واتساب">📤</button>
+          <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}" aria-label="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
+            ${fav ? "♥" : "♡"}
+          </button>
+        </div>
       </div>
       <h3>${item.title}</h3>
       <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
@@ -482,6 +498,13 @@ function buildItemCard(section, item, index = 0) {
     favBtn.classList.remove("pop");
     void favBtn.offsetWidth;
     favBtn.classList.add("pop");
+    playClickSound();
+  });
+
+  const shareBtn = card.querySelector(".share-btn");
+  shareBtn.addEventListener("click", () => {
+    const text = buildShareText(section, item);
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
     playClickSound();
   });
 
@@ -630,6 +653,9 @@ function renderSection(section) {
 
     filtered.forEach((item, index) => grid.appendChild(buildItemCard(section, item, index)));
   }
+
+  const sharedQuery = new URLSearchParams(location.search).get("q");
+  if (sharedQuery && searchInput) searchInput.value = sharedQuery;
 
   renderFilters();
   renderGrid();

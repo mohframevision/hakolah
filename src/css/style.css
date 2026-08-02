@@ -752,6 +752,30 @@ img {
   border: 1px solid var(--color-border);
 }
 
+.item-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.share-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  line-height: 1;
+  padding: 4px;
+  transition:
+    color 0.18s ease,
+    transform 0.15s ease;
+}
+
+.share-btn:hover {
+  color: var(--color-primary);
+  transform: scale(1.15);
+}
+
 .fav-btn {
   background: none;
   border: none;
