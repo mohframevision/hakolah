@@ -2,6 +2,7 @@
 title: قلعة البحرين
 icon: 🏛️
 desc: موقع أثري عمره أكثر من 4000 عام، عاصمة حضارة دلمون القديمة، ومُدرج على قائمة التراث العالمي لليونسكو.
+image: /hakolah/assets/uploads/ondrej-bocek-hEPkfOY7ibY-unsplash.jpg
 categories:
   - تاريخي
   - إطلالة
