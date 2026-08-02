@@ -43,6 +43,26 @@ function itemFields(entry) {
       required: false,
     },
     {
+      name: "dateAdded",
+      widget: "hidden",
+      default: "{{now}}",
+      required: false,
+    },
+    {
+      label: 'خط العرض Latitude (اختياري — لميزة "قريب مني". اتركه فاضي، بنعبّيه لاحقاً من رابط الخريطة)',
+      name: "lat",
+      widget: "number",
+      required: false,
+      value_type: "float",
+    },
+    {
+      label: 'خط الطول Longitude (اختياري — لميزة "قريب مني". اتركه فاضي، بنعبّيه لاحقاً من رابط الخريطة)',
+      name: "lng",
+      widget: "number",
+      required: false,
+      value_type: "float",
+    },
+    {
       label: "تصنيفات جديدة (ما تلقى تصنيفك بالقائمة؟ اكتبه هنا واضغط Enter — بيضاف تلقائياً)",
       name: "categoriesCustom",
       widget: "list",

@@ -507,6 +507,41 @@ img {
   margin-top: 8px;
 }
 
+/* ===== زر قريب مني ===== */
+.near-me-btn {
+  margin-top: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.near-me-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.near-me-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.tag.distance-tag {
+  background: rgba(37, 99, 235, 0.18);
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
 /* ===== الفلاتر ===== */
 .filters {
   display: flex;
@@ -608,6 +643,20 @@ img {
   inset-inline-start: 12px;
   z-index: 5;
   background: var(--color-accent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.new-badge {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  z-index: 5;
+  background: var(--color-primary);
   color: #fff;
   font-size: 0.72rem;
   font-weight: 800;

@@ -10,4 +10,6 @@ links:
   maps: https://maps.app.goo.gl/ZdovdZp5jBGBA2nE8
   instagram: ''
   website: https://www.lechocolatbh.com/
+lat: 26.2349219
+lng: 50.5332927
 ---

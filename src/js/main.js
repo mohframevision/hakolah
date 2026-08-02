@@ -401,6 +401,21 @@ const LINK_META = {
 // دايماً أول زر وبتنسيق أساسي (بارز)، والباقي أزرار ثانوية بعده
 const LINK_ORDER = ["website", "phone", "maps", "instagram"];
 
+/* ===== ترتيب "قريب مني" حسب المسافة ===== */
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistance(km) {
+  return km < 1 ? `${Math.round(km * 1000)} م` : `${km.toFixed(1)} كم`;
+}
+
 /* ===== مشاركة عبر واتساب ===== */
 const SITE_ORIGIN = "https://mohframevision.github.io/hakolah/";
 
@@ -453,7 +468,7 @@ function showToast(message) {
 }
 
 /* ===== بناء بطاقة عنصر واحدة ===== */
-function buildItemCard(section, item, index = 0) {
+function buildItemCard(section, item, index = 0, distanceKm = null) {
   const card = document.createElement("div");
   card.className = item.featured ? "item-card featured" : "item-card";
   card.style.animationDelay = `${Math.min(index, 10) * 45}ms`;
@@ -465,6 +480,7 @@ function buildItemCard(section, item, index = 0) {
   card.innerHTML = `
     ${item.image ? `<img class="item-photo" src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" />` : ""}
     ${item.featured ? `<span class="featured-badge">⭐ مميز</span>` : ""}
+    ${item.isNew ? `<span class="new-badge">🆕 جديد</span>` : ""}
     <div class="item-body">
       <div class="item-top">
         <span class="item-icon">${item.icon || "⭐"}</span>
@@ -479,6 +495,7 @@ function buildItemCard(section, item, index = 0) {
       <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
       ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">اقرأ المزيد</button>` : ""}
       <div class="item-meta">
+        ${distanceKm !== null ? `<span class="tag distance-tag">📍 ${formatDistance(distanceKm)}</span>` : ""}
         ${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}
       </div>
       <div class="item-actions">
@@ -549,6 +566,7 @@ function renderSection(section) {
   const grid = document.querySelector(".card-grid");
   const searchInput = document.querySelector(".search-box");
   const filtersWrap = document.querySelector(".filters");
+  const nearMeBtn = document.querySelector(".near-me-btn");
 
   if (!grid) return;
 
@@ -559,6 +577,8 @@ function renderSection(section) {
   let activeTag = "all";
   let filtersExpanded = false;
   const FILTER_CHIP_LIMIT = 10;
+  let userCoords = null;
+  let sortByDistance = false;
 
   function renderFilters() {
     if (!filtersWrap) return;
@@ -624,16 +644,32 @@ function renderSection(section) {
     const query = (searchInput?.value || "").trim();
     grid.innerHTML = "";
 
-    const filtered = data.items
-      .filter((item) => {
-        const matchesTag = activeTag === "all" || (item.tags || []).includes(activeTag);
-        const haystack = item.title + " " + (item.desc || "") + " " + (item.tags || []).join(" ");
-        const matchesQuery = fuzzyIncludes(haystack, query);
-        return matchesTag && matchesQuery;
-      })
-      .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+    const filtered = data.items.filter((item) => {
+      const matchesTag = activeTag === "all" || (item.tags || []).includes(activeTag);
+      const haystack = item.title + " " + (item.desc || "") + " " + (item.tags || []).join(" ");
+      const matchesQuery = fuzzyIncludes(haystack, query);
+      return matchesTag && matchesQuery;
+    });
 
-    if (filtered.length === 0) {
+    let ranked = filtered.map((item) => ({
+      item,
+      distanceKm:
+        sortByDistance && userCoords && item.lat != null && item.lng != null
+          ? haversineKm(userCoords.lat, userCoords.lng, item.lat, item.lng)
+          : null,
+    }));
+
+    ranked =
+      sortByDistance && userCoords
+        ? ranked.sort((a, b) => {
+            if (a.distanceKm === null && b.distanceKm === null) return 0;
+            if (a.distanceKm === null) return 1;
+            if (b.distanceKm === null) return -1;
+            return a.distanceKm - b.distanceKm;
+          })
+        : ranked.sort((a, b) => Number(Boolean(b.item.featured)) - Number(Boolean(a.item.featured)));
+
+    if (ranked.length === 0) {
       const isSectionEmpty = data.items.length === 0;
       grid.innerHTML = isSectionEmpty
         ? `
@@ -651,11 +687,48 @@ function renderSection(section) {
       return;
     }
 
-    filtered.forEach((item, index) => grid.appendChild(buildItemCard(section, item, index)));
+    ranked.forEach(({ item, distanceKm }, index) =>
+      grid.appendChild(buildItemCard(section, item, index, distanceKm))
+    );
   }
 
   const sharedQuery = new URLSearchParams(location.search).get("q");
   if (sharedQuery && searchInput) searchInput.value = sharedQuery;
+
+  if (nearMeBtn) {
+    nearMeBtn.addEventListener("click", () => {
+      if (sortByDistance) {
+        sortByDistance = false;
+        nearMeBtn.classList.remove("active");
+        nearMeBtn.setAttribute("aria-pressed", "false");
+        nearMeBtn.textContent = "📍 الأقرب مني";
+        renderGrid();
+        playClickSound();
+        return;
+      }
+      if (!navigator.geolocation) {
+        showToast("متصفحك ما يدعم تحديد الموقع");
+        return;
+      }
+      nearMeBtn.textContent = "⏳ جاري تحديد موقعك…";
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          sortByDistance = true;
+          nearMeBtn.classList.add("active");
+          nearMeBtn.setAttribute("aria-pressed", "true");
+          nearMeBtn.textContent = "📍 الأقرب مني ✕";
+          renderGrid();
+          playClickSound();
+        },
+        () => {
+          showToast("تعذّر الوصول لموقعك — تأكد من تفعيل صلاحية الموقع بالمتصفح");
+          nearMeBtn.textContent = "📍 الأقرب مني";
+        },
+        { enableHighAccuracy: false, timeout: 10000 }
+      );
+    });
+  }
 
   renderFilters();
   renderGrid();

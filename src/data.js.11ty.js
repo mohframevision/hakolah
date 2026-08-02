@@ -3,12 +3,16 @@ exports.data = {
   eleventyExcludeFromCollections: true,
 };
 
+const NEW_BADGE_DAYS = 7;
+
 exports.render = function (data) {
   const sections = data.sections;
   const out = {};
+  const now = Date.now();
 
   for (const meta of sections) {
     const items = (data.collections[meta.slug] || []).map((entry) => {
+      const addedAt = entry.data.dateAdded ? new Date(entry.data.dateAdded).getTime() : NaN;
       const item = {
         id: entry.fileSlug,
         icon: entry.data.icon || "⭐",
@@ -16,6 +20,9 @@ exports.render = function (data) {
         desc: entry.data.desc || "",
         image: entry.data.image || null,
         featured: Boolean(entry.data.featured),
+        isNew: !Number.isNaN(addedAt) && now - addedAt < NEW_BADGE_DAYS * 86400000,
+        lat: typeof entry.data.lat === "number" ? entry.data.lat : null,
+        lng: typeof entry.data.lng === "number" ? entry.data.lng : null,
         tags: [...(entry.data.categories || []), ...(entry.data.categoriesCustom || [])],
       };
       if (meta.hasDetailPages) {

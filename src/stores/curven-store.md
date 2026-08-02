@@ -15,4 +15,6 @@ links:
   website: https://www.curven.net/
   maps: https://maps.app.goo.gl/GjxovmNUpqtEQwYh6
   instagram: https://www.instagram.com/curven.store/?hl=ar
+lat: 26.23403
+lng: 50.5319664
 ---
