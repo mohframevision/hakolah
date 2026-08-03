@@ -309,22 +309,60 @@ function initCookieConsent() {
    إعلانات وإظهار ملاحظة لطيفة وغير مزعجة. الإغلاق بـ sessionStorage عمداً
    (مو localStorage) — يعني تختفي لباقي هالجلسة إذا ضغط الزائر ✕، بس ترجع
    تظهر بجلسة تصفح جديدة طول ما المانع لسا شغّال، بدل ما تختفي إلى الأبد. */
-function detectAdblockViaBaitElement() {
-  return new Promise((resolve) => {
-    // عنصر "طعم" بأسماء كلاسات شائعة تستهدفها قوائم فلترة مانعات الإعلانات
-    // القائمة على تعديل الصفحة (CSS) زي uBlock Origin وAdBlock Plus — لو
-    // انحجب (ارتفاعه صار صفر) فهذا دليل إن مانع إعلانات نشط بالمتصفح
-    const bait = document.createElement("div");
-    bait.className = "adsbox ad-banner ad-placement adsbygoogle";
-    bait.style.cssText = "position:absolute; top:-9999px; inset-inline-start:-9999px; width:10px; height:10px;";
-    document.body.appendChild(bait);
+// أسماء كلاسات ومعرّفات شائعة تستهدفها قوائم فلترة مانعات الإعلانات (EasyList
+// وما شابهها) — نفس الأسماء اللي تستخدمها مكتبات كشف مانعات الإعلانات المعروفة.
+// عنصر واحد قد يفلت من فلتر معيّن، فنحط عدة عناصر بأسماء مختلفة لنزيد فرصة
+// الاكتشاف مهما كانت القائمة اللي يعتمد عليها مانع الزائر
+const ADBLOCK_BAIT_NAMES = [
+  "adsbox",
+  "ad-banner",
+  "adBanner",
+  "ad-placement",
+  "adsbygoogle",
+  "textAd",
+  "text-ad",
+  "google-ad",
+  "ad-container",
+  "banner-ad",
+  "pub_300x250",
+  "pub_728x90",
+  "adSpace",
+  "ad-header",
+];
 
+function detectAdblockViaBaitElements() {
+  return new Promise((resolve) => {
+    const baits = ADBLOCK_BAIT_NAMES.map((name, i) => {
+      const el = document.createElement("div");
+      el.className = name;
+      el.id = `${name}-${i}`;
+      el.style.cssText =
+        "position:absolute; top:-9999px; inset-inline-start:-9999px; width:10px; height:10px; " +
+        "background:#fff; pointer-events:none;";
+      el.innerHTML = "&nbsp;";
+      document.body.appendChild(el);
+      return el;
+    });
+
+    const isHidden = (el) => {
+      if (!el.isConnected) return true;
+      const style = getComputedStyle(el);
+      return el.offsetParent === null || el.offsetHeight === 0 || style.display === "none" || style.visibility === "hidden";
+    };
+
+    // فحص على مرحلتين — بعض المانعات تطبّق فلاتر CSS فوراً، وبعضها بعد لحظة
+    // من رسم الصفحة (عبر MutationObserver داخلي)
     setTimeout(() => {
-      const style = getComputedStyle(bait);
-      const blocked =
-        bait.offsetParent === null || bait.offsetHeight === 0 || style.display === "none" || style.visibility === "hidden";
-      bait.remove();
-      resolve(blocked);
+      if (baits.some(isHidden)) {
+        baits.forEach((el) => el.remove());
+        resolve(true);
+        return;
+      }
+      setTimeout(() => {
+        const blocked = baits.some(isHidden);
+        baits.forEach((el) => el.remove());
+        resolve(blocked);
+      }, 900);
     }, 300);
   });
 }
@@ -337,7 +375,7 @@ function initAdblockNotice() {
   const closeBtn = document.getElementById("adblockNoticeClose");
   if (!notice || !closeBtn) return;
 
-  detectAdblockViaBaitElement().then((blocked) => {
+  detectAdblockViaBaitElements().then((blocked) => {
     if (blocked) notice.classList.add("open");
   });
 
