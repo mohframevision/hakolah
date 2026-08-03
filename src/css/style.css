@@ -698,8 +698,16 @@ img {
 }
 
 .verified-badge {
-  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 800;
   vertical-align: middle;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  padding: 2px 9px;
+  border-radius: 999px;
 }
 
 .item-card .item-desc {

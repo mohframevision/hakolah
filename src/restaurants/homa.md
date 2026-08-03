@@ -12,5 +12,4 @@ links:
   instagram: 'https://www.instagram.com/homabahrain/'
 lat: 26.1889679
 lng: 50.4631819
-verified: true
 ---

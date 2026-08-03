@@ -491,7 +491,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
           </button>
         </div>
       </div>
-      <h3>${item.title}${item.verified ? ` <span class="verified-badge" title="تحقّق هكوله من هذا العنصر شخصياً">✅</span>` : ""}</h3>
+      <h3>${item.title}${item.verified ? ` <span class="verified-badge" title="صاحب الموقع زار هذا المكان شخصياً">✅ زُرته شخصياً</span>` : ""}</h3>
       <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
       ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">اقرأ المزيد</button>` : ""}
       <div class="item-meta">
