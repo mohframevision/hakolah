@@ -303,6 +303,40 @@ function initCookieConsent() {
   });
 }
 
+/* ===== ملاحظة مانع الإعلانات ===== */
+/* لا يمكن تقنياً إجبار المتصفح على تعطيل إضافة مثبّتة عنده (قرار متعمّد من
+   المتصفحات نفسها لحماية المستخدم) — أقصى شي ممكن نسويه هو اكتشاف وجود مانع
+   إعلانات وإظهار ملاحظة لطيفة وغير مزعجة، يقدر الزائر يتجاهلها ويكمل تصفح
+   الموقع بشكل طبيعي بدون أي تقييد. */
+function initAdblockNotice() {
+  const DISMISSED_KEY = "adblock_notice_dismissed";
+  if (localStorage.getItem(DISMISSED_KEY)) return;
+
+  const notice = document.getElementById("adblockNotice");
+  const closeBtn = document.getElementById("adblockNoticeClose");
+  if (!notice || !closeBtn) return;
+
+  // عنصر "طعم" بأسماء كلاسات شائعة تستهدفها قوائم فلترة مانعات الإعلانات —
+  // لو انحجب (ارتفاعه صار صفر) فهذا دليل إن مانع إعلانات نشط بالمتصفح
+  const bait = document.createElement("div");
+  bait.className = "adsbox ad-banner ad-placement adsbygoogle";
+  bait.style.cssText = "position:absolute; top:-9999px; inset-inline-start:-9999px; width:10px; height:10px;";
+  document.body.appendChild(bait);
+
+  setTimeout(() => {
+    const style = getComputedStyle(bait);
+    const blocked =
+      bait.offsetParent === null || bait.offsetHeight === 0 || style.display === "none" || style.visibility === "hidden";
+    bait.remove();
+    if (blocked) notice.classList.add("open");
+  }, 300);
+
+  closeBtn.addEventListener("click", () => {
+    localStorage.setItem(DISMISSED_KEY, "1");
+    notice.classList.remove("open");
+  });
+}
+
 /* ===== قائمة الجوال ===== */
 function initNavToggle() {
   const toggle = document.querySelector(".nav-toggle");
@@ -1188,6 +1222,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
   initSoundToggle();
   initCookieConsent();
+  initAdblockNotice();
   initNavToggle();
   initHeaderScroll();
   initAutoUpdateCheck();

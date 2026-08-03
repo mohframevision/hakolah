@@ -125,6 +125,11 @@
     <button type="button" class="btn cookie-accept" id="cookie-accept">موافق</button>
   </div>
 
+  <div class="adblock-notice" id="adblockNotice" role="region" aria-label="ملاحظة عن مانع الإعلانات">
+    <button type="button" class="adblock-notice-close" id="adblockNoticeClose" aria-label="إغلاق">✕</button>
+    <p>🙏 لاحظنا إنك تستخدم مانع إعلانات. الموقع مجاني بالكامل وبدون أي رسوم عليك، ودخل بسيط من الإعلانات يساعدنا نكمل ونطوّر الموقع. لو تقدر تعطّله لهذا الموقع تحديداً، نقدّر ذلك ❤️</p>
+  </div>
+
   <script>
     window.PUSH_CONFIG = { workerUrl: {{ push.workerUrl | json | safe }}, vapidPublicKey: {{ push.vapidPublicKey | json | safe }} };
   </script>
