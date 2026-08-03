@@ -998,8 +998,10 @@ img {
   margin-bottom: 10px;
 }
 
-/* ===== مكان الإعلانات ===== */
-.ad-slot {
+/* ===== مكان الترويج/الإعلانات — تعمّدت تجنّب كلمة "ad" بالاسم لأن مانعات
+   الإعلانات (uBlock, AdBlock) تخفي أي عنصر اسمه يحتوي "ad-slot" أو شبيهاته
+   تلقائياً عبر قوائم فلترة عامة، حتى لو المحتوى مو إعلان قوقل فعلياً ===== */
+.site-promo-slot {
   border: 1px dashed var(--color-border);
   border-radius: var(--radius);
   padding: 18px;
