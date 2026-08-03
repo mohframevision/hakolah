@@ -377,6 +377,79 @@ function isFavorite(section, id) {
   return Boolean(favs[section] && favs[section][id]);
 }
 
+/* ===== إعجاب عام من الزوار (منفصل عن "أعجبني" الخاصة بصاحب الموقع) —
+   عدّاد عام مشترك بين كل الزوار عبر Cloudflare Worker، والحماية من تكرار
+   الإعجاب من نفس المتصفح تصير محلياً بـ localStorage ===== */
+const LIKES_KEY = "site_liked_items_v1";
+let LIKE_COUNTS = {};
+
+function getLikedItems() {
+  try {
+    return JSON.parse(localStorage.getItem(LIKES_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLikedItems(liked) {
+  localStorage.setItem(LIKES_KEY, JSON.stringify(liked));
+}
+
+function isLikedByMe(section, id) {
+  return Boolean(getLikedItems()[`${section}:${id}`]);
+}
+
+async function fetchLikeCounts() {
+  const config = window.PUSH_CONFIG;
+  if (!config || !config.workerUrl) return;
+  try {
+    const res = await fetch(`${config.workerUrl}/likes`);
+    LIKE_COUNTS = await res.json();
+  } catch {
+    return;
+  }
+  document.querySelectorAll(".like-btn").forEach((btn) => {
+    const key = `${btn.dataset.section}:${btn.dataset.id}`;
+    const countEl = btn.querySelector(".like-count");
+    if (countEl && LIKE_COUNTS[key] != null) countEl.textContent = LIKE_COUNTS[key];
+  });
+}
+
+async function toggleLike(section, id, btn) {
+  const liked = getLikedItems();
+  const key = `${section}:${id}`;
+  const alreadyLiked = Boolean(liked[key]);
+  const countEl = btn.querySelector(".like-count");
+  const iconEl = btn.querySelector(".like-icon");
+  const currentCount = Number(countEl.textContent) || 0;
+  const optimisticCount = alreadyLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
+
+  countEl.textContent = optimisticCount;
+  iconEl.textContent = alreadyLiked ? "🤍" : "❤️";
+  btn.classList.toggle("active", !alreadyLiked);
+  if (alreadyLiked) delete liked[key];
+  else liked[key] = true;
+  saveLikedItems(liked);
+  playClickSound();
+
+  const config = window.PUSH_CONFIG;
+  if (!config || !config.workerUrl) return;
+  try {
+    const res = await fetch(`${config.workerUrl}${alreadyLiked ? "/unlike" : "/like"}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section, id }),
+    });
+    const data = await res.json();
+    if (typeof data.count === "number") {
+      LIKE_COUNTS[key] = data.count;
+      countEl.textContent = data.count;
+    }
+  } catch {
+    // نتجاهل فشل الشبكة بصمت — الحالة المحلية (optimistic) تبقى كما هي
+  }
+}
+
 function toggleFavorite(section, id) {
   const favs = getFavorites();
   if (!favs[section]) favs[section] = {};
@@ -474,6 +547,8 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
   card.style.animationDelay = `${Math.min(index, 10) * 45}ms`;
 
   const fav = isFavorite(section, item.id);
+  const liked = isLikedByMe(section, item.id);
+  const likeCount = LIKE_COUNTS[`${section}:${item.id}`] || 0;
   const desc = item.desc || "";
   const isLongDesc = desc.length > 100;
 
@@ -484,6 +559,9 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
       <div class="item-top">
         <span class="item-icon">${item.icon || "⭐"}</span>
         <div class="item-top-actions">
+          <button class="like-btn ${liked ? "active" : ""}" data-section="${section}" data-id="${item.id}" title="أعجبني" aria-label="أعجبني">
+            <span class="like-icon">${liked ? "❤️" : "🤍"}</span> <span class="like-count">${likeCount}</span>
+          </button>
           <button class="share-btn" title="مشاركة عبر واتساب" aria-label="مشاركة عبر واتساب">📤</button>
           <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}" aria-label="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
             ${fav ? "♥" : "♡"}
@@ -503,6 +581,11 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
       </div>
     </div>
   `;
+
+  const likeBtn = card.querySelector(".like-btn");
+  likeBtn.addEventListener("click", () => {
+    toggleLike(section, item.id, likeBtn);
+  });
 
   const favBtn = card.querySelector(".fav-btn");
   favBtn.addEventListener("click", () => {
@@ -1016,4 +1099,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initAutoUpdateCheck();
   initContactForm();
   trackVisit();
+  fetchLikeCounts();
 });

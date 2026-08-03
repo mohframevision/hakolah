@@ -18,6 +18,10 @@ function todayKey() {
   return `visits:day:${new Date().toISOString().slice(0, 10)}`;
 }
 
+function likeKey(section, id) {
+  return `likes:${section}:${id}`;
+}
+
 async function keyFor(endpoint) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(endpoint));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -72,6 +76,41 @@ export default {
         JSON.stringify({ total: Number(total) || 0, today: Number(today) || 0 }),
         { headers: { ...corsHeaders(), "Content-Type": "application/json" } }
       );
+    }
+
+    // إعجاب عام من الزوار (منفصل عن "أعجبني" الخاصة بصاحب الموقع) — عدّاد بسيط
+    // بدون تسجيل دخول، الحماية من التكرار تصير محلياً بالمتصفح (localStorage)
+    if (request.method === "POST" && url.pathname === "/like") {
+      const { section, id } = await request.json();
+      if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
+      const key = likeKey(section, id);
+      const count = (Number(await env.SUBSCRIPTIONS.get(key)) || 0) + 1;
+      await env.SUBSCRIPTIONS.put(key, String(count));
+      return new Response(JSON.stringify({ count }), {
+        headers: { ...corsHeaders(), "Content-Type": "application/json" },
+      });
+    }
+
+    if (request.method === "POST" && url.pathname === "/unlike") {
+      const { section, id } = await request.json();
+      if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
+      const key = likeKey(section, id);
+      const count = Math.max(0, (Number(await env.SUBSCRIPTIONS.get(key)) || 0) - 1);
+      await env.SUBSCRIPTIONS.put(key, String(count));
+      return new Response(JSON.stringify({ count }), {
+        headers: { ...corsHeaders(), "Content-Type": "application/json" },
+      });
+    }
+
+    if (request.method === "GET" && url.pathname === "/likes") {
+      const list = await env.SUBSCRIPTIONS.list({ prefix: "likes:" });
+      const counts = {};
+      for (const key of list.keys) {
+        counts[key.name.slice("likes:".length)] = Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
+      }
+      return new Response(JSON.stringify(counts), {
+        headers: { ...corsHeaders(), "Content-Type": "application/json" },
+      });
     }
 
     return new Response("Not found", { status: 404, headers: corsHeaders() });

@@ -825,6 +825,34 @@ img {
   gap: 2px;
 }
 
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  line-height: 1;
+  padding: 4px 6px;
+  font-family: inherit;
+  transition: transform 0.15s ease;
+}
+
+.like-btn .like-icon {
+  font-size: 1.05rem;
+}
+
+.like-btn:hover {
+  transform: scale(1.08);
+}
+
+.like-btn.active {
+  color: #ec4899;
+}
+
 .share-btn {
   background: none;
   border: none;
