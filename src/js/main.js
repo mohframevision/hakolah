@@ -1131,40 +1131,47 @@ async function initPushNotifications() {
   apply(Boolean(subscription));
 
   btn.addEventListener("click", async () => {
-    if (subscription) {
-      await fetch(`${config.workerUrl}/unsubscribe`, {
+    try {
+      if (subscription) {
+        await fetch(`${config.workerUrl}/unsubscribe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
+        });
+        await subscription.unsubscribe();
+        subscription = null;
+        apply(false);
+        showToast("تم إيقاف الإشعارات");
+        playClickSound();
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        showToast("لازم توافق على الإذن من إعدادات المتصفح");
+        return;
+      }
+
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(config.vapidPublicKey),
+      });
+
+      await fetch(`${config.workerUrl}/subscribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: subscription.endpoint }),
+        body: JSON.stringify(subscription),
       });
-      await subscription.unsubscribe();
-      subscription = null;
-      apply(false);
-      showToast("تم إيقاف الإشعارات");
+
+      apply(true);
+      showToast("تفعّلت الإشعارات — بنذكّرك بـ اختيار اليوم");
       playClickSound();
-      return;
+    } catch (err) {
+      // بدون هذا الـ catch، أي فشل هنا (زي رفض الاشتراك من المتصفح نفسه)
+      // كان يوقف التنفيذ بصمت والزر يضل بحالته القديمة بدون أي تفسير للزائر
+      console.error("push subscription failed:", err);
+      showToast("تعذّر تفعيل الإشعارات، جرّب مرة ثانية");
     }
-
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
-      showToast("لازم توافق على الإذن من إعدادات المتصفح");
-      return;
-    }
-
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(config.vapidPublicKey),
-    });
-
-    await fetch(`${config.workerUrl}/subscribe`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(subscription),
-    });
-
-    apply(true);
-    showToast("تفعّلت الإشعارات — بنذكّرك بـ اختيار اليوم");
-    playClickSound();
   });
 }
 
