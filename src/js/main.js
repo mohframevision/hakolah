@@ -409,10 +409,9 @@ function initSoundToggle() {
   function apply(enabled) {
     btn.classList.toggle("active", enabled);
     btn.textContent = enabled ? "🔊" : "🔇";
-    btn.setAttribute("aria-label", enabled ? "إيقاف المؤثرات الصوتية" : "تفعيل المؤثرات الصوتية");
-    btn.title = enabled
-      ? "المؤثرات الصوتية: مفعّلة — اضغط للإيقاف"
-      : "المؤثرات الصوتية: متوقفة — اضغط للتفعيل";
+    const label = enabled ? t("sound_on") : t("sound_off");
+    btn.setAttribute("aria-label", label);
+    btn.title = label;
   }
 
   apply(isSoundEnabled());
@@ -432,8 +431,6 @@ function initThemeToggle() {
 
   const KEY = "site_theme_pref";
   const ICONS = { auto: "🌓", light: "☀️", dark: "🌙" };
-  const SHORT_LABELS = { auto: "تلقائي", light: "نهاري", dark: "ليلي" };
-  const LABELS = { auto: "تلقائي (يتبع النظام)", light: "فاتح", dark: "داكن" };
   const NEXT = { auto: "light", light: "dark", dark: "auto" };
 
   function getPref() {
@@ -447,8 +444,8 @@ function initThemeToggle() {
     } else {
       document.documentElement.setAttribute("data-theme", pref);
     }
-    btn.textContent = `${ICONS[pref]} ${SHORT_LABELS[pref]}`;
-    btn.title = `المظهر الحالي: ${LABELS[pref]} — اضغط للتبديل`;
+    btn.textContent = `${ICONS[pref]} ${t(`theme_short_${pref}`)}`;
+    btn.title = `${t("theme_current_label")}: ${t(`theme_label_${pref}`)} — ${t("theme_click_to_toggle")}`;
   }
 
   apply(getPref());
@@ -615,7 +612,7 @@ function initNavToggle() {
     const isOpen = nav.classList.toggle("open");
     toggle.classList.toggle("open", isOpen);
     toggle.setAttribute("aria-expanded", String(isOpen));
-    toggle.setAttribute("aria-label", isOpen ? "إغلاق القائمة" : "فتح القائمة");
+    toggle.setAttribute("aria-label", isOpen ? t("nav_toggle_close") : t("nav_toggle_open"));
     playClickSound();
   });
 }
@@ -767,10 +764,10 @@ function toggleFavorite(section, id) {
 
 /* ===== أزرار الروابط (يدعم رابط واحد قديم item.url أو عدة روابط item.links) ===== */
 const LINK_META = {
-  website: { icon: "🌐", label: "زيارة" },
-  phone: { icon: "📞", label: "رقم الهاتف" },
-  maps: { icon: "📍", label: "الخريطة" },
-  instagram: { icon: "📷", label: "إنستقرام" },
+  website: { icon: "🌐", labelKey: "link_website" },
+  phone: { icon: "📞", labelKey: "link_phone" },
+  maps: { icon: "📍", labelKey: "link_maps" },
+  instagram: { icon: "📷", labelKey: "link_instagram" },
 };
 
 // ترتيب ثابت للأزرار بغض النظر عن ترتيب الحقول باللوحة — رابط الموقع (website)
@@ -789,7 +786,7 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 }
 
 function formatDistance(km) {
-  return km < 1 ? `${Math.round(km * 1000)} م` : `${km.toFixed(1)} كم`;
+  return km < 1 ? `${Math.round(km * 1000)} ${t("unit_meters")}` : `${km.toFixed(1)} ${t("unit_km")}`;
 }
 
 /* ===== مشاركة عبر واتساب ===== */
@@ -822,12 +819,13 @@ function buildActionsHtml(item) {
   return orderedKeys
     .map((key, i) => {
       const url = links[key];
-      const meta = LINK_META[key] || { icon: "🔗", label: "رابط" };
+      const meta = LINK_META[key] || { icon: "🔗", labelKey: "link_generic" };
+      const metaLabel = t(meta.labelKey);
       const cls = i === 0 ? "btn" : "btn secondary";
       if (key === "phone") {
-        return `<button type="button" class="${cls} phone-copy-btn" data-phone="${url}">${meta.icon} ${meta.label}</button>`;
+        return `<button type="button" class="${cls} phone-copy-btn" data-phone="${url}">${meta.icon} ${metaLabel}</button>`;
       }
-      const label = key === "website" && item.cta ? item.cta : meta.label;
+      const label = key === "website" && item.cta ? item.cta : metaLabel;
       return `<a class="${cls}" href="${url}" target="_blank" rel="noopener noreferrer">${meta.icon} ${label}</a>`;
     })
     .join("");
@@ -926,10 +924,10 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
       try {
         await navigator.clipboard.writeText(phone);
       } catch {
-        showToast("تعذّر نسخ الرقم، انسخه يدوياً: " + phone);
+        showToast(`${t("phone_copy_failed")} ${phone}`);
         return;
       }
-      showToast("تم نسخ رقم الهاتف");
+      showToast(t("phone_copied"));
       playClickSound();
     });
   }
@@ -1034,8 +1032,8 @@ function renderSection(section) {
       const toggleChip = document.createElement("button");
       toggleChip.className = "filter-chip filter-toggle";
       toggleChip.textContent = filtersExpanded
-        ? "عرض أقل ▲"
-        : `عرض المزيد (+${tagsList.length - FILTER_CHIP_LIMIT}) ▼`;
+        ? `${t("filters_show_less")} ▲`
+        : `${t("filters_show_more")} (+${tagsList.length - FILTER_CHIP_LIMIT}) ▼`;
       toggleChip.setAttribute("aria-expanded", String(filtersExpanded));
       toggleChip.addEventListener("click", () => {
         filtersExpanded = !filtersExpanded;
@@ -1210,7 +1208,7 @@ function renderFeaturedPick() {
     container.innerHTML = `
       <div class="empty-state">
         <span class="icon">🎯</span>
-        <p>ترقّبنا قريباً!</p>
+        <p>${t("stay_tuned")}</p>
       </div>
     `;
     return;
@@ -1221,7 +1219,7 @@ function renderFeaturedPick() {
 
   const wrapper = document.createElement("div");
   wrapper.className = "carousel-item";
-  wrapper.innerHTML = `<span class="carousel-label">🎯 اختيار اليوم</span><div class="featured-pick-frame"></div>`;
+  wrapper.innerHTML = `<span class="carousel-label">🎯 ${t("daily_pick_label")}</span><div class="featured-pick-frame"></div>`;
   wrapper.querySelector(".featured-pick-frame").appendChild(buildItemCard(section, item, 0));
   container.prepend(wrapper);
 }
@@ -1256,7 +1254,7 @@ async function renderTrendingSection() {
     if (!item) return;
     const wrapper = document.createElement("div");
     wrapper.className = "carousel-item";
-    wrapper.innerHTML = `<span class="carousel-label">🔥 الأكثر إعجاباً</span>`;
+    wrapper.innerHTML = `<span class="carousel-label">🔥 ${t("trending_label")}</span>`;
     wrapper.appendChild(buildItemCard(itemSection, item, index));
     container.appendChild(wrapper);
   });
@@ -1290,7 +1288,11 @@ function renderExploreProgress() {
 
   container.innerHTML = `
     <p class="explore-progress-text">
-      ${isComplete ? "🎉 استكشفت كل أقسام الموقع!" : `🧭 استكشفت ${count} من ${total} أقسام`}
+      ${
+        isComplete
+          ? t("explore_complete")
+          : `🧭 ${t("explore_progress_verb")} ${count} ${t("explore_progress_of")} ${total} ${t("explore_progress_sections")}`
+      }
     </p>
     <div class="explore-progress-bar"><div class="explore-progress-fill" style="width: ${percent}%"></div></div>
   `;
@@ -1316,9 +1318,9 @@ async function checkVisitSecretCode(value, searchInput, onReset) {
   try {
     const res = await fetch(`${config.workerUrl}/stats`);
     const data = await res.json();
-    showToast(`👀 زيارات اليوم: ${data.today} — الإجمالي: ${data.total}`);
+    showToast(`👀 ${t("stats_today_label")}: ${data.today} — ${t("stats_total_label")}: ${data.total}`);
   } catch {
-    showToast("تعذّر جلب الإحصائيات");
+    showToast(t("stats_fetch_failed"));
   }
 }
 
@@ -1344,7 +1346,7 @@ async function initPushNotifications() {
 
   function apply(subscribed) {
     btn.classList.toggle("active", subscribed);
-    btn.textContent = subscribed ? "🔔 الإشعارات مفعّلة" : "🔕 نبّهني كل يوم";
+    btn.textContent = subscribed ? t("push_enabled_label") : t("push_enable_cta");
   }
   apply(Boolean(subscription));
 
@@ -1359,14 +1361,14 @@ async function initPushNotifications() {
         await subscription.unsubscribe();
         subscription = null;
         apply(false);
-        showToast("تم إيقاف الإشعارات");
+        showToast(t("push_disabled"));
         playClickSound();
         return;
       }
 
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        showToast("لازم توافق على الإذن من إعدادات المتصفح");
+        showToast(t("push_permission_needed"));
         return;
       }
 
@@ -1382,13 +1384,13 @@ async function initPushNotifications() {
       });
 
       apply(true);
-      showToast("تفعّلت الإشعارات — بنذكّرك بـ اختيار اليوم");
+      showToast(t("push_enabled"));
       playClickSound();
     } catch (err) {
       // بدون هذا الـ catch، أي فشل هنا (زي رفض الاشتراك من المتصفح نفسه)
       // كان يوقف التنفيذ بصمت والزر يضل بحالته القديمة بدون أي تفسير للزائر
       console.error("push subscription failed:", err);
-      showToast("تعذّر تفعيل الإشعارات، جرّب مرة ثانية");
+      showToast(t("push_enable_failed"));
     }
   });
 }
