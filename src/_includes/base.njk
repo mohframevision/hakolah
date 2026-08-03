@@ -23,6 +23,12 @@
   {% if metaDescription %}<meta name="description" content="{{ metaDescription }}" />{% endif %}
   {% if noindex %}<meta name="robots" content="noindex, nofollow" />{% endif %}
   <link rel="canonical" href="{{ pageUrl }}" />
+  {% if langSwitchUrl %}
+  {% set altUrl = site.origin + (langSwitchUrl | url) %}
+  <link rel="alternate" hreflang="{{ lang }}" href="{{ pageUrl }}" />
+  <link rel="alternate" hreflang="{{ 'ar' if lang == 'en' else 'en' }}" href="{{ altUrl }}" />
+  <link rel="alternate" hreflang="x-default" href="{{ pageUrl if lang == 'ar' else altUrl }}" />
+  {% endif %}
   <meta name="theme-color" content="#2563eb" />
 
   <link rel="icon" type="image/svg+xml" href="{{ '/assets/favicon.svg' | url }}" />
@@ -34,7 +40,8 @@
 
   <meta property="og:type" content="{{ ogType }}" />
   <meta property="og:site_name" content="{{ site.name }}" />
-  <meta property="og:locale" content="{{ site.locale }}" />
+  <meta property="og:locale" content="{{ 'en_US' if lang == 'en' else site.locale }}" />
+  {% if langSwitchUrl %}<meta property="og:locale:alternate" content="{{ site.locale if lang == 'en' else 'en_US' }}" />{% endif %}
   <meta property="og:url" content="{{ pageUrl }}" />
   <meta property="og:title" content="{{ title }}" />
   {% if metaDescription %}<meta property="og:description" content="{{ metaDescription }}" />{% endif %}
@@ -73,7 +80,7 @@
         "@type": "WebSite",
         "name": {{ site.name | json | safe }},
         "url": {{ (site.origin + ('/index.html' | url)) | json | safe }},
-        "inLanguage": "ar"
+        "inLanguage": "{{ lang }}"
       },
       {
         "@type": "Organization",
