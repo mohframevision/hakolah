@@ -1200,6 +1200,55 @@ img {
   color: var(--color-text);
 }
 
+/* ===== تذكير "اختيار اليوم" — نفس تصميم ملاحظة مانع الإعلانات، بس بالزاوية
+   المقابلة عشان ما يتراكبان لو ظهرا مع بعض ===== */
+.daily-pick-reminder {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  inset-inline-end: 16px;
+  z-index: 60;
+  max-width: 260px;
+  padding: 14px;
+  padding-inline-start: 34px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.daily-pick-reminder.open {
+  display: block;
+}
+
+.daily-pick-reminder p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.daily-pick-reminder a {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.daily-pick-reminder-close {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 10px;
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 4px;
+}
+
+.daily-pick-reminder-close:hover {
+  color: var(--color-text);
+}
+
 /* ===== صفحة الإحصائيات ===== */
 .stats-embed {
   width: 100%;

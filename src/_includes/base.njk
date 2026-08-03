@@ -130,6 +130,11 @@
     <p>🙏 لاحظنا إنك تستخدم مانع إعلانات. الموقع مجاني بالكامل وبدون أي رسوم عليك، ودخل بسيط من الإعلانات يساعدنا نكمل ونطوّر الموقع. لو تقدر تعطّله لهذا الموقع تحديداً، نقدّر ذلك ❤️</p>
   </div>
 
+  <div class="daily-pick-reminder" id="dailyPickReminder" role="region" aria-label="تذكير باختيار اليوم">
+    <button type="button" class="daily-pick-reminder-close" id="dailyPickReminderClose" aria-label="إغلاق">✕</button>
+    <p>🎯 شفت <a href="{{ '/index.html' | url }}">اختيار اليوم</a> بعد؟</p>
+  </div>
+
   <script>
     window.PUSH_CONFIG = { workerUrl: {{ push.workerUrl | json | safe }}, vapidPublicKey: {{ push.vapidPublicKey | json | safe }} };
   </script>

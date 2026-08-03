@@ -397,6 +397,36 @@ function initAdblockNotice() {
   });
 }
 
+/* ===== تذكير "اختيار اليوم" (بديل خفيف عن الإشعارات لا يعتمد على أي خدمة
+   خارجية) — لو الزائر ما زار الصفحة الرئيسية اليوم بعد وهو يتصفح صفحة ثانية
+   بالموقع، يظهر له تذكير صغير وغير مزعج. مو إشعار حقيقي (ما يوصله وهو خارج
+   الموقع)، بس يكمّل أي قناة توصيل ثانية لاحقاً بدل ما يكون بديل عنها ===== */
+function initDailyPickReminder() {
+  const SEEN_KEY = "daily_pick_seen_date";
+  const DISMISSED_KEY = "daily_pick_reminder_dismissed";
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (document.getElementById("homeCarousel")) {
+    // إذا الزائر بالصفحة الرئيسية أصلاً، يعتبر اختيار اليوم "مشاهَد"
+    localStorage.setItem(SEEN_KEY, today);
+    return;
+  }
+
+  if (localStorage.getItem(SEEN_KEY) === today) return;
+  if (sessionStorage.getItem(DISMISSED_KEY)) return;
+
+  const banner = document.getElementById("dailyPickReminder");
+  const closeBtn = document.getElementById("dailyPickReminderClose");
+  if (!banner || !closeBtn) return;
+
+  banner.classList.add("open");
+
+  closeBtn.addEventListener("click", () => {
+    sessionStorage.setItem(DISMISSED_KEY, "1");
+    banner.classList.remove("open");
+  });
+}
+
 /* ===== قائمة الجوال ===== */
 function initNavToggle() {
   const toggle = document.querySelector(".nav-toggle");
@@ -1290,6 +1320,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSoundToggle();
   initCookieConsent();
   initAdblockNotice();
+  initDailyPickReminder();
   initNavToggle();
   initHeaderScroll();
   initAutoUpdateCheck();
