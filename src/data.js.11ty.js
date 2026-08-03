@@ -18,6 +18,8 @@ exports.render = function (data) {
         icon: entry.data.icon || "⭐",
         title: entry.data.title,
         desc: entry.data.desc || "",
+        title_en: entry.data.title_en || "",
+        desc_en: entry.data.desc_en || "",
         image: entry.data.image || null,
         featured: Boolean(entry.data.featured),
         verified: Boolean(entry.data.verified),

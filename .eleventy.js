@@ -54,6 +54,9 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/sw.js");
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
+  eleventyConfig.addFilter("replace", (str, search, replacement) =>
+    typeof str === "string" ? str.split(search).join(replacement) : str
+  );
 
   // أي رابط خارجي (http/https) داخل محتوى Markdown يفتح بتبويب جديد — حتى
   // يضل الزائر بموقعنا مفتوح بدل ما يختفي من شريط المتصفح (الروابط الداخلية

@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+{% set lang = lang or "ar" %}
+{% set t = i18n[lang] %}
+<html lang="{{ lang }}" dir="{{ 'ltr' if lang == 'en' else 'rtl' }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -85,22 +87,28 @@
 </head>
 <body>
 
-  <a href="#main-content" class="skip-link">تخطّي إلى المحتوى</a>
+  <a href="#main-content" class="skip-link">{{ t.skip_to_content }}</a>
 
   <header class="site-header">
     <div class="header-inner">
-      <a href="{{ '/index.html' | url }}" class="logo"><span class="dot">●</span><span class="logo-word">هكو<span class="logo-tail">له</span></span></a>
+      <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}" class="logo"><span class="dot">●</span><span class="logo-word">هكو<span class="logo-tail">له</span></span></a>
       <nav class="main-nav" id="main-nav">
-        <a href="{{ '/index.html' | url }}"{% if navActive == "home" %} class="active"{% endif %}>الرئيسية</a>
+        {% if lang == "en" %}
+        <a href="{{ '/en/index.html' | url }}"{% if navActive == "home" %} class="active"{% endif %}>{{ t.nav_home }}</a>
+        <a href="{{ '/en/bakeries.html' | url }}"{% if navActive == "bakeries" %} class="active"{% endif %}>Bakeries</a>
+        {% else %}
+        <a href="{{ '/index.html' | url }}"{% if navActive == "home" %} class="active"{% endif %}>{{ t.nav_home }}</a>
         {% for entry in sections %}
         <a href="{{ ('/' + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active"{% endif %}>{{ entry.navLabel }}</a>
         {% endfor %}
-        <a href="{{ '/favorites.html' | url }}"{% if navActive == "favorites" %} class="active"{% endif %}>المفضلة</a>
-        <a href="{{ '/picker.html' | url }}"{% if navActive == "picker" %} class="active"{% endif %}>🎲 اختار لي</a>
+        <a href="{{ '/favorites.html' | url }}"{% if navActive == "favorites" %} class="active"{% endif %}>{{ t.nav_favorites }}</a>
+        <a href="{{ '/picker.html' | url }}"{% if navActive == "picker" %} class="active"{% endif %}>{{ t.nav_picker }}</a>
+        {% endif %}
       </nav>
-      <button class="theme-toggle" aria-label="تبديل المظهر (فاتح/داكن/تلقائي)" title="تبديل المظهر"></button>
-      <button class="sound-toggle" aria-label="تفعيل المؤثرات الصوتية" title="المؤثرات الصوتية">🔇</button>
-      <button class="nav-toggle" aria-label="فتح القائمة" aria-expanded="false" aria-controls="main-nav">☰</button>
+      <a class="lang-switch" href="{{ (langSwitchUrl or ('/index.html' if lang == 'en' else '/en/index.html')) | url }}">{{ t.lang_switch }}</a>
+      <button class="theme-toggle" aria-label="{{ t.theme_toggle_aria }}" title="{{ t.theme_toggle }}"></button>
+      <button class="sound-toggle" aria-label="{{ t.sound_off }}" title="{{ t.sound_off }}">🔇</button>
+      <button class="nav-toggle" aria-label="{{ t.nav_toggle_open }}" aria-expanded="false" aria-controls="main-nav">☰</button>
     </div>
   </header>
 
@@ -110,33 +118,35 @@
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <span>© 2026 هكوله. جميع الحقوق محفوظة.</span>
+      <span>{{ t.footer_copyright }}</span>
       <div class="footer-links">
-        <a href="{{ '/about.html' | url }}">عن الموقع</a>
-        <a href="{{ '/contact.html' | url }}">تواصل معنا</a>
-        <a href="{{ '/privacy-policy.html' | url }}">سياسة الخصوصية</a>
-        <a href="{{ '/terms.html' | url }}">شروط الاستخدام</a>
+        <a href="{{ ('/en/about.html' if lang == 'en' else '/about.html') | url }}">{{ t.footer_about }}</a>
+        <a href="{{ ('/en/contact.html' if lang == 'en' else '/contact.html') | url }}">{{ t.footer_contact }}</a>
+        <a href="{{ ('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url }}">{{ t.footer_privacy }}</a>
+        <a href="{{ ('/en/terms.html' if lang == 'en' else '/terms.html') | url }}">{{ t.footer_terms }}</a>
       </div>
     </div>
   </footer>
 
-  <div class="cookie-banner" id="cookie-banner" role="region" aria-label="إشعار ملفات تعريف الارتباط">
-    <p>نستخدم ملفات تعريف الارتباط (Cookies) لحفظ تفضيلاتك (كالمظهر والمفضلة) ولعرض إعلانات Google. بمتابعة تصفح الموقع فأنت توافق على <a href="{{ '/privacy-policy.html' | url }}">سياسة الخصوصية</a>.</p>
-    <button type="button" class="btn cookie-accept" id="cookie-accept">موافق</button>
+  <div class="cookie-banner" id="cookie-banner" role="region" aria-label="{{ t.cookie_accept }}">
+    <p>{{ t.cookie_text_html | replace("{privacyUrl}", (('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url)) | safe }}</p>
+    <button type="button" class="btn cookie-accept" id="cookie-accept">{{ t.cookie_accept }}</button>
   </div>
 
-  <div class="adblock-notice" id="adblockNotice" role="region" aria-label="ملاحظة عن مانع الإعلانات">
-    <button type="button" class="adblock-notice-close" id="adblockNoticeClose" aria-label="إغلاق">✕</button>
-    <p>🙏 لاحظنا إنك تستخدم مانع إعلانات. الموقع مجاني بالكامل وبدون أي رسوم عليك، ودخل بسيط من الإعلانات يساعدنا نكمل ونطوّر الموقع. لو تقدر تعطّله لهذا الموقع تحديداً، نقدّر ذلك ❤️</p>
+  <div class="adblock-notice" id="adblockNotice" role="region" aria-label="{{ t.adblock_close }}">
+    <button type="button" class="adblock-notice-close" id="adblockNoticeClose" aria-label="{{ t.adblock_close }}">✕</button>
+    <p>{{ t.adblock_text }}</p>
   </div>
 
-  <div class="daily-pick-reminder" id="dailyPickReminder" role="region" aria-label="تذكير باختيار اليوم">
-    <button type="button" class="daily-pick-reminder-close" id="dailyPickReminderClose" aria-label="إغلاق">✕</button>
-    <p>🎯 شفت <a href="{{ '/index.html' | url }}">اختيار اليوم</a> بعد؟</p>
+  <div class="daily-pick-reminder" id="dailyPickReminder" role="region" aria-label="{{ t.daily_pick_close }}">
+    <button type="button" class="daily-pick-reminder-close" id="dailyPickReminderClose" aria-label="{{ t.daily_pick_close }}">✕</button>
+    <p>{{ t.daily_pick_text_html | replace("{homeUrl}", (('/en/index.html' if lang == 'en' else '/index.html') | url)) | safe }}</p>
   </div>
 
   <script>
     window.PUSH_CONFIG = { workerUrl: {{ push.workerUrl | json | safe }}, vapidPublicKey: {{ push.vapidPublicKey | json | safe }} };
+    window.SITE_LANG = {{ lang | json | safe }};
+    window.I18N = {{ i18n | json | safe }};
   </script>
   <script src="{{ '/js/data.js' | url }}?v={{ buildVersion }}"></script>
   <script src="{{ '/js/main.js' | url }}?v={{ buildVersion }}"></script>

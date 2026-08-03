@@ -1,3 +1,36 @@
+/* ===== دعم اللغتين (عربي/إنجليزي) — window.SITE_LANG وwindow.I18N يُضبطان من
+   base.njk. t() يرجع نص الواجهة المناسب، itemTitle/itemDesc يرجعان الترجمة
+   الإنجليزية للعنصر لو متوفرة، وإلا يرجعان النص العربي (تدهور تدريجي — عنصر
+   ما تُرجم بعد يبقى يظهر بالعربي حتى بصفحة إنجليزية، بدل ما يختفي) ===== */
+function t(key) {
+  const lang = window.SITE_LANG || "ar";
+  return (window.I18N && window.I18N[lang] && window.I18N[lang][key]) || key;
+}
+
+function itemTitle(item) {
+  return window.SITE_LANG === "en" && item.title_en ? item.title_en : item.title;
+}
+
+function itemDesc(item) {
+  return window.SITE_LANG === "en" && item.desc_en ? item.desc_en : item.desc || "";
+}
+
+// ترجمة مؤقتة لأسماء تصنيفات قسم "مخابز" فقط — أول قسم فيه نسخة إنجليزية
+// تجريبية. لو توسّعت النسخة الإنجليزية لأقسام ثانية لاحقاً، الحل الصحيح
+// طويل المدى إضافة حقل ترجمة لكل تصنيف بلوحة التحكم بدل هذا القاموس الثابت
+const TAG_TRANSLATIONS_EN = {
+  "عالي": "A'ali",
+  "جدحفص": "Jidhafs",
+  "البديع": "Al Budaiya",
+  "المنطقة الدبلوماسية": "Diplomatic Area",
+  "أبو قوة": "Abu Quwah",
+};
+
+function tagLabel(tag) {
+  if (window.SITE_LANG === "en") return TAG_TRANSLATIONS_EN[tag] || tag;
+  return tag;
+}
+
 /* ===== بحث ذكي متسامح مع الأخطاء الإملائية ===== */
 function levenshtein(a, b) {
   const m = a.length;
@@ -688,37 +721,38 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
   const fav = isFavorite(section, item.id);
   const liked = isLikedByMe(section, item.id);
   const likeCount = LIKE_COUNTS[`${section}:${item.id}`] || 0;
-  const desc = item.desc || "";
+  const title = itemTitle(item);
+  const desc = itemDesc(item);
   const isLongDesc = desc.length > 100;
 
   card.innerHTML = `
-    ${item.image ? `<img class="item-photo" src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" />` : ""}
-    ${item.featured ? `<span class="featured-badge">⭐ مميز</span>` : ""}
+    ${item.image ? `<img class="item-photo" src="${item.image}" alt="${title}" loading="lazy" decoding="async" />` : ""}
+    ${item.featured ? `<span class="featured-badge">${t("featured_badge")}</span>` : ""}
     <div class="item-body">
       <div class="item-top">
         <span class="item-icon">${item.icon || "⭐"}</span>
         <div class="item-top-actions">
-          <button class="like-btn ${liked ? "active" : ""}" data-section="${section}" data-id="${item.id}" title="أعجبني" aria-label="أعجبني">
+          <button class="like-btn ${liked ? "active" : ""}" data-section="${section}" data-id="${item.id}" title="${t("like_action")}" aria-label="${t("like_action")}">
             <span class="like-icon">${liked ? "♥" : "♡"}</span> <span class="like-count">${likeCount}</span>
           </button>
-          <button class="share-btn" title="مشاركة عبر واتساب" aria-label="مشاركة عبر واتساب">📤</button>
-          <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}" aria-label="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
+          <button class="share-btn" title="${t("share_whatsapp")}" aria-label="${t("share_whatsapp")}">📤</button>
+          <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? t("fav_remove") : t("fav_add")}" aria-label="${fav ? t("fav_remove") : t("fav_add")}">
             ${fav ? "♥" : "♡"}
           </button>
         </div>
       </div>
-      <h3>${item.title}${item.verified ? ` <span class="verified-badge" title="صاحب الموقع زار هذا المكان شخصياً">✅ زُرته شخصياً</span>` : ""}${item.liked ? ` <span class="liked-badge" title="توصية شخصية من صاحب الموقع">👍 أعجبني</span>` : ""}</h3>
+      <h3>${title}${item.verified ? ` <span class="verified-badge" title="${t("verified_badge")}">${t("verified_badge")}</span>` : ""}${item.liked ? ` <span class="liked-badge" title="${t("liked_badge")}">${t("liked_badge")}</span>` : ""}</h3>
       <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
-      ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">اقرأ المزيد</button>` : ""}
+      ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">${t("read_more")}</button>` : ""}
       <div class="item-meta">
-        ${item.isNew ? `<span class="tag new-tag">🆕 مضاف مؤخراً</span>` : ""}
+        ${item.isNew ? `<span class="tag new-tag">${t("new_badge")}</span>` : ""}
         ${distanceKm !== null ? `<span class="tag distance-tag">📍 ${formatDistance(distanceKm)}</span>` : ""}
-        ${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}
+        ${(item.tags || []).map((tag) => `<span class="tag">${tagLabel(tag)}</span>`).join("")}
       </div>
       <div class="item-actions">
         ${buildActionsHtml(item)}
       </div>
-      <a class="report-link" href="contact.html?report=${encodeURIComponent(item.title)}&section=${encodeURIComponent(section)}">🚩 إبلاغ عن معلومة خاطئة</a>
+      <a class="report-link" href="${window.SITE_LANG === "en" ? "../contact.html" : "contact.html"}?report=${encodeURIComponent(title)}&section=${encodeURIComponent(section)}">🚩 ${t("report_wrong_info")}</a>
     </div>
   `;
 
@@ -768,7 +802,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
     const descEl = card.querySelector(".item-desc");
     descToggle.addEventListener("click", () => {
       const expanded = descEl.classList.toggle("clamped") === false;
-      descToggle.textContent = expanded ? "اقرأ أقل" : "اقرأ المزيد";
+      descToggle.textContent = expanded ? t("read_less") : t("read_more");
       descToggle.setAttribute("aria-expanded", String(expanded));
       if (expanded) {
         card.classList.add("just-expanded");
@@ -829,7 +863,8 @@ function renderSection(section) {
     filtersWrap.innerHTML = "";
     const allChip = document.createElement("button");
     allChip.className = "filter-chip active";
-    allChip.textContent = "الكل";
+    allChip.textContent = t("all_filter");
+    allChip.dataset.tag = "all";
     allChip.setAttribute("aria-pressed", "true");
     allChip.addEventListener("click", () => {
       activeTag = "all";
@@ -846,7 +881,8 @@ function renderSection(section) {
     visibleTags.forEach((tag) => {
       const chip = document.createElement("button");
       chip.className = "filter-chip";
-      chip.textContent = tag;
+      chip.textContent = tagLabel(tag);
+      chip.dataset.tag = tag;
       chip.setAttribute("aria-pressed", "false");
       chip.addEventListener("click", () => {
         activeTag = tag;
@@ -877,8 +913,7 @@ function renderSection(section) {
   function updateActiveChip() {
     if (!filtersWrap) return;
     [...filtersWrap.children].forEach((chip) => {
-      const isAll = chip.textContent === "الكل";
-      const isActive = isAll ? activeTag === "all" : chip.textContent === activeTag;
+      const isActive = chip.dataset.tag === activeTag;
       chip.classList.toggle("active", isActive);
       chip.setAttribute("aria-pressed", String(isActive));
     });
@@ -919,13 +954,13 @@ function renderSection(section) {
         ? `
         <div class="empty-state" style="grid-column: 1/-1;">
           <span class="icon">🧭</span>
-          <p>ما فيه عناصر بهذا القسم بعد — ترقّبنا قريباً!</p>
+          <p>${t("empty_section")}</p>
         </div>
       `
         : `
         <div class="empty-state" style="grid-column: 1/-1;">
           <span class="icon">🔍</span>
-          <p>لا توجد نتائج مطابقة لبحثك.</p>
+          <p>${t("empty_search")}</p>
         </div>
       `;
       return;
@@ -945,29 +980,29 @@ function renderSection(section) {
         sortByDistance = false;
         nearMeBtn.classList.remove("active");
         nearMeBtn.setAttribute("aria-pressed", "false");
-        nearMeBtn.textContent = "📍 الأقرب مني";
+        nearMeBtn.textContent = t("near_me");
         renderGrid();
         playClickSound();
         return;
       }
       if (!navigator.geolocation) {
-        showToast("متصفحك ما يدعم تحديد الموقع");
+        showToast(t("geolocation_unsupported"));
         return;
       }
-      nearMeBtn.textContent = "⏳ جاري تحديد موقعك…";
+      nearMeBtn.textContent = t("near_me_locating");
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           sortByDistance = true;
           nearMeBtn.classList.add("active");
           nearMeBtn.setAttribute("aria-pressed", "true");
-          nearMeBtn.textContent = "📍 الأقرب مني ✕";
+          nearMeBtn.textContent = t("near_me_active");
           renderGrid();
           playClickSound();
         },
         () => {
-          showToast("تعذّر الوصول لموقعك — تأكد من تفعيل صلاحية الموقع بالمتصفح");
-          nearMeBtn.textContent = "📍 الأقرب مني";
+          showToast(t("geolocation_denied"));
+          nearMeBtn.textContent = t("near_me");
         },
         { enableHighAccuracy: false, timeout: 10000 }
       );

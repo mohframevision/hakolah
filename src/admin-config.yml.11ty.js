@@ -21,6 +21,18 @@ function itemFields(entry) {
       widget: "text",
     },
     {
+      label: "Name in English (اختياري — للنسخة الإنجليزية من الموقع)",
+      name: "title_en",
+      widget: "string",
+      required: false,
+    },
+    {
+      label: "Description in English (اختياري — للنسخة الإنجليزية من الموقع)",
+      name: "desc_en",
+      widget: "text",
+      required: false,
+    },
+    {
       label: "صورة (اختياري — لو ضفتها بتظهر بدل الأيقونة بكرت العنصر وبأعلى المقال)",
       name: "image",
       widget: "image",
