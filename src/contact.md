@@ -4,6 +4,7 @@ permalink: "contact.html"
 title: "تواصل معنا | هكوله"
 description: "تواصل معنا لطلب إضافة مطعم أو متجر أو أداة، أو لأي استفسار عن موقع هكوله."
 navActive: "contact"
+langSwitchUrl: "/en/contact.html"
 ---
 <article class="prose">
 

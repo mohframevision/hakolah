@@ -3,6 +3,7 @@ title: سياسة الخصوصية | هكوله
 layout: base.njk
 permalink: privacy-policy.html
 description: سياسة الخصوصية الخاصة بموقع هكوله وكيفية التعامل مع بياناتك وملفات تعريف الارتباط.
+langSwitchUrl: "/en/privacy-policy.html"
 ---
 
 <article class="prose">

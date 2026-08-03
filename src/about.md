@@ -3,6 +3,7 @@ title: عن الموقع | هكوله
 layout: base.njk
 permalink: about.html
 description: تعرّف على موقع هكوله وهدفه من جمع الروابط والأدوات والمطاعم والمتاجر والأماكن المميزة في مكان واحد.
+langSwitchUrl: "/en/about.html"
 ---
 
 <article class="prose">

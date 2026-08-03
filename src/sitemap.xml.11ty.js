@@ -23,20 +23,18 @@ exports.render = function (data) {
     ["", "en/index.html"],
     ["favorites.html", "en/favorites.html"],
     ["picker.html", "en/picker.html"],
+    ["about.html", "en/about.html"],
+    ["contact.html", "en/contact.html"],
+    ["privacy-policy.html", "en/privacy-policy.html"],
+    ["terms.html", "en/terms.html"],
     ...EN_SECTION_SLUGS.map((slug) => [`${slug}.html`, `en/${slug}.html`]),
     ...detailPagePairs,
   ];
 
-  const arabicOnlyPages = [
-    "about.html",
-    "contact.html",
-    "privacy-policy.html",
-    "terms.html",
-    ...data.sections
-      .map((s) => s.slug)
-      .filter((slug) => !EN_SECTION_SLUGS.includes(slug))
-      .map((slug) => `${slug}.html`),
-  ];
+  const arabicOnlyPages = data.sections
+    .map((s) => s.slug)
+    .filter((slug) => !EN_SECTION_SLUGS.includes(slug))
+    .map((slug) => `${slug}.html`);
 
   const bilingualItems = bilingualPairs.map(([ar, en]) => {
     const arUrl = `${SITE_URL}/${ar}`;

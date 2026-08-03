@@ -3,6 +3,7 @@ title: شروط الاستخدام | هكوله
 layout: base.njk
 permalink: terms.html
 description: شروط استخدام موقع هكوله — طبيعة الخدمة، حدود المسؤولية، وحقوق المحتوى.
+langSwitchUrl: "/en/terms.html"
 ---
 
 <article class="prose">

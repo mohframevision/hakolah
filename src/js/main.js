@@ -280,10 +280,11 @@ function initContactForm() {
   if (reportItem) {
     const typeSelect = form.querySelector('[name="request_type"]');
     const messageField = form.querySelector('[name="message"]');
-    if (typeSelect) typeSelect.value = "إبلاغ عن معلومة خاطئة";
+    if (typeSelect) typeSelect.value = t("contact_report_option");
     if (messageField) {
       const section = params.get("section") || "";
-      messageField.value = `بخصوص: ${reportItem}${section ? ` (قسم: ${section})` : ""}\n\nالمعلومة الخاطئة: `;
+      const sectionSuffix = section ? ` (${t("contact_report_section_label")}: ${section})` : "";
+      messageField.value = `${t("contact_report_regarding")}: ${reportItem}${sectionSuffix}\n\n${t("contact_report_wrong_info_label")}: `;
       messageField.focus();
     }
   }
@@ -308,17 +309,17 @@ function initContactForm() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (name && name.value.trim().length < 2) {
-      showMessage("error", "❌ يرجى إدخال اسم صحيح (على الأقل حرفين).");
+      showMessage("error", t("contact_err_name"));
       name.focus();
       return false;
     }
     if (email && !emailRegex.test(email.value.trim())) {
-      showMessage("error", "❌ يرجى إدخال بريد إلكتروني صحيح.");
+      showMessage("error", t("contact_err_email"));
       email.focus();
       return false;
     }
     if (message && message.value.trim().length < 5) {
-      showMessage("error", "❌ يرجى كتابة رسالة أطول.");
+      showMessage("error", t("contact_err_message"));
       message.focus();
       return false;
     }
@@ -342,16 +343,13 @@ function initContactForm() {
       const result = await res.json();
 
       if (result.success) {
-        showMessage("success", "✅ تم إرسال رسالتك بنجاح! بنرد عليك بأقرب وقت ممكن.");
+        showMessage("success", t("contact_success"));
         form.reset();
       } else {
-        showMessage(
-          "error",
-          "❌ عذراً، صار خطأ أثناء الإرسال. حاول مرة ثانية أو راسلنا مباشرة بالإيميل."
-        );
+        showMessage("error", t("contact_err_submit"));
       }
     } catch {
-      showMessage("error", "❌ عذراً، صار خطأ بالاتصال. تأكد من الإنترنت وحاول مرة ثانية.");
+      showMessage("error", t("contact_err_network"));
     } finally {
       if (submitBtn) submitBtn.disabled = false;
       if (btnText) btnText.style.display = "inline";
@@ -796,6 +794,7 @@ function formatDistance(km) {
 
 /* ===== مشاركة عبر واتساب ===== */
 const SITE_ORIGIN = "https://mohframevision.github.io/hakolah/";
+const SITE_ROOT_PATH = "/hakolah/";
 
 function buildShareUrl(section, item) {
   const isEn = window.SITE_LANG === "en";
@@ -890,7 +889,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
       <div class="item-actions">
         ${buildActionsHtml(item)}
       </div>
-      <a class="report-link" href="${window.SITE_LANG === "en" ? "../contact.html" : "contact.html"}?report=${encodeURIComponent(title)}&section=${encodeURIComponent(section)}">🚩 ${t("report_wrong_info")}</a>
+      <a class="report-link" href="${SITE_ROOT_PATH}${window.SITE_LANG === "en" ? "en/" : ""}contact.html?report=${encodeURIComponent(title)}&section=${encodeURIComponent(section)}">🚩 ${t("report_wrong_info")}</a>
     </div>
   `;
 
