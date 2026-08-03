@@ -142,6 +142,12 @@ const TAG_TRANSLATIONS_EN = {
   "تقنية وبرمجيات": "Tech & Software",
   "تصميم ومونتاج": "Design & Editing",
   "تسويق وأعمال": "Marketing & Business",
+  // تصنيفات مخصّصة (categoriesCustom) — تُكتب يدوياً بلوحة التحكم بدل الاختيار
+  // من القائمة الجاهزة، فلازم تنضاف هنا يدوياً كل ما يُكتب تصنيف مخصّص جديد
+  // (scripts/check-i18n-parity.js يكشف أي تصنيف مستخدم وغير مترجم هنا)
+  "مأكولات عالمية": "International Cuisine",
+  "بروستد": "Broasted Chicken",
+  "ممشى": "Walkway",
 };
 
 function tagLabel(tag) {
@@ -149,19 +155,13 @@ function tagLabel(tag) {
   return tag;
 }
 
-const SECTION_NAMES_EN = {
-  "links-tools": "Links & Tools",
-  restaurants: "Restaurants",
-  stores: "Stores",
-  cafes: "Cafes",
-  bakeries: "Bakeries",
-  places: "Places",
-  guides: "Guides",
-};
-
+// اسم القسم بلغة الصفحة الحالية — يقرأ title_en المولّد ببناء data.js من
+// sections/*.md مباشرة (مو قاموس ثابت هنا)، فقسم جديد يُضاف من لوحة التحكم
+// يظهر باسمه الإنجليزي تلقائياً بدون تعديل هذا الملف
 function sectionLabel(section) {
-  if (window.SITE_LANG === "en") return SECTION_NAMES_EN[section] || SITE_DATA[section].title;
-  return SITE_DATA[section].title;
+  const meta = SITE_DATA[section];
+  if (!meta) return section;
+  return window.SITE_LANG === "en" ? meta.title_en || meta.title : meta.title;
 }
 
 /* ===== بحث ذكي متسامح مع الأخطاء الإملائية ===== */
@@ -825,7 +825,8 @@ function buildActionsHtml(item) {
       if (key === "phone") {
         return `<button type="button" class="${cls} phone-copy-btn" data-phone="${url}">${meta.icon} ${metaLabel}</button>`;
       }
-      const label = key === "website" && item.cta ? item.cta : metaLabel;
+      const cta = window.SITE_LANG === "en" ? item.cta_en || item.cta : item.cta;
+      const label = key === "website" && cta ? cta : metaLabel;
       return `<a class="${cls}" href="${url}" target="_blank" rel="noopener noreferrer">${meta.icon} ${label}</a>`;
     })
     .join("");

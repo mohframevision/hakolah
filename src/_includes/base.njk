@@ -102,13 +102,9 @@
       <nav class="main-nav" id="main-nav">
         {% if lang == "en" %}
         <a href="{{ '/en/index.html' | url }}"{% if navActive == "home" %} class="active"{% endif %}>{{ t.nav_home }}</a>
-        <a href="{{ '/en/links-tools.html' | url }}"{% if navActive == "links-tools" %} class="active"{% endif %}>Links &amp; Tools</a>
-        <a href="{{ '/en/restaurants.html' | url }}"{% if navActive == "restaurants" %} class="active"{% endif %}>Restaurants</a>
-        <a href="{{ '/en/stores.html' | url }}"{% if navActive == "stores" %} class="active"{% endif %}>Stores</a>
-        <a href="{{ '/en/cafes.html' | url }}"{% if navActive == "cafes" %} class="active"{% endif %}>Cafes</a>
-        <a href="{{ '/en/bakeries.html' | url }}"{% if navActive == "bakeries" %} class="active"{% endif %}>Bakeries</a>
-        <a href="{{ '/en/places.html' | url }}"{% if navActive == "places" %} class="active"{% endif %}>Places</a>
-        <a href="{{ '/en/guides.html' | url }}"{% if navActive == "guides" %} class="active"{% endif %}>Guides & Articles</a>
+        {% for entry in sections %}
+        <a href="{{ ('/en/' + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active"{% endif %}>{{ entry.navLabel_en }}</a>
+        {% endfor %}
         <a href="{{ '/en/favorites.html' | url }}"{% if navActive == "favorites" %} class="active"{% endif %}>{{ t.nav_favorites }}</a>
         <a href="{{ '/en/picker.html' | url }}"{% if navActive == "picker" %} class="active"{% endif %}>{{ t.nav_picker }}</a>
         {% else %}

@@ -4,24 +4,25 @@ pagination:
   size: 1
   alias: "sectionEntry"
 layout: "base.njk"
+lang: "en"
 eleventyComputed:
-  permalink: "{{ sectionEntry.slug }}.html"
-  title: "{{ sectionEntry.title }} | هكوله"
-  description: "{{ sectionEntry.description }}"
+  permalink: "en/{{ sectionEntry.slug }}.html"
+  title: "{{ sectionEntry.title_en }} | Hakolah"
+  description: "{{ sectionEntry.description_en }}"
   navActive: "{{ sectionEntry.slug }}"
   section: "{{ sectionEntry.slug }}"
-  langSwitchUrl: "/en/{{ sectionEntry.slug }}.html"
+  langSwitchUrl: "/{{ sectionEntry.slug }}.html"
 ---
 {# قوالب المحتوى تُعرض قبل القالب الأب (base.njk)، فمتغيّر t المعرّف هناك مو
    متاح هنا — لازم كل قالب يحتاج t يعرّفه بنفسه #}
 {% set t = i18n[lang or "ar"] %}
-<div class="breadcrumb"><a href="{{ '/index.html' | url }}">{{ t.nav_home }}</a> / {{ sectionEntry.title }}</div>
+<div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> / {{ sectionEntry.title_en }}</div>
 <section class="page-header">
-  <h1>{{ sectionEntry.icon }} {{ sectionEntry.title }}</h1>
-  <p>{{ sectionEntry.description }}</p>
+  <h1>{{ sectionEntry.icon }} {{ sectionEntry.title_en }}</h1>
+  <p>{{ sectionEntry.description_en }}</p>
 </section>
 
-<input type="text" class="search-box" placeholder="{{ sectionEntry.searchPlaceholder }}" aria-label="البحث في {{ sectionEntry.title }}" />
+<input type="text" class="search-box" placeholder="{{ sectionEntry.searchPlaceholder_en }}" aria-label="Search {{ sectionEntry.title_en }}" />
 <button type="button" class="near-me-btn" aria-pressed="false">{{ t.near_me }}</button>
 <div class="filters"></div>
 

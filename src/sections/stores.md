@@ -4,6 +4,10 @@ title: متاجر
 navLabel: متاجر
 icon: 🛍️
 description: متاجر مختارة تغطي الملابس والإلكترونيات والمنزل وغيرها.
+title_en: "Stores"
+navLabel_en: "Stores"
+description_en: "Selected stores covering clothing, electronics, home, and more."
+searchPlaceholder_en: "Search for a store… (e.g. clothing, electronics, kids)"
 searchPlaceholder: 'ابحث عن متجر… (مثال: ملابس، إلكترونيات، أطفال)'
 order: 4
 iconOptions:

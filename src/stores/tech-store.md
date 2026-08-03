@@ -8,6 +8,7 @@ categories:
   - إلكترونيات
 featured: true
 cta: تسوق الآن 🛒
+cta_en: Shop now 🛒
 links:
   website: https://cazasouq.idevaffiliate.com/692.html
   maps: https://maps.app.goo.gl/854kR4X4eXbb2hyq5

@@ -123,6 +123,12 @@ function itemFields(entry) {
         required: false,
       },
       {
+        label: "Website button text in English (اختياري — للنسخة الإنجليزية، مثال: Order now)",
+        name: "cta_en",
+        widget: "string",
+        required: false,
+      },
+      {
         label: "الروابط",
         name: "links",
         widget: "object",
@@ -183,6 +189,30 @@ exports.render = function (data) {
         name: "searchPlaceholder",
         widget: "string",
         default: "ابحث…",
+      },
+      {
+        label: "Section name in English (اختياري — للنسخة الإنجليزية من الموقع)",
+        name: "title_en",
+        widget: "string",
+        required: false,
+      },
+      {
+        label: "Short nav label in English (اختياري — للقائمة العلوية بالنسخة الإنجليزية)",
+        name: "navLabel_en",
+        widget: "string",
+        required: false,
+      },
+      {
+        label: "Section description in English (اختياري — للنسخة الإنجليزية من الموقع)",
+        name: "description_en",
+        widget: "text",
+        required: false,
+      },
+      {
+        label: "Search box placeholder in English (اختياري — للنسخة الإنجليزية من الموقع)",
+        name: "searchPlaceholder_en",
+        widget: "string",
+        required: false,
       },
       {
         label: "ترتيب الظهور (رقم أصغر = أسبق)",

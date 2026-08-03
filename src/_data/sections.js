@@ -26,6 +26,13 @@ module.exports = () => {
       description: data.description || "",
       searchPlaceholder: data.searchPlaceholder || "ابحث…",
       navLabel: data.navLabel || data.title || slug,
+      // نصوص القسم بالإنجليزية — تتدهور تدريجياً للعربي لو ما تُرجم القسم بعد
+      // (نفس مبدأ title_en/desc_en بالعناصر)، فقسم جديد يُضاف من اللوحة بدون
+      // ترجمة يظهر بالنسخة الإنجليزية بعنوانه العربي بدل ما يختفي أو يكسر البناء
+      title_en: data.title_en || data.title || slug,
+      description_en: data.description_en || data.description || "",
+      searchPlaceholder_en: data.searchPlaceholder_en || data.searchPlaceholder || "Search…",
+      navLabel_en: data.navLabel_en || data.navLabel || data.title || slug,
       order: typeof data.order === "number" ? data.order : 999,
       hasDetailPages: Boolean(data.hasDetailPages),
       iconOptions:

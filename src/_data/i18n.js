@@ -94,6 +94,15 @@ module.exports = {
     push_enable_failed: "تعذّر تفعيل الإشعارات، جرّب مرة ثانية",
     unit_meters: "م",
     unit_km: "كم",
+    promo_ad_label: "إعلان",
+    promo_cazasouq_title: "كازاسوق",
+    promo_cazasouq_desc:
+      "أجهزة ألعاب، ملحقات كمبيوتر، ومعدات جيمنج بالبحرين — توصيل لجميع المناطق.",
+    promo_shop_now: "تسوق الآن",
+    promo_devo_headphones: "سماعة ديفو",
+    promo_gaming_tables: "طاولات قيمنق",
+    home_favorites_title: "المفضلة",
+    home_favorites_desc: "كل ما حفظته من الأقسام المختلفة في مكان واحد.",
   },
   en: {
     skip_to_content: "Skip to content",
@@ -187,5 +196,14 @@ module.exports = {
     push_enable_failed: "Couldn't enable notifications, try again",
     unit_meters: "m",
     unit_km: "km",
+    promo_ad_label: "Ad",
+    promo_cazasouq_title: "Cazasouq",
+    promo_cazasouq_desc:
+      "Gaming consoles, computer accessories, and gaming gear in Bahrain — delivery to all areas.",
+    promo_shop_now: "Shop now",
+    promo_devo_headphones: "Devo headphones",
+    promo_gaming_tables: "Gaming tables",
+    home_favorites_title: "Favorites",
+    home_favorites_desc: "Everything you've saved from the different sections, in one place.",
   },
 };

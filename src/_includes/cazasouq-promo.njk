@@ -1,15 +1,17 @@
+{% set lang = lang or "ar" %}
+{% set t = i18n[lang] %}
 <div class="site-promo-slot cazasouq-promo">
-  <span class="cazasouq-promo-label">إعلان</span>
+  <span class="cazasouq-promo-label">{{ t.promo_ad_label }}</span>
   <div class="cazasouq-promo-body">
     <span class="cazasouq-promo-icon">🎮</span>
     <div class="cazasouq-promo-text">
-      <h3>كازاسوق</h3>
-      <p>أجهزة ألعاب، ملحقات كمبيوتر، ومعدات جيمنج بالبحرين — توصيل لجميع المناطق.</p>
+      <h3>{{ t.promo_cazasouq_title }}</h3>
+      <p>{{ t.promo_cazasouq_desc }}</p>
     </div>
   </div>
   <div class="cazasouq-promo-links">
-    <a class="btn" href="https://cazasouq.idevaffiliate.com/692.html" target="_blank" rel="noopener noreferrer sponsored">🛒 تسوق الآن</a>
-    <a class="btn secondary" href="https://cazasouq.idevaffiliate.com/idevaffiliate.php?id=692&url=741" target="_blank" rel="noopener noreferrer sponsored">🎧 سماعة ديفو</a>
-    <a class="btn secondary" href="https://cazasouq.idevaffiliate.com/idevaffiliate.php?id=692&url=705" target="_blank" rel="noopener noreferrer sponsored">🪑 طاولات قيمنق</a>
+    <a class="btn" href="https://cazasouq.idevaffiliate.com/692.html" target="_blank" rel="noopener noreferrer sponsored">🛒 {{ t.promo_shop_now }}</a>
+    <a class="btn secondary" href="https://cazasouq.idevaffiliate.com/idevaffiliate.php?id=692&url=741" target="_blank" rel="noopener noreferrer sponsored">🎧 {{ t.promo_devo_headphones }}</a>
+    <a class="btn secondary" href="https://cazasouq.idevaffiliate.com/idevaffiliate.php?id=692&url=705" target="_blank" rel="noopener noreferrer sponsored">🪑 {{ t.promo_gaming_tables }}</a>
   </div>
 </div>

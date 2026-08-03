@@ -5,13 +5,15 @@ exports.data = {
 
 const SITE_URL = "https://mohframevision.github.io/hakolah";
 
-// أقسام لها نسخة إنجليزية موازية فعلياً تحت src/en/ (راجع langSwitchUrl بـ section.njk)
-const EN_SECTION_SLUGS = ["links-tools", "restaurants", "stores", "cafes", "bakeries", "places", "guides"];
-
 exports.render = function (data) {
+  // كل قسم له تلقائياً نسخة إنجليزية (src/en/section.njk يولّدها بالـ pagination
+  // نفسها اللي يستخدمها section.njk العربي) — فما فيه قائمة يدوية تحتاج تحديث
+  // لما يُضاف قسم جديد من لوحة التحكم
+  const EN_SECTION_SLUGS = data.sections.map((s) => s.slug);
+
   // مسار عربي بلا امتداد .html <-> مساره الإنجليزي المقابل، لكل صفحة لها نسخة بلغتين فعلياً
   const detailPagePairs = data.sections
-    .filter((s) => s.hasDetailPages && EN_SECTION_SLUGS.includes(s.slug))
+    .filter((s) => s.hasDetailPages)
     .flatMap((s) =>
       (data.collections[s.slug] || []).map((entry) => [
         `${s.slug}/${entry.fileSlug}.html`,
@@ -30,11 +32,6 @@ exports.render = function (data) {
     ...EN_SECTION_SLUGS.map((slug) => [`${slug}.html`, `en/${slug}.html`]),
     ...detailPagePairs,
   ];
-
-  const arabicOnlyPages = data.sections
-    .map((s) => s.slug)
-    .filter((slug) => !EN_SECTION_SLUGS.includes(slug))
-    .map((slug) => `${slug}.html`);
 
   const bilingualItems = bilingualPairs.map(([ar, en]) => {
     const arUrl = `${SITE_URL}/${ar}`;
@@ -55,11 +52,8 @@ exports.render = function (data) {
     );
   });
 
-  const arabicOnlyItems = arabicOnlyPages.map(
-    (path) => `  <url><loc>${SITE_URL}/${path}</loc></url>`
-  );
-
-  const items = [...bilingualItems, ...arabicOnlyItems].join("\n");
+  // كل صفحة بالموقع صار لها نسخة بلغتين — ما فيه صفحات "عربي فقط" بعد
+  const items = bilingualItems.join("\n");
 
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +

@@ -37,11 +37,12 @@ exports.render = function (data) {
       } else {
         item.links = entry.data.links || {};
         item.cta = entry.data.cta || null;
+        item.cta_en = entry.data.cta_en || null;
       }
       return item;
     });
 
-    out[meta.slug] = { title: meta.title, icon: meta.icon, items };
+    out[meta.slug] = { title: meta.title, title_en: meta.title_en, icon: meta.icon, items };
   }
 
   return (

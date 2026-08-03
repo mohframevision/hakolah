@@ -5,7 +5,8 @@
   "description": "موقع هكوله — Eleventy + Sveltia CMS",
   "scripts": {
     "start": "eleventy --serve",
-    "build": "eleventy && node scripts/minify.js",
+    "build": "eleventy && node scripts/check-i18n-parity.js && node scripts/minify.js",
+    "check:i18n": "eleventy && node scripts/check-i18n-parity.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
