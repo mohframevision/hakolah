@@ -329,26 +329,23 @@ function detectAdblockViaBaitElement() {
   });
 }
 
-function detectAdblockViaNetworkRequest() {
-  return new Promise((resolve) => {
-    // مانعات مبنية على حجب الطلبات الشبكية مباشرة (زي درع Brave Shields)
-    // ما تحجب عناصر الصفحة بالضرورة، بس تمنع تحميل ملفات من نطاقات إعلانية
-    // معروفة — نجرّب تحميل سكربت AdSense الحقيقي ونشوف هل يفشل التحميل
-    const script = document.createElement("script");
-    script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-    script.async = true;
-    let done = false;
-    const finish = (blocked) => {
-      if (done) return;
-      done = true;
-      script.remove();
-      resolve(blocked);
-    };
-    script.onload = () => finish(false);
-    script.onerror = () => finish(true);
-    document.body.appendChild(script);
-    setTimeout(() => finish(false), 2000);
-  });
+async function detectAdblockViaNetworkRequest() {
+  // مانعات مبنية على حجب الطلبات الشبكية مباشرة (زي درع Brave Shields) ما
+  // تحجب عناصر الصفحة بالضرورة، بس تمنع الطلب الشبكي نفسه من الوصول لنطاقات
+  // إعلانية معروفة. fetch() أدق من وسم <script> هنا لأنه يرمي خطأ فعلي
+  // (Failed to fetch) لما الطلب يُحجب، بعكس <script> اللي بعض المانعات
+  // ترجّع له استجابة فارغة وهمية فيبدو إنه "نجح" رغم إنه محجوب فعلياً
+  const AD_URL = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+  try {
+    await Promise.race([
+      fetch(AD_URL, { mode: "no-cors", cache: "no-store" }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 2000)),
+    ]);
+    return false;
+  } catch (err) {
+    // انتهاء المهلة يعني الشبكة بطيئة، مو بالضرورة حجب — نفترض عدم الحجب
+    return err.message !== "timeout";
+  }
 }
 
 function initAdblockNotice() {
