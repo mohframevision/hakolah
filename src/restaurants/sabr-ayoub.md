@@ -9,4 +9,6 @@ links:
   maps: https://maps.app.goo.gl/dPoZkGMj3PyfU7jm9
   instagram: https://www.instagram.com/sabarayoob.restaurant/
   website: ''
+lat: 26.173933112272227
+lng: 50.558248212180565
 ---

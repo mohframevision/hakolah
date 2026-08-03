@@ -11,4 +11,6 @@ links:
   maps: https://maps.app.goo.gl/TBc1YaDmkNdwhKh69
   instagram: https://www.instagram.com/5spoon/
   website: ''
+lat: 26.176502664162935
+lng: 50.56229788658042
 ---

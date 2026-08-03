@@ -9,4 +9,6 @@ links:
   maps: https://maps.app.goo.gl/9i8tsfiUL2wKdpQs9
   instagram: https://www.instagram.com/karami.foods/
   website: https://karamigroup.com
+lat: 26.176141039941882
+lng: 50.555506672811866
 ---
