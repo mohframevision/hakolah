@@ -334,14 +334,18 @@ img {
 
 .home-carousel {
   display: flex;
+  align-items: stretch;
   gap: 16px;
   overflow-x: auto;
+  overflow-y: visible;
   scroll-snap-type: x mandatory;
   padding: 6px 4px 14px;
   margin: 0 -4px;
 }
 
 .carousel-item {
+  display: flex;
+  flex-direction: column;
   position: relative;
   flex: 0 0 auto;
   width: min(300px, 82vw);
@@ -350,7 +354,7 @@ img {
 
 .carousel-item .item-card {
   margin: 0;
-  height: 100%;
+  flex: 1;
 }
 
 .carousel-label {
@@ -363,10 +367,11 @@ img {
 }
 
 .featured-pick-frame {
+  display: flex;
+  flex: 1;
   padding: 3px;
   border-radius: calc(var(--radius) + 3px);
   background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-  height: 100%;
 }
 
 .featured-pick-frame .item-card {
