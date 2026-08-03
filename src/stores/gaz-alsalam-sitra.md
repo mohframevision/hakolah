@@ -10,4 +10,6 @@ links:
   phone: '17401212'
   maps: 'https://maps.app.goo.gl/WX3UyG3Z3AwAz8An8'
   instagram: 'https://www.instagram.com/alsalambah/'
+lat: 26.138757203969547
+lng: 50.61148158542943
 ---

@@ -11,4 +11,6 @@ links:
   phone: '32212676'
   instagram: 'https://www.instagram.com/jwjb.bh/'
   website: ''
+lat: 26.213029011626645
+lng: 50.58423112490535
 ---
