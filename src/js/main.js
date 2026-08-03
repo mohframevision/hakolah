@@ -425,7 +425,7 @@ async function toggleLike(section, id, btn) {
   const optimisticCount = alreadyLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
 
   countEl.textContent = optimisticCount;
-  iconEl.textContent = alreadyLiked ? "🤍" : "❤️";
+  iconEl.textContent = alreadyLiked ? "♡" : "♥";
   btn.classList.toggle("active", !alreadyLiked);
   if (alreadyLiked) delete liked[key];
   else liked[key] = true;
@@ -560,7 +560,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
         <span class="item-icon">${item.icon || "⭐"}</span>
         <div class="item-top-actions">
           <button class="like-btn ${liked ? "active" : ""}" data-section="${section}" data-id="${item.id}" title="أعجبني" aria-label="أعجبني">
-            <span class="like-icon">${liked ? "❤️" : "🤍"}</span> <span class="like-count">${likeCount}</span>
+            <span class="like-icon">${liked ? "♥" : "♡"}</span> <span class="like-count">${likeCount}</span>
           </button>
           <button class="share-btn" title="مشاركة عبر واتساب" aria-label="مشاركة عبر واتساب">📤</button>
           <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}" aria-label="${fav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
@@ -847,7 +847,7 @@ function renderFavoritesPage() {
   if (collected.length === 0) {
     grid.innerHTML = `
       <div class="empty-state" style="grid-column: 1/-1;">
-        <span class="icon">🤍</span>
+        <span class="icon">♡</span>
         <p>لم تُضِف أي عنصر إلى المفضلة بعد.<br>تصفّح الأقسام واضغط على أيقونة القلب لحفظ ما يعجبك.</p>
       </div>
     `;
