@@ -702,6 +702,19 @@ img {
   border-radius: 999px;
 }
 
+.liked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  vertical-align: middle;
+  background: rgba(236, 72, 153, 0.15);
+  color: #ec4899;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+
 .item-card .item-desc {
   color: var(--color-text-muted);
   font-size: 0.9rem;

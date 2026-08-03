@@ -43,6 +43,14 @@ function itemFields(entry) {
       default: false,
     },
     {
+      label:
+        "👍 أعجبني هذا المكان (توصية شخصية منك) — يظهر عليه شارة توصية بجانب الاسم. اتركه فاضي لو ما جربته أو ما عجبك، بدون أي شارة سلبية",
+      name: "liked",
+      widget: "boolean",
+      required: false,
+      default: false,
+    },
+    {
       label: "التصنيفات (اختر واحد أو أكثر من القائمة الجاهزة)",
       name: "categories",
       widget: "select",
