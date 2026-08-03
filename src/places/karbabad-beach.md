@@ -10,6 +10,7 @@ categories:
   - إطلالة
 lat: 26.2424826
 lng: 50.5267773
+langSwitchUrl: "/en/places/karbabad-beach.html"
 ---
 
 ## نبذة عن المكان

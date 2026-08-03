@@ -1,0 +1,9 @@
+{
+  "layout": "detail-item.njk",
+  "lang": "en",
+  "navActive": "places",
+  "sectionSlug": "places",
+  "sectionTitle": "Places",
+  "permalink": "en/places/{{ page.fileSlug }}.html",
+  "eleventyExcludeFromCollections": true
+}

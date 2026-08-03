@@ -8,6 +8,7 @@ categories:
   - تقنية وبرمجيات
   - تصميم ومونتاج
 dateAdded: 2026-08-03
+langSwitchUrl: "/en/guides/badail-majjaniya-lil-tasmim.html"
 ---
 
 ## لا تملك اشتراكات Adobe؟ ذلك لا يمنعك من البدء

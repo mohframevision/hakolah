@@ -798,18 +798,23 @@ function formatDistance(km) {
 const SITE_ORIGIN = "https://mohframevision.github.io/hakolah/";
 
 function buildShareUrl(section, item) {
-  const relPath = item.detailUrl || `${section}.html?q=${encodeURIComponent(item.title)}`;
-  return SITE_ORIGIN + relPath;
+  const isEn = window.SITE_LANG === "en";
+  const prefix = isEn ? "en/" : "";
+  const relPath = isEn && item.detailUrlEn
+    ? item.detailUrlEn
+    : item.detailUrl || `${section}.html?q=${encodeURIComponent(itemTitle(item))}`;
+  return SITE_ORIGIN + prefix + relPath;
 }
 
 function buildShareText(section, item) {
   const url = buildShareUrl(section, item);
-  return `${item.title} — على موقع هكوله 👇\n${url}`;
+  return `${itemTitle(item)} ${t("share_suffix")}\n${url}`;
 }
 
 function buildActionsHtml(item) {
   if (item.detailUrl) {
-    return `<a class="btn" href="${item.detailUrl}">📖 اقرأ التفاصيل</a>`;
+    const href = window.SITE_LANG === "en" && item.detailUrlEn ? item.detailUrlEn : item.detailUrl;
+    return `<a class="btn" href="${href}">📖 ${t("read_details")}</a>`;
   }
   const links = item.links || (item.url ? { website: item.url } : {});
   const orderedKeys = Object.keys(links)
@@ -899,7 +904,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
     const nowFav = toggleFavorite(section, item.id);
     favBtn.classList.toggle("active", nowFav);
     favBtn.textContent = nowFav ? "♥" : "♡";
-    const label = nowFav ? "إزالة من المفضلة" : "إضافة للمفضلة";
+    const label = nowFav ? t("fav_remove") : t("fav_add");
     favBtn.title = label;
     favBtn.setAttribute("aria-label", label);
     favBtn.classList.remove("pop");

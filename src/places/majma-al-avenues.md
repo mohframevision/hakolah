@@ -10,6 +10,7 @@ categories:
   - إطلالة
 lat: 26.2458146
 lng: 50.5847702
+langSwitchUrl: "/en/places/majma-al-avenues.html"
 ---
 
 ## نبذة عن المكان

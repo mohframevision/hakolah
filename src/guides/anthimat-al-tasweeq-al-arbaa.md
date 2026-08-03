@@ -7,6 +7,7 @@ desc_en: Most people think marketing just means ads and posts. In reality, tacti
 categories:
   - تسويق وأعمال
 dateAdded: 2026-08-03
+langSwitchUrl: "/en/guides/anthimat-al-tasweeq-al-arbaa.html"
 ---
 
 ## خطأ شائع: البدء بالتكتيك قبل النظام

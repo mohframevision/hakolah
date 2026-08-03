@@ -31,6 +31,9 @@ exports.render = function (data) {
       };
       if (meta.hasDetailPages) {
         item.detailUrl = `${meta.slug}/${entry.fileSlug}.html`;
+        // slug_en اختياري — لازم فقط لو ملف Markdown العربي اسمه بالعربي
+        // (مثل ممشى-توبلي.md) بينما ملف النسخة الإنجليزية المقابلة له بالإنجليزي
+        item.detailUrlEn = `${meta.slug}/${entry.data.slug_en || entry.fileSlug}.html`;
       } else {
         item.links = entry.data.links || {};
         item.cta = entry.data.cta || null;

@@ -8,6 +8,7 @@ categories:
   - تقنية وبرمجيات
   - تصميم ومونتاج
 dateAdded: 2026-08-03
+langSwitchUrl: "/en/guides/cinetemp-app.html"
 ---
 
 ## لماذا يحتاج المصوّرون إلى تطبيق كهذا؟

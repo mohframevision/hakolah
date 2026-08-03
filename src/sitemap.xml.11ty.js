@@ -6,15 +6,25 @@ exports.data = {
 const SITE_URL = "https://mohframevision.github.io/hakolah";
 
 // أقسام لها نسخة إنجليزية موازية فعلياً تحت src/en/ (راجع langSwitchUrl بـ section.njk)
-const EN_SECTION_SLUGS = ["links-tools", "restaurants", "stores", "cafes", "bakeries"];
+const EN_SECTION_SLUGS = ["links-tools", "restaurants", "stores", "cafes", "bakeries", "places", "guides"];
 
 exports.render = function (data) {
   // مسار عربي بلا امتداد .html <-> مساره الإنجليزي المقابل، لكل صفحة لها نسخة بلغتين فعلياً
+  const detailPagePairs = data.sections
+    .filter((s) => s.hasDetailPages && EN_SECTION_SLUGS.includes(s.slug))
+    .flatMap((s) =>
+      (data.collections[s.slug] || []).map((entry) => [
+        `${s.slug}/${entry.fileSlug}.html`,
+        `en/${s.slug}/${entry.data.slug_en || entry.fileSlug}.html`,
+      ])
+    );
+
   const bilingualPairs = [
     ["", "en/index.html"],
     ["favorites.html", "en/favorites.html"],
     ["picker.html", "en/picker.html"],
     ...EN_SECTION_SLUGS.map((slug) => [`${slug}.html`, `en/${slug}.html`]),
+    ...detailPagePairs,
   ];
 
   const arabicOnlyPages = [

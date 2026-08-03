@@ -10,7 +10,7 @@ eleventyComputed:
   description: "{{ sectionEntry.description }}"
   navActive: "{{ sectionEntry.slug }}"
   section: "{{ sectionEntry.slug }}"
-  langSwitchUrl: "{{ ('/en/' + sectionEntry.slug + '.html') if sectionEntry.slug in ['bakeries', 'links-tools', 'restaurants', 'stores', 'cafes'] else '/en/index.html' }}"
+  langSwitchUrl: "{{ ('/en/' + sectionEntry.slug + '.html') if sectionEntry.slug in ['bakeries', 'links-tools', 'restaurants', 'stores', 'cafes', 'places', 'guides'] else '/en/index.html' }}"
 ---
 <div class="breadcrumb"><a href="{{ '/index.html' | url }}">الرئيسية</a> / {{ sectionEntry.title }}</div>
 <section class="page-header">

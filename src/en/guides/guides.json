@@ -1,0 +1,9 @@
+{
+  "layout": "detail-item.njk",
+  "lang": "en",
+  "navActive": "guides",
+  "sectionSlug": "guides",
+  "sectionTitle": "Guides & Articles",
+  "permalink": "en/guides/{{ page.fileSlug }}.html",
+  "eleventyExcludeFromCollections": true
+}

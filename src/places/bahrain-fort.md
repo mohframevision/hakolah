@@ -12,6 +12,7 @@ categories:
 dateAdded: 2026-08-02
 lat: 26.2334276
 lng: 50.5192457
+langSwitchUrl: "/en/places/bahrain-fort.html"
 ---
 
 ## نبذة عن المكان

@@ -47,6 +47,8 @@ module.exports = {
     geolocation_denied: "تعذّر الوصول لموقعك — تأكد من تفعيل صلاحية الموقع بالمتصفح",
     try_again: "🔄 جرّب مرة ثانية",
     spin_button: "🎲 اختر لي!",
+    read_details: "اقرأ التفاصيل",
+    share_suffix: "— على موقع هكوله 👇",
   },
   en: {
     skip_to_content: "Skip to content",
@@ -93,5 +95,7 @@ module.exports = {
     geolocation_denied: "Couldn't access your location — check your browser's location permission",
     try_again: "🔄 Try again",
     spin_button: "🎲 Pick for me!",
+    read_details: "Read details",
+    share_suffix: "— on Hakolah 👇",
   },
 };

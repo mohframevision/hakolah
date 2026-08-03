@@ -100,11 +100,20 @@ function itemFields(entry) {
   ];
 
   if (entry.hasDetailPages) {
-    fields.push({
-      label: "المقال الكامل (نبذة، طريقة الوصول، نصائح...)",
-      name: "body",
-      widget: "markdown",
-    });
+    fields.push(
+      {
+        label: "المقال الكامل (نبذة، طريقة الوصول، نصائح...)",
+        name: "body",
+        widget: "markdown",
+      },
+      {
+        label:
+          "Slug إنجليزي (اختياري — فقط لو اسم الملف الحالي بالعربي، مثل ممشى-توبلي، وبتضيف نسخة إنجليزية لاحقاً بملف باسم إنجليزي مختلف. اتركه فاضي لو الاسم أصلاً إنجليزي)",
+        name: "slug_en",
+        widget: "string",
+        required: false,
+      }
+    );
   } else {
     fields.push(
       {

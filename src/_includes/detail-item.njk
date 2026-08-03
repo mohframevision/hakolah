@@ -1,7 +1,11 @@
 ---
 layout: base.njk
 ---
-<div class="breadcrumb"><a href="{{ '/index.html' | url }}">الرئيسية</a> / <a href="{{ ('/' + sectionSlug + '.html') | url }}">{{ sectionTitle }}</a> / {{ title }}</div>
+{% set lang = lang or "ar" %}
+{% set t = i18n[lang] %}
+{% set homeUrl = ('/en/index.html' if lang == 'en' else '/index.html') %}
+{% set sectionUrl = (('/en/' if lang == 'en' else '/') + sectionSlug + '.html') %}
+<div class="breadcrumb"><a href="{{ homeUrl | url }}">{{ t.nav_home }}</a> / <a href="{{ sectionUrl | url }}">{{ sectionTitle }}</a> / {{ title }}</div>
 {% if image %}<img class="detail-hero-photo" src="{{ image }}" alt="{{ title }}" />{% endif %}
 <section class="page-header">
   <h1>{{ icon }} {{ title }}</h1>
@@ -16,7 +20,7 @@ layout: base.njk
   "@type": "Article",
   "headline": {{ title | json | safe }},
   "description": {{ desc | json | safe }},
-  "inLanguage": "ar",
+  "inLanguage": "{{ lang }}",
   {% if image %}"image": {{ (site.origin + image) | json | safe }},{% endif %}
   "isPartOf": {
     "@type": "WebSite",
