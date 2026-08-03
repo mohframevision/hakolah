@@ -36,7 +36,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ '/assets/favicon-16x16.png' | url }}" />
   <link rel="shortcut icon" href="{{ '/assets/favicon.ico' | url }}" />
   <link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/apple-touch-icon.png' | url }}" />
-  <link rel="manifest" href="{{ '/assets/site.webmanifest' | url }}" />
+  <link rel="manifest" href="{{ (('/assets/site-en.webmanifest' if lang == 'en' else '/assets/site.webmanifest')) | url }}" />
 
   <meta property="og:type" content="{{ ogType }}" />
   <meta property="og:site_name" content="{{ site.name }}" />
@@ -98,7 +98,7 @@
 
   <header class="site-header">
     <div class="header-inner">
-      <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}" class="logo"><span class="dot">●</span><span class="logo-word">هكو<span class="logo-tail">له</span></span></a>
+      <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}" class="logo"><span class="dot">●</span>{% if lang == "en" %}<span class="logo-word">Hako<span class="logo-tail">lah</span></span>{% else %}<span class="logo-word">هكو<span class="logo-tail">له</span></span>{% endif %}</a>
       <nav class="main-nav" id="main-nav">
         {% if lang == "en" %}
         <a href="{{ '/en/index.html' | url }}"{% if navActive == "home" %} class="active"{% endif %}>{{ t.nav_home }}</a>

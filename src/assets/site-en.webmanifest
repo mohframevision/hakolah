@@ -1,0 +1,24 @@
+{
+  "name": "Hakolah",
+  "short_name": "Hakolah",
+  "description": "A directory of links, tools, restaurants, stores, and places — everything useful in one site.",
+  "start_url": "/hakolah/en/index.html",
+  "scope": "/hakolah/",
+  "display": "standalone",
+  "lang": "en",
+  "dir": "ltr",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/hakolah/assets/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/hakolah/assets/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
