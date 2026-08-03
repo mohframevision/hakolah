@@ -35,6 +35,14 @@ function itemFields(entry) {
       default: false,
     },
     {
+      label:
+        "✅ تحقّقت شخصياً من هذا العنصر (الاسم، رابط الخرائط، إنستقرام/الموقع كلها صحيحة ومؤكدة) — يظهر عليه علامة توثيق صغيرة بجانب الاسم",
+      name: "verified",
+      widget: "boolean",
+      required: false,
+      default: false,
+    },
+    {
       label: "التصنيفات (اختر واحد أو أكثر من القائمة الجاهزة)",
       name: "categories",
       widget: "select",

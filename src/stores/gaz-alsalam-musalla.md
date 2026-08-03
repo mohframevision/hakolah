@@ -12,4 +12,5 @@ links:
   instagram: 'https://www.instagram.com/alsalambah/'
 lat: 26.211334677837797
 lng: 50.54379483432474
+verified: true
 ---

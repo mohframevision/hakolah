@@ -10,6 +10,7 @@ categories:
 dateAdded: 2026-08-02
 lat: 26.2334276
 lng: 50.5192457
+verified: true
 ---
 
 ## نبذة عن المكان

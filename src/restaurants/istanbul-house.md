@@ -12,4 +12,5 @@ links:
   instagram: 'https://www.instagram.com/istanbulhouserestaurant/'
 lat: 26.1871303
 lng: 50.4722181
+verified: true
 ---
