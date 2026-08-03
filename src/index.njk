@@ -20,6 +20,11 @@ navActive: "home"
   </div>
 </section>
 
+<section class="trending-section" id="trendingSection" style="display: none;">
+  <h2 class="trending-title">🔥 الأكثر إعجاباً هذا الأسبوع</h2>
+  <div class="card-grid" id="trendingPick"></div>
+</section>
+
 <section class="section-grid">
   {% for entry in sections %}
   <a class="section-card" href="{{ ('/' + entry.slug + '.html') | url }}">

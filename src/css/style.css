@@ -349,6 +349,20 @@ img {
   margin: 0;
 }
 
+.trending-section {
+  padding: 8px 0 16px;
+}
+
+.trending-title {
+  text-align: center;
+  font-size: 1.25rem;
+  margin: 0 0 16px;
+}
+
+.trending-section .card-grid {
+  padding-bottom: 10px;
+}
+
 .notify-toggle {
   margin-top: 16px;
 }

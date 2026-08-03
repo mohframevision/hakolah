@@ -22,6 +22,23 @@ function likeKey(section, id) {
   return `likes:${section}:${id}`;
 }
 
+// بادئة مرتبطة بأسبوع ISO الحالي (مثال: likes:week:2026-W32:) — تُستخدم لمعرفة
+// الأكثر إعجاباً "هذا الأسبوع" تحديداً، منفصل عن عدّاد الإعجاب الكلي (likes:)
+function weekPrefix() {
+  const now = new Date();
+  const target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dayNum = (target.getUTCDay() + 6) % 7;
+  target.setUTCDate(target.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+  const week =
+    1 + Math.round(((target - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+  return `likes:week:${target.getUTCFullYear()}-W${String(week).padStart(2, "0")}:`;
+}
+
+function weekKey(section, id) {
+  return `${weekPrefix()}${section}:${id}`;
+}
+
 async function keyFor(endpoint) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(endpoint));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -84,8 +101,15 @@ export default {
       const { section, id } = await request.json();
       if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       const key = likeKey(section, id);
-      const count = (Number(await env.SUBSCRIPTIONS.get(key)) || 0) + 1;
-      await env.SUBSCRIPTIONS.put(key, String(count));
+      const wKey = weekKey(section, id);
+      const [count, weekCount] = await Promise.all([
+        env.SUBSCRIPTIONS.get(key).then((v) => (Number(v) || 0) + 1),
+        env.SUBSCRIPTIONS.get(wKey).then((v) => (Number(v) || 0) + 1),
+      ]);
+      await Promise.all([
+        env.SUBSCRIPTIONS.put(key, String(count)),
+        env.SUBSCRIPTIONS.put(wKey, String(weekCount), { expirationTtl: 60 * 60 * 24 * 14 }),
+      ]);
       return new Response(JSON.stringify({ count }), {
         headers: { ...corsHeaders(), "Content-Type": "application/json" },
       });
@@ -95,8 +119,15 @@ export default {
       const { section, id } = await request.json();
       if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       const key = likeKey(section, id);
-      const count = Math.max(0, (Number(await env.SUBSCRIPTIONS.get(key)) || 0) - 1);
-      await env.SUBSCRIPTIONS.put(key, String(count));
+      const wKey = weekKey(section, id);
+      const [count, weekCount] = await Promise.all([
+        env.SUBSCRIPTIONS.get(key).then((v) => Math.max(0, (Number(v) || 0) - 1)),
+        env.SUBSCRIPTIONS.get(wKey).then((v) => Math.max(0, (Number(v) || 0) - 1)),
+      ]);
+      await Promise.all([
+        env.SUBSCRIPTIONS.put(key, String(count)),
+        env.SUBSCRIPTIONS.put(wKey, String(weekCount), { expirationTtl: 60 * 60 * 24 * 14 }),
+      ]);
       return new Response(JSON.stringify({ count }), {
         headers: { ...corsHeaders(), "Content-Type": "application/json" },
       });
@@ -106,7 +137,20 @@ export default {
       const list = await env.SUBSCRIPTIONS.list({ prefix: "likes:" });
       const counts = {};
       for (const key of list.keys) {
+        if (key.name.startsWith("likes:week:")) continue;
         counts[key.name.slice("likes:".length)] = Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
+      }
+      return new Response(JSON.stringify(counts), {
+        headers: { ...corsHeaders(), "Content-Type": "application/json" },
+      });
+    }
+
+    if (request.method === "GET" && url.pathname === "/likes/week") {
+      const prefix = weekPrefix();
+      const list = await env.SUBSCRIPTIONS.list({ prefix });
+      const counts = {};
+      for (const key of list.keys) {
+        counts[key.name.slice(prefix.length)] = Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
       }
       return new Response(JSON.stringify(counts), {
         headers: { ...corsHeaders(), "Content-Type": "application/json" },

@@ -890,6 +890,44 @@ function renderFeaturedPick() {
   container.appendChild(buildItemCard(section, item, 0));
 }
 
+/* ===== الأكثر إعجاباً هذا الأسبوع (دليل اجتماعي حقيقي — مبني على بيانات
+   الإعجاب الفعلية من الزوار، يختفي القسم كامل لو ما فيه إعجابات هالأسبوع بعد) ===== */
+async function renderTrendingSection() {
+  const container = document.getElementById("trendingPick");
+  const section = document.getElementById("trendingSection");
+  if (!container || !section) return;
+
+  const config = window.PUSH_CONFIG;
+  if (!config || !config.workerUrl) return;
+
+  let weekCounts;
+  try {
+    const res = await fetch(`${config.workerUrl}/likes/week`);
+    weekCounts = await res.json();
+  } catch {
+    return;
+  }
+
+  const ranked = Object.entries(weekCounts)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+
+  if (ranked.length === 0) return;
+
+  container.innerHTML = "";
+  ranked.forEach(([key], index) => {
+    const sepIndex = key.indexOf(":");
+    const itemSection = key.slice(0, sepIndex);
+    const itemId = key.slice(sepIndex + 1);
+    const item = (SITE_DATA[itemSection]?.items || []).find((i) => i.id === itemId);
+    if (!item) return;
+    container.appendChild(buildItemCard(itemSection, item, index));
+  });
+
+  section.style.display = "";
+}
+
 /* ===== عدّاد زيارات بسيط (خاص بنا فقط، نفس Cloudflare Worker حق الإشعارات) =====
    يعد كل تحميل صفحة بصمت، ويظهر الرقم بس لمن يكتب كود سري بصندوق البحث —
    عمداً غير ظاهر لعامة الزوار لأن الأرقام لسا صغيرة بمرحلة الموقع الحالية. */

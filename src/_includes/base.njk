@@ -133,6 +133,6 @@
   {% if section %}<script>renderSection("{{ section }}");</script>{% endif %}
   {% if isFavoritesPage %}<script>renderFavoritesPage();</script>{% endif %}
   {% if navActive == "picker" %}<script>initRandomPicker();</script>{% endif %}
-  {% if navActive == "home" %}<script>renderFeaturedPick();initPushNotifications();</script>{% endif %}
+  {% if navActive == "home" %}<script>renderFeaturedPick();initPushNotifications();renderTrendingSection();</script>{% endif %}
 </body>
 </html>
