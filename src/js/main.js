@@ -306,11 +306,12 @@ function initCookieConsent() {
 /* ===== ملاحظة مانع الإعلانات ===== */
 /* لا يمكن تقنياً إجبار المتصفح على تعطيل إضافة مثبّتة عنده (قرار متعمّد من
    المتصفحات نفسها لحماية المستخدم) — أقصى شي ممكن نسويه هو اكتشاف وجود مانع
-   إعلانات وإظهار ملاحظة لطيفة وغير مزعجة، يقدر الزائر يتجاهلها ويكمل تصفح
-   الموقع بشكل طبيعي بدون أي تقييد. */
+   إعلانات وإظهار ملاحظة لطيفة وغير مزعجة. الإغلاق بـ sessionStorage عمداً
+   (مو localStorage) — يعني تختفي لباقي هالجلسة إذا ضغط الزائر ✕، بس ترجع
+   تظهر بجلسة تصفح جديدة طول ما المانع لسا شغّال، بدل ما تختفي إلى الأبد. */
 function initAdblockNotice() {
   const DISMISSED_KEY = "adblock_notice_dismissed";
-  if (localStorage.getItem(DISMISSED_KEY)) return;
+  if (sessionStorage.getItem(DISMISSED_KEY)) return;
 
   const notice = document.getElementById("adblockNotice");
   const closeBtn = document.getElementById("adblockNoticeClose");
@@ -332,7 +333,7 @@ function initAdblockNotice() {
   }, 300);
 
   closeBtn.addEventListener("click", () => {
-    localStorage.setItem(DISMISSED_KEY, "1");
+    sessionStorage.setItem(DISMISSED_KEY, "1");
     notice.classList.remove("open");
   });
 }
