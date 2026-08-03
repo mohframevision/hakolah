@@ -100,26 +100,28 @@
     <div class="header-inner">
       <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}" class="logo"><span class="dot">●</span>{% if lang == "en" %}<span class="logo-word">Hako<span class="logo-tail">lah</span></span>{% else %}<span class="logo-word">هكو<span class="logo-tail">له</span></span>{% endif %}</a>
       <nav class="main-nav" id="main-nav">
-        {% if lang == "en" %}
-        <a href="{{ '/en/index.html' | url }}"{% if navActive == "home" %} class="active"{% endif %}>{{ t.nav_home }}</a>
+        {% set homeUrl = '/en/index.html' if lang == 'en' else '/index.html' %}
+        <a href="{{ homeUrl | url }}"{% if navActive == "home" %} class="active"{% endif %}>{{ t.nav_home }}</a>
         {% for entry in sections %}
-        <a href="{{ ('/en/' + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active"{% endif %}>{{ entry.navLabel_en }}</a>
+        <a href="{{ (('/en/' if lang == 'en' else '/') + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active"{% endif %}>{{ entry.navLabel_en if lang == 'en' else entry.navLabel }}</a>
         {% endfor %}
-        <a href="{{ '/en/favorites.html' | url }}"{% if navActive == "favorites" %} class="active"{% endif %}>{{ t.nav_favorites }}</a>
-        <a href="{{ '/en/picker.html' | url }}"{% if navActive == "picker" %} class="active"{% endif %}>{{ t.nav_picker }}</a>
-        {% else %}
-        <a href="{{ '/index.html' | url }}"{% if navActive == "home" %} class="active"{% endif %}>{{ t.nav_home }}</a>
-        {% for entry in sections %}
-        <a href="{{ ('/' + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active"{% endif %}>{{ entry.navLabel }}</a>
-        {% endfor %}
-        <a href="{{ '/favorites.html' | url }}"{% if navActive == "favorites" %} class="active"{% endif %}>{{ t.nav_favorites }}</a>
-        <a href="{{ '/picker.html' | url }}"{% if navActive == "picker" %} class="active"{% endif %}>{{ t.nav_picker }}</a>
-        {% endif %}
+        {# على الجوال تختفي أيقونتا المفضلة و"اختار لي" من الهيدر (ضيق) وتظهران
+           هنا داخل القائمة المنسدلة بدل ما تزدحم مع الشعار #}
+        <a class="nav-only-mobile{% if navActive == "favorites" %} active{% endif %}" href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}">❤️ {{ t.nav_favorites }}</a>
+        <a class="nav-only-mobile{% if navActive == "picker" %} active{% endif %}" href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}">{{ t.nav_picker }}</a>
       </nav>
-      <a class="lang-switch" href="{{ (langSwitchUrl or ('/index.html' if lang == 'en' else '/en/index.html')) | url }}">{{ t.lang_switch }}</a>
-      <button class="theme-toggle" aria-label="{{ t.theme_toggle_aria }}" title="{{ t.theme_toggle }}"></button>
-      <button class="sound-toggle" aria-label="{{ t.sound_off }}" title="{{ t.sound_off }}">🔇</button>
-      <button class="nav-toggle" aria-label="{{ t.nav_toggle_open }}" aria-expanded="false" aria-controls="main-nav">☰</button>
+      <div class="header-actions">
+        {# المفضلة و"اختار لي" أدوات مو أقسام محتوى — نقلناها من القائمة لهنا
+           كأيقونات، عشان القائمة تضل بسطر واحد حتى لما تُضاف أقسام جديدة #}
+        <a class="icon-btn{% if navActive == "favorites" %} active{% endif %}" href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}" title="{{ t.nav_favorites }}" aria-label="{{ t.nav_favorites }}">❤️</a>
+        <a class="icon-btn{% if navActive == "picker" %} active{% endif %}" href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}" title="{{ t.nav_picker }}" aria-label="{{ t.nav_picker }}">🎲</a>
+        <span class="header-divider" aria-hidden="true"></span>
+        {# على الشاشات الضيقة نعرض الاختصار بدل الاسم الكامل عشان يضل الهيدر بصف واحد #}
+        <a class="lang-switch" href="{{ (langSwitchUrl or ('/index.html' if lang == 'en' else '/en/index.html')) | url }}" title="{{ t.lang_switch }}" aria-label="{{ t.lang_switch }}"><span class="lang-full">{{ t.lang_switch }}</span><span class="lang-short" aria-hidden="true">{{ t.lang_switch_short }}</span></a>
+        <button class="theme-toggle" aria-label="{{ t.theme_toggle_aria }}" title="{{ t.theme_toggle }}"></button>
+        <button class="sound-toggle" aria-label="{{ t.sound_off }}" title="{{ t.sound_off }}">🔇</button>
+        <button class="nav-toggle" aria-label="{{ t.nav_toggle_open }}" aria-expanded="false" aria-controls="main-nav">☰</button>
+      </div>
     </div>
   </header>
 

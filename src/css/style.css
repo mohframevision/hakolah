@@ -13,6 +13,23 @@
   --shadow-card-hover: 0 8px 20px rgba(0, 0, 0, 0.1);
   --radius: 14px;
   --max-width: 1180px;
+  /* الهيدر يمتد أعرض من عمود المحتوى — القائمة صارت 8 عناصر والنصوص
+     الإنجليزية أطول من العربية، فبعرض المحتوى نفسه كانت تفيض وتنقص */
+  --header-max-width: 1320px;
+
+  /* سلّم مسافات موحّد — كل المسافات بالموقع مضاعفات 4px، عشان الإيقاع البصري
+     يكون منتظم بدل أرقام عشوائية (14px هنا، 16 هناك، 4 هناك) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* ارتفاع موحّد لكل عناصر التحكم بالهيدر (اللغة/المظهر/الصوت/القائمة)
+     عشان تتحاذى بخط أفقي واحد بدل ما يطلع كل زر بحجم مختلف */
+  --control-height: 40px;
+  --control-radius: 999px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -126,21 +143,23 @@ img {
 .header-inner {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 14px 20px;
-  max-width: var(--max-width);
+  padding: var(--space-3) var(--space-5);
+  max-width: var(--header-max-width);
   margin: 0 auto;
-  gap: 16px;
+  /* مسافة واحدة كبيرة تفصل المجموعات الثلاث (شعار | قائمة | أدوات) عن بعض،
+     والمسافات الصغيرة داخل كل مجموعة تجي من gap الخاص فيها */
+  gap: var(--space-6);
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-weight: 800;
   font-size: 1.25rem;
   color: var(--color-primary);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .logo span.dot {
@@ -160,29 +179,55 @@ img {
   color: var(--color-accent);
 }
 
+/* الخط المتدرّج تحت الشعار — كان بعرض 145% فيطلع برّا الكلمة ويزحف على
+   عناصر القائمة المجاورة. صار 100% (بعرض الكلمة بالضبط) فيضل جزء من
+   الشعار بدل ما يكون خط سايب يلخبط المسافات حواليه */
 .logo-word::after {
   content: "";
   position: absolute;
   inset-inline-start: 0;
   bottom: 0;
   height: 3px;
-  width: 145%;
+  width: 100%;
   border-radius: 3px;
   background: linear-gradient(to left, var(--color-primary), var(--color-accent));
 }
 
 .main-nav {
   display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-inline-start: auto; /* يدفع القائمة للطرف البعيد، فيتجمع الشعار وزر المظهر وزر الجوال معاً بدل ما يطفون بمنتصف الهيدر */
+  align-items: center;
+  gap: var(--space-1);
+  /* nowrap عمداً: القائمة صارت 10 عناصر، ومع wrap كانت تنكسر لسطرين
+     فيلتصق السطر الثاني بالشعار. لو ما فيه مساحة كافية ننتقل لقائمة
+     الجوال (نقطة الكسر تحت) بدل ما نسمح بالكسر العشوائي */
+  flex-wrap: nowrap;
+  margin-inline-start: auto;
+  /* شبكة أمان: لو أُضيفت أقسام كثيرة مستقبلاً من لوحة التحكم وضاقت المساحة،
+     القائمة تنزلق أفقياً بدل ما تكسر تخطيط الهيدر كله */
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.main-nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* مجموعة أدوات الهيدر (اللغة/المظهر/الصوت/زر القائمة) — تتجمع بمسافة
+   داخلية صغيرة ومتساوية، ومفصولة عن القائمة بمسافة المجموعات الكبيرة */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .main-nav a {
-  padding: 8px 14px;
-  border-radius: 999px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--control-radius);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
   color: var(--color-text-muted);
   transition:
     background 0.15s,
@@ -195,70 +240,93 @@ img {
   color: #fff;
 }
 
-.lang-switch {
+/* كل أزرار الهيدر تشترك بنفس الارتفاع والشكل والحدود — كانت قبل مختلفة
+   (بيضاوي بارتفاع، ومربّع بزوايا 8px بارتفاع ثاني) فتبان غير مرتّبة */
+.lang-switch,
+.theme-toggle,
+.sound-toggle,
+.nav-toggle,
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-height);
   border: 1px solid var(--color-border);
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-size: 0.85rem;
+  border-radius: var(--control-radius);
+  background: none;
+  font-family: inherit;
   font-weight: 700;
-  color: var(--color-text-muted);
+  line-height: 1;
+  color: var(--color-text);
   white-space: nowrap;
+  cursor: pointer;
   transition:
+    transform 0.2s ease,
+    background 0.2s ease,
     border-color 0.2s ease,
     color 0.2s ease;
 }
 
-.lang-switch:hover {
+.lang-switch:hover,
+.theme-toggle:hover,
+.sound-toggle:hover,
+.nav-toggle:hover,
+.icon-btn:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
 
-.theme-toggle {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  padding: 8px 16px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  font-family: inherit;
-  line-height: 1;
-  color: var(--color-text);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.theme-toggle:hover {
-  border-color: var(--color-primary);
-}
-
-.theme-toggle:active {
+.lang-switch:active,
+.theme-toggle:active,
+.sound-toggle:active,
+.nav-toggle:active,
+.icon-btn:active {
   transform: scale(0.92);
 }
 
-.sound-toggle {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 1.1rem;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease;
+/* الأزرار النصية: حشوة أفقية مريحة. الأزرار الأيقونية: مربّعة تماماً
+   (نفس العرض والارتفاع) فتبان دائرية منتظمة */
+.lang-switch {
+  padding-inline: var(--space-4);
+  font-size: 0.875rem;
 }
 
-.sound-toggle:hover {
+/* كل الأزرار الأيقونية مربّعة بنفس المقاس — الأيقونة وحدها تكفي والشرح
+   يجي من title/aria-label، فيضل الهيدر مرتّب ومتساوي */
+.theme-toggle,
+.sound-toggle,
+.nav-toggle,
+.icon-btn {
+  width: var(--control-height);
+  padding: 0;
+  font-size: 1.05rem;
+}
+
+.lang-switch {
+  color: var(--color-text-muted);
+}
+
+.lang-short {
+  display: none;
+}
+
+/* روابط تظهر داخل القائمة على الجوال فقط (مقابلها أيقونات بالهيدر على الشاشات الأكبر) */
+.nav-only-mobile {
+  display: none;
+}
+
+/* الأيقونة الفعّالة (الصفحة الحالية) تاخذ نفس تمييز رابط القائمة النشط */
+.icon-btn.active {
+  background: var(--color-primary);
   border-color: var(--color-primary);
 }
 
-.sound-toggle:active {
-  transform: scale(0.92);
+/* فاصل بصري خفيف يفصل أيقونات التنقّل عن أدوات الموقع (لغة/مظهر/صوت) */
+.header-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--color-border);
+  flex-shrink: 0;
 }
 
 .sound-toggle.active {
@@ -268,16 +336,6 @@ img {
 
 .nav-toggle {
   display: none;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 1.1rem;
-  color: var(--color-text);
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease;
 }
 
 .nav-toggle.open {
@@ -285,14 +343,22 @@ img {
   background: var(--color-bg);
 }
 
-@media (max-width: 800px) {
+/* نقطة الكسر مربوطة بعرض القائمة الفعلي (الرئيسية + 7 أقسام بالعربي) وليس
+   بحجم "جوال" تقليدي — كانت 800px فتضل القائمة ظاهرة ومزدحمة لين 800px
+   وتنكسر لسطرين فوقها */
+@media (max-width: 1200px) {
   .nav-toggle {
     display: inline-flex;
+  }
+  .header-inner {
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    justify-content: space-between;
   }
   .main-nav {
     display: flex;
     width: 100%;
-    order: 3; /* يخلي القائمة تنزل تحت الشعار وزر المظهر وزر الجوال بدل ما تفصل بينهم */
+    order: 3; /* تنزل تحت صف الشعار والأدوات بدل ما تفصل بينهم */
     flex-direction: column;
     gap: 2px;
     max-height: 0;
@@ -300,23 +366,61 @@ img {
     overflow: hidden;
     pointer-events: none;
     padding-top: 0;
+    margin-inline-start: 0;
     transition:
       max-height 0.35s ease,
       opacity 0.25s ease,
       padding-top 0.25s ease;
   }
   .main-nav.open {
-    max-height: 400px;
+    max-height: 520px;
     opacity: 1;
     pointer-events: auto;
-    padding-top: 10px;
+    padding-top: var(--space-3);
+  }
+  .main-nav a {
+    padding: var(--space-3);
+    font-size: 0.95rem;
+  }
+}
+
+/* شاشات الجوال: نصغّر الأزرار ونستخدم اختصار اللغة (EN / ع) بدل الاسم الكامل،
+   عشان الشعار وكل الأدوات يدخلون بصف واحد بدل صفّين (كان ارتفاع الهيدر 128px
+   على عرض 360px لأن الأدوات كانت تنزل لسطر ثاني وحدها) */
+@media (max-width: 560px) {
+  :root {
+    --control-height: 36px;
   }
   .header-inner {
-    flex-wrap: wrap;
-    justify-content: space-between; /* توزيع متساوي بين الشعار وزر المظهر وزر القائمة، يتمدد ويتقلص مع عرض الشاشة */
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-3);
   }
-  .main-nav {
-    margin-inline-start: 0; /* على الجوال ما نحتاج الدفع للطرف، الصف الأول يتوزع بـ space-between */
+  .header-actions {
+    gap: var(--space-1);
+  }
+  .header-divider {
+    display: none;
+  }
+  .lang-switch {
+    width: var(--control-height);
+    padding-inline: 0;
+    font-size: 0.8rem;
+  }
+  .lang-full {
+    display: none;
+  }
+  .lang-short {
+    display: inline;
+  }
+  .logo {
+    font-size: 1.15rem;
+  }
+  /* الأيقونتان تنتقلان من الهيدر للقائمة المنسدلة */
+  .header-actions .icon-btn {
+    display: none;
+  }
+  .main-nav .nav-only-mobile {
+    display: block;
   }
 }
 

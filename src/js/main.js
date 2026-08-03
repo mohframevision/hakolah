@@ -444,8 +444,11 @@ function initThemeToggle() {
     } else {
       document.documentElement.setAttribute("data-theme", pref);
     }
-    btn.textContent = `${ICONS[pref]} ${t(`theme_short_${pref}`)}`;
-    btn.title = `${t("theme_current_label")}: ${t(`theme_label_${pref}`)} — ${t("theme_click_to_toggle")}`;
+    // أيقونة فقط داخل الزر (الزر مربّع بالهيدر) والشرح النصي بالـ title/aria
+    btn.textContent = ICONS[pref];
+    const label = `${t("theme_current_label")}: ${t(`theme_label_${pref}`)} — ${t("theme_click_to_toggle")}`;
+    btn.title = label;
+    btn.setAttribute("aria-label", label);
   }
 
   apply(getPref());
