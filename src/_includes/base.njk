@@ -4,17 +4,40 @@
 <html lang="{{ lang }}" dir="{{ 'ltr' if lang == 'en' else 'rtl' }}">
 <head>
   <meta charset="UTF-8" />
+  {#
+    Content-Security-Policy — GitHub Pages ما يسمح بضبط HTTP headers مخصصة،
+    فهذا الـ meta tag هو الطريقة الوحيدة المتاحة (ملاحظة: frame-ancestors
+    وreport-uri ما يشتغلوا عبر meta، بس باقي التوجيهات تشتغل صح).
+    كل التوجيهات مبنية على الأصول الفعلية اللي يتصل بها الموقع فقط:
+    - self: كل شيء عندنا (CSS/JS/صور/بيانات مبنية).
+    - Google Fonts: تحميل الخط.
+    - AdSense/googlesyndication + googletagmanager + المجالات المرتبطة فيها:
+      لعرض الإعلانات (لسا قيد المراجعة من قوقل وقت كتابة هذا) وGoogle Analytics.
+      إعلانات AdSense تُعرض فعلياً داخل iframes معزولة بمجال قوقل، لذلك frame-src
+      يسمح بها بدل ما تحتاج script-src صلاحيات واسعة.
+    - Web3Forms: نموذج التواصل.
+    - Worker الخاص بنا (hakolah-push.workers.dev): تتبع الزيارات، الإعجاب،
+      اشتراكات الإشعارات.
+    - object-src none: يمنع أي Flash/plugin قديم (ناقل هجمات كلاسيكي).
+    - base-uri self: يمنع حقن <base> لتغيير مسار كل الروابط النسبية بالصفحة.
+    ما فيه أي unsafe-inline بـ script-src إطلاقاً — وهذا هو الأهم أمنياً
+    (الحماية الفعلية من XSS). كل الأكواد المضمّنة سابقاً (تفضيل المظهر،
+    إعدادات اللغة، gtag، استدعاءات كل صفحة) نُقلت لملفات JS خارجية أو لعنصر
+    بيانات <script type="application/json"> (غير قابل للتنفيذ أصلاً).
+
+    الاستثناء الوحيد: style-src-attr 'unsafe-inline' — سكربت إعلانات Google
+    (show_ads_impl.js) يضبط سمات style مضمّنة على حاويات الإعلان، وبدون هذا
+    الاستثناء تنكسر الإعلانات. مقصور عمداً على سمات style فقط (style-src-attr)،
+    فيبقى style-src نفسه صارماً: ما يُسمح بحقن عناصر <style> أو ملفات CSS
+    خارجية إلا من نطاقنا وخطوط Google. تنسيقات الموقع كلها بملف CSS خارجي،
+    فهذا الاستثناء ما يفتح أي ثغرة بكودنا نحن — فقط يسمح لسكربت قوقل يشتغل.
+  #}
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://*.adtrafficquality.google; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://www.googletagmanager.com https://*.adtrafficquality.google; connect-src 'self' https://api.web3forms.com https://hakolah-push.hakolah.workers.dev https://*.google-analytics.com https://*.analytics.google.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google https://lookerstudio.google.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.web3forms.com; manifest-src 'self'; worker-src 'self'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script>
-    (function () {
-      try {
-        var pref = localStorage.getItem("site_theme_pref");
-        if (pref === "light" || pref === "dark") {
-          document.documentElement.setAttribute("data-theme", pref);
-        }
-      } catch (e) {}
-    })();
-  </script>
+  {# ملف خارجي (وليس سكربت مضمّن) عمداً — يسمح بسياسة CSP صارمة script-src
+     بدون unsafe-inline. يُحمَّل بدون defer/async فيشتغل قبل أول رسم للصفحة
+     (يمنع "وميض" المظهر الفاتح قبل تطبيق المظهر الداكن المحفوظ) #}
+  <script src="{{ '/js/theme-init.js' | url }}"></script>
   {% set metaDescription = description or desc %}
   {% set pageUrl = site.origin + (page.url | url) %}
   {% set ogType = "article" if sectionSlug else "website" %}
@@ -62,14 +85,10 @@
   {% if adsense.publisherId %}
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense.publisherId }}" crossorigin="anonymous"></script>
   {% endif %}
+  {# ضبط gtag انتقل لـ bootstrap.js (يقرأ المعرّف من #site-config) — كان
+     سكربت مضمّن يمنع سياسة CSP صارمة #}
   {% if analytics.measurementId %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics.measurementId }}"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag("js", new Date());
-    gtag("config", "{{ analytics.measurementId }}");
-  </script>
   {% endif %}
 
   <script type="application/ld+json">
@@ -156,16 +175,25 @@
     <p>{{ t.daily_pick_text_html | replace("{homeUrl}", (('/en/index.html' if lang == 'en' else '/index.html') | url)) | safe }}</p>
   </div>
 
-  <script>
-    window.PUSH_CONFIG = { workerUrl: {{ push.workerUrl | json | safe }}, vapidPublicKey: {{ push.vapidPublicKey | json | safe }} };
-    window.SITE_LANG = {{ lang | json | safe }};
-    window.I18N = {{ i18n | json | safe }};
+  {# إعدادات الصفحة كبيانات JSON (نوع application/json لا يُنفَّذ إطلاقاً، فما
+     يحتاج أي استثناء بسياسة CSP). bootstrap.js يقرأها، وmain.js يشغّل دوال
+     الصفحة المناسبة حسب page — بدل السكربتات المضمّنة اللي كانت هنا #}
+  <script type="application/json" id="site-config">
+    {
+      "lang": {{ lang | json | safe }},
+      "gaId": {{ analytics.measurementId | json | safe }},
+      "push": { "workerUrl": {{ push.workerUrl | json | safe }}, "vapidPublicKey": {{ push.vapidPublicKey | json | safe }} },
+      "page": {
+        "section": {{ (section or "") | json | safe }},
+        "favorites": {{ (isFavoritesPage or false) | json | safe }},
+        "picker": {{ (navActive == "picker") | json | safe }},
+        "home": {{ (navActive == "home") | json | safe }}
+      },
+      "i18n": {{ i18n | json | safe }}
+    }
   </script>
+  <script src="{{ '/js/bootstrap.js' | url }}?v={{ buildVersion }}"></script>
   <script src="{{ '/js/data.js' | url }}?v={{ buildVersion }}"></script>
   <script src="{{ '/js/main.js' | url }}?v={{ buildVersion }}"></script>
-  {% if section %}<script>renderSection("{{ section }}");</script>{% endif %}
-  {% if isFavoritesPage %}<script>renderFavoritesPage();</script>{% endif %}
-  {% if navActive == "picker" %}<script>initRandomPicker();</script>{% endif %}
-  {% if navActive == "home" %}<script>renderFeaturedPick();initPushNotifications();renderTrendingSection();renderExploreProgress();</script>{% endif %}
 </body>
 </html>

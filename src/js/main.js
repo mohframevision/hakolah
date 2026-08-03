@@ -513,11 +513,10 @@ function detectAdblockViaBaitElements() {
   return new Promise((resolve) => {
     const baits = ADBLOCK_BAIT_NAMES.map((name, i) => {
       const el = document.createElement("div");
-      el.className = name;
+      // اسم الطُعم أولاً (هو اللي تطابقه فلاتر مانعات الإعلانات)، وكلاس
+      // التنسيق بعده — التنسيق بـ CSS وليس بـ style.cssText عشان سياسة CSP
+      el.className = `${name} adblock-bait`;
       el.id = `${name}-${i}`;
-      el.style.cssText =
-        "position:absolute; top:-9999px; inset-inline-start:-9999px; width:10px; height:10px; " +
-        "background:#fff; pointer-events:none;";
       el.innerHTML = "&nbsp;";
       document.body.appendChild(el);
       return el;
@@ -1091,13 +1090,13 @@ function renderSection(section) {
       const isSectionEmpty = data.items.length === 0;
       grid.innerHTML = isSectionEmpty
         ? `
-        <div class="empty-state" style="grid-column: 1/-1;">
+        <div class="empty-state full-row">
           <span class="icon">🧭</span>
           <p>${t("empty_section")}</p>
         </div>
       `
         : `
-        <div class="empty-state" style="grid-column: 1/-1;">
+        <div class="empty-state full-row">
           <span class="icon">🔍</span>
           <p>${t("empty_search")}</p>
         </div>
@@ -1181,7 +1180,7 @@ function renderFavoritesPage() {
 
   if (collected.length === 0) {
     grid.innerHTML = `
-      <div class="empty-state" style="grid-column: 1/-1;">
+      <div class="empty-state full-row">
         <span class="icon">♡</span>
         <p>لم تُضِف أي عنصر إلى المفضلة بعد.<br>تصفّح الأقسام واضغط على أيقونة القلب لحفظ ما يعجبك.</p>
       </div>
@@ -1298,8 +1297,13 @@ function renderExploreProgress() {
           : `🧭 ${t("explore_progress_verb")} ${count} ${t("explore_progress_of")} ${total} ${t("explore_progress_sections")}`
       }
     </p>
-    <div class="explore-progress-bar"><div class="explore-progress-fill" style="width: ${percent}%"></div></div>
+    <div class="explore-progress-bar"><div class="explore-progress-fill"></div></div>
   `;
+
+  // العرض يُضبط عبر CSSOM بعد الإدراج — سمة style مضمّنة بالـ HTML ممنوعة
+  // بسياسة CSP (style-src-attr)، أما ضبط الخاصية بجافاسكربت فمسموح
+  const fill = container.querySelector(".explore-progress-fill");
+  if (fill) fill.style.width = `${percent}%`;
 }
 
 /* ===== عدّاد زيارات بسيط (خاص بنا فقط، نفس Cloudflare Worker حق الإشعارات) =====
@@ -1343,7 +1347,7 @@ async function initPushNotifications() {
   if (!btn || !config || !config.workerUrl) return;
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
-  btn.style.display = "";
+  btn.classList.remove("hidden");
 
   const registration = await navigator.serviceWorker.register("/hakolah/sw.js");
   let subscription = await registration.pushManager.getSubscription();
@@ -1521,4 +1525,17 @@ document.addEventListener("DOMContentLoaded", () => {
   initContactForm();
   trackVisit();
   fetchLikeCounts();
+
+  // ما يخص كل صفحة على حدة — كانت سكربتات مضمّنة بـ base.njk، صارت تُقرأ من
+  // إعدادات الصفحة (#site-config) عشان تشتغل سياسة CSP بدون unsafe-inline
+  const page = window.PAGE || {};
+  if (page.section) renderSection(page.section);
+  if (page.favorites) renderFavoritesPage();
+  if (page.picker) initRandomPicker();
+  if (page.home) {
+    renderFeaturedPick();
+    initPushNotifications();
+    renderTrendingSection();
+    renderExploreProgress();
+  }
 });

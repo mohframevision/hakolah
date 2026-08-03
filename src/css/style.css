@@ -69,6 +69,13 @@
   box-sizing: border-box;
 }
 
+/* بديل عن style="display:none" بالقوالب — يسمح بسياسة CSP صارمة على
+   style-src بدون unsafe-inline (الحالة الأولية مخفية بكلاس، وJS بعدها
+   يتحكم بالعرض عبر .style.display مباشرة، وهذا غير خاضع لـ CSP إطلاقاً) */
+.hidden {
+  display: none;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -583,9 +590,30 @@ img {
 
 .explore-progress-fill {
   height: 100%;
+  /* العرض يُضبط من JS عبر CSSOM (element.style.width) وليس بسمة style بالـ HTML
+     — سمة style المضمّنة ممنوعة بسياسة CSP، أما CSSOM فمسموح */
+  width: 0;
   background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
   border-radius: 999px;
   transition: width 0.4s ease;
+}
+
+/* بديل عن style="grid-column: 1/-1" المضمّنة بحالات "لا توجد نتائج" */
+.empty-state.full-row {
+  grid-column: 1 / -1;
+}
+
+/* عناصر طُعم كشف مانع الإعلانات — كانت تُنسّق بـ style.cssText من JS، وهذا
+   يُعدّ سمة style مضمّنة فتمنعه سياسة CSP. النقل لكلاس يحلّ ذلك، والكشف لا
+   يتأثر لأن مانعات الإعلانات تطابق على أسماء الكلاسات الأخرى (adsbox وغيرها) */
+.adblock-bait {
+  position: absolute;
+  top: -9999px;
+  inset-inline-start: -9999px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  pointer-events: none;
 }
 
 /* ===== شبكة الأقسام في الرئيسية ===== */

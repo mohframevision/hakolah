@@ -18,20 +18,4 @@ description: "الصفحة اللي تدور عليها مو موجودة أو �
   <a href="{{ '/index.html' | url }}" class="btn" id="notFoundHomeLink">🏠 الرجوع للرئيسية</a>
 </div>
 
-<script>
-  {# GitHub Pages يخدم ملف 404.html هذا لأي رابط غير موجود بكل الموقع (حتى تحت /en/)،
-     ما فيه دعم لـ 404 مختلف لكل مجلد فرعي — لذا نكتشف اللغة من المسار مباشرة بجافاسكربت #}
-  (function () {
-    if (location.pathname.indexOf("/en/") === -1) return;
-    document.documentElement.lang = "en";
-    document.documentElement.dir = "ltr";
-    document.title = "Page Not Found | Hakolah";
-    document.getElementById("notFoundHeader").innerHTML =
-      "<h1>😕 404 — Page Not Found</h1><p>The link you opened doesn't exist or was moved.</p>";
-    document.getElementById("notFoundHint").textContent =
-      "Try going back to the homepage, or browse a section from the menu above.";
-    var homeLink = document.getElementById("notFoundHomeLink");
-    homeLink.href = "{{ '/en/index.html' | url }}";
-    homeLink.textContent = "🏠 Back to Home";
-  })();
-</script>
+<script src="{{ '/js/notfound.js' | url }}"></script>

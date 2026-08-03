@@ -14,13 +14,13 @@ langSwitchUrl: "/en/contact.html"
 
 </article>
 
-<div id="formMessage" class="form-message" style="display: none;"></div>
+<div id="formMessage" class="form-message hidden"></div>
 
 <form id="contactForm" class="contact-form" action="https://api.web3forms.com/submit" method="POST">
   <input type="hidden" name="access_key" value="a2dc8bb2-0fb8-47a9-8b58-ad3245d3f5a3">
   <input type="hidden" name="subject" value="رسالة جديدة من موقع هكوله">
   <input type="hidden" name="from_name" value="نموذج تواصل هكوله">
-  <input type="checkbox" name="botcheck" style="display: none;">
+  <input type="checkbox" name="botcheck" class="hidden">
 
   <div class="form-group">
     <label for="name">الاسم *</label>
@@ -47,7 +47,7 @@ langSwitchUrl: "/en/contact.html"
 
   <button type="submit" id="submitBtn" class="btn">
     <span id="btnText">إرسال</span>
-    <span id="btnLoading" style="display: none;">جاري الإرسال…</span>
+    <span id="btnLoading" class="hidden">جاري الإرسال…</span>
   </button>
 </form>
 

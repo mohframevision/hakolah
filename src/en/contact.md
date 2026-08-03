@@ -15,13 +15,13 @@ Have a restaurant, store, or tool you'd like added to the site? Or have a questi
 
 </article>
 
-<div id="formMessage" class="form-message" style="display: none;"></div>
+<div id="formMessage" class="form-message hidden"></div>
 
 <form id="contactForm" class="contact-form" action="https://api.web3forms.com/submit" method="POST">
   <input type="hidden" name="access_key" value="a2dc8bb2-0fb8-47a9-8b58-ad3245d3f5a3">
   <input type="hidden" name="subject" value="New message from Hakolah">
   <input type="hidden" name="from_name" value="Hakolah contact form">
-  <input type="checkbox" name="botcheck" style="display: none;">
+  <input type="checkbox" name="botcheck" class="hidden">
 
   <div class="form-group">
     <label for="name">Name *</label>
@@ -54,7 +54,7 @@ Have a restaurant, store, or tool you'd like added to the site? Or have a questi
 
   <button type="submit" id="submitBtn" class="btn">
     <span id="btnText">Send</span>
-    <span id="btnLoading" style="display: none;">Sending…</span>
+    <span id="btnLoading" class="hidden">Sending…</span>
   </button>
 </form>
 
