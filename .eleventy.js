@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const matter = require("gray-matter");
+const markdownItLinkAttributes = require("markdown-it-link-attributes");
 
 /*
   يتأكد كل قسم معرّف في src/sections/*.md له مجلد محتوى خاص به + ملف بيانات
@@ -53,6 +54,20 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/sw.js");
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
+
+  // أي رابط خارجي (http/https) داخل محتوى Markdown يفتح بتبويب جديد — حتى
+  // يضل الزائر بموقعنا مفتوح بدل ما يختفي من شريط المتصفح (الروابط الداخلية
+  // النسبية ما تتأثر، وأزرار البطاقات (موقع/خرائط/إنستقرام) أصلاً مضبوطة
+  // بنفس الطريقة من main.js مباشرة)
+  eleventyConfig.amendLibrary("md", (mdLib) =>
+    mdLib.use(markdownItLinkAttributes, {
+      matcher: (href) => /^https?:\/\//.test(href),
+      attrs: {
+        target: "_blank",
+        rel: "noopener noreferrer",
+      },
+    })
+  );
 
   return {
     dir: {
