@@ -45,6 +45,8 @@ module.exports = {
     near_me_locating: "⏳ جاري تحديد موقعك…",
     geolocation_unsupported: "متصفحك ما يدعم تحديد الموقع",
     geolocation_denied: "تعذّر الوصول لموقعك — تأكد من تفعيل صلاحية الموقع بالمتصفح",
+    try_again: "🔄 جرّب مرة ثانية",
+    spin_button: "🎲 اختر لي!",
   },
   en: {
     skip_to_content: "Skip to content",
@@ -89,5 +91,7 @@ module.exports = {
     near_me_locating: "⏳ Locating you…",
     geolocation_unsupported: "Your browser doesn't support geolocation",
     geolocation_denied: "Couldn't access your location — check your browser's location permission",
+    try_again: "🔄 Try again",
+    spin_button: "🎲 Pick for me!",
   },
 };

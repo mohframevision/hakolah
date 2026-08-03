@@ -15,20 +15,153 @@ function itemDesc(item) {
   return window.SITE_LANG === "en" && item.desc_en ? item.desc_en : item.desc || "";
 }
 
-// ترجمة مؤقتة لأسماء تصنيفات قسم "مخابز" فقط — أول قسم فيه نسخة إنجليزية
-// تجريبية. لو توسّعت النسخة الإنجليزية لأقسام ثانية لاحقاً، الحل الصحيح
-// طويل المدى إضافة حقل ترجمة لكل تصنيف بلوحة التحكم بدل هذا القاموس الثابت
+// ترجمة مؤقتة لأسماء التصنيفات والمناطق المستخدمة عبر كل الأقسام — الحل
+// طويل المدى (لو توسّعت النسخة الإنجليزية أكثر) هو حقل ترجمة لكل تصنيف
+// بلوحة التحكم بدل هذا القاموس الثابت
 const TAG_TRANSLATIONS_EN = {
+  // مناطق
+  "المنامة": "Manama",
+  "المحرق": "Muharraq",
+  "سترة": "Sitra",
+  "أبو قوة": "Abu Quwah",
+  "السهلة": "Sehla",
+  "مدينة عيسى": "Isa Town",
+  "مدينة حمد": "Hamad Town",
   "عالي": "A'ali",
   "جدحفص": "Jidhafs",
   "البديع": "Al Budaiya",
+  "الحد": "Al Hidd",
+  "السهلة الشمالية": "North Sehla",
+  "السهلة الجنوبية": "South Sehla",
+  "أم الحصم": "Umm Al Hassam",
+  "البلاد القديم": "Bilad Al Qadeem",
+  "القضيبية": "Al Qudaibiya",
+  "الزنج": "Zinj",
+  "الديه": "Al Diyah",
+  "راس رمان": "Ras Rumman",
+  "جدعلي": "Jid Ali",
+  "جد علي": "Jid Ali",
+  "الرفاع الشرقي": "East Riffa",
+  "الخميس": "Al Khamis",
+  "العدلية": "Adliya",
+  "سار": "Sar",
+  "المقشع": "Al Maqsha",
+  "سلماباد": "Salmabad",
+  "ديار المنامة": "Diyar Al Manama",
+  "توبلي": "Tubli",
+  "سند": "Sanad",
+  "الدراز": "Al Daraz",
   "المنطقة الدبلوماسية": "Diplomatic Area",
-  "أبو قوة": "Abu Quwah",
+  // مطاعم
+  "برجر": "Burger",
+  "سندويشات": "Sandwiches",
+  "وجبات سريعة": "Fast Food",
+  "مخبز": "Bakery",
+  "معجنات": "Pastries",
+  "عراقي": "Iraqi",
+  "مشاوي": "Grills",
+  "ذرة": "Corn",
+  "آلو وصوصات": "Fries & Sauces",
+  "عيوش": "Aayosh",
+  "شاورما": "Shawarma",
+  "تركي": "Turkish",
+  "بيتزا": "Pizza",
+  "حلويات": "Sweets",
+  "آيسكريم": "Ice Cream",
+  "هندي": "Indian",
+  "إيطالي": "Italian",
+  "آسيوي": "Asian",
+  "مأكولات بحرية": "Seafood",
+  "عربات طعام": "Food Trucks",
+  "صحي": "Healthy",
+  "كافيه": "Cafe",
+  "مطعم عائلي": "Family Restaurant",
+  "لبناني": "Lebanese",
+  "إيراني": "Iranian",
+  "بحريني": "Bahraini",
+  // كافيهات
+  "قهوة مختصة": "Specialty Coffee",
+  "كرك": "Karak Tea",
+  "مشروبات باردة": "Cold Drinks",
+  "حلا ومعجنات": "Desserts & Pastries",
+  "إفطار": "Breakfast",
+  "مناسب للعمل والدراسة": "Good for Work/Study",
+  "عائلي": "Family-Friendly",
+  "تيك أواي": "Takeaway",
+  // متاجر
+  "إلكترونيات": "Electronics",
+  "المستلزمات المنزلية": "Home Essentials",
+  "مستلزمات الهواتف": "Phone Accessories",
+  "ملابس": "Clothing",
+  "عناية وجمال": "Beauty & Care",
+  "أطفال": "Kids",
+  "كتب وقرطاسية": "Books & Stationery",
+  "ديكور منزلي": "Home Decor",
+  "ألعاب": "Toys",
+  "إكسسوارات": "Accessories",
+  "رياضة": "Sports",
+  "مكتبة": "Library",
+  "مشتل": "Nursery",
+  "معدات التصوير واكسسوارته": "Photography Equipment",
+  "كاميرات": "Cameras",
+  "عدسات": "Lenses",
+  "بصريات": "Optics",
+  "مستلزمات السباكة": "Plumbing Supplies",
+  "الكمبيوتر": "Computers",
+  "تصحيح النصوص": "Proofreading",
+  // روابط وأدوات
+  "تصميم": "Design",
+  "ألوان": "Colors",
+  "ترجمة": "Translation",
+  "برمجة": "Coding",
+  "مستندات": "Documents",
+  "إنتاجية": "Productivity",
+  "صور": "Photos",
+  "أمان": "Security",
+  "تعليم": "Education",
+  "فيديو": "Video",
+  "صوت": "Audio",
+  "بيانات": "Data",
+  "ذكاء اصطناعي": "AI",
+  // أماكن
+  "شاطئ": "Beach",
+  "إطلالة": "View",
+  "تنزه": "Outing",
+  "تاريخي": "Historic",
+  "ترفيهي": "Entertainment",
+  "طبيعة": "Nature",
+  // مقالات وأدلة
+  "دليل شامل": "Full Guide",
+  "أفضل 10": "Top 10",
+  "نهاية أسبوع": "Weekend",
+  "نصائح": "Tips",
+  "مواسم وفعاليات": "Seasons & Events",
+  "نقل ومواصلات": "Transport",
+  "ميزانية": "Budget",
+  "للزوار": "For Visitors",
+  "تقنية وبرمجيات": "Tech & Software",
+  "تصميم ومونتاج": "Design & Editing",
+  "تسويق وأعمال": "Marketing & Business",
 };
 
 function tagLabel(tag) {
   if (window.SITE_LANG === "en") return TAG_TRANSLATIONS_EN[tag] || tag;
   return tag;
+}
+
+const SECTION_NAMES_EN = {
+  "links-tools": "Links & Tools",
+  restaurants: "Restaurants",
+  stores: "Stores",
+  cafes: "Cafes",
+  bakeries: "Bakeries",
+  places: "Places",
+  guides: "Guides",
+};
+
+function sectionLabel(section) {
+  if (window.SITE_LANG === "en") return SECTION_NAMES_EN[section] || SITE_DATA[section].title;
+  return SITE_DATA[section].title;
 }
 
 /* ===== بحث ذكي متسامح مع الأخطاء الإملائية ===== */
@@ -1287,7 +1420,7 @@ function initRandomPicker() {
       (key) => `
       <button class="picker-category" data-section="${key}" aria-pressed="false">
         <span class="picker-category-icon">${SITE_DATA[key].icon}</span>
-        <span>${SITE_DATA[key].title}</span>
+        <span>${sectionLabel(key)}</span>
       </button>`
     )
     .join("");
@@ -1317,7 +1450,7 @@ function initRandomPicker() {
 
     const retryBtn = document.createElement("button");
     retryBtn.className = "btn secondary picker-retry-btn";
-    retryBtn.textContent = "🔄 جرّب مرة ثانية";
+    retryBtn.textContent = t("try_again");
     retryBtn.addEventListener("click", () => {
       playClickSound();
       spin();
@@ -1343,7 +1476,7 @@ function initRandomPicker() {
 
     function tick() {
       const randomItem = items[Math.floor(Math.random() * items.length)];
-      slot.innerHTML = `<span class="picker-slot-icon">${randomItem.icon || "⭐"}</span><span class="picker-slot-title">${randomItem.title}</span>`;
+      slot.innerHTML = `<span class="picker-slot-icon">${randomItem.icon || "⭐"}</span><span class="picker-slot-title">${itemTitle(randomItem)}</span>`;
       slot.classList.remove("pulse");
       void slot.offsetWidth;
       slot.classList.add("pulse");

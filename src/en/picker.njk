@@ -1,0 +1,22 @@
+---
+layout: base.njk
+lang: "en"
+permalink: "en/picker.html"
+title: "Pick for Me 🎲 | Hakolah"
+description: "Can't decide? Let Hakolah pick randomly for you from any section."
+navActive: "picker"
+langSwitchUrl: "/picker.html"
+---
+<div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">Home</a> / Pick for me</div>
+<section class="page-header">
+  <h1>🎲 Pick for Me</h1>
+  <p>Can't decide where to go or what to pick? Choose a section and press the button, let Hakolah decide for you!</p>
+</section>
+
+<div class="picker-categories" id="pickerCategories"></div>
+
+<div class="picker-action">
+  <button id="pickerSpinBtn" class="btn picker-spin-btn" disabled>🎲 Pick for me!</button>
+</div>
+
+<div class="picker-stage" id="pickerStage"></div>
