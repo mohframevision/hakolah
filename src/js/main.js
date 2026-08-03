@@ -309,6 +309,48 @@ function initCookieConsent() {
    إعلانات وإظهار ملاحظة لطيفة وغير مزعجة. الإغلاق بـ sessionStorage عمداً
    (مو localStorage) — يعني تختفي لباقي هالجلسة إذا ضغط الزائر ✕، بس ترجع
    تظهر بجلسة تصفح جديدة طول ما المانع لسا شغّال، بدل ما تختفي إلى الأبد. */
+function detectAdblockViaBaitElement() {
+  return new Promise((resolve) => {
+    // عنصر "طعم" بأسماء كلاسات شائعة تستهدفها قوائم فلترة مانعات الإعلانات
+    // القائمة على تعديل الصفحة (CSS) زي uBlock Origin وAdBlock Plus — لو
+    // انحجب (ارتفاعه صار صفر) فهذا دليل إن مانع إعلانات نشط بالمتصفح
+    const bait = document.createElement("div");
+    bait.className = "adsbox ad-banner ad-placement adsbygoogle";
+    bait.style.cssText = "position:absolute; top:-9999px; inset-inline-start:-9999px; width:10px; height:10px;";
+    document.body.appendChild(bait);
+
+    setTimeout(() => {
+      const style = getComputedStyle(bait);
+      const blocked =
+        bait.offsetParent === null || bait.offsetHeight === 0 || style.display === "none" || style.visibility === "hidden";
+      bait.remove();
+      resolve(blocked);
+    }, 300);
+  });
+}
+
+function detectAdblockViaNetworkRequest() {
+  return new Promise((resolve) => {
+    // مانعات مبنية على حجب الطلبات الشبكية مباشرة (زي درع Brave Shields)
+    // ما تحجب عناصر الصفحة بالضرورة، بس تمنع تحميل ملفات من نطاقات إعلانية
+    // معروفة — نجرّب تحميل سكربت AdSense الحقيقي ونشوف هل يفشل التحميل
+    const script = document.createElement("script");
+    script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+    script.async = true;
+    let done = false;
+    const finish = (blocked) => {
+      if (done) return;
+      done = true;
+      script.remove();
+      resolve(blocked);
+    };
+    script.onload = () => finish(false);
+    script.onerror = () => finish(true);
+    document.body.appendChild(script);
+    setTimeout(() => finish(false), 2000);
+  });
+}
+
 function initAdblockNotice() {
   const DISMISSED_KEY = "adblock_notice_dismissed";
   if (sessionStorage.getItem(DISMISSED_KEY)) return;
@@ -317,20 +359,11 @@ function initAdblockNotice() {
   const closeBtn = document.getElementById("adblockNoticeClose");
   if (!notice || !closeBtn) return;
 
-  // عنصر "طعم" بأسماء كلاسات شائعة تستهدفها قوائم فلترة مانعات الإعلانات —
-  // لو انحجب (ارتفاعه صار صفر) فهذا دليل إن مانع إعلانات نشط بالمتصفح
-  const bait = document.createElement("div");
-  bait.className = "adsbox ad-banner ad-placement adsbygoogle";
-  bait.style.cssText = "position:absolute; top:-9999px; inset-inline-start:-9999px; width:10px; height:10px;";
-  document.body.appendChild(bait);
-
-  setTimeout(() => {
-    const style = getComputedStyle(bait);
-    const blocked =
-      bait.offsetParent === null || bait.offsetHeight === 0 || style.display === "none" || style.visibility === "hidden";
-    bait.remove();
-    if (blocked) notice.classList.add("open");
-  }, 300);
+  Promise.all([detectAdblockViaBaitElement(), detectAdblockViaNetworkRequest()]).then(
+    ([blockedByCss, blockedByNetwork]) => {
+      if (blockedByCss || blockedByNetwork) notice.classList.add("open");
+    }
+  );
 
   closeBtn.addEventListener("click", () => {
     sessionStorage.setItem(DISMISSED_KEY, "1");
