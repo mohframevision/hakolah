@@ -2,6 +2,8 @@
 title: مبشر كافيه
 icon: "☕"
 desc: كافيه بمنطقة المقشع.
+title_en: Mubashir Cafe
+desc_en: A cafe in Al Maqsha.
 categories:
   - المقشع
 links:

@@ -2,6 +2,8 @@
 title: بوابة شيشل
 icon: "🌯"
 desc: برجر، سندويشات، شاورما ودونر بمنطقة جد علي.
+title_en: Sheesha Gate
+desc_en: Burgers, sandwiches, shawarma, and doner in Jid Ali.
 categories:
   - شاورما
   - برجر

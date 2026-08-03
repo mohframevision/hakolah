@@ -2,6 +2,8 @@
 title: Shawarma Lab
 icon: "🌯"
 desc: مطعم شاورما بمنطقة الزنج، يفتح من الساعة 5 عصراً حتى منتصف الليل.
+title_en: Shawarma Lab
+desc_en: A shawarma restaurant in Zinj, open from 5 PM to midnight.
 categories:
   - شاورما
   - الزنج

@@ -3,6 +3,9 @@ title: معجنات بباي
 icon: "🥐"
 desc: |-
   معجنات وبيتزا وسندويشات، فروع بجد علي وسند. حساب تيك توك: @popeyepastries
+title_en: Babay Pastries
+desc_en: |-
+  Pastries, pizza, and sandwiches, with branches in Jid Ali and Sanad. TikTok: @popeyepastries
 categories:
   - معجنات
   - بيتزا

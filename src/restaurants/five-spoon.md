@@ -2,6 +2,8 @@
 title: فايف سبون
 icon: "🍽️"
 desc: مطعم يقدم مأكولات إيطالية وصينية وأمريكية، بمنطقة جد علي.
+title_en: Five Spoon
+desc_en: A restaurant serving Italian, Chinese, and American food in Jid Ali.
 categories:
   - إيطالي
   - آسيوي

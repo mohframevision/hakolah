@@ -2,6 +2,8 @@
 title: مطعم اسطنبول هاوس
 icon: "🍽️"
 desc: مطعم تركي يقدّم المأكولات التركية على أصولها، له عدة فروع بالبحرين.
+title_en: Istanbul House Restaurant
+desc_en: A Turkish restaurant serving authentic Turkish cuisine, with several branches in Bahrain.
 categories:
   - تركي
 dateAdded: 2026-08-02

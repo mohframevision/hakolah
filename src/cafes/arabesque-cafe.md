@@ -2,6 +2,8 @@
 title: أرابيسك كافيه
 icon: "☕"
 desc: كافيه.
+title_en: Arabesque Cafe
+desc_en: A cafe.
 categories:
   - أبو قوة
 links:

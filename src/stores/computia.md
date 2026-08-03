@@ -14,6 +14,20 @@ desc: |-
   📍 البحرين
   ☎️ / واتساب: +973 33141214
   📧 computia.me@gmail.com
+title_en: computia
+desc_en: |-
+  A Bahraini online store specializing in computers and components, offering ready-made or custom-build gaming PCs, computer components (CPUs, GPUs, motherboards, RAM, storage), gaming monitors, accessories (mice, keyboards, headsets), and gaming furniture (gaming chairs and desks, RGB lighting). The store also offers device maintenance and cleaning, plus after-sales service. Highly rated by customers (4.92/5 based on 633 ratings on the store itself, and 5.0/5 on Google).
+
+  Key highlights:
+
+  - Installments up to 24 months (via Zain, Batelco, and Tabby)
+  - Shipping and delivery across Gulf countries
+  - One-year warranty on eligible products
+  - Same-day delivery (within 3–5 hours for most available products)
+
+  📍 Bahrain
+  ☎️ / WhatsApp: +973 33141214
+  📧 computia.me@gmail.com
 image: ''
 categories:
   - إلكترونيات

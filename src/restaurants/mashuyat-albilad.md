@@ -2,6 +2,8 @@
 title: مشويات البلاد
 icon: "🍽️"
 desc: مشويات بمنطقة البلاد القديم.
+title_en: Mashuyat Al Bilad
+desc_en: Grills in Bilad Al Qadeem.
 categories:
   - مشاوي
   - البلاد القديم

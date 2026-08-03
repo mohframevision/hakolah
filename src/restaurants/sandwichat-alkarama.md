@@ -2,6 +2,8 @@
 title: سندويشات الكرامة
 icon: "🥪"
 desc: سندويشات وعصائر بمنطقة جد علي.
+title_en: Sandwichat Al Karama
+desc_en: Sandwiches and juices in Jid Ali.
 categories:
   - سندويشات
   - برجر

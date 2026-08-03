@@ -2,6 +2,8 @@
 title: سويت كورنر كافيه
 icon: "☕"
 desc: كافيه.
+title_en: Sweet Corner Cafe
+desc_en: A cafe.
 categories:
   - المقشع
 links:

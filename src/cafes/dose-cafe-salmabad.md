@@ -2,6 +2,8 @@
 title: دوز كافيه - سلماباد
 icon: "☕"
 desc: كافيه بمنطقة سلماباد.
+title_en: Dose Cafe - Salmabad
+desc_en: A cafe in Salmabad.
 categories:
   - سلماباد
 links:

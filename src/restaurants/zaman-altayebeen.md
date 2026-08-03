@@ -2,6 +2,8 @@
 title: زمن الطيبين
 icon: "🍽️"
 desc: مطعم مشاوي شعبي بمنطقة سند، معروف بالريوق والتكة والرقبة المشوية.
+title_en: Zaman Al Tayebeen
+desc_en: A popular grill restaurant in Sanad, known for liver, tikka, and grilled neck.
 categories:
   - مشاوي
   - سند

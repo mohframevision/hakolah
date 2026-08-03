@@ -2,6 +2,8 @@
 title: حصير كافيه
 icon: "☕"
 desc: كافيه.
+title_en: Hasir Cafe
+desc_en: A cafe.
 categories:
   - المقشع
 links:

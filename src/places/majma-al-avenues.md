@@ -2,6 +2,8 @@
 title: مجمع الأفنيوز
 icon: 🛍️
 desc: أكبر مركز تجاري بالبحرين، على الواجهة البحرية بقلب المنامة — تسوق، مطاعم، وترفيه.
+title_en: The Avenues Bahrain
+desc_en: The largest mall in Bahrain, on the waterfront in the heart of Manama — shopping, dining, and entertainment.
 categories:
   - ترفيهي
   - عائلي

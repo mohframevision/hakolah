@@ -2,6 +2,8 @@
 title: مطعم الأكيل
 icon: 🍽️
 desc: مطعم مشويات بمنطقة مدينة عيسى.
+title_en: Al Akeel Restaurant
+desc_en: A grill restaurant in Isa Town.
 verified: true
 liked: true
 categories:

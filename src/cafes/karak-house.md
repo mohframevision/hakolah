@@ -2,6 +2,8 @@
 title: كرك هاوس
 icon: "☕"
 desc: كرك ومشروبات.
+title_en: Karak House
+desc_en: Karak tea and drinks.
 categories:
   - كرك
 links:

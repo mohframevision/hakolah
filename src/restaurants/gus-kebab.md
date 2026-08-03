@@ -2,6 +2,8 @@
 title: گص كباب
 icon: "🍢"
 desc: مطعم عراقي بمنطقة سند، مشويات ومقبلات.
+title_en: Gus Kebab
+desc_en: An Iraqi restaurant in Sanad, grills and appetizers.
 categories:
   - عراقي
   - مشاوي

@@ -2,6 +2,8 @@
 title: جوديز (Joody's)
 icon: 🥪
 desc: سندويشات ووجبات سريعة — "Eat good, feel jood". يوفر توصيل وقائمة متنوعة.
+title_en: Joody's
+desc_en: Sandwiches and fast food — "Eat good, feel jood." Offers delivery and a varied menu.
 verified: true
 liked: true
 categories:

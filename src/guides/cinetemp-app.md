@@ -2,6 +2,8 @@
 title: تطبيق CineTemp — مقياس إضاءة ومتتبّع شمس عبر الهاتف
 icon: "🎬"
 desc: كيف يساعد تطبيق CineTemp على قياس درجة حرارة اللون والتعريض الضوئي، وتتبّع مسار الشمس أثناء مسح المواقع والتحضير للتصوير.
+title_en: "CineTemp App — A Light Meter and Sun Tracker in Your Pocket"
+desc_en: How the CineTemp app helps measure color temperature and exposure, and track the sun's path during location scouting and pre-production.
 categories:
   - تقنية وبرمجيات
   - تصميم ومونتاج

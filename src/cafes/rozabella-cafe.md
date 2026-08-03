@@ -2,6 +2,8 @@
 title: روزابيلا كافيه
 icon: ☕
 desc: كافيه.
+title_en: Rozabella Cafe
+desc_en: A cafe.
 categories:
   - جدحفص
 cta: ''

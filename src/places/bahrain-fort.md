@@ -2,6 +2,8 @@
 title: قلعة البحرين
 icon: 🏛️
 desc: موقع أثري عمره أكثر من 4000 عام، عاصمة حضارة دلمون القديمة، ومُدرج على قائمة التراث العالمي لليونسكو.
+title_en: Bahrain Fort
+desc_en: An archaeological site over 4,000 years old, former capital of the ancient Dilmun civilization, and a UNESCO World Heritage Site.
 image: /hakolah/assets/uploads/ondrej-bocek-hEPkfOY7ibY-unsplash.jpg
 categories:
   - تاريخي

@@ -2,6 +2,8 @@
 title: كينج كرك
 icon: "☕"
 desc: كرك ومشروبات.
+title_en: King Karak
+desc_en: Karak tea and drinks.
 categories:
   - كرك
 links:

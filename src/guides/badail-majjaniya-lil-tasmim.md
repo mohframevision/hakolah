@@ -2,6 +2,8 @@
 title: بدائل مجانية لأشهر برامج التصميم والمونتاج
 icon: "💻"
 desc: مقارنة بين أشهر برامج التصميم والموشن جرافيك والمونتاج المدفوعة، وبدائلها المجانية أو شبه المجانية لمن يبدأ دون ميزانية استوديو احترافي.
+title_en: "Free Alternatives to the Most Popular Design and Editing Software"
+desc_en: A comparison between the most popular paid design, motion graphics, and editing software and their free (or nearly free) alternatives, for anyone starting out without a professional studio budget.
 categories:
   - تقنية وبرمجيات
   - تصميم ومونتاج

@@ -2,6 +2,8 @@
 title: بنديرة كافيه - مجمع عالي
 icon: "☕"
 desc: كافيه داخل مجمع عالي.
+title_en: Bindaira Cafe - A'ali Complex
+desc_en: A cafe inside A'ali Complex.
 categories:
   - عالي
 links:

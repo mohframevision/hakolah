@@ -2,6 +2,8 @@
 title: مقهى النوفرة
 icon: "☕"
 desc: كافيه.
+title_en: Nawfara Cafe
+desc_en: A cafe.
 categories:
   - المقشع
 links:

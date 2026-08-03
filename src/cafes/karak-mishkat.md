@@ -2,6 +2,8 @@
 title: كرك مشكاة
 icon: "☕"
 desc: كرك ومشروبات.
+title_en: Karak Mishkat
+desc_en: Karak tea and drinks.
 categories:
   - كرك
 links:

@@ -2,6 +2,8 @@
 title: مطعم هما الإيراني
 icon: "🍽️"
 desc: مطعم إيراني بمنطقة الجنبية، يقدم المأكولات الفارسية الأصيلة بوصفات تقليدية.
+title_en: Homa Restaurant (Iranian)
+desc_en: An Iranian restaurant in Janabiyah, serving authentic Persian cuisine with traditional recipes.
 categories:
   - إيراني
 dateAdded: 2026-08-02

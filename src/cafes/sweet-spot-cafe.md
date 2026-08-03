@@ -2,6 +2,8 @@
 title: سويت سبوت كافيه
 icon: "☕"
 desc: كافيه.
+title_en: Sweet Spot Cafe
+desc_en: A cafe.
 categories:
   - جدحفص
 links:

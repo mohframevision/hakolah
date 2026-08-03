@@ -2,6 +2,8 @@
 title: هش برجر (Hash Burger)
 icon: "🍔"
 desc: مطعم برجر حلال بمنطقة البلاد القديم، يفتح مساءً حتى ساعات متأخرة.
+title_en: Hash Burger
+desc_en: A halal burger restaurant in Bilad Al Qadeem, open evenings until late.
 categories:
   - برجر
   - البلاد القديم

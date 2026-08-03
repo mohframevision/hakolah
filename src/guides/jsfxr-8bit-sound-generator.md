@@ -2,6 +2,8 @@
 title: أداة مجانية لتوليد مؤثرات صوتية بطابع 8-bit
 icon: "🔊"
 desc: أداة مجانية تعمل داخل المتصفح دون تثبيت، تولّد مؤثرات صوتية بأسلوب ألعاب الفيديو الكلاسيكية (8-bit) خلال ثوانٍ، وتصدّرها بصيغة WAV جاهزة للاستخدام.
+title_en: "A Free Tool to Generate 8-bit Sound Effects"
+desc_en: A free browser-based tool, no install required, that generates classic video-game-style (8-bit) sound effects in seconds and exports them as ready-to-use WAV files.
 categories:
   - تقنية وبرمجيات
   - تصميم ومونتاج

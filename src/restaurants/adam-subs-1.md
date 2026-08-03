@@ -2,6 +2,8 @@
 title: آدم سابز
 icon: 🍔
 desc: برجر وسندويشات (Subs) متنوعة، مع خدمة توصيل عبر عدة تطبيقات.
+title_en: Adam Subs
+desc_en: A variety of burgers and subs, with delivery via several apps.
 verified: true
 liked: true
 categories:

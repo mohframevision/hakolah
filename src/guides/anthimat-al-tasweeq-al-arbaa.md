@@ -2,6 +2,8 @@
 title: قبل أن تُطلق أي إعلان — أربعة أنظمة يجب بناؤها أولاً
 icon: "💡"
 desc: يظن معظم الناس أن التسويق يعني إعلانات ومنشورات فحسب. والحقيقة أن التكتيكات دون نظام أساسي سرعان ما تنهار، تماماً كبيت يُشيَّد دون مخطط.
+title_en: "Before You Run Any Ad — Four Systems You Need to Build First"
+desc_en: Most people think marketing just means ads and posts. In reality, tactics without a foundational system quickly collapse, just like a house built without a blueprint.
 categories:
   - تسويق وأعمال
 dateAdded: 2026-08-03

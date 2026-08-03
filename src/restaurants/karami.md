@@ -2,6 +2,8 @@
 title: مطعم كرامي
 icon: "🍽️"
 desc: مطعم وبوفيه أطعمة دولية ومشويات — عدة فروع بالبحرين (الزنج، سند، مجمع الرملي، جد علي، عراد).
+title_en: Karami Restaurant
+desc_en: A restaurant and buffet serving international food and grills — several branches in Bahrain (Zinj, Sanad, Al Ramli Mall, Jid Ali, Arad).
 categories:
   - مشاوي
   - شاورما

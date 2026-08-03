@@ -2,6 +2,8 @@
 title: إيلين كافيه
 icon: "☕"
 desc: كافيه.
+title_en: Ellein Cafe
+desc_en: A cafe.
 categories: []
 links:
   maps: https://maps.app.goo.gl/ahf71cggTDftkvqq5

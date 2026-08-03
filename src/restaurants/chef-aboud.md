@@ -2,6 +2,8 @@
 title: مطعم شيف عبود
 icon: "🍽️"
 desc: مطعم سوري لبناني بمنطقة الزنج، بخبرة الشيف اللي تمتد لأكثر من 26 سنة بسوريا قبل ما يفتح مطعمه بالبحرين.
+title_en: Chef Aboud Restaurant
+desc_en: A Syrian-Lebanese restaurant in Zinj, by a chef with over 26 years of experience in Syria before opening his restaurant in Bahrain.
 categories:
   - لبناني
   - الزنج

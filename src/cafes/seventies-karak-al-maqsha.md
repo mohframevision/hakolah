@@ -2,6 +2,8 @@
 title: كرك السبعينات - المقشع
 icon: "☕"
 desc: فرع كرك السبعينات بمنطقة المقشع — كرك ومشروبات.
+title_en: Karak Al-Sabinat - Al Maqsha
+desc_en: Karak Al-Sabinat branch in Al Maqsha — karak tea and drinks.
 categories:
   - كرك
   - المقشع

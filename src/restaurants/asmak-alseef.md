@@ -2,6 +2,8 @@
 title: مطعم أسماك السيف
 icon: "🍽️"
 desc: مطعم أسماك بمنطقة توبلي.
+title_en: Asmak Al Seef
+desc_en: A fish restaurant in Tubli.
 categories:
   - مأكولات بحرية
   - توبلي

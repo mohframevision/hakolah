@@ -2,6 +2,8 @@
 title: بيوت كافيه
 icon: "☕"
 desc: كافيه.
+title_en: Beaut Cafe
+desc_en: A cafe.
 categories:
   - سار
 links:
