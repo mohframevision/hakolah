@@ -572,7 +572,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
       <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
       ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">اقرأ المزيد</button>` : ""}
       <div class="item-meta">
-        ${item.isNew ? `<span class="tag new-tag">🆕 جديد</span>` : ""}
+        ${item.isNew ? `<span class="tag new-tag">🆕 مضاف مؤخراً</span>` : ""}
         ${distanceKm !== null ? `<span class="tag distance-tag">📍 ${formatDistance(distanceKm)}</span>` : ""}
         ${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}
       </div>
