@@ -47,5 +47,6 @@ dateAdded: 2026-08-03
 - [🌐 sfxr.me](https://sfxr.me/) — النسخة الأشهر والأكثر تحديثاً.
 - [🌐 szfxr على GitHub Pages](https://szfpro.github.io/szfxr/) — نسخة بديلة مستضافة على GitHub.
 - [🌐 sn_jsfxr من Harmless Lion](https://harmlesslion.com/sn_sfxr/) — نسخة بديلة أخرى بواجهة مشابهة.
+- [🌐 TSFXR](https://tsfxr.jdmnk.dev/) — نسخة أخرى بواجهة مختلفة، تجربة مستخدم ممتازة.
 
 في حال تعطّل أحد الروابط أو تغيّر عنوانه مستقبلاً، تبقى بقية الروابط بديلاً فورياً لنفس الأداة.
