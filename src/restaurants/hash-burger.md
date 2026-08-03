@@ -11,4 +11,6 @@ links:
   phone: '32211447'
   maps: 'https://maps.app.goo.gl/sL2awV5rZAaFWCSv7'
   instagram: 'https://www.instagram.com/hashburger.bh/'
+lat: 26.210994
+lng: 50.557923
 ---

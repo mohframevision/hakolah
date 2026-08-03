@@ -11,4 +11,6 @@ links:
   phone: '17300808'
   maps: 'https://maps.app.goo.gl/hHeidZBXvxzGx8C97'
   instagram: 'https://www.instagram.com/fareeqbinaqoolbh/'
+lat: 26.213747
+lng: 50.564729
 ---

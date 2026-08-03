@@ -11,4 +11,6 @@ links:
   phone: '17202828'
   maps: 'https://maps.app.goo.gl/pViwZhYRkfYZMzk8A'
   instagram: 'https://www.instagram.com/chefaboud/'
+lat: 26.2141967
+lng: 50.5650221
 ---
