@@ -480,7 +480,6 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
   card.innerHTML = `
     ${item.image ? `<img class="item-photo" src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" />` : ""}
     ${item.featured ? `<span class="featured-badge">⭐ مميز</span>` : ""}
-    ${item.isNew ? `<span class="new-badge">🆕 جديد</span>` : ""}
     <div class="item-body">
       <div class="item-top">
         <span class="item-icon">${item.icon || "⭐"}</span>
@@ -495,6 +494,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
       <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
       ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">اقرأ المزيد</button>` : ""}
       <div class="item-meta">
+        ${item.isNew ? `<span class="tag new-tag">🆕 جديد</span>` : ""}
         ${distanceKm !== null ? `<span class="tag distance-tag">📍 ${formatDistance(distanceKm)}</span>` : ""}
         ${(item.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}
       </div>
