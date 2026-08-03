@@ -379,7 +379,19 @@ function initAdblockNotice() {
     if (blocked) notice.classList.add("open");
   });
 
+  // إعادة فحص دورية (بدون تعديل منطق الاكتشاف نفسه) — لو الزائر عطّل مانع
+  // الإعلانات وهو فاتح نفس التبويب، الملاحظة تختفي تلقائياً بدون حاجة لتحديث الصفحة
+  const recheckInterval = setInterval(() => {
+    detectAdblockViaBaitElements().then((stillBlocked) => {
+      if (!stillBlocked) {
+        notice.classList.remove("open");
+        clearInterval(recheckInterval);
+      }
+    });
+  }, 4000);
+
   closeBtn.addEventListener("click", () => {
+    clearInterval(recheckInterval);
     sessionStorage.setItem(DISMISSED_KEY, "1");
     notice.classList.remove("open");
   });
