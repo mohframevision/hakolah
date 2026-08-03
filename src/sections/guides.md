@@ -20,6 +20,7 @@ iconOptions:
   - ✅
   - 💻
   - 🎬
+  - 🔊
 categoryOptions:
   - دليل شامل
   - أفضل 10
