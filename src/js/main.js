@@ -641,10 +641,31 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
   return card;
 }
 
+/* ===== تتبّع الأقسام اللي تصفّحها الزائر (محلياً، بدون تسجيل دخول) — يغذّي
+   مؤشر "استكشفت X من Y قسم" بالرئيسية (مبدأ Zeigarnik: العقل ما ينسى الشي الناقص) ===== */
+const EXPLORED_KEY = "site_explored_sections_v1";
+
+function getExploredSections() {
+  try {
+    return JSON.parse(localStorage.getItem(EXPLORED_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function markSectionExplored(section) {
+  const explored = getExploredSections();
+  if (explored[section]) return;
+  explored[section] = true;
+  localStorage.setItem(EXPLORED_KEY, JSON.stringify(explored));
+}
+
 /* ===== عرض قسم كامل: بحث + فلاتر + شبكة بطاقات ===== */
 function renderSection(section) {
   const data = SITE_DATA[section];
   if (!data) return;
+
+  markSectionExplored(section);
 
   const grid = document.querySelector(".card-grid");
   const searchInput = document.querySelector(".search-box");
@@ -927,6 +948,40 @@ async function renderTrendingSection() {
     wrapper.appendChild(buildItemCard(itemSection, item, index));
     container.appendChild(wrapper);
   });
+}
+
+/* ===== مؤشر "استكشفت X من Y قسم" (الصفحة الرئيسية) — يشجع الزائر يكمل تصفح
+   باقي الأقسام بدل ما يوقف بقسم وحد (مبدأ Zeigarnik) ===== */
+function renderExploreProgress() {
+  const container = document.getElementById("exploreProgress");
+  if (!container) return;
+
+  const totalSections = Object.keys(SITE_DATA);
+  const explored = getExploredSections();
+  const exploredSections = totalSections.filter((s) => explored[s]);
+  const total = totalSections.length;
+  const count = exploredSections.length;
+
+  if (total === 0) return;
+
+  document.querySelectorAll(".section-card[data-section]").forEach((card) => {
+    if (explored[card.dataset.section]) card.classList.add("explored");
+  });
+
+  if (count === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const percent = Math.round((count / total) * 100);
+  const isComplete = count >= total;
+
+  container.innerHTML = `
+    <p class="explore-progress-text">
+      ${isComplete ? "🎉 استكشفت كل أقسام الموقع!" : `🧭 استكشفت ${count} من ${total} أقسام`}
+    </p>
+    <div class="explore-progress-bar"><div class="explore-progress-fill" style="width: ${percent}%"></div></div>
+  `;
 }
 
 /* ===== عدّاد زيارات بسيط (خاص بنا فقط، نفس Cloudflare Worker حق الإشعارات) =====

@@ -26,7 +26,7 @@ module.exports = [
         "error",
         {
           varsIgnorePattern:
-            "^(renderSection|renderFavoritesPage|initRandomPicker|renderFeaturedPick|initPushNotifications|renderTrendingSection)$",
+            "^(renderSection|renderFavoritesPage|initRandomPicker|renderFeaturedPick|initPushNotifications|renderTrendingSection|renderExploreProgress)$",
         },
       ],
     },

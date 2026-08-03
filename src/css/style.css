@@ -440,6 +440,33 @@ img {
   background: rgba(37, 99, 235, 0.1);
 }
 
+/* ===== مؤشر "استكشفت X من Y قسم" (الرئيسية) ===== */
+.explore-progress {
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.explore-progress-text {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin: 0 0 8px;
+}
+
+.explore-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.explore-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
 /* ===== شبكة الأقسام في الرئيسية ===== */
 .section-grid {
   display: grid;
@@ -449,6 +476,7 @@ img {
 }
 
 .section-card {
+  position: relative;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -459,6 +487,23 @@ img {
     box-shadow 0.2s ease;
   display: block;
   animation: cardIn 0.5s ease both;
+}
+
+.section-card.explored::after {
+  content: "✓";
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--color-primary);
+  border-radius: 999px;
 }
 
 .section-card:nth-child(1) {
