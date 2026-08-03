@@ -326,41 +326,51 @@ img {
   max-width: 520px;
 }
 
-/* ===== اختيار اليوم (الصفحة الرئيسية) ===== */
-.featured-pick-section {
+/* ===== شريط اختيار اليوم + الأكثر إعجاباً (الصفحة الرئيسية) — سكرول أفقي واحد
+   يقدر الزائر يتصفح فيه بطاقة اختيار اليوم وبطاقات الأكثر إعجاباً جنب بعض ===== */
+.home-carousel-section {
   padding: 8px 0 32px;
 }
 
-.featured-pick-title {
-  text-align: center;
-  font-size: 1.25rem;
-  margin: 0 0 16px;
+.home-carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 6px 4px 14px;
+  margin: 0 -4px;
 }
 
-.featured-pick-card {
-  max-width: 420px;
-  margin: 0 auto;
+.carousel-item {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(300px, 82vw);
+  scroll-snap-align: start;
+}
+
+.carousel-item .item-card {
+  margin: 0;
+  height: 100%;
+}
+
+.carousel-label {
+  display: block;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.featured-pick-frame {
   padding: 3px;
   border-radius: calc(var(--radius) + 3px);
   background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  height: 100%;
 }
 
-.featured-pick-card .item-card {
+.featured-pick-frame .item-card {
   margin: 0;
-}
-
-.trending-section {
-  padding: 8px 0 16px;
-}
-
-.trending-title {
-  text-align: center;
-  font-size: 1.25rem;
-  margin: 0 0 16px;
-}
-
-.trending-section .card-grid {
-  padding-bottom: 10px;
 }
 
 .notify-toggle {

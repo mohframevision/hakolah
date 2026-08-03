@@ -863,7 +863,7 @@ function renderFavoritesPage() {
    (نفس الاختيار لكل الزوار بنفس اليوم — يعتمد على تاريخ اليوم كبذرة ثابتة،
    بدون عشوائية حقيقية ولا خادم، فيدور على كل العناصر بالتناوب بمرور الأيام) ===== */
 function renderFeaturedPick() {
-  const container = document.getElementById("featuredPick");
+  const container = document.getElementById("homeCarousel");
   if (!container) return;
 
   const allItems = [];
@@ -886,16 +886,18 @@ function renderFeaturedPick() {
   const daysSinceEpoch = Math.floor(Date.now() / 86400000);
   const { section, item } = allItems[daysSinceEpoch % allItems.length];
 
-  container.innerHTML = "";
-  container.appendChild(buildItemCard(section, item, 0));
+  const wrapper = document.createElement("div");
+  wrapper.className = "carousel-item";
+  wrapper.innerHTML = `<span class="carousel-label">🎯 اختيار اليوم</span><div class="featured-pick-frame"></div>`;
+  wrapper.querySelector(".featured-pick-frame").appendChild(buildItemCard(section, item, 0));
+  container.prepend(wrapper);
 }
 
 /* ===== الأكثر إعجاباً هذا الأسبوع (دليل اجتماعي حقيقي — مبني على بيانات
-   الإعجاب الفعلية من الزوار، يختفي القسم كامل لو ما فيه إعجابات هالأسبوع بعد) ===== */
+   الإعجاب الفعلية من الزوار، ما تضيف شي لو ما فيه إعجابات هالأسبوع بعد) ===== */
 async function renderTrendingSection() {
-  const container = document.getElementById("trendingPick");
-  const section = document.getElementById("trendingSection");
-  if (!container || !section) return;
+  const container = document.getElementById("homeCarousel");
+  if (!container) return;
 
   const config = window.PUSH_CONFIG;
   if (!config || !config.workerUrl) return;
@@ -913,19 +915,18 @@ async function renderTrendingSection() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6);
 
-  if (ranked.length === 0) return;
-
-  container.innerHTML = "";
   ranked.forEach(([key], index) => {
     const sepIndex = key.indexOf(":");
     const itemSection = key.slice(0, sepIndex);
     const itemId = key.slice(sepIndex + 1);
     const item = (SITE_DATA[itemSection]?.items || []).find((i) => i.id === itemId);
     if (!item) return;
-    container.appendChild(buildItemCard(itemSection, item, index));
+    const wrapper = document.createElement("div");
+    wrapper.className = "carousel-item";
+    wrapper.innerHTML = `<span class="carousel-label">🔥 الأكثر إعجاباً</span>`;
+    wrapper.appendChild(buildItemCard(itemSection, item, index));
+    container.appendChild(wrapper);
   });
-
-  section.style.display = "";
 }
 
 /* ===== عدّاد زيارات بسيط (خاص بنا فقط، نفس Cloudflare Worker حق الإشعارات) =====
