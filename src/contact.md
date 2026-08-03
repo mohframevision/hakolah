@@ -35,6 +35,7 @@ navActive: "contact"
     <label for="request_type">نوع الطلب</label>
     <select id="request_type" name="request_type">{%- for entry in sections %}
 <option value="إضافة إلى {{ entry.title }}">إضافة إلى {{ entry.title }}</option>{%- endfor %}
+<option value="إبلاغ عن معلومة خاطئة">🚩 إبلاغ عن معلومة خاطئة</option>
 <option value="استفسار عام">استفسار عام</option></select>
   </div>
 

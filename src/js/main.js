@@ -107,6 +107,21 @@ function initContactForm() {
   const form = document.getElementById("contactForm");
   if (!form) return;
 
+  // تعبئة تلقائية لو الزائر جا من زر "🚩 إبلاغ عن خطأ" بأي بطاقة عنصر
+  // (رابط بصيغة contact.html?report=اسم-العنصر&section=قسم)
+  const params = new URLSearchParams(location.search);
+  const reportItem = params.get("report");
+  if (reportItem) {
+    const typeSelect = form.querySelector('[name="request_type"]');
+    const messageField = form.querySelector('[name="message"]');
+    if (typeSelect) typeSelect.value = "إبلاغ عن معلومة خاطئة";
+    if (messageField) {
+      const section = params.get("section") || "";
+      messageField.value = `بخصوص: ${reportItem}${section ? ` (قسم: ${section})` : ""}\n\nالمعلومة الخاطئة: `;
+      messageField.focus();
+    }
+  }
+
   const formMessage = document.getElementById("formMessage");
   const submitBtn = document.getElementById("submitBtn");
   const btnText = document.getElementById("btnText");
@@ -703,6 +718,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
       <div class="item-actions">
         ${buildActionsHtml(item)}
       </div>
+      <a class="report-link" href="contact.html?report=${encodeURIComponent(item.title)}&section=${encodeURIComponent(section)}">🚩 إبلاغ عن معلومة خاطئة</a>
     </div>
   `;
 
