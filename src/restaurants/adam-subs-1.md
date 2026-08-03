@@ -3,6 +3,7 @@ title: آدم سابز
 icon: 🍔
 desc: برجر وسندويشات (Subs) متنوعة، مع خدمة توصيل عبر عدة تطبيقات.
 verified: true
+liked: true
 categories:
   - برجر
   - سندويشات
