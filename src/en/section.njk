@@ -16,6 +16,7 @@ eleventyComputed:
 {# قوالب المحتوى تُعرض قبل القالب الأب (base.njk)، فمتغيّر t المعرّف هناك مو
    متاح هنا — لازم كل قالب يحتاج t يعرّفه بنفسه #}
 {% set t = i18n[lang or "ar"] %}
+{% import "item-card.njk" as cards %}
 <div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> / {{ sectionEntry.title_en }}</div>
 <section class="page-header">
   <h1>{{ sectionEntry.icon }} {{ sectionEntry.title_en }}</h1>
@@ -26,6 +27,11 @@ eleventyComputed:
 <button type="button" class="near-me-btn" aria-pressed="false">{{ t.near_me }}</button>
 <div class="filters"></div>
 
-<div class="card-grid"></div>
+{# البطاقات مطبوعة هنا وقت البناء عشان محركات البحث تقرأ المحتوى فعلاً #}
+<div class="card-grid">
+{%- for entry in collections[sectionEntry.slug] %}
+{{ cards.card(entry, sectionEntry.slug, "en", sectionEntry.hasDetailPages, tags_en, i18n) }}
+{%- endfor %}
+</div>
 
 {% include "cazasouq-promo.njk" %}

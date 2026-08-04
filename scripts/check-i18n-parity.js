@@ -100,8 +100,8 @@ const dataJs = fs.readFileSync(path.join(SITE, "js/data.js"), "utf8");
 // data.js يعرّف `const SITE_DATA = {...}` — نحوّله لتعبير يرجع الكائن مباشرة
 // (eval عادي ما يسرّب const للنطاق الخارجي)
 const SITE_DATA = new Function(dataJs + "\nreturn SITE_DATA;")();
-const mainJs = fs.readFileSync("src/js/main.js", "utf8");
-const dict = mainJs.slice(mainJs.indexOf("TAG_TRANSLATIONS_EN"), mainJs.indexOf("function tagLabel"));
+// قاموس ترجمة التصنيفات — مصدر واحد يستخدمه القوالب وقت البناء وmain.js بالمتصفح
+const TAGS_EN = require(path.resolve("src/_data/tags_en.js"));
 let items = 0;
 const untranslatedTags = new Set();
 for (const [slug, sec] of Object.entries(SITE_DATA)) {
@@ -112,11 +112,11 @@ for (const [slug, sec] of Object.entries(SITE_DATA)) {
     if (item.desc && !item.desc_en) fail(`${slug}/${item.id}: بلا desc_en`);
     if (item.cta && !item.cta_en) fail(`${slug}/${item.id}: عنده cta عربي بلا cta_en`);
     for (const tag of item.tags || []) {
-      if (!dict.includes(`"${tag}"`)) untranslatedTags.add(tag);
+      if (!TAGS_EN[tag]) untranslatedTags.add(tag);
     }
   }
 }
-for (const tag of untranslatedTags) fail(`تصنيف بلا ترجمة بـ TAG_TRANSLATIONS_EN: "${tag}"`);
+for (const tag of untranslatedTags) fail(`تصنيف بلا ترجمة بـ src/_data/tags_en.js: "${tag}"`);
 console.log(`  فُحص ${items} عنصر`);
 
 section("4. عناصر فاضية (نص مفقود)");

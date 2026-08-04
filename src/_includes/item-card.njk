@@ -1,0 +1,45 @@
+{#
+  بطاقة عنصر تُطبع داخل HTML وقت البناء — الهدف الأساسي محركات البحث.
+
+  قبل هذا، كل العناصر (105) كانت تُبنى بجافاسكربت بعد فتح الصفحة، فكود صفحة
+  "مطاعم" ما كان فيه ولا اسم مطعم واحد. يعني من يبحث بقوقل عن اسم مطعم
+  معيّن ما يوصل للموقع إطلاقاً.
+
+  main.js يعيد بناء الشبكة بعد التحميل ويستبدل هذي البطاقات بنسخة تفاعلية
+  (إعجاب/مفضلة/مشاركة/فلترة). فهذي النسخة عمداً بلا أزرار تفاعلية — تحتوي
+  فقط ما يهم محرك البحث والزائر بدون جافاسكربت: الاسم، الوصف، التصنيفات،
+  والروابط. والكلاسات نفسها عشان الشكل يكون مطابقاً قبل تدخّل جافاسكربت.
+#}
+{% macro card(entry, sectionSlug, lang, hasDetailPages, tagsEn, i18n) %}
+{% set d = entry.data %}
+{% set isEn = (lang == "en") %}
+{% set title = (d.title_en or d.title) if isEn else d.title %}
+{% set desc = (d.desc_en or d.desc) if isEn else d.desc %}
+{% set t = i18n[lang or "ar"] %}
+<div class="item-card{% if d.featured %} featured{% endif %}">
+  {% if d.image %}<img class="item-photo" src="{{ d.image }}" alt="{{ title }}" loading="lazy" decoding="async" />{% endif %}
+  {% if d.featured %}<span class="featured-badge">{{ t.featured_badge }}</span>{% endif %}
+  <div class="item-body">
+    <div class="item-top">
+      <span class="item-icon">{{ d.icon or "⭐" }}</span>
+    </div>
+    <h3>{{ title }}{% if d.verified %} <span class="verified-badge">{{ t.verified_badge }}</span>{% endif %}{% if d.liked %} <span class="liked-badge">{{ t.liked_badge }}</span>{% endif %}</h3>
+    <p class="item-desc">{{ desc }}</p>
+    <div class="item-meta">
+      {%- for tag in (d.categories or []).concat(d.categoriesCustom or []) %}
+      <span class="tag">{{ (tagsEn[tag] or tag) if isEn else tag }}</span>
+      {%- endfor %}
+    </div>
+    <div class="item-actions">
+      {%- if hasDetailPages %}
+      <a class="btn" href="{{ (('/en/' if isEn else '/') + sectionSlug + '/' + (d.slug_en if (isEn and d.slug_en) else entry.fileSlug) + '.html') | url }}">📖 {{ t.read_details }}</a>
+      {%- else %}
+      {%- set links = d.links or {} %}
+      {%- if links.website %}<a class="btn" href="{{ links.website }}" target="_blank" rel="noopener noreferrer">🌐 {{ ((d.cta_en or d.cta) if isEn else d.cta) or t.link_website }}</a>{% endif %}
+      {%- if links.maps %}<a class="btn secondary" href="{{ links.maps }}" target="_blank" rel="noopener noreferrer">📍 {{ t.link_maps }}</a>{% endif %}
+      {%- if links.instagram %}<a class="btn secondary" href="{{ links.instagram }}" target="_blank" rel="noopener noreferrer">📷 {{ t.link_instagram }}</a>{% endif %}
+      {%- endif %}
+    </div>
+  </div>
+</div>
+{% endmacro %}
