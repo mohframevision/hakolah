@@ -20,17 +20,20 @@ function itemFields(entry) {
       name: "desc",
       widget: "text",
     },
+    // إلزاميان عمداً: النسخة الإنجليزية جزء أصيل من الموقع، وفحص التطابق
+    // المربوط بالنشر يرفض أي عنصر بلا ترجمة — فاللوحة تمنع الحفظ من البداية
+    // بدل ما يفشل النشر لاحقاً بصمت والموقع ما يتحدّث
     {
-      label: "Name in English (اختياري — للنسخة الإنجليزية من الموقع)",
+      label: "الاسم بالإنجليزية (مطلوب — للنسخة الإنجليزية من الموقع)",
       name: "title_en",
       widget: "string",
-      required: false,
+      hint: "بدونه لن يُنشر التعديل. مثال: Naya",
     },
     {
-      label: "Description in English (اختياري — للنسخة الإنجليزية من الموقع)",
+      label: "الوصف بالإنجليزية (مطلوب — للنسخة الإنجليزية من الموقع)",
       name: "desc_en",
       widget: "text",
-      required: false,
+      hint: "بدونه لن يُنشر التعديل. ترجمة الوصف العربي أعلاه.",
     },
     {
       label: "صورة (اختياري — لو ضفتها بتظهر بدل الأيقونة بكرت العنصر وبأعلى المقال)",
@@ -92,11 +95,15 @@ function itemFields(entry) {
     { name: "lat", widget: "hidden", required: false },
     { name: "lng", widget: "hidden", required: false },
     {
-      label: "تصنيفات جديدة (ما تلقى تصنيفك بالقائمة؟ اكتبه هنا واضغط Enter — بيضاف تلقائياً)",
+      label: "تصنيفات جديدة (ما تلقى تصنيفك بالقائمة؟ اكتبه هنا واضغط Enter)",
       name: "categoriesCustom",
       widget: "list",
       required: false,
       default: [],
+      hint:
+        "⚠️ أي تصنيف جديد يحتاج ترجمة إنجليزية تُضاف بالكود (src/_data/tags_en.js)، " +
+        "وبدونها لن يُنشر التعديل. الأفضل اختيار تصنيف موجود من القائمة أعلاه، " +
+        "أو إخباري بالتصنيف الجديد لأضيف ترجمته.",
     },
   ];
 
@@ -122,12 +129,14 @@ function itemFields(entry) {
         name: "cta",
         widget: "string",
         required: false,
+        hint: "⚠️ لو عبّيته، لازم تعبّي الحقل الإنجليزي تحته أيضاً وإلا لن يُنشر التعديل.",
       },
       {
-        label: "Website button text in English (اختياري — للنسخة الإنجليزية، مثال: Order now)",
+        label: "نص زر الموقع بالإنجليزية (مطلوب فقط لو عبّيت الحقل العربي فوقه)",
         name: "cta_en",
         widget: "string",
         required: false,
+        hint: "مثال: Order now",
       },
       {
         label: "الروابط",
