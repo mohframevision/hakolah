@@ -27,10 +27,15 @@ function persist() {
   renderCounts();
 }
 
-/* عنصر يُعدّ "جاهزاً" فقط لو فيه ما يكفي لبطاقة صحيحة بالموقع:
-   قسم واسم عربي واسم إنجليزي ووصف بلغتين — نفس ما تفرضه لوحة التحكم */
+/* عنصر يُعدّ "جاهزاً" لو فيه ما يكفي لبطاقة صحيحة بالموقع: قسم واسمان
+   ووصف بلغتين — نفس ما تفرضه لوحة التحكم.
+
+   استثناء: لو فُعّل خيار "خلّ Claude يكتب الوصف" فالوصفان غير مطلوبين،
+   ويُصدَّر المكان مع علامة صريحة ليكتبهما Claude بعد بحث وتحقق. الغرض
+   المرور على عشرات الأماكن بسرعة بدل التوقف عند كل وصف. */
 function isReady(e) {
-  return Boolean(e && e.section && e.ar && e.en && e.descAr && e.descEn);
+  if (!e || !e.section || !e.ar || !e.en) return false;
+  return e.autoDesc ? true : Boolean(e.descAr && e.descEn);
 }
 
 function renderCounts() {
@@ -76,7 +81,9 @@ function renderList() {
           <b>${escapeHtml(p.ar || p.en || "(بلا اسم)")}</b>
           <small>${escapeHtml([p.type, p.area, p.cuisine].filter(Boolean).join(" · "))}</small>
         </div>
-        <span class="badge${ready ? " done" : ""}">${ready ? "جاهز ✓" : started ? "بدأت" : p.type}</span>
+        <span class="badge${ready ? (e.autoDesc ? " auto" : " done") : ""}">${
+          ready ? (e.autoDesc ? "🤖 بانتظار الوصف" : "جاهز ✓") : started ? "بدأت" : p.type
+        }</span>
       </div>`;
     })
     .join("");
@@ -124,11 +131,21 @@ function openEditor(i) {
       <div><label for="eEn">الاسم بالإنجليزي *</label><input id="eEn" value="${escapeHtml(e.en || p.en || "")}" /></div>
     </div>
 
-    <label for="eDescAr">الوصف بالعربي *</label>
-    <textarea id="eDescAr">${escapeHtml(e.descAr || "")}</textarea>
+    <div class="toggles">
+      <label class="tg"><input type="checkbox" id="eAuto"${e.autoDesc ? " checked" : ""} /> 🤖 خلّ Claude يكتب الوصف</label>
+      <label class="tg"><input type="checkbox" id="eVisited"${e.visited ? " checked" : ""} /> ✅ زرته شخصياً</label>
+    </div>
 
-    <label for="eDescEn">الوصف بالإنجليزي *</label>
-    <textarea id="eDescEn">${escapeHtml(e.descEn || "")}</textarea>
+    <div id="descBox">
+      <label for="eDescAr">الوصف بالعربي *</label>
+      <textarea id="eDescAr">${escapeHtml(e.descAr || "")}</textarea>
+
+      <label for="eDescEn">الوصف بالإنجليزي *</label>
+      <textarea id="eDescEn">${escapeHtml(e.descEn || "")}</textarea>
+    </div>
+
+    <label for="eNotes">ملاحظاتك لـ Claude <span class="hint">(اختياري — تساعده يكتب وصفاً أدق)</span></label>
+    <textarea id="eNotes" placeholder="مثال: مشهور بالمشاوي، الأفضل وقت العشاء، الأسعار معقولة">${escapeHtml(e.notes || "")}</textarea>
 
     <label>التصنيفات <span class="hint">(اختر من الموجود فقط)</span></label>
     <div class="chips" id="eCats"></div>
@@ -161,6 +178,13 @@ function openEditor(i) {
     drawIcons(s, null);
     drawCats(s, []); // تصنيفات القسم الجديد مختلفة، فنبدأ نظيفاً
   });
+  // إخفاء حقلي الوصف عند تفعيل الكتابة الآلية — أوضح من تركهما فارغين
+  const syncAuto = () => {
+    $("descBox").style.display = $("eAuto").checked ? "none" : "";
+  };
+  $("eAuto").addEventListener("change", syncAuto);
+  syncAuto();
+
   $("eSave").addEventListener("click", saveCurrent);
   $("eSkip").addEventListener("click", nextPlace);
   $("eClear").addEventListener("click", () => {
@@ -219,13 +243,17 @@ function drawCats(section, active) {
 function saveCurrent() {
   const picked = (sel) =>
     [...document.querySelectorAll(sel)].filter((c) => c.getAttribute("aria-pressed") === "true");
+  const auto = $("eAuto").checked;
   entries[currentIndex] = {
     section: $("eSection").value,
     icon: picked("#eIcons .chip")[0]?.dataset.ic || "",
     ar: $("eAr").value.trim(),
     en: $("eEn").value.trim(),
-    descAr: $("eDescAr").value.trim(),
-    descEn: $("eDescEn").value.trim(),
+    autoDesc: auto,
+    visited: $("eVisited").checked,
+    notes: $("eNotes").value.trim(),
+    descAr: auto ? "" : $("eDescAr").value.trim(),
+    descEn: auto ? "" : $("eDescEn").value.trim(),
     cats: picked("#eCats .chip").map((c) => c.dataset.cat),
     coords: $("eCoords").value.trim(),
     maps: $("eMaps").value.trim(),
@@ -257,8 +285,13 @@ function exportReady() {
         icon: e.icon || undefined,
         title: e.ar,
         title_en: e.en,
-        desc: e.descAr,
-        desc_en: e.descEn,
+        // عند الكتابة الآلية نُرسل null صراحةً مع علامة needsDescription،
+        // فلا يلتبس على Claude "فارغ" مع "اتركه فارغاً"
+        desc: e.autoDesc ? null : e.descAr,
+        desc_en: e.autoDesc ? null : e.descEn,
+        needsDescription: e.autoDesc || undefined,
+        verified: e.visited || undefined,
+        notes: e.notes || undefined,
         categories: e.cats,
         coords: e.coords || undefined,
         links: {
@@ -272,12 +305,25 @@ function exportReady() {
     });
 
   if (!ready.length) {
-    alert("ما فيه أماكن جاهزة بعد.\nالمطلوب لكل مكان: القسم، الاسمان، والوصفان.");
+    alert(
+      "ما فيه أماكن جاهزة بعد.\n\nالمطلوب لكل مكان: القسم والاسمان،\n" +
+        "ثم إما تكتب الوصفين، أو تفعّل «🤖 خلّ Claude يكتب الوصف»."
+    );
     return;
   }
 
+  const needDesc = ready.filter((r) => r.needsDescription).length;
   download(
-    JSON.stringify({ generatedAt: new Date().toISOString(), count: ready.length, items: ready }, null, 2),
+    JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        count: ready.length,
+        needDescription: needDesc,
+        items: ready,
+      },
+      null,
+      2
+    ),
     `hakolah-places-${ready.length}.json`
   );
 }
