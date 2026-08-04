@@ -39,9 +39,8 @@ const rel = (f) => f.split(path.sep).join("/").replace(SITE + "/", "");
 
 // صفحات مستثناة عمداً من مبدأ "لكل صفحة نسخة بلغتين":
 //   admin  — لوحة تحكم Sveltia (واجهة الأداة نفسها، مو محتوى موقع)
-//   stats  — صفحة داخلية noindex لصاحب الموقع فقط
 //   404    — GitHub Pages يخدم ملف واحد لكل الموقع، واللغة تُكتشف بجافاسكربت
-const EXCLUDED = new Set(["admin/index.html", "stats.html", "404.html"]);
+const EXCLUDED = new Set(["admin/index.html", "404.html"]);
 
 // أسماء ملفات إنجليزية تختلف عن مقابلها العربي (لما اسم الملف العربي بالعربي)
 const SLUG_ALIASES = { "places/ممشى-توبلي.html": "places/tubli-bay-walkway.html" };

@@ -1152,9 +1152,6 @@ function renderSection(section) {
 
   if (searchInput) {
     searchInput.addEventListener("input", renderGrid);
-    searchInput.addEventListener("input", () => {
-      checkVisitSecretCode(searchInput.value, searchInput, renderGrid);
-    });
     initSearchSuggestions(searchInput, data.items, renderGrid);
   }
 }
@@ -1306,31 +1303,11 @@ function renderExploreProgress() {
   if (fill) fill.style.width = `${percent}%`;
 }
 
-/* ===== عدّاد زيارات بسيط (خاص بنا فقط، نفس Cloudflare Worker حق الإشعارات) =====
-   يعد كل تحميل صفحة بصمت، ويظهر الرقم بس لمن يكتب كود سري بصندوق البحث —
-   عمداً غير ظاهر لعامة الزوار لأن الأرقام لسا صغيرة بمرحلة الموقع الحالية. */
-function trackVisit() {
-  const config = window.PUSH_CONFIG;
-  if (!config || !config.workerUrl) return;
-  fetch(`${config.workerUrl}/track`, { keepalive: true }).catch(() => {});
-}
-
-const VISIT_SECRET_CODE = "2005 moo";
-
-async function checkVisitSecretCode(value, searchInput, onReset) {
-  if (value.trim().toLowerCase() !== VISIT_SECRET_CODE) return;
-  const config = window.PUSH_CONFIG;
-  searchInput.value = "";
-  onReset();
-  if (!config || !config.workerUrl) return;
-  try {
-    const res = await fetch(`${config.workerUrl}/stats`);
-    const data = await res.json();
-    showToast(`👀 ${t("stats_today_label")}: ${data.today} — ${t("stats_total_label")}: ${data.total}`);
-  } catch {
-    showToast(t("stats_fetch_failed"));
-  }
-}
+/* عدّاد الزيارات القديم (‎/track و/stats بالـ Worker) أُزيل — Google Analytics
+   المركّب أصلاً يعدّ الزيارات بدقة أعلى وبلا حدود، بينما كان العدّاد القديم
+   يكتب مرتين لكل زيارة على Cloudflare KV، وحصة الخطة المجانية 1000 كتابة
+   باليوم فقط — أي 500 زيارة صفحة يومياً تستهلك الحصة كلها وتوقف معها
+   الإعجابات واشتراكات الإشعارات (يتشاركون نفس الحصة). */
 
 /* ===== إشعار "اختيار اليوم" اليومي (اختياري، معطّل حتى المستخدم يفعّله بنفسه) =====
    الاشتراك يُخزَّن على Cloudflare Worker خاص بنا فقط — بدون أي طرف ثالث. */
@@ -1523,7 +1500,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initHeaderScroll();
   initAutoUpdateCheck();
   initContactForm();
-  trackVisit();
   fetchLikeCounts();
 
   // ما يخص كل صفحة على حدة — كانت سكربتات مضمّنة بـ base.njk، صارت تُقرأ من

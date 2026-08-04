@@ -14,8 +14,54 @@ function corsHeaders() {
   };
 }
 
-function todayKey() {
-  return `visits:day:${new Date().toISOString().slice(0, 10)}`;
+/*
+  ترويسة CORS تمنع المتصفح من قراءة الرد بموقع آخر، لكنها ما تمنع طلباً
+  مباشراً (curl/سكربت) من الوصول للـ Worker أصلاً. لذا نتحقق من Origin
+  بأنفسنا ونرفض أي طلب يعدّل بيانات إذا ما جاء من نطاق الموقع.
+  هذا يوقف السكربتات البسيطة والاستدعاء من مواقع أخرى — ما يوقف من يزوّر
+  الترويسة يدوياً (مستحيل تقنياً بدون تسجيل دخول)، لكنه يرفع الكلفة كثيراً.
+*/
+function isAllowedOrigin(request) {
+  const origin = request.headers.get("Origin");
+  if (origin) return origin === SITE_ORIGIN;
+  // بعض المتصفحات ما ترسل Origin مع same-origin GET — نقبل حينها بالـ Referer
+  const referer = request.headers.get("Referer");
+  return Boolean(referer && referer.startsWith(SITE_ORIGIN));
+}
+
+function forbidden() {
+  return new Response("Forbidden", { status: 403, headers: corsHeaders() });
+}
+
+/*
+  حد بسيط لعدد الإعجابات لكل زائر بالدقيقة. مبني على تجزئة (hash) لعنوان
+  الـ IP وليس العنوان نفسه — ما نخزّن أي عنوان IP خام إطلاقاً، والمفتاح
+  ينتهي تلقائياً خلال دقيقتين (خصوصية الزائر أولاً).
+
+  مهم: عند تجاوز الحد نرجع 429 **بدون أي كتابة** على KV — فحتى لو حاول
+  أحد إغراق الـ Worker، الضرر على حصة الكتابة المجانية يبقى محدوداً
+  بـ LIKE_RATE_LIMIT كتابة لكل زائر بالدقيقة بدل ما يكون بلا سقف.
+*/
+const LIKE_RATE_LIMIT = 15;
+
+async function isRateLimited(request, env) {
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const minute = Math.floor(Date.now() / 60000);
+  const bucket = await keyFor(`${ip}:${minute}`);
+  const key = `rl:like:${bucket}`;
+
+  const current = Number(await env.SUBSCRIPTIONS.get(key)) || 0;
+  if (current >= LIKE_RATE_LIMIT) return true;
+
+  await env.SUBSCRIPTIONS.put(key, String(current + 1), { expirationTtl: 120 });
+  return false;
+}
+
+function tooManyRequests() {
+  return new Response("Too Many Requests", {
+    status: 429,
+    headers: { ...corsHeaders(), "Retry-After": "60" },
+  });
 }
 
 function likeKey(section, id) {
@@ -52,6 +98,10 @@ export default {
       return new Response(null, { headers: corsHeaders() });
     }
 
+    // كل ما يعدّل بيانات لازم يجي من نطاق الموقع نفسه
+    const isMutating = request.method === "POST";
+    if (isMutating && !isAllowedOrigin(request)) return forbidden();
+
     if (request.method === "POST" && url.pathname === "/subscribe") {
       const sub = await request.json();
       if (!sub || !sub.endpoint) {
@@ -67,37 +117,17 @@ export default {
       return new Response("OK", { headers: corsHeaders() });
     }
 
-    // عدّاد زيارات بسيط (مو دقيق زي Google Analytics، بس كافي لعرض تقريبي —
-    // بياناته عندنا بس، بدون أي طرف ثالث)
-    if ((request.method === "GET" || request.method === "POST") && url.pathname === "/track") {
-      const dayKey = todayKey();
-      const [total, today] = await Promise.all([
-        env.SUBSCRIPTIONS.get("visits:total"),
-        env.SUBSCRIPTIONS.get(dayKey),
-      ]);
-      await Promise.all([
-        env.SUBSCRIPTIONS.put("visits:total", String((Number(total) || 0) + 1)),
-        env.SUBSCRIPTIONS.put(dayKey, String((Number(today) || 0) + 1), {
-          expirationTtl: 60 * 60 * 24 * 7,
-        }),
-      ]);
-      return new Response("OK", { headers: corsHeaders() });
-    }
-
-    if (request.method === "GET" && url.pathname === "/stats") {
-      const [total, today] = await Promise.all([
-        env.SUBSCRIPTIONS.get("visits:total"),
-        env.SUBSCRIPTIONS.get(todayKey()),
-      ]);
-      return new Response(
-        JSON.stringify({ total: Number(total) || 0, today: Number(today) || 0 }),
-        { headers: { ...corsHeaders(), "Content-Type": "application/json" } }
-      );
-    }
+    /* عدّاد الزيارات (‎/track و/stats) أُزيل عمداً: كان يكتب مرتين على KV لكل
+       زيارة صفحة، وحصة الخطة المجانية 1000 كتابة باليوم — أي أن 500 زيارة
+       صفحة تستهلك الحصة كاملة وتوقف معها الإعجابات والاشتراكات (نفس الحصة).
+       وكان أيضاً غير دقيق أصلاً: الكتابة على نفس المفتاح محدودة بمرة واحدة
+       بالثانية، وقراءة-ثم-كتابة متزامنة تضيّع زيارات. Google Analytics
+       المركّب بالموقع يعدّ الزيارات بدقة أعلى وبلا حدود وبدون هذي المشاكل. */
 
     // إعجاب عام من الزوار (منفصل عن "أعجبني" الخاصة بصاحب الموقع) — عدّاد بسيط
     // بدون تسجيل دخول، الحماية من التكرار تصير محلياً بالمتصفح (localStorage)
     if (request.method === "POST" && url.pathname === "/like") {
+      if (await isRateLimited(request, env)) return tooManyRequests();
       const { section, id } = await request.json();
       if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       const key = likeKey(section, id);
@@ -116,6 +146,7 @@ export default {
     }
 
     if (request.method === "POST" && url.pathname === "/unlike") {
+      if (await isRateLimited(request, env)) return tooManyRequests();
       const { section, id } = await request.json();
       if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       const key = likeKey(section, id);
@@ -192,11 +223,31 @@ async function sendDailyPick(env) {
     url: pageUrl,
   });
 
+  /*
+    نفس الـ KV namespace يخزّن أشياء ثانية غير الاشتراكات (عدّادات الإعجاب،
+    مفاتيح حد الطلبات، وبقايا عدّاد الزيارات القديم). الاشتراكات مخزّنة
+    بمفتاح hash بلا بادئة، فنستبعد البادئات المعروفة بدل ما نعامل كل مفتاح
+    كأنه اشتراك — وإلا نهدر قراءات ونحاول إرسال إشعار لعدّاد رقمي.
+  */
+  const NON_SUBSCRIPTION_PREFIXES = ["likes:", "rl:", "visits:"];
   const list = await env.SUBSCRIPTIONS.list();
+
   for (const key of list.keys) {
+    if (NON_SUBSCRIPTION_PREFIXES.some((p) => key.name.startsWith(p))) continue;
+
     const raw = await env.SUBSCRIPTIONS.get(key.name);
     if (!raw) continue;
-    const sub = JSON.parse(raw);
+
+    // JSON.parse كان خارج try — أي قيمة غير صالحة كانت توقف المهمة المجدولة
+    // كلها فما يوصل الإشعار لأي مشترك. الآن الفشل يتخطى هذا المفتاح فقط.
+    let sub;
+    try {
+      sub = JSON.parse(raw);
+    } catch {
+      continue;
+    }
+    if (!sub || typeof sub !== "object" || !sub.endpoint) continue;
+
     try {
       await webpush.sendNotification(sub, payload);
     } catch (err) {
