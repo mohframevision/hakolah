@@ -1,8 +1,8 @@
 ---
-title: المطعم اللبناني
+title: المطعم اللبناني - سند
 icon: "🍽️"
 desc: مأكولات لبنانية بمنطقة سند.
-title_en: The Lebanese Restaurant
+title_en: The Lebanese Restaurant – Sanad
 desc_en: Lebanese food in Sanad.
 categories:
   - لبناني
