@@ -25,7 +25,8 @@ exports.render = function (data) {
     ["", "en/index.html"],
     ["favorites.html", "en/favorites.html"],
     ["picker.html", "en/picker.html"],
-    ["plan.html", "en/plan.html"],
+    // plan.html مخفية مؤقتاً (تحتاج خوارزمية أفضل) — خارج الخريطة وعليها
+    // noindex حتى لا تُفهرَس وهي ناقصة
     ["about.html", "en/about.html"],
     ["contact.html", "en/contact.html"],
     ["privacy-policy.html", "en/privacy-policy.html"],

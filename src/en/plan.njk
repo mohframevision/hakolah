@@ -6,7 +6,10 @@ title: "Day Plan | Hakolah"
 description: "Not sure how to spend your day in Bahrain? Hakolah builds you a full plan — breakfast, an outing, lunch and an evening spot — from real hand-picked places."
 navActive: "plan"
 langSwitchUrl: "/plan.html"
+noindex: true
 ---
+{# ⚠️ Feature hidden for now — see the note in src/plan.njk for why and how
+   to re-enable. Reachable by direct URL only, and excluded from the sitemap. #}
 {% set t = i18n[lang or "ar"] %}
 <div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> / {{ t.plan_title }}</div>
 <section class="page-header">

@@ -34,11 +34,9 @@ langSwitchUrl: "/index.html"
     <p>{{ entry.description_en }}</p>
   </a>
   {% endfor %}
-  <a class="section-card" href="{{ '/en/plan.html' | url }}">
-    <span class="icon">🗓️</span>
-    <h3>{{ t.home_plan_title }}</h3>
-    <p>{{ t.home_plan_desc }}</p>
-  </a>
+  {# "Day Plan" card hidden for now — the feature needs a better algorithm
+     (see the note at the top of src/plan.njk). The page itself still works
+     via its direct URL for testing. #}
   <a class="section-card" href="{{ '/en/favorites.html' | url }}">
     <span class="icon">❤️</span>
     <h3>{{ t.home_favorites_title }}</h3>

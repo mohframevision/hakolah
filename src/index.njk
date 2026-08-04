@@ -29,11 +29,8 @@ navActive: "home"
     <p>{{ entry.description }}</p>
   </a>
   {% endfor %}
-  <a class="section-card" href="{{ '/plan.html' | url }}">
-    <span class="icon">🗓️</span>
-    <h3>خطة اليوم</h3>
-    <p>خلّ هكوله يرتّب لك يوم كامل: فطور، نشاط، غداء، وسهرة.</p>
-  </a>
+  {# بطاقة "خطة اليوم" مخفية مؤقتاً — الميزة تحتاج خوارزمية أفضل (راجع
+     الملاحظة أعلى src/plan.njk). الصفحة نفسها باقية للتجربة بالرابط المباشر. #}
   <a class="section-card" href="{{ '/favorites.html' | url }}">
     <span class="icon">❤️</span>
     <h3>المفضلة</h3>
