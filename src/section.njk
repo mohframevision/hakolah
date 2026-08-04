@@ -6,8 +6,9 @@ pagination:
 layout: "base.njk"
 eleventyComputed:
   permalink: "{{ sectionEntry.slug }}.html"
-  title: "{{ sectionEntry.title }} | هكوله"
-  description: "{{ sectionEntry.description }}"
+  # safe| ضرورية: قيم بيانات خام، وbase.njk هو اللي يهرّبها للـ HTML مرة واحدة
+  title: "{{ sectionEntry.title | safe }} | هكوله"
+  description: "{{ sectionEntry.description | safe }}"
   navActive: "{{ sectionEntry.slug }}"
   section: "{{ sectionEntry.slug }}"
   langSwitchUrl: "/en/{{ sectionEntry.slug }}.html"
