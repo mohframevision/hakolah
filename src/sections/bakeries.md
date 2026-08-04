@@ -1,18 +1,20 @@
 ---
 slug: bakeries
-title: "مخابز البحرين"
-navLabel: مخابز
+title: "مخبوزات وحلويات البحرين"
+navLabel: مخبوزات وحلويات
 icon: 🥐
-description: "دليل مخابز البحرين — خبز طازج، كيك، حلويات ومعجنات، مرتّبة حسب المنطقة القريبة منك."
-title_en: "Bakeries in Bahrain"
-navLabel_en: "Bakeries"
-description_en: "A guide to bakeries in Bahrain — fresh bread, cakes, sweets and pastries, sorted by the area nearest you."
-searchPlaceholder_en: "Search for a bakery…"
-searchPlaceholder: ابحث عن مخبز…
+description: "دليل المخبوزات والحلويات بالبحرين — خبز طازج، كيك، معجنات، حلويات وآيسكريم، مرتّبة حسب المنطقة القريبة منك."
+title_en: "Bakeries & Sweets in Bahrain"
+navLabel_en: "Bakeries & Sweets"
+description_en: "A guide to bakeries and sweet shops in Bahrain — fresh bread, cakes, pastries, sweets and ice cream, sorted by the area nearest you."
+searchPlaceholder_en: "Search for a bakery or sweet shop…"
+searchPlaceholder: ابحث عن مخبز أو محل حلويات…
 order: 999
 hasDetailPages: false
 iconOptions:
   - 🥐
+  - 🍦
+  - 🍫
   - 🍞
   - 🥖
   - 🧁
@@ -25,6 +27,10 @@ iconOptions:
   - 🥨
   - 🧇
 categoryOptions:
+  - حلويات
+  - آيسكريم
+  - معجنات
+  - كيك
   - المنامة
   - المحرق
   - سترة

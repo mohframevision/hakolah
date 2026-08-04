@@ -60,6 +60,7 @@ module.exports = {
   "بيتزا": "Pizza",
   "حلويات": "Sweets",
   "آيسكريم": "Ice Cream",
+  "كيك": "Cakes",
   "هندي": "Indian",
   "إيطالي": "Italian",
   "آسيوي": "Asian",
