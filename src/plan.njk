@@ -1,0 +1,23 @@
+---
+layout: base.njk
+permalink: "plan.html"
+title: "خطة اليوم | هكوله"
+description: "محتار كيف تقضي يومك بالبحرين؟ هكوله يرتّب لك خطة كاملة — فطور، نشاط، غداء، وسهرة — من أماكن حقيقية مختارة."
+navActive: "plan"
+langSwitchUrl: "/en/plan.html"
+---
+{% set t = i18n[lang or "ar"] %}
+<div class="breadcrumb"><a href="{{ '/index.html' | url }}">{{ t.nav_home }}</a> / {{ t.plan_title }}</div>
+<section class="page-header">
+  <h1>🗓️ {{ t.plan_title }}</h1>
+  <p>{{ t.plan_intro }}</p>
+</section>
+
+<div class="text-center plan-actions">
+  <button type="button" class="btn" id="dayPlanBtn">{{ t.plan_regenerate }}</button>
+  <button type="button" class="btn secondary hidden" id="dayPlanShare">📤 {{ t.plan_share }}</button>
+</div>
+
+<div class="plan-stage" id="dayPlanStage"></div>
+
+{% include "cazasouq-promo.njk" %}

@@ -25,6 +25,7 @@ exports.render = function (data) {
     ["", "en/index.html"],
     ["favorites.html", "en/favorites.html"],
     ["picker.html", "en/picker.html"],
+    ["plan.html", "en/plan.html"],
     ["about.html", "en/about.html"],
     ["contact.html", "en/contact.html"],
     ["privacy-policy.html", "en/privacy-policy.html"],

@@ -1,0 +1,24 @@
+---
+layout: base.njk
+lang: "en"
+permalink: "en/plan.html"
+title: "Day Plan | Hakolah"
+description: "Not sure how to spend your day in Bahrain? Hakolah builds you a full plan — breakfast, an outing, lunch and an evening spot — from real hand-picked places."
+navActive: "plan"
+langSwitchUrl: "/plan.html"
+---
+{% set t = i18n[lang or "ar"] %}
+<div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> / {{ t.plan_title }}</div>
+<section class="page-header">
+  <h1>🗓️ {{ t.plan_title }}</h1>
+  <p>{{ t.plan_intro }}</p>
+</section>
+
+<div class="text-center plan-actions">
+  <button type="button" class="btn" id="dayPlanBtn">{{ t.plan_regenerate }}</button>
+  <button type="button" class="btn secondary hidden" id="dayPlanShare">📤 {{ t.plan_share }}</button>
+</div>
+
+<div class="plan-stage" id="dayPlanStage"></div>
+
+{% include "cazasouq-promo.njk" %}

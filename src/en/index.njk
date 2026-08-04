@@ -34,6 +34,11 @@ langSwitchUrl: "/index.html"
     <p>{{ entry.description_en }}</p>
   </a>
   {% endfor %}
+  <a class="section-card" href="{{ '/en/plan.html' | url }}">
+    <span class="icon">🗓️</span>
+    <h3>{{ t.home_plan_title }}</h3>
+    <p>{{ t.home_plan_desc }}</p>
+  </a>
   <a class="section-card" href="{{ '/en/favorites.html' | url }}">
     <span class="icon">❤️</span>
     <h3>{{ t.home_favorites_title }}</h3>

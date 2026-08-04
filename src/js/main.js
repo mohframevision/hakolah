@@ -1288,6 +1288,98 @@ function spawnConfetti(container) {
   }
 }
 
+/* ===== خطة اليوم =====
+   يقترح مساراً كاملاً ليوم واحد من نفس بيانات الموقع، بلا أي محتوى جديد.
+
+   قرار تصميمي مهم: المراحل مبنية على **الأقسام** لا على التصنيفات. فحص
+   البيانات الفعلي أظهر أن التصنيفات الدقيقة شبه غائبة (تصنيف "إفطار" مثلاً
+   غير مستخدم بأي كافيه إطلاقاً، و"قهوة مختصة" على كافيه واحد فقط)، فبناء
+   المراحل عليها كان بينتج خططاً فاضية أو مكررة. الأقسام مضمونة الامتلاء.
+
+   كل مرحلة تتخطى نفسها بهدوء لو قسمها فاضي، فالميزة تشتغل مهما كان المحتوى،
+   وتتحسّن تلقائياً مع كل عنصر يُضاف بلا أي تعديل هنا. */
+const DAY_PLAN_STEPS = [
+  { key: "morning", icon: "🥐", from: ["bakeries", "cafes"] },
+  { key: "activity", icon: "📍", from: ["places"] },
+  { key: "lunch", icon: "🍽️", from: ["restaurants"] },
+  { key: "evening", icon: "☕", from: ["cafes"] },
+];
+
+function buildDayPlan() {
+  const used = new Set();
+  const steps = [];
+
+  for (const step of DAY_PLAN_STEPS) {
+    // نجمع كل عناصر الأقسام المسموحة لهذي المرحلة، ونستبعد المستخدَم سابقاً
+    // حتى ما يتكرر نفس المكان مرتين بنفس الخطة
+    const pool = [];
+    for (const slug of step.from) {
+      for (const item of (SITE_DATA[slug]?.items || [])) {
+        const id = `${slug}:${item.id}`;
+        if (!used.has(id)) pool.push({ slug, item, id });
+      }
+    }
+    if (!pool.length) continue;
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    used.add(chosen.id);
+    steps.push({ ...step, ...chosen });
+  }
+  return steps;
+}
+
+function renderDayPlan() {
+  const stage = document.getElementById("dayPlanStage");
+  const btn = document.getElementById("dayPlanBtn");
+  const shareBtn = document.getElementById("dayPlanShare");
+  if (!stage || !btn) return;
+
+  let current = [];
+
+  function draw() {
+    current = buildDayPlan();
+    stage.innerHTML = "";
+
+    if (!current.length) {
+      stage.innerHTML = `<div class="empty-state full-row"><span class="icon">🧭</span><p>${t("empty_section")}</p></div>`;
+      if (shareBtn) shareBtn.classList.add("hidden");
+      return;
+    }
+
+    current.forEach((step, i) => {
+      const row = document.createElement("div");
+      row.className = "plan-step";
+      row.style.animationDelay = `${i * 90}ms`;
+
+      const head = document.createElement("div");
+      head.className = "plan-step-head";
+      head.innerHTML = `<span class="plan-step-icon">${step.icon}</span><span class="plan-step-label">${t("plan_" + step.key)}</span>`;
+      row.appendChild(head);
+
+      row.appendChild(buildItemCard(step.slug, step.item, i));
+      stage.appendChild(row);
+    });
+
+    if (shareBtn) shareBtn.classList.remove("hidden");
+    playSuccessSound();
+  }
+
+  btn.addEventListener("click", () => {
+    playClickSound();
+    draw();
+  });
+
+  if (shareBtn) {
+    shareBtn.addEventListener("click", () => {
+      const lines = current.map((s) => `${s.icon} ${t("plan_" + s.key)}: ${itemTitle(s.item)}`);
+      const text = `${t("plan_share_title")}\n\n${lines.join("\n")}\n\n${SITE_ORIGIN}${window.SITE_LANG === "en" ? "en/" : ""}plan.html`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+      playClickSound();
+    });
+  }
+
+  draw();
+}
+
 function initRandomPicker() {
   const categoriesWrap = document.getElementById("pickerCategories");
   const spinBtn = document.getElementById("pickerSpinBtn");
@@ -1401,6 +1493,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page.section) renderSection(page.section);
   if (page.favorites) renderFavoritesPage();
   if (page.picker) initRandomPicker();
+  if (page.plan) renderDayPlan();
   if (page.home) {
     renderFeaturedPick();
     initPushNotifications();

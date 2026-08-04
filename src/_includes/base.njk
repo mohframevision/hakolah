@@ -146,6 +146,7 @@
         {# على الجوال تختفي أيقونتا المفضلة و"اختار لي" من الهيدر (ضيق) وتظهران
            هنا داخل القائمة المنسدلة بدل ما تزدحم مع الشعار #}
         <a class="nav-only-mobile{% if navActive == "favorites" %} active{% endif %}" href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}">❤️ {{ t.nav_favorites }}</a>
+        <a class="nav-only-mobile{% if navActive == "plan" %} active{% endif %}" href="{{ (('/en/plan.html' if lang == 'en' else '/plan.html')) | url }}">🗓️ {{ t.plan_title }}</a>
         <a class="nav-only-mobile{% if navActive == "picker" %} active{% endif %}" href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}">{{ t.nav_picker }}</a>
       </nav>
       <div class="header-actions">
@@ -206,6 +207,7 @@
         "section": {{ (section or "") | json | safe }},
         "favorites": {{ (isFavoritesPage or false) | json | safe }},
         "picker": {{ (navActive == "picker") | json | safe }},
+        "plan": {{ (navActive == "plan") | json | safe }},
         "home": {{ (navActive == "home") | json | safe }}
       },
       "i18n": {{ i18n | json | safe }}
