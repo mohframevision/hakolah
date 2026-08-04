@@ -150,6 +150,11 @@ function openEditor(i) {
     <label>التصنيفات <span class="hint">(اختر من الموجود فقط)</span></label>
     <div class="chips" id="eCats"></div>
 
+    <label for="eArea">المنطقة
+      <span class="hint">(تُضاف للتصنيفات — ${p.guessedArea ? "مقترحة من الموقع، تأكّد منها" : "اختر من القائمة"})</span>
+    </label>
+    <select id="eArea"></select>
+
     <label for="eCoords">الإحداثيات</label>
     <input id="eCoords" dir="ltr" value="${escapeHtml(e.coords ?? p.coords ?? "")}" />
 
@@ -172,11 +177,15 @@ function openEditor(i) {
 
   drawIcons(section, e.icon);
   drawCats(section, e.cats || []);
+  // المنطقة المحفوظة أولاً، وإلا المقترحة من الإحداثيات — اقتراح لا حقيقة
+  drawAreas(section, e.area !== undefined ? e.area : p.guessedArea || "");
 
   $("eSection").addEventListener("change", () => {
     const s = $("eSection").value;
+    const keepArea = $("eArea").value;
     drawIcons(s, null);
     drawCats(s, []); // تصنيفات القسم الجديد مختلفة، فنبدأ نظيفاً
+    drawAreas(s, keepArea); // المناطق واحدة بكل الأقسام، فلا داعي لإفقادها
   });
   // إخفاء حقلي الوصف عند تفعيل الكتابة الآلية — أوضح من تركهما فارغين
   const syncAuto = () => {
@@ -240,6 +249,16 @@ function drawCats(section, active) {
     );
 }
 
+// المناطق بقائمة منسدلة لا شرائح: ٩٠+ منطقة كشرائح تدفن التصنيفات الحقيقية
+function drawAreas(section, active) {
+  const areas = (SECTIONS[section] || SECTIONS.restaurants).areas || [];
+  $("eArea").innerHTML =
+    '<option value="">— بلا منطقة —</option>' +
+    areas
+      .map((a) => `<option value="${escapeHtml(a)}"${a === active ? " selected" : ""}>${escapeHtml(a)}</option>`)
+      .join("");
+}
+
 function saveCurrent() {
   const picked = (sel) =>
     [...document.querySelectorAll(sel)].filter((c) => c.getAttribute("aria-pressed") === "true");
@@ -255,6 +274,7 @@ function saveCurrent() {
     descAr: auto ? "" : $("eDescAr").value.trim(),
     descEn: auto ? "" : $("eDescEn").value.trim(),
     cats: picked("#eCats .chip").map((c) => c.dataset.cat),
+    area: $("eArea").value,
     coords: $("eCoords").value.trim(),
     maps: $("eMaps").value.trim(),
     insta: $("eInsta").value.trim(),
@@ -292,7 +312,8 @@ function exportReady() {
         needsDescription: e.autoDesc || undefined,
         verified: e.visited || undefined,
         notes: e.notes || undefined,
-        categories: e.cats,
+        // المنطقة تصنيف كبقيّة التصنيفات بالموقع — تُدمج هنا لا تُصدَّر منفصلة
+        categories: e.area && !e.cats.includes(e.area) ? e.cats.concat(e.area) : e.cats,
         coords: e.coords || undefined,
         links: {
           maps: e.maps || undefined,

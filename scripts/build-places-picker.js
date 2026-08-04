@@ -1,7 +1,8 @@
 /*
   يجهّز بيانات "منتقي الأماكن" (places-picker) من:
     1. osm-places.csv  — قائمة المراجعة المولّدة بـ scripts/fetch-osm-places.js
-    2. src/sections/*.md — التصنيفات والأيقونات الفعلية لكل قسم
+    2. src/_data/sections.js — التصنيفات الفعلية لكل قسم (شاملةً كل مناطق البحرين)
+    3. scripts/areas-geo.json — إحداثيات المناطق، لاقتراح منطقة كل مكان تلقائياً
 
   الهدف أن يعمل المنتقي بلا إنترنت وبلا خادم، وأن تكون خياراته مطابقة تماماً
   لما تقبله لوحة التحكم — فلا يختار المستخدم تصنيفاً غير موجود ثم يفشل النشر.
@@ -16,6 +17,31 @@ const ROOT = path.join(__dirname, "..");
 const CSV = path.join(ROOT, "osm-places.csv");
 const OUT = path.join(ROOT, "places-picker", "data.js");
 const SECTIONS = ["restaurants", "cafes", "bakeries", "stores", "places"];
+
+const AREAS_GEO = require("./areas-geo.json");
+
+// أبعد مسافة نقبل عندها اقتراح منطقة. مركز المنطقة نقطة واحدة لا حدود، فالاقتراح
+// تقريبي بطبيعته — وبلا سقف يُنسب مكان بأقصى الجنوب لأقرب منطقة على بعد 20 كم.
+// ponytail: أقرب مركز (Voronoi تقريبي)؛ لو احتجنا دقة أعلى نجلب حدود المناطق من OSM
+const AREA_MAX_KM = 4;
+
+function nearestArea(coords) {
+  const [lat, lng] = String(coords).split(",").map(Number);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "";
+  let best = "";
+  let bestKm = Infinity;
+  for (const [name, [alat, alng]] of Object.entries(AREAS_GEO)) {
+    // تقريب مسطّح — كافٍ لمقارنة مسافات داخل البحرين (~50 كم)
+    const dx = (lng - alng) * 99.8; // كم لكل درجة طول عند خط عرض 26°
+    const dy = (lat - alat) * 111.0;
+    const km = Math.sqrt(dx * dx + dy * dy);
+    if (km < bestKm) {
+      bestKm = km;
+      best = name;
+    }
+  }
+  return bestKm <= AREA_MAX_KM ? best : "";
+}
 
 // محلل CSV بسيط يحترم الاقتباس والفواصل داخل الخلايا
 function parseCsv(text) {
@@ -80,18 +106,31 @@ function main() {
       phone: r[7],
       website: r[8],
       maps: r[9],
+      // منطقة مقترحة من الإحداثيات دائماً — منطقة المصدر بالإنجليزي وبتهجئة
+      // حرة، فلا تصلح تصنيفاً بالموقع. تبقى معروضة للمقارنة لا أكثر.
+      guessedArea: nearestArea(r[6]),
     }));
 
+  // التصنيفات من sections.js لا من ملفات الأقسام الخام، لأنها تدمج كل مناطق
+  // البحرين — فيختار المستخدم المنطقة من القائمة بدل كتابتها (والكتابة اليدوية
+  // تحتاج ترجمة بالكود وإلا فشل النشر)
+  const merged = require(path.join(ROOT, "src", "_data", "sections.js"))();
   const sections = {};
   for (const slug of SECTIONS) {
+    const s = merged.find((x) => x.slug === slug);
     const p = path.join(ROOT, "src", "sections", `${slug}.md`);
-    if (!fs.existsSync(p)) continue;
-    const d = matter(fs.readFileSync(p, "utf8")).data;
+    if (!s || !fs.existsSync(p)) continue;
     sections[slug] = {
-      title: d.title,
-      icons: d.iconOptions || ["⭐"],
-      cats: d.categoryOptions || [],
+      title: s.title,
+      icons: matter(fs.readFileSync(p, "utf8")).data.iconOptions || ["⭐"],
+      cats: s.categoryOptions,
     };
+  }
+  // المناطق منفصلة كي يعرضها المنتقي بمجموعة خاصة بدل خلطها بـ100 شريحة
+  const areaSet = new Set(Object.keys(require(path.join(ROOT, "src", "_data", "areas.js"))));
+  for (const s of Object.values(sections)) {
+    s.areas = s.cats.filter((c) => areaSet.has(c));
+    s.cats = s.cats.filter((c) => !areaSet.has(c));
   }
 
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
@@ -106,6 +145,11 @@ function main() {
   console.log(`الناتج: ${OUT}`);
   console.log(`  أماكن للمراجعة : ${places.length}`);
   console.log(`  أقسام          : ${Object.keys(sections).join("، ")}`);
+  const guessed = places.filter((p) => p.guessedArea).length;
+  console.log(
+    `  منطقة معروفة   : ${guessed} من ${places.length}` +
+      ` (${Math.round((guessed / places.length) * 100)}%)`
+  );
   console.log(`  الحجم          : ${(fs.statSync(OUT).size / 1024).toFixed(0)} كيلوبايت`);
 }
 
