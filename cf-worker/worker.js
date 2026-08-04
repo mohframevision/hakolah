@@ -38,9 +38,17 @@ function forbidden() {
   الـ IP وليس العنوان نفسه — ما نخزّن أي عنوان IP خام إطلاقاً، والمفتاح
   ينتهي تلقائياً خلال دقيقتين (خصوصية الزائر أولاً).
 
-  مهم: عند تجاوز الحد نرجع 429 **بدون أي كتابة** على KV — فحتى لو حاول
-  أحد إغراق الـ Worker، الضرر على حصة الكتابة المجانية يبقى محدوداً
-  بـ LIKE_RATE_LIMIT كتابة لكل زائر بالدقيقة بدل ما يكون بلا سقف.
+  عند تجاوز الحد نرجع 429 بدون أي كتابة على KV.
+
+  ⚠️ حدّ تقريبي وليس صارماً — بصراحة: توثيق Cloudflare نفسه يقول إن KV
+  "غير مناسب" لعدّادات وحدود الطلبات، لأنه eventually consistent: القراءة
+  قد ترجع قيمة قديمة لحد 60 ثانية بعد الكتابة. اختبار حي على 20 طلب متتالٍ
+  مرّر 18 بدل 15. يعني هذا الحد "مطبّ سرعة" يوقف العبث البسيط، مو جدار.
+
+  الحماية الحقيقية المتاحة مجاناً هي فحص Origin أعلاه. الحل الصارم يحتاج
+  Durable Objects (خطة مدفوعة) وهذا يخالف قيد "مجاني دائماً" للمشروع.
+  ولو استُنزفت حصة الكتابة بيوم ما: لا تضيع أي بيانات، والحصة ترجع تلقائياً
+  بعد منتصف الليل UTC.
 */
 const LIKE_RATE_LIMIT = 15;
 
@@ -127,9 +135,11 @@ export default {
     // إعجاب عام من الزوار (منفصل عن "أعجبني" الخاصة بصاحب الموقع) — عدّاد بسيط
     // بدون تسجيل دخول، الحماية من التكرار تصير محلياً بالمتصفح (localStorage)
     if (request.method === "POST" && url.pathname === "/like") {
-      if (await isRateLimited(request, env)) return tooManyRequests();
+      // التحقق من صحة الطلب أولاً (مجاني)، وبعدين فحص الحد (يكلّف كتابة) —
+      // فالطلبات الناقصة/العبثية ما تستهلك حصة الكتابة إطلاقاً
       const { section, id } = await request.json();
       if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
+      if (await isRateLimited(request, env)) return tooManyRequests();
       const key = likeKey(section, id);
       const wKey = weekKey(section, id);
       const [count, weekCount] = await Promise.all([
@@ -146,9 +156,9 @@ export default {
     }
 
     if (request.method === "POST" && url.pathname === "/unlike") {
-      if (await isRateLimited(request, env)) return tooManyRequests();
       const { section, id } = await request.json();
       if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
+      if (await isRateLimited(request, env)) return tooManyRequests();
       const key = likeKey(section, id);
       const wKey = weekKey(section, id);
       const [count, weekCount] = await Promise.all([
