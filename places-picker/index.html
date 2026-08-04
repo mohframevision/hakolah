@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>منتقي أماكن هكوله</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --bg:#0f1320; --panel:#171c2b; --border:#2a3145; --text:#e9ecf5;
+    --muted:#9aa3b8; --primary:#2563eb; --accent:#f59e0b; --ok:#22c55e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.6}
+  header{
+    padding:12px 18px;border-bottom:1px solid var(--border);display:flex;
+    gap:12px;align-items:center;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:10;
+  }
+  header h1{font-size:1.05rem;margin:0;font-weight:800}
+  .counts{color:var(--muted);font-size:.85rem}
+  .counts b{color:var(--ok)}
+  .grow{flex:1}
+  input,select,textarea,button{font:inherit}
+  input,select,textarea{
+    width:100%;padding:8px 10px;border-radius:8px;background:#0f1320;
+    color:var(--text);border:1px solid var(--border);font-size:.9rem;
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);outline-offset:1px}
+  textarea{resize:vertical;min-height:56px}
+  button{
+    padding:9px 15px;border-radius:999px;border:1px solid var(--border);
+    background:#0f1320;color:var(--text);cursor:pointer;font-weight:700;
+  }
+  button.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  button.ok{background:var(--ok);border-color:var(--ok);color:#04250f}
+  button:hover{border-color:var(--primary)}
+  button:active{transform:scale(.97)}
+  .wrap{display:flex;gap:16px;padding:16px;align-items:flex-start}
+  .list{flex:1 1 460px;min-width:340px}
+  .filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .filters input{flex:2 1 200px}
+  .filters select{flex:1 1 130px}
+  .rows{
+    border:1px solid var(--border);border-radius:12px;overflow:auto;
+    max-height:calc(100vh - 190px);background:var(--panel);
+  }
+  .row{
+    display:flex;gap:10px;align-items:center;padding:9px 12px;
+    border-bottom:1px solid var(--border);cursor:pointer;
+  }
+  .row:last-child{border-bottom:0}
+  .row:hover{background:#1d2334}
+  .row.sel{background:#132043}
+  .row.done{border-inline-start:3px solid var(--ok)}
+  .row .nm{flex:1;min-width:0}
+  .row .nm b{display:block;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .nm small{color:var(--muted);font-size:.76rem}
+  .row .badge{font-size:.7rem;padding:2px 8px;border-radius:999px;background:#0f1320;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+  .row .badge.done{background:var(--ok);color:#04250f;border-color:var(--ok);font-weight:700}
+  .editor{
+    flex:1 1 420px;min-width:340px;background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;padding:16px;position:sticky;top:74px;max-height:calc(100vh - 90px);overflow:auto;
+  }
+  .editor h2{margin:0 0 4px;font-size:1.05rem}
+  .editor .sub{color:var(--muted);font-size:.82rem;margin-bottom:12px}
+  label{display:block;font-size:.78rem;color:var(--muted);margin:10px 0 4px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;max-height:150px;overflow:auto;padding:8px;border:1px solid var(--border);border-radius:8px}
+  .chip{
+    padding:4px 11px;border-radius:999px;border:1px solid var(--border);
+    font-size:.8rem;cursor:pointer;user-select:none;
+  }
+  .chip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+  .icons{display:flex;flex-wrap:wrap;gap:6px}
+  .icons .chip{font-size:1.1rem;padding:4px 9px}
+  .two{display:flex;gap:8px}
+  .two>*{flex:1}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+  .hint{font-size:.76rem;color:var(--muted);margin-top:4px}
+  .empty{padding:36px 16px;text-align:center;color:var(--muted)}
+  a{color:#7aa7ff}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📍 منتقي أماكن هكوله</h1>
+  <span class="counts" id="counts"></span>
+  <span class="grow"></span>
+  <button type="button" class="ok" id="export">⬇️ صدّر الجاهزة</button>
+  <button type="button" id="save">💾 نسخة احتياطية</button>
+  <button type="button" id="load">📂 استرجاع</button>
+</header>
+
+<div class="wrap">
+  <div class="list">
+    <div class="filters">
+      <input id="q" placeholder="ابحث بالاسم أو المنطقة…" />
+      <select id="fType"><option value="">كل الأنواع</option></select>
+      <select id="fState">
+        <option value="">الكل</option>
+        <option value="done">الجاهزة فقط</option>
+        <option value="todo">غير المعبّأة</option>
+      </select>
+    </div>
+    <div class="rows" id="rows"></div>
+  </div>
+
+  <div class="editor" id="editor">
+    <div class="empty">اختر مكاناً من القائمة لتعبئة معلوماته</div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".json" hidden />
+<script src="data.js"></script>
+<script src="picker.js"></script>
+</body>
+</html>

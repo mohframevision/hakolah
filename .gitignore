@@ -6,3 +6,6 @@ _site/
 
 # قائمة مراجعة تُولّد محلياً (scripts/fetch-osm-places.js) — مُخرَج مؤقت لا يُرفع
 osm-places.csv
+
+# بيانات منتقي الأماكن — تُولّد محلياً (scripts/build-places-picker.js)
+places-picker/data.js

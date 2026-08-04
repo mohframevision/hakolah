@@ -6,7 +6,14 @@ module.exports = [
   {
     // cf-worker مشروع Cloudflare Worker مستقل تماماً بأدوات وتشغيل خاصة فيه (wrangler)
     // poster-editor/vendor مكتبة خارجية منسوخة كما هي — لا تُعدَّل ولا تُفحص
-    ignores: ["_site/**", "node_modules/**", "cf-worker/**", "poster-editor/vendor/**"],
+    // places-picker/data.js ملف بيانات مولّد آلياً (نحو 400 كيلوبايت)
+    ignores: [
+      "_site/**",
+      "node_modules/**",
+      "cf-worker/**",
+      "poster-editor/vendor/**",
+      "places-picker/data.js",
+    ],
   },
   {
     // كود المتصفح (يعمل عبر <script> عادي، بدون نظام وحدات)
@@ -45,6 +52,16 @@ module.exports = [
     rules: {
       // toPngBlob تُستدعى من أدوات الفحص الآلي بالمتصفح أيضاً
       "no-unused-vars": ["error", { varsIgnorePattern: "^toPngBlob$" }],
+    },
+  },
+  {
+    // منتقي الأماكن — أداة محلية مستقلة (خارج src/ فلا تُبنى ولا تُنشر)،
+    // تقرأ PLACES وSECTIONS من data.js المولّد
+    files: ["places-picker/picker.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "script",
+      globals: { ...globals.browser, PLACES: "readonly", SECTIONS: "readonly" },
     },
   },
   {
