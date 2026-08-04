@@ -11,5 +11,6 @@ links:
   maps: https://maps.app.goo.gl/eiaQUpaTZtxERYch9
   instagram: https://www.instagram.com/lebaneserestaurant/
   website: ''
+coords: ''
 dateAdded: 2026-08-04
 ---

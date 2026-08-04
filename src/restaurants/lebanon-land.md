@@ -11,5 +11,6 @@ links:
   maps: https://maps.app.goo.gl/VcSSAmzDytZs7bXq6
   instagram: ''
   website: ''
+coords: ''
 dateAdded: 2026-08-04
 ---

@@ -11,5 +11,6 @@ links:
   maps: https://maps.app.goo.gl/m6rZ8NLLaLTvpoYE8
   instagram: https://www.instagram.com/naya.bh/
   website: ''
+coords: ''
 dateAdded: 2026-08-04
 ---
