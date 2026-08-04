@@ -2,7 +2,24 @@ const fs = require("fs");
 const path = require("path");
 const matter = require("gray-matter");
 
+const AREAS = require("./areas.js");
+
 const SECTIONS_DIR = path.join(__dirname, "..", "sections");
+
+/*
+  الأقسام التي لعناصرها موقع فعلي على الأرض — تُدمَج فيها كل مناطق البحرين
+  تلقائياً ضمن خيارات التصنيف، فلا يحتاج المستخدم لكتابة اسم منطقة يدوياً
+  (والتصنيف المكتوب يدوياً يحتاج ترجمة بالكود وإلا فشل النشر).
+  "روابط وأدوات" و"مقالات وأدلة" مستثناة — لا موقع جغرافي لها.
+*/
+const SECTIONS_WITH_AREAS = ["restaurants", "cafes", "bakeries", "stores", "places"];
+
+// خيارات القسم أولاً (الأكثر استخداماً بالأعلى)، ثم المناطق بلا تكرار
+function withAreas(slug, options) {
+  if (!SECTIONS_WITH_AREAS.includes(slug)) return options;
+  const seen = new Set(options);
+  return options.concat(Object.keys(AREAS).filter((a) => !seen.has(a)));
+}
 
 /*
   يقرأ تعريفات الأقسام مباشرة من ملفات src/sections/*.md بدل الاعتماد على
@@ -39,10 +56,12 @@ module.exports = () => {
         Array.isArray(data.iconOptions) && data.iconOptions.length
           ? data.iconOptions
           : ["⭐", "📍", "🔗", "🎯"],
-      categoryOptions:
+      categoryOptions: withAreas(
+        slug,
         Array.isArray(data.categoryOptions) && data.categoryOptions.length
           ? data.categoryOptions
           : ["عام"],
+      ),
     };
   });
 
