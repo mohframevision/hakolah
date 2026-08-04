@@ -3,3 +3,6 @@ Thumbs.db
 node_modules/
 .vscode/
 _site/
+
+# قائمة مراجعة تُولّد محلياً (scripts/fetch-osm-places.js) — مُخرَج مؤقت لا يُرفع
+osm-places.csv
