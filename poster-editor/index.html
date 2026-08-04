@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>محرر بوسترات هكوله</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --bg:#0f1320; --panel:#171c2b; --border:#2a3145; --text:#e9ecf5;
+    --muted:#9aa3b8; --primary:#2563eb; --accent:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text); line-height:1.6;
+    font-family:"Segoe UI",Tahoma,Arial,sans-serif;
+  }
+  header{
+    padding:14px 20px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  header h1{font-size:1.1rem; margin:0; font-weight:800}
+  header .note{color:var(--muted); font-size:.85rem}
+  .wrap{display:flex; gap:20px; padding:20px; align-items:flex-start; flex-wrap:wrap}
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:16px; flex:1 1 380px; min-width:340px;
+  }
+  .preview{flex:0 0 auto; position:sticky; top:20px}
+  fieldset{border:1px solid var(--border); border-radius:10px; margin:0 0 14px; padding:12px}
+  legend{padding:0 6px; font-weight:700; font-size:.9rem; color:var(--accent)}
+  label{display:block; font-size:.82rem; color:var(--muted); margin:10px 0 4px}
+  input,textarea,select{
+    width:100%; padding:9px 11px; border-radius:8px; font:inherit; font-size:.9rem;
+    background:#0f1320; color:var(--text); border:1px solid var(--border);
+  }
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--primary); outline-offset:1px}
+  textarea{resize:vertical; min-height:60px}
+  .row{display:flex; gap:8px}
+  .row .icon{flex:0 0 74px; text-align:center; font-size:1.1rem}
+  .row .txt{flex:1}
+  .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px}
+  button{
+    font:inherit; font-weight:700; padding:11px 18px; border-radius:999px;
+    border:1px solid var(--border); background:#0f1320; color:var(--text); cursor:pointer;
+  }
+  button.primary{background:var(--primary); border-color:var(--primary); color:#fff}
+  button:hover{border-color:var(--primary)}
+  button:active{transform:scale(.97)}
+  #stage{
+    width:min(520px,90vw); aspect-ratio:1/1; border-radius:14px; overflow:hidden;
+    border:1px solid var(--border); background:#000;
+  }
+  #stage svg{width:100%; height:100%; display:block}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:4px}
+  .status{font-size:.85rem; margin-top:10px; min-height:1.2em}
+  .status.ok{color:#4ade80}
+  .status.err{color:#f87171}
+  .lang-tabs{display:flex; gap:8px; margin-bottom:12px}
+  .lang-tabs button{flex:1; padding:9px}
+  .lang-tabs button[aria-pressed="true"]{background:var(--primary); border-color:var(--primary); color:#fff}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎨 محرر بوسترات هكوله</h1>
+  <span class="note">أداة محلية مستقلة — غير مرتبطة بالموقع ولا تُنشر معه. كل شي يشتغل داخل متصفحك.</span>
+</header>
+
+<div class="wrap">
+  <!-- ===== لوحة التحكم ===== -->
+  <div class="panel">
+    <div class="lang-tabs">
+      <button type="button" id="tabAr" aria-pressed="true">🇧🇭 عربي (RTL)</button>
+      <button type="button" id="tabEn" aria-pressed="false">🇬🇧 English (LTR)</button>
+    </div>
+
+    <fieldset>
+      <legend>الأساسيات</legend>
+      <label for="badge">شارة أعلى اليسار</label>
+      <input id="badge" />
+      <label for="brand">اسم العلامة (كبير)</label>
+      <input id="brand" />
+      <label for="headline">العنوان الرئيسي</label>
+      <input id="headline" />
+      <label for="sub">سطر توضيحي</label>
+      <input id="sub" />
+    </fieldset>
+
+    <fieldset>
+      <legend>شارتا اللغة (اتركها فاضية لإخفائها)</legend>
+      <div class="row">
+        <input class="txt" id="pill1" placeholder="العربية" />
+        <input class="txt" id="pill2" placeholder="English" />
+      </div>
+      <p class="hint">تظهر كزرّين أبيضين بينهما سهم ⇄</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>الميزات (اترك السطر فاضياً لتخطيه)</legend>
+      <div id="features"></div>
+      <p class="hint">الأيقونة إيموجي واحد. أقصى 5 صفوف.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>الدعوة والرابط</legend>
+      <label for="cta">نص فوق رمز QR</label>
+      <input id="cta" />
+      <label for="url">الرابط داخل رمز QR</label>
+      <input id="url" dir="ltr" />
+      <label for="foot">نص أسفل الرمز</label>
+      <input id="foot" dir="ltr" />
+      <p class="hint">⚠️ الروابط الطويلة تصنع رمزاً كثيفاً يصعب مسحه — يُفضّل رابط قصير.</p>
+    </fieldset>
+
+    <div class="btns">
+      <button type="button" class="primary" id="download">⬇️ تنزيل PNG بمقاس 1080</button>
+      <button type="button" id="verify">🔍 تحقق أن رمز QR يُقرأ</button>
+      <button type="button" id="reset">↺ استرجاع الافتراضي</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- ===== المعاينة ===== -->
+  <div class="preview">
+    <div id="stage"></div>
+    <p class="hint" style="text-align:center">معاينة حية — الناتج 1080×1080</p>
+  </div>
+</div>
+
+<script src="vendor/qrcode.js"></script>
+<script src="poster.js"></script>
+</body>
+</html>

@@ -5,7 +5,8 @@ module.exports = [
   js.configs.recommended,
   {
     // cf-worker مشروع Cloudflare Worker مستقل تماماً بأدوات وتشغيل خاصة فيه (wrangler)
-    ignores: ["_site/**", "node_modules/**", "cf-worker/**"],
+    // poster-editor/vendor مكتبة خارجية منسوخة كما هي — لا تُعدَّل ولا تُفحص
+    ignores: ["_site/**", "node_modules/**", "cf-worker/**", "poster-editor/vendor/**"],
   },
   {
     // كود المتصفح (يعمل عبر <script> عادي، بدون نظام وحدات)
@@ -30,6 +31,20 @@ module.exports = [
             "^(renderSection|renderFavoritesPage|initRandomPicker|renderFeaturedPick|initPushNotifications|renderTrendingSection|renderExploreProgress)$",
         },
       ],
+    },
+  },
+  {
+    // محرر البوسترات — أداة محلية مستقلة (خارج src/ فلا تُبنى ولا تُنشر)،
+    // تعمل بالمتصفح وتستخدم qrcode العام من vendor/qrcode.js
+    files: ["poster-editor/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "script",
+      globals: { ...globals.browser, qrcode: "readonly" },
+    },
+    rules: {
+      // toPngBlob تُستدعى من أدوات الفحص الآلي بالمتصفح أيضاً
+      "no-unused-vars": ["error", { varsIgnorePattern: "^toPngBlob$" }],
     },
   },
   {
