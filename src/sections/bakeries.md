@@ -1,12 +1,12 @@
 ---
 slug: bakeries
-title: مخابز
+title: "مخابز البحرين"
 navLabel: مخابز
 icon: 🥐
-description: مخابز مختارة في البحرين — كيك، حلويات، ومعجنات طازجة قريبة منك.
-title_en: "Bakeries"
+description: "دليل مخابز البحرين — خبز طازج، كيك، حلويات ومعجنات، مرتّبة حسب المنطقة القريبة منك."
+title_en: "Bakeries in Bahrain"
 navLabel_en: "Bakeries"
-description_en: "Selected bakeries in Bahrain — cakes, sweets, and fresh pastries near you."
+description_en: "A guide to bakeries in Bahrain — fresh bread, cakes, sweets and pastries, sorted by the area nearest you."
 searchPlaceholder_en: "Search for a bakery…"
 searchPlaceholder: ابحث عن مخبز…
 order: 999

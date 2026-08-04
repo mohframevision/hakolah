@@ -1,12 +1,12 @@
 ---
 slug: stores
-title: متاجر
+title: "متاجر البحرين"
 navLabel: متاجر
 icon: 🛍️
-description: متاجر مختارة تغطي الملابس والإلكترونيات والمنزل وغيرها.
-title_en: "Stores"
+description: "دليل متاجر البحرين — إلكترونيات، ملابس، مستلزمات منزلية، أطفال، وعناية وجمال، مع روابط مباشرة لكل متجر."
+title_en: "Stores in Bahrain"
 navLabel_en: "Stores"
-description_en: "Selected stores covering clothing, electronics, home, and more."
+description_en: "A guide to stores in Bahrain — electronics, clothing, home essentials, kids, and beauty, with direct links to each store."
 searchPlaceholder_en: "Search for a store… (e.g. clothing, electronics, kids)"
 searchPlaceholder: 'ابحث عن متجر… (مثال: ملابس، إلكترونيات، أطفال)'
 order: 4
