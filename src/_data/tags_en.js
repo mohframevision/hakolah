@@ -45,6 +45,7 @@ module.exports = {
   "سماهيج": "Samaheej",
   "دمستان": "Dumistan",
   "المالكية": "Malkiya",
+  "الهملة": "Hamala",
   "برجر": "Burger",
   "سندويشات": "Sandwiches",
   "وجبات سريعة": "Fast Food",
