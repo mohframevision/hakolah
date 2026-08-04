@@ -687,6 +687,39 @@ function nearestBranch(item, userCoords) {
 const SITE_ORIGIN = "https://mohframevision.github.io/hakolah/";
 const SITE_ROOT_PATH = "/hakolah/";
 
+/*
+  قياس "الروابط" لا "الزيارات": كم زائراً شارك أو خرج لمحل فعلي.
+  عدد الزيارات وحده يقول إن الموقع رفّ كتب؛ هذا يقول إن كان شبكة.
+  لا يرسل شيئاً بنفسه — يمرّ عبر gtag الموجود أصلاً، فلا طلب ولا كلفة إضافية.
+*/
+function trackEdge(name, params) {
+  if (typeof window.gtag === "function") window.gtag("event", name, params);
+}
+
+/*
+  مستمع واحد على المستند بدل مستمع لكل رابط: البطاقات تُطبع من السيرفر أحياناً
+  وتُبنى بالمتصفح أحياناً، والتفويض يغطي الاثنين ولا يكبر مع عدد العناصر.
+*/
+function initOutboundTracking() {
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[target="_blank"][href^="http"]');
+    if (!a) return;
+    let host;
+    try {
+      host = new URL(a.href).hostname.replace(/^www\./, "");
+    } catch {
+      return;
+    }
+    if (host === location.hostname) return;
+    // الاسم أول عقدة نصية بالعنوان — الشارات (✅ زُرته، 👍 أعجبني) عناصر بعده
+    const heading = a.closest(".item-card, .card")?.querySelector("h3, h2");
+    trackEdge("outbound_click", {
+      destination: host,
+      item_name: heading?.firstChild?.textContent.trim() || heading?.textContent.trim() || "",
+    });
+  });
+}
+
 function buildShareUrl(section, item) {
   const isEn = window.SITE_LANG === "en";
   const prefix = isEn ? "en/" : "";
@@ -809,6 +842,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
   shareBtn.addEventListener("click", () => {
     const text = buildShareText(section, item);
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+    trackEdge("share", { method: "whatsapp", section, item_name: itemTitle(item) });
     playClickSound();
   });
 
@@ -1486,6 +1520,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initAutoUpdateCheck();
   initContactForm();
   fetchLikeCounts();
+  initOutboundTracking();
 
   // ما يخص كل صفحة على حدة — كانت سكربتات مضمّنة بـ base.njk، صارت تُقرأ من
   // إعدادات الصفحة (#site-config) عشان تشتغل سياسة CSP بدون unsafe-inline
