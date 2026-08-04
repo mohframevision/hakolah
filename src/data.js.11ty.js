@@ -44,6 +44,33 @@ function parseCoords(raw) {
   return null;
 }
 
+/*
+  يدعم أكثر من فرع للعنصر الواحد: كل سطر بحقل coords = فرع مستقل، مع اسم
+  اختياري قبل علامة | لعرضه للزائر. مثال:
+
+      الشاخورة | 26.2098071, 50.504281
+      كرباباد  | https://www.google.com/maps/.../@26.228514,50.52247,17z/...
+
+  الفائدة: سلسلة مثل "برجر السادة" (11 فرعاً) تبقى ببطاقة واحدة نظيفة، لكن
+  ميزة "قريب مني" تحسب المسافة لأقرب فرع فعلاً بدل فرع واحد ثابت.
+  سطر واحد يظل يشتغل كما كان (توافق خلفي كامل).
+*/
+function parseBranches(raw) {
+  if (typeof raw !== "string") return [];
+  return raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const sep = line.indexOf("|");
+      const label = sep === -1 ? "" : line.slice(0, sep).trim();
+      const coordsPart = sep === -1 ? line : line.slice(sep + 1).trim();
+      const c = parseCoords(coordsPart);
+      return c ? { label, lat: c.lat, lng: c.lng } : null;
+    })
+    .filter(Boolean);
+}
+
 exports.render = function (data) {
   const sections = data.sections;
   const out = {};
@@ -53,8 +80,9 @@ exports.render = function (data) {
     const items = (data.collections[meta.slug] || []).map((entry) => {
       const addedAt = entry.data.dateAdded ? new Date(entry.data.dateAdded).getTime() : NaN;
       // حقل coords الجديد له الأولوية، ويُرجَع لحقلي lat/lng القديمين لو كان
-      // فاضياً — فالعناصر الـ52 المعبّأة سابقاً تظل تشتغل بلا أي تعديل
-      const coords = parseCoords(entry.data.coords);
+      // فاضياً — فالعناصر المعبّأة سابقاً تظل تشتغل بلا أي تعديل
+      const branches = parseBranches(entry.data.coords);
+      const coords = branches[0] || null;
       const item = {
         id: entry.fileSlug,
         icon: entry.data.icon || "⭐",
@@ -71,6 +99,9 @@ exports.render = function (data) {
         lng: coords ? coords.lng : typeof entry.data.lng === "number" ? entry.data.lng : null,
         tags: [...(entry.data.categories || []), ...(entry.data.categoriesCustom || [])],
       };
+      // تُرسَل للمتصفح فقط لما يكون فيه أكثر من فرع — عنصر بفرع واحد يكتفي
+      // بـ lat/lng أعلاه، فما نضخّم ملف البيانات بلا فائدة
+      if (branches.length > 1) item.branches = branches;
       if (meta.hasDetailPages) {
         item.detailUrl = `${meta.slug}/${entry.fileSlug}.html`;
         // slug_en اختياري — لازم فقط لو ملف Markdown العربي اسمه بالعربي

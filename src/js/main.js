@@ -660,6 +660,29 @@ function formatDistance(km) {
   return km < 1 ? `${Math.round(km * 1000)} ${t("unit_meters")}` : `${km.toFixed(1)} ${t("unit_km")}`;
 }
 
+/*
+  أقرب فرع للزائر. العنصر متعدد الفروع (مثل سلسلة مطاعم) يحمل مصفوفة
+  branches، فنحسب المسافة لكل فرع ونرجّع الأقرب — بدل ما نقيس لفرع واحد
+  ثابت فيطلع ترتيب "قريب مني" مضلّلاً. العنصر بفرع واحد يستخدم lat/lng.
+  يرجّع null لو ما عنده أي موقع.
+*/
+function nearestBranch(item, userCoords) {
+  const points =
+    Array.isArray(item.branches) && item.branches.length
+      ? item.branches
+      : item.lat != null && item.lng != null
+        ? [{ label: "", lat: item.lat, lng: item.lng }]
+        : [];
+  if (!points.length) return null;
+
+  let best = null;
+  for (const p of points) {
+    const km = haversineKm(userCoords.lat, userCoords.lng, p.lat, p.lng);
+    if (!best || km < best.km) best = { km, label: p.label || "" };
+  }
+  return best;
+}
+
 /* ===== مشاركة عبر واتساب ===== */
 const SITE_ORIGIN = "https://mohframevision.github.io/hakolah/";
 const SITE_ROOT_PATH = "/hakolah/";
@@ -720,7 +743,7 @@ function showToast(message) {
 }
 
 /* ===== بناء بطاقة عنصر واحدة ===== */
-function buildItemCard(section, item, index = 0, distanceKm = null) {
+function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel = "") {
   const card = document.createElement("div");
   card.className = item.featured ? "item-card featured" : "item-card";
   card.style.animationDelay = `${Math.min(index, 10) * 45}ms`;
@@ -753,7 +776,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null) {
       ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">${t("read_more")}</button>` : ""}
       <div class="item-meta">
         ${item.isNew ? `<span class="tag new-tag">${t("new_badge")}</span>` : ""}
-        ${distanceKm !== null ? `<span class="tag distance-tag">📍 ${formatDistance(distanceKm)}</span>` : ""}
+        ${distanceKm !== null ? `<span class="tag distance-tag">📍 ${formatDistance(distanceKm)}${branchLabel ? ` — ${t("nearest_branch")} ${branchLabel}` : ""}</span>` : ""}
         ${(item.tags || []).map((tag) => `<span class="tag">${tagLabel(tag)}</span>`).join("")}
       </div>
       <div class="item-actions">
@@ -937,13 +960,14 @@ function renderSection(section) {
       return matchesTag && matchesQuery;
     });
 
-    let ranked = filtered.map((item) => ({
-      item,
-      distanceKm:
-        sortByDistance && userCoords && item.lat != null && item.lng != null
-          ? haversineKm(userCoords.lat, userCoords.lng, item.lat, item.lng)
-          : null,
-    }));
+    let ranked = filtered.map((item) => {
+      const near = sortByDistance && userCoords ? nearestBranch(item, userCoords) : null;
+      return {
+        item,
+        distanceKm: near ? near.km : null,
+        branchLabel: near ? near.label : "",
+      };
+    });
 
     ranked =
       sortByDistance && userCoords
@@ -973,8 +997,8 @@ function renderSection(section) {
       return;
     }
 
-    ranked.forEach(({ item, distanceKm }, index) =>
-      grid.appendChild(buildItemCard(section, item, index, distanceKm))
+    ranked.forEach(({ item, distanceKm, branchLabel }, index) =>
+      grid.appendChild(buildItemCard(section, item, index, distanceKm, branchLabel))
     );
   }
 
