@@ -33,9 +33,25 @@ exports.render = function (data) {
     ...detailPagePairs,
   ];
 
+  /*
+    مواصفة Sitemap تُلزم بترميز الروابط (URL-encoded) وبتهريب رموز XML.
+    كان عندنا رابط باسم ملف عربي (places/ممشى-توبلي.html) يُكتب بحروف عربية
+    خام داخل <loc> — وهذي مخالفة تخلي قوقل يفشل بقراءة الملف كاملاً، فتضيع
+    كل الروابط الـ44 مو رابط واحد.
+    encodeURI يرمّز الحروف غير الإنجليزية ويترك : و / كما هي.
+  */
+  const xmlEscape = (s) =>
+    s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+  const safeUrl = (path) => xmlEscape(encodeURI(`${SITE_URL}/${path}`));
+
   const bilingualItems = bilingualPairs.map(([ar, en]) => {
-    const arUrl = `${SITE_URL}/${ar}`;
-    const enUrl = `${SITE_URL}/${en}`;
+    const arUrl = safeUrl(ar);
+    const enUrl = safeUrl(en);
     return (
       `  <url>\n` +
       `    <loc>${arUrl}</loc>\n` +
