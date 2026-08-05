@@ -611,13 +611,21 @@ async function toggleLike(section, id, btn) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ section, id }),
     });
+    if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     if (typeof data.count === "number") {
       LIKE_COUNTS[key] = data.count;
       countEl.textContent = data.count;
     }
   } catch {
-    // نتجاهل فشل الشبكة بصمت — الحالة المحلية (optimistic) تبقى كما هي
+    // فشل الخادم (شبكة، 429، 403) → نرجّع كل شي لحاله. بدونه يظل المتصفح
+    // يظن أنه أعجب، فالضغطة التالية ترسل /unlike وتنقص إعجاب شخص آخر فعلاً.
+    countEl.textContent = currentCount;
+    iconEl.textContent = alreadyLiked ? "♥" : "♡";
+    btn.classList.toggle("active", alreadyLiked);
+    if (alreadyLiked) liked[key] = true;
+    else delete liked[key];
+    saveLikedItems(liked);
   }
 }
 
