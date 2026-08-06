@@ -92,6 +92,7 @@ exports.render = function (data) {
         desc_en: entry.data.desc_en || "",
         image: entry.data.image || null,
         featured: Boolean(entry.data.featured),
+        sponsored: Boolean(entry.data.sponsored),
         verified: Boolean(entry.data.verified),
         liked: Boolean(entry.data.liked),
         isNew: !Number.isNaN(addedAt) && now - addedAt < NEW_BADGE_DAYS * 86400000,

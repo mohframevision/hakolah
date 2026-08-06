@@ -185,11 +185,6 @@
     <button type="button" class="btn cookie-accept" id="cookie-accept">{{ t.cookie_accept }}</button>
   </div>
 
-  <div class="adblock-notice" id="adblockNotice" role="region" aria-label="{{ t.adblock_close }}">
-    <button type="button" class="adblock-notice-close" id="adblockNoticeClose" aria-label="{{ t.adblock_close }}">✕</button>
-    <p>{{ t.adblock_text }}</p>
-  </div>
-
   <div class="daily-pick-reminder" id="dailyPickReminder" role="region" aria-label="{{ t.daily_pick_close }}">
     <button type="button" class="daily-pick-reminder-close" id="dailyPickReminderClose" aria-label="{{ t.daily_pick_close }}">✕</button>
     <p>{{ t.daily_pick_text_html | replace("{homeUrl}", (('/en/index.html' if lang == 'en' else '/index.html') | url)) | safe }}</p>

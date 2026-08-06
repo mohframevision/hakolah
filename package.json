@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check:ux": "node scripts/check-ux.js"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",

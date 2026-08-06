@@ -16,9 +16,12 @@
 {% set title = (d.title_en or d.title) if isEn else d.title %}
 {% set desc = (d.desc_en or d.desc) if isEn else d.desc %}
 {% set t = i18n[lang or "ar"] %}
-<div class="item-card{% if d.featured %} featured{% endif %}">
+<div class="item-card{% if d.sponsored %} sponsored{% elif d.featured %} featured{% endif %}{% if d.verified %} verified{% endif %}">
   {% if d.image %}<img class="item-photo" src="{{ d.image }}" alt="{{ title }}" loading="lazy" decoding="async" />{% endif %}
-  {% if d.featured %}<span class="featured-badge">{{ t.featured_badge }}</span>{% endif %}
+  {# شارة واحدة بس — الشارتان بنفس الموضع المطلق فتتراكبان. "ممول" لها
+     الأولوية: الإفصاح عن الإعلان المدفوع أهم من وسم "مميز" #}
+  {% if d.sponsored %}<span class="sponsored-badge">{{ t.sponsored_badge }}</span>
+  {% elif d.featured %}<span class="featured-badge">{{ t.featured_badge }}</span>{% endif %}
   <div class="item-body">
     <div class="item-top">
       <span class="item-icon">{{ d.icon or "⭐" }}</span>

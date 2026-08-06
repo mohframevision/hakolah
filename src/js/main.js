@@ -18,7 +18,6 @@ function itemDesc(item) {
 // قاموس ترجمة التصنيفات يجي من ملف data.js (متغيّر TAGS_EN)، ومصدره
 // الأصلي src/_data/tags_en.js — نفسه اللي تستخدمه القوالب وقت البناء.
 
-
 function tagLabel(tag) {
   if (window.SITE_LANG === "en") return (typeof TAGS_EN !== "undefined" && TAGS_EN[tag]) || tag;
   return tag;
@@ -351,99 +350,6 @@ function initCookieConsent() {
   });
 }
 
-/* ===== ملاحظة مانع الإعلانات ===== */
-/* لا يمكن تقنياً إجبار المتصفح على تعطيل إضافة مثبّتة عنده (قرار متعمّد من
-   المتصفحات نفسها لحماية المستخدم) — أقصى شي ممكن نسويه هو اكتشاف وجود مانع
-   إعلانات وإظهار ملاحظة لطيفة وغير مزعجة. الإغلاق بـ sessionStorage عمداً
-   (مو localStorage) — يعني تختفي لباقي هالجلسة إذا ضغط الزائر ✕، بس ترجع
-   تظهر بجلسة تصفح جديدة طول ما المانع لسا شغّال، بدل ما تختفي إلى الأبد. */
-// أسماء كلاسات ومعرّفات شائعة تستهدفها قوائم فلترة مانعات الإعلانات (EasyList
-// وما شابهها) — نفس الأسماء اللي تستخدمها مكتبات كشف مانعات الإعلانات المعروفة.
-// عنصر واحد قد يفلت من فلتر معيّن، فنحط عدة عناصر بأسماء مختلفة لنزيد فرصة
-// الاكتشاف مهما كانت القائمة اللي يعتمد عليها مانع الزائر
-const ADBLOCK_BAIT_NAMES = [
-  "adsbox",
-  "ad-banner",
-  "adBanner",
-  "ad-placement",
-  "adsbygoogle",
-  "textAd",
-  "text-ad",
-  "google-ad",
-  "ad-container",
-  "banner-ad",
-  "pub_300x250",
-  "pub_728x90",
-  "adSpace",
-  "ad-header",
-];
-
-function detectAdblockViaBaitElements() {
-  return new Promise((resolve) => {
-    const baits = ADBLOCK_BAIT_NAMES.map((name, i) => {
-      const el = document.createElement("div");
-      // اسم الطُعم أولاً (هو اللي تطابقه فلاتر مانعات الإعلانات)، وكلاس
-      // التنسيق بعده — التنسيق بـ CSS وليس بـ style.cssText عشان سياسة CSP
-      el.className = `${name} adblock-bait`;
-      el.id = `${name}-${i}`;
-      el.innerHTML = "&nbsp;";
-      document.body.appendChild(el);
-      return el;
-    });
-
-    const isHidden = (el) => {
-      if (!el.isConnected) return true;
-      const style = getComputedStyle(el);
-      return el.offsetParent === null || el.offsetHeight === 0 || style.display === "none" || style.visibility === "hidden";
-    };
-
-    // فحص على مرحلتين — بعض المانعات تطبّق فلاتر CSS فوراً، وبعضها بعد لحظة
-    // من رسم الصفحة (عبر MutationObserver داخلي)
-    setTimeout(() => {
-      if (baits.some(isHidden)) {
-        baits.forEach((el) => el.remove());
-        resolve(true);
-        return;
-      }
-      setTimeout(() => {
-        const blocked = baits.some(isHidden);
-        baits.forEach((el) => el.remove());
-        resolve(blocked);
-      }, 900);
-    }, 300);
-  });
-}
-
-function initAdblockNotice() {
-  const DISMISSED_KEY = "adblock_notice_dismissed";
-  if (sessionStorage.getItem(DISMISSED_KEY)) return;
-
-  const notice = document.getElementById("adblockNotice");
-  const closeBtn = document.getElementById("adblockNoticeClose");
-  if (!notice || !closeBtn) return;
-
-  detectAdblockViaBaitElements().then((blocked) => {
-    if (blocked) notice.classList.add("open");
-  });
-
-  // إعادة فحص دورية (بدون تعديل منطق الاكتشاف نفسه) — لو الزائر عطّل مانع
-  // الإعلانات وهو فاتح نفس التبويب، الملاحظة تختفي تلقائياً بدون حاجة لتحديث الصفحة
-  const recheckInterval = setInterval(() => {
-    detectAdblockViaBaitElements().then((stillBlocked) => {
-      if (!stillBlocked) {
-        notice.classList.remove("open");
-        clearInterval(recheckInterval);
-      }
-    });
-  }, 4000);
-
-  closeBtn.addEventListener("click", () => {
-    clearInterval(recheckInterval);
-    sessionStorage.setItem(DISMISSED_KEY, "1");
-    notice.classList.remove("open");
-  });
-}
-
 /* ===== تذكير "اختيار اليوم" (بديل خفيف عن الإشعارات لا يعتمد على أي خدمة
    خارجية) — لو الزائر ما زار الصفحة الرئيسية اليوم بعد وهو يتصفح صفحة ثانية
    بالموقع، يظهر له تذكير صغير وغير مزعج. مو إشعار حقيقي (ما يوصله وهو خارج
@@ -495,6 +401,13 @@ function initHeaderScroll() {
   const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 8);
   document.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
+
+  // ارتفاع الهيدر الفعلي → متغيّر CSS يستخدمه صندوق البحث اللاصق. يتغيّر
+  // بتغيّر عرض الشاشة (القائمة تلتف لسطرين)، فنعيد قياسه مع كل تغيير حجم
+  const setHeaderHeight = () =>
+    document.documentElement.style.setProperty("--header-h", `${header.offsetHeight}px`);
+  setHeaderHeight();
+  window.addEventListener("resize", setHeaderHeight, { passive: true });
 }
 
 /* ===== تحديث تلقائي: يكتشف نسخة جديدة من الموقع ويعيد التحميل بدون تدخل المستخدم =====
@@ -665,7 +578,9 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 }
 
 function formatDistance(km) {
-  return km < 1 ? `${Math.round(km * 1000)} ${t("unit_meters")}` : `${km.toFixed(1)} ${t("unit_km")}`;
+  return km < 1
+    ? `${Math.round(km * 1000)} ${t("unit_meters")}`
+    : `${km.toFixed(1)} ${t("unit_km")}`;
 }
 
 /*
@@ -731,9 +646,10 @@ function initOutboundTracking() {
 function buildShareUrl(section, item) {
   const isEn = window.SITE_LANG === "en";
   const prefix = isEn ? "en/" : "";
-  const relPath = isEn && item.detailUrlEn
-    ? item.detailUrlEn
-    : item.detailUrl || `${section}.html?q=${encodeURIComponent(itemTitle(item))}`;
+  const relPath =
+    isEn && item.detailUrlEn
+      ? item.detailUrlEn
+      : item.detailUrl || `${section}.html?q=${encodeURIComponent(itemTitle(item))}`;
   return SITE_ORIGIN + prefix + relPath;
 }
 
@@ -783,10 +699,24 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove("open"), 2000);
 }
 
+// ترتيب التثبيت أول القائمة: الممول فوق المميز فوق الباقي. الترتيب الأصلي
+// محفوظ داخل كل مرتبة لأن Array.sort ثابت (stable) بكل المتصفحات الحديثة
+function pinRank(item) {
+  return (item.sponsored ? 2 : 0) + (item.featured ? 1 : 0);
+}
+
 /* ===== بناء بطاقة عنصر واحدة ===== */
 function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel = "") {
   const card = document.createElement("div");
-  card.className = item.featured ? "item-card featured" : "item-card";
+  // نفس منطق item-card.njk بالضبط — أي تغيير هنا لازم ينعكس هناك، وإلا اختلف
+  // شكل البطاقة قبل تشغيل جافاسكربت وبعده (وبوّابة التطابق بالبناء تكشفها)
+  card.className = [
+    "item-card",
+    item.sponsored ? "sponsored" : item.featured ? "featured" : "",
+    item.verified ? "verified" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   card.style.animationDelay = `${Math.min(index, 10) * 45}ms`;
 
   const fav = isFavorite(section, item.id);
@@ -798,7 +728,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
 
   card.innerHTML = `
     ${item.image ? `<img class="item-photo" src="${item.image}" alt="${title}" loading="lazy" decoding="async" />` : ""}
-    ${item.featured ? `<span class="featured-badge">${t("featured_badge")}</span>` : ""}
+    ${item.sponsored ? `<span class="sponsored-badge">${t("sponsored_badge")}</span>` : item.featured ? `<span class="featured-badge">${t("featured_badge")}</span>` : ""}
     <div class="item-body">
       <div class="item-top">
         <span class="item-icon">${item.icon || "⭐"}</span>
@@ -1019,7 +949,7 @@ function renderSection(section) {
             if (b.distanceKm === null) return -1;
             return a.distanceKm - b.distanceKm;
           })
-        : ranked.sort((a, b) => Number(Boolean(b.item.featured)) - Number(Boolean(a.item.featured)));
+        : ranked.sort((a, b) => pinRank(b.item) - pinRank(a.item));
 
     if (ranked.length === 0) {
       const isSectionEmpty = data.items.length === 0;
@@ -1356,7 +1286,7 @@ function buildDayPlan() {
     // حتى ما يتكرر نفس المكان مرتين بنفس الخطة
     const pool = [];
     for (const slug of step.from) {
-      for (const item of (SITE_DATA[slug]?.items || [])) {
+      for (const item of SITE_DATA[slug]?.items || []) {
         const id = `${slug}:${item.id}`;
         if (!used.has(id)) pool.push({ slug, item, id });
       }
@@ -1414,7 +1344,11 @@ function renderDayPlan() {
     shareBtn.addEventListener("click", () => {
       const lines = current.map((s) => `${s.icon} ${t("plan_" + s.key)}: ${itemTitle(s.item)}`);
       const text = `${t("plan_share_title")}\n\n${lines.join("\n")}\n\n${SITE_ORIGIN}${window.SITE_LANG === "en" ? "en/" : ""}plan.html`;
-      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(text)}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
       playClickSound();
     });
   }
@@ -1521,7 +1455,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
   initSoundToggle();
   initCookieConsent();
-  initAdblockNotice();
   initDailyPickReminder();
   initNavToggle();
   initHeaderScroll();

@@ -23,8 +23,6 @@ module.exports = {
     cookie_text_html:
       'نستخدم ملفات تعريف الارتباط (Cookies) لحفظ تفضيلاتك (كالمظهر والمفضلة) ولعرض إعلانات Google. بمتابعة تصفح الموقع فأنت توافق على <a href="{privacyUrl}">سياسة الخصوصية</a>.',
     cookie_accept: "موافق",
-    adblock_text: "🙏 لاحظنا إنك تستخدم مانع إعلانات. الموقع مجاني بالكامل وبدون أي رسوم عليك، ودخل بسيط من الإعلانات يساعدنا نكمل ونطوّر الموقع. لو تقدر تعطّله لهذا الموقع تحديداً، نقدّر ذلك ❤️",
-    adblock_close: "إغلاق",
     daily_pick_text_html: '🎯 شفت <a href="{homeUrl}">اختيار اليوم</a> بعد؟',
     daily_pick_close: "إغلاق",
     all_filter: "الكل",
@@ -39,6 +37,7 @@ module.exports = {
     empty_search: "لا توجد نتائج مطابقة لبحثك.",
     near_me: "📍 الأقرب مني",
     featured_badge: "⭐ مميز",
+    sponsored_badge: "ممول",
     new_badge: "🆕 مضاف مؤخراً",
     verified_badge: "✅ زُرته شخصياً",
     liked_badge: "👍 أعجبني",
@@ -135,8 +134,6 @@ module.exports = {
     cookie_text_html:
       'We use cookies to save your preferences (theme, favorites) and show Google ads. By continuing to browse, you agree to our <a href="{privacyUrl}">Privacy Policy</a>.',
     cookie_accept: "Accept",
-    adblock_text: "🙏 We noticed you're using an ad blocker. The site is completely free with no cost to you — a small ad income helps us keep it running and improve it. If you can whitelist this site, we'd really appreciate it ❤️",
-    adblock_close: "Close",
     daily_pick_text_html: "🎯 Seen <a href=\"{homeUrl}\">today's pick</a> yet?",
     daily_pick_close: "Close",
     all_filter: "All",
@@ -151,6 +148,7 @@ module.exports = {
     empty_search: "No results match your search.",
     near_me: "📍 Near me",
     featured_badge: "⭐ Featured",
+    sponsored_badge: "Sponsored",
     new_badge: "🆕 New",
     verified_badge: "✅ Personally visited",
     liked_badge: "👍 Recommended",

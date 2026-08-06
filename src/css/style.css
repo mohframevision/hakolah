@@ -517,7 +517,13 @@ img {
 }
 
 /* ===== صندوق البحث ===== */
+/* يلتصق تحت الهيدر عند التمرير — بصفحة فيها ٤٠ بطاقة، الوصول للبحث بدونه
+   يتطلب رجوع لأعلى الصفحة. الارتفاع --header-h يضبطه main.js من الهيدر الفعلي
+   (يتغيّر بين الجوال والحاسب)، والقيمة الاحتياطية للحظة ما قبل تشغيل جافاسكربت */
 .search-box {
+  position: sticky;
+  top: calc(var(--header-h, 64px) + 8px);
+  z-index: 20; /* دون الهيدر (50) عمداً، فوق البطاقات */
   width: 100%;
   padding: 14px 18px;
   border-radius: 999px;
@@ -526,14 +532,32 @@ img {
   color: var(--color-text);
   font-size: 1rem;
   font-family: inherit;
+  box-shadow: var(--shadow-card);
 }
 
 .search-box:focus {
   outline: 2px solid var(--color-primary);
 }
 
+/* main.js يلفّ صندوق البحث بهذا الغلاف بعد التحميل (لقائمة الاقتراحات). واللصق
+   محدود بصندوق العنصر الأب، وهذا الغلاف ارتفاعه ٤٩ بكسل بس — فلو بقي اللصق على
+   الحقل نفسه ما التصق إلا داخل ٤٩ بكسل، أي عملياً أبداً. فاللصق ينتقل للغلاف
+   (أبوه main بكامل ارتفاع الصفحة)، والحقل يرجع عادياً بداخله.
+   sticky عنصر موضَّع مثل relative، فقائمة الاقتراحات المطلقة تظل مرتكزة عليه */
 .search-wrap {
-  position: relative;
+  position: sticky;
+  top: var(--header-h, 64px);
+  z-index: 20;
+  /* شريط معتم خلف الحقل — بدونه يظهر نص البطاقات من حول زوايا الحقل المدوّرة
+     وهو ملتصق. الهوامش السالبة تمدّ الشريط لعرض العمود كامل (٢٠ بكسل = حشو
+     .container)، فلا تفلت البطاقات من الحواف */
+  background: var(--color-bg);
+  margin-inline: -20px;
+  padding: 8px 20px;
+}
+
+.search-wrap .search-box {
+  position: static;
 }
 
 .search-suggestions {
@@ -601,19 +625,6 @@ img {
 /* بديل عن style="grid-column: 1/-1" المضمّنة بحالات "لا توجد نتائج" */
 .empty-state.full-row {
   grid-column: 1 / -1;
-}
-
-/* عناصر طُعم كشف مانع الإعلانات — كانت تُنسّق بـ style.cssText من JS، وهذا
-   يُعدّ سمة style مضمّنة فتمنعه سياسة CSP. النقل لكلاس يحلّ ذلك، والكشف لا
-   يتأثر لأن مانعات الإعلانات تطابق على أسماء الكلاسات الأخرى (adsbox وغيرها) */
-.adblock-bait {
-  position: absolute;
-  top: -9999px;
-  inset-inline-start: -9999px;
-  width: 10px;
-  height: 10px;
-  background: #fff;
-  pointer-events: none;
 }
 
 /* ===== شبكة الأقسام في الرئيسية ===== */
@@ -872,6 +883,37 @@ img {
   padding: 4px 12px;
   border-radius: 999px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* عنصر ممول (إعلان مدفوع) — يترتّب فوق المميز. مقصود يكون هادئاً بصرياً
+   (رمادي، لا يصيح) لكن نصّه صريح: الإفصاح لازم يكون مقروءاً لا مموّهاً */
+.item-card.sponsored {
+  border-color: var(--color-text-muted);
+}
+
+.sponsored-badge {
+  position: absolute;
+  top: 12px;
+  inset-inline-start: 12px;
+  z-index: 5;
+  background: rgba(17, 24, 39, 0.82);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* "زُرته شخصياً" — أقوى إشارة ثقة بالموقع، فتاخذ تمييزاً على مستوى البطاقة
+   كاملة مو شارة صغيرة بس. شريط ذهبي دافئ على الحافة البادئة + خلفية خفيفة،
+   وهذا شكل مختلف عن إطار "مميز" الكامل عشان ما تلتبس الميزتان لو اجتمعتا */
+.item-card.verified {
+  border-inline-start: 3px solid #d4a017;
+  /* طبقة تلوين مسطّحة فوق لون البطاقة — بلا اتجاه، فتشتغل بالعربي والإنجليزي
+     وبالوضعين الفاتح والداكن بلا قواعد إضافية */
+  background-image: linear-gradient(rgba(212, 160, 23, 0.07), rgba(212, 160, 23, 0.07));
 }
 
 .tag.new-tag {
@@ -1319,52 +1361,8 @@ img {
   flex-shrink: 0;
 }
 
-/* ===== ملاحظة مانع الإعلانات — بطاقة صغيرة بزاوية الشاشة، مو حاجز كامل العرض،
-   وواضح إنها تُغلق بسهولة (زر X) ===== */
-.adblock-notice {
-  display: none;
-  position: fixed;
-  bottom: 16px;
-  inset-inline-start: 16px;
-  z-index: 60;
-  max-width: 300px;
-  padding: 16px 34px 16px 16px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card-hover);
-}
-
-.adblock-notice.open {
-  display: block;
-}
-
-.adblock-notice p {
-  margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.6;
-  color: var(--color-text-muted);
-}
-
-.adblock-notice-close {
-  position: absolute;
-  top: 10px;
-  inset-inline-end: 10px;
-  background: none;
-  border: none;
-  font-size: 0.95rem;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  padding: 4px;
-}
-
-.adblock-notice-close:hover {
-  color: var(--color-text);
-}
-
-/* ===== تذكير "اختيار اليوم" — نفس تصميم ملاحظة مانع الإعلانات، بس بالزاوية
-   المقابلة عشان ما يتراكبان لو ظهرا مع بعض ===== */
+/* ===== تذكير "اختيار اليوم" — بطاقة صغيرة بزاوية الشاشة، مو حاجز كامل
+   العرض، وواضح إنها تُغلق بسهولة (زر ✕) ===== */
 .daily-pick-reminder {
   display: none;
   position: fixed;
@@ -1757,5 +1755,42 @@ img {
   100% {
     transform: translate(calc(-50% + var(--x)), calc(-50% - 140px)) rotate(var(--rot)) scale(1);
     opacity: 0;
+  }
+}
+
+/* ===== أهداف اللمس على الجوال =====
+   إرشاد WCAG 2.5.8 وأدلة أبل/قوقل: أي شي يُضغط لازم يكون ٤٤×٤٤ بكسل على
+   الأقل. أزرار البطاقة (♡ 📤 ♥) كانت ~٢٨ بكسل، فالضغط عليها بالإبهام يخطئ
+   ويصيب. نطبّقها بـ pointer: coarse لا بعرض الشاشة — المعيار هو الإصبع لا
+   حجم النافذة، فالحاسب بالفأرة يبقى بكثافته الحالية بلا تضخّم.
+   الحشو المتماثل (place-content) يكبّر المساحة القابلة للضغط بلا تكبير
+   الأيقونة نفسها، فالشكل ما يتغيّر — المساحة بس تتوسّع. */
+@media (pointer: coarse) {
+  .fav-btn,
+  .share-btn,
+  .like-btn,
+  .desc-toggle,
+  .item-actions .btn,
+  .filter-chip,
+  .near-me-btn,
+  .daily-pick-reminder-close,
+  .cookie-banner .btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* الأزرار الثلاثة بأعلى البطاقة كانت متلاصقة (gap: 2px) — بأهداف ٤٤ بكسل
+     تحتاج فاصلاً حقيقياً وإلا تلامست حوافها القابلة للضغط */
+  .item-top-actions {
+    gap: var(--space-1);
+  }
+
+  /* رابط الإبلاغ نص عادي، فيكبر بالحشو الرأسي لا بصندوق ٤٤×٤٤ كامل */
+  .report-link {
+    display: inline-block;
+    padding-block: 12px;
   }
 }
