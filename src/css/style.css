@@ -1,16 +1,17 @@
 /* ===== المتغيرات العامة =====
-   أبيض/أسود صريحان بدل أي درجة دافئة (كريمية أو بيج) — طلب صريح: بلا بيج
-   ولا برتقالي إطلاقاً. أخضر الغابة يبقى اللون الوحيد بالموقع (بدرجتين: غامق
-   للأزرار الرئيسية، وأفتح --color-accent للمس الثانوية) بدل الذهبي السابق،
-   اللي كان نفسه يُصنَّف بيج. الحدود والظلال رمادية محايدة، لا بنّية دافئة. */
+   أبيض/أسود بلا أي درجة دافئة (كريمية أو بيج) — لكن ليس أبيض ١٠٠٪ ولا أسود
+   ١٠٠٪ الصريحين: الأول يبهر العين، والثاني قاسٍ بلا داعٍ. رمادي محايد فاتح
+   جداً (#f7f7f7) وقريب من الأسود (#121212، معيار شائع بالتصاميم الداكنة
+   تحديداً لتفادي إجهاد العين من الأسود الخام). زمرد/باين بدل الأخضر
+   الزيتوني السابق — أكثر وضوحاً وحيوية بدل اللون المطفّى. */
 :root {
-  --color-bg: #ffffff;
+  --color-bg: #f7f7f7;
   --color-surface: #ffffff;
   --color-text: #111111;
   --color-text-muted: #666666;
-  --color-primary: #2d4a3e;
-  --color-primary-dark: #1f352c;
-  --color-accent: #4a6e5d;
+  --color-primary: #1b4d3e;
+  --color-primary-dark: #123529;
+  --color-accent: #2f7a5f;
   --color-border: #e0e0e0;
   --color-danger: #ef4444;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.09), 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -38,13 +39,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #000000;
-    --color-surface: #141414;
+    --color-bg: #121212;
+    --color-surface: #1c1c1c;
     --color-text: #f0f0f0;
     --color-text-muted: #9a9a9a;
-    --color-primary: #4a6e5d;
-    --color-primary-dark: #2d4a3e;
-    --color-accent: #6b8f7a;
+    --color-primary: #3fa480;
+    --color-primary-dark: #1b4d3e;
+    --color-accent: #57bd97;
     --color-border: #2a2a2a;
     --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6);
     --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.7);
@@ -53,26 +54,26 @@
 
 /* تفعيل يدوي من زر تبديل الوضع — يتغلب على تفضيل النظام */
 :root[data-theme="dark"] {
-  --color-bg: #000000;
-  --color-surface: #141414;
+  --color-bg: #121212;
+  --color-surface: #1c1c1c;
   --color-text: #f0f0f0;
   --color-text-muted: #9a9a9a;
-  --color-primary: #4a6e5d;
-  --color-primary-dark: #2d4a3e;
-  --color-accent: #6b8f7a;
+  --color-primary: #3fa480;
+  --color-primary-dark: #1b4d3e;
+  --color-accent: #57bd97;
   --color-border: #2a2a2a;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.7);
 }
 
 :root[data-theme="light"] {
-  --color-bg: #ffffff;
+  --color-bg: #f7f7f7;
   --color-surface: #ffffff;
   --color-text: #111111;
   --color-text-muted: #666666;
-  --color-primary: #2d4a3e;
-  --color-primary-dark: #1f352c;
-  --color-accent: #4a6e5d;
+  --color-primary: #1b4d3e;
+  --color-primary-dark: #123529;
+  --color-accent: #2f7a5f;
   --color-border: #e0e0e0;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.09), 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0 10px 24px rgba(0, 0, 0, 0.13);
@@ -351,7 +352,7 @@ img {
 
 .sound-toggle.active {
   border-color: var(--color-primary);
-  background: rgba(45, 74, 62, 0.1);
+  background: rgba(27, 77, 62, 0.1);
 }
 
 .nav-toggle {
@@ -524,7 +525,7 @@ img {
 }
 
 .notify-toggle.active {
-  background: rgba(45, 74, 62, 0.1);
+  background: rgba(27, 77, 62, 0.1);
   color: var(--color-primary);
   border-color: var(--color-primary);
 }
@@ -602,7 +603,7 @@ img {
 }
 
 .search-suggestion:hover {
-  background: rgba(45, 74, 62, 0.1);
+  background: rgba(27, 77, 62, 0.1);
 }
 
 /* ===== مؤشر "استكشفت X من Y قسم" (الرئيسية) ===== */
@@ -786,7 +787,7 @@ img {
 }
 
 .tag.distance-tag {
-  background: rgba(45, 74, 62, 0.18);
+  background: rgba(27, 77, 62, 0.18);
   color: var(--color-primary);
   font-weight: 800;
 }
@@ -882,7 +883,7 @@ img {
 .item-card.featured {
   border-color: var(--color-accent);
   box-shadow:
-    0 0 0 2px rgba(74, 110, 93, 0.3),
+    0 0 0 2px rgba(47, 122, 95, 0.3),
     var(--shadow-card);
 }
 
@@ -929,7 +930,7 @@ img {
   border-inline-start: 3px solid var(--color-accent);
   /* طبقة تلوين مسطّحة فوق لون البطاقة — بلا اتجاه، فتشتغل بالعربي والإنجليزي
      وبالوضعين الفاتح والداكن بلا قواعد إضافية */
-  background-image: linear-gradient(rgba(74, 110, 93, 0.07), rgba(74, 110, 93, 0.07));
+  background-image: linear-gradient(rgba(47, 122, 95, 0.07), rgba(47, 122, 95, 0.07));
 }
 
 .tag.new-tag {
@@ -1026,7 +1027,7 @@ img {
      animation الدخول (cardIn) الموجودة على .item-card ويعيد تشغيلها من الصفر */
   box-shadow:
     var(--shadow-card),
-    0 0 0 3px rgba(45, 74, 62, 0.32);
+    0 0 0 3px rgba(27, 77, 62, 0.32);
 }
 
 .desc-toggle {
@@ -1053,7 +1054,7 @@ img {
 
 .tag {
   font-size: 0.75rem;
-  background: rgba(45, 74, 62, 0.1);
+  background: rgba(27, 77, 62, 0.1);
   color: var(--color-primary);
   padding: 3px 10px;
   border-radius: 999px;
@@ -1467,8 +1468,8 @@ img {
 }
 
 .banner-note {
-  background: rgba(74, 110, 93, 0.12);
-  border: 1px solid rgba(74, 110, 93, 0.35);
+  background: rgba(47, 122, 95, 0.12);
+  border: 1px solid rgba(47, 122, 95, 0.35);
   color: var(--color-primary-dark);
   padding: 12px 16px;
   border-radius: 10px;
@@ -1603,8 +1604,8 @@ img {
 
 .picker-category.active {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(45, 74, 62, 0.2);
-  background: rgba(45, 74, 62, 0.08);
+  box-shadow: 0 0 0 3px rgba(27, 77, 62, 0.2);
+  background: rgba(27, 77, 62, 0.08);
 }
 
 .picker-action {
@@ -1616,7 +1617,7 @@ img {
   font-size: 1.15rem;
   padding: 16px 42px;
   border-radius: 999px;
-  box-shadow: 0 6px 20px rgba(45, 74, 62, 0.35);
+  box-shadow: 0 6px 20px rgba(27, 77, 62, 0.35);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -1818,7 +1819,7 @@ img {
   position: relative;
   margin: 20px 0 28px;
   padding: 22px 28px 22px 52px;
-  background: linear-gradient(135deg, rgba(45, 74, 62, 0.07), rgba(74, 110, 93, 0.05));
+  background: linear-gradient(135deg, rgba(27, 77, 62, 0.07), rgba(47, 122, 95, 0.05));
   border-inline-start: 3px solid var(--color-primary);
   border-radius: 4px var(--radius) var(--radius) 4px;
   font-size: 1.05rem;
@@ -1850,7 +1851,7 @@ img {
    حافة موجودة على أي بطاقة كانت */
 .item-card.scroll-reveal {
   box-shadow:
-    0 0 0 1px rgba(45, 74, 62, 0.28),
+    0 0 0 1px rgba(27, 77, 62, 0.28),
     var(--shadow-card);
   transition: box-shadow 1.1s ease 0.05s;
 }
