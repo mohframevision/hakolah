@@ -1,14 +1,14 @@
 /* ===== المتغيرات العامة =====
    لوحة دافئة بدل الأزرق العام (كان #2563eb — حرفياً لون Tailwind الافتراضي،
-   نفس اللون بمواقع لا تُحصى). تراكوتا دافئة كلون رئيسي، وتبقى العنبر
-   (--color-accent) كما هي — كانت أصلاً دافئة ومتناسقة مع التراكوتا. */
+   نفس اللون بمواقع لا تُحصى). أخضر غابة عميق دافئ كلون رئيسي (كان تراكوتا،
+   استُبدل بطلب صريح)، وتبقى العنبر (--color-accent) كما هي. */
 :root {
   --color-bg: #faf6f0;
   --color-surface: #ffffff;
   --color-text: #241f1a;
   --color-text-muted: #7a6f63;
-  --color-primary: #c1502e;
-  --color-primary-dark: #9c3f24;
+  --color-primary: #2d4a3e;
+  --color-primary-dark: #1f352c;
   --color-accent: #f59e0b;
   --color-border: #ece3d6;
   --color-danger: #ef4444;
@@ -41,6 +41,8 @@
     --color-surface: #221a12;
     --color-text: #f2ece1;
     --color-text-muted: #a89885;
+    --color-primary: #4a6e5d;
+    --color-primary-dark: #2d4a3e;
     --color-border: #362a1e;
     --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
     --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
@@ -53,6 +55,8 @@
   --color-surface: #221a12;
   --color-text: #f2ece1;
   --color-text-muted: #a89885;
+  --color-primary: #4a6e5d;
+  --color-primary-dark: #2d4a3e;
   --color-border: #362a1e;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
@@ -63,6 +67,8 @@
   --color-surface: #ffffff;
   --color-text: #241f1a;
   --color-text-muted: #7a6f63;
+  --color-primary: #2d4a3e;
+  --color-primary-dark: #1f352c;
   --color-border: #ece3d6;
   --shadow-card: 0 1px 3px rgba(60, 40, 20, 0.09), 0 1px 2px rgba(60, 40, 20, 0.05);
   --shadow-card-hover: 0 10px 24px rgba(60, 40, 20, 0.13);
@@ -341,7 +347,7 @@ img {
 
 .sound-toggle.active {
   border-color: var(--color-primary);
-  background: rgba(193, 80, 46, 0.1);
+  background: rgba(45, 74, 62, 0.1);
 }
 
 .nav-toggle {
@@ -514,7 +520,7 @@ img {
 }
 
 .notify-toggle.active {
-  background: rgba(193, 80, 46, 0.1);
+  background: rgba(45, 74, 62, 0.1);
   color: var(--color-primary);
   border-color: var(--color-primary);
 }
@@ -592,7 +598,7 @@ img {
 }
 
 .search-suggestion:hover {
-  background: rgba(193, 80, 46, 0.1);
+  background: rgba(45, 74, 62, 0.1);
 }
 
 /* ===== مؤشر "استكشفت X من Y قسم" (الرئيسية) ===== */
@@ -776,7 +782,7 @@ img {
 }
 
 .tag.distance-tag {
-  background: rgba(193, 80, 46, 0.18);
+  background: rgba(45, 74, 62, 0.18);
   color: var(--color-primary);
   font-weight: 800;
 }
@@ -1015,7 +1021,7 @@ img {
      animation الدخول (cardIn) الموجودة على .item-card ويعيد تشغيلها من الصفر */
   box-shadow:
     var(--shadow-card),
-    0 0 0 3px rgba(193, 80, 46, 0.32);
+    0 0 0 3px rgba(45, 74, 62, 0.32);
 }
 
 .desc-toggle {
@@ -1042,7 +1048,7 @@ img {
 
 .tag {
   font-size: 0.75rem;
-  background: rgba(193, 80, 46, 0.1);
+  background: rgba(45, 74, 62, 0.1);
   color: var(--color-primary);
   padding: 3px 10px;
   border-radius: 999px;
@@ -1592,8 +1598,8 @@ img {
 
 .picker-category.active {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(193, 80, 46, 0.2);
-  background: rgba(193, 80, 46, 0.08);
+  box-shadow: 0 0 0 3px rgba(45, 74, 62, 0.2);
+  background: rgba(45, 74, 62, 0.08);
 }
 
 .picker-action {
@@ -1605,7 +1611,7 @@ img {
   font-size: 1.15rem;
   padding: 16px 42px;
   border-radius: 999px;
-  box-shadow: 0 6px 20px rgba(193, 80, 46, 0.35);
+  box-shadow: 0 6px 20px rgba(45, 74, 62, 0.35);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -1807,7 +1813,7 @@ img {
   position: relative;
   margin: 20px 0 28px;
   padding: 22px 28px 22px 52px;
-  background: linear-gradient(135deg, rgba(193, 80, 46, 0.07), rgba(245, 158, 11, 0.05));
+  background: linear-gradient(135deg, rgba(45, 74, 62, 0.07), rgba(245, 158, 11, 0.05));
   border-inline-start: 3px solid var(--color-primary);
   border-radius: 4px var(--radius) var(--radius) 4px;
   font-size: 1.05rem;
@@ -1839,7 +1845,7 @@ img {
    حافة موجودة على أي بطاقة كانت */
 .item-card.scroll-reveal {
   box-shadow:
-    0 0 0 1px rgba(193, 80, 46, 0.28),
+    0 0 0 1px rgba(45, 74, 62, 0.28),
     var(--shadow-card);
   transition: box-shadow 1.1s ease 0.05s;
 }
