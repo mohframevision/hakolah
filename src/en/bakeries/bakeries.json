@@ -1,0 +1,9 @@
+{
+  "layout": "detail-item.njk",
+  "lang": "en",
+  "navActive": "bakeries",
+  "sectionSlug": "bakeries",
+  "sectionTitle": "Bakeries & Sweets",
+  "permalink": "en/bakeries/{{ page.fileSlug }}.html",
+  "eleventyExcludeFromCollections": true
+}

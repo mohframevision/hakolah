@@ -1,9 +1,0 @@
-{
-  "tags": "places",
-  "eleventyExcludeFromCollections": false,
-  "layout": "detail-item.njk",
-  "navActive": "places",
-  "sectionSlug": "places",
-  "sectionTitle": "أماكن البحرين",
-  "permalink": "places/{{ page.fileSlug }}.html"
-}

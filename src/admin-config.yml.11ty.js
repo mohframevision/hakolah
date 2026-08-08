@@ -166,6 +166,26 @@ function itemFields(entry) {
           { label: "خرائط قوقل", name: "maps", widget: "string", required: false },
           { label: "إنستقرام", name: "instagram", widget: "string", required: false },
         ],
+      },
+      {
+        label:
+          "📖 عطِ هذا العنصر صفحة مقال مستقلة (بدل بطاقة روابط بس) — فعّله فقط لو عبّيت المقال تحته بمعلومات حقيقية، ما تسويها لعنصر ناقص المعلومات",
+        name: "hasDetailPage",
+        widget: "boolean",
+        required: false,
+        default: false,
+      },
+      {
+        label: "المقال الكامل (اختياري — يظهر فقط لو فعّلت الخيار فوق)",
+        name: "body",
+        widget: "markdown",
+        required: false,
+      },
+      {
+        label: "Slug إنجليزي (اختياري — فقط لو اسم الملف الحالي بالعربي وبتفعّل الصفحة المستقلة)",
+        name: "slug_en",
+        widget: "string",
+        required: false,
       }
     );
   }

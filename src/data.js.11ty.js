@@ -103,7 +103,10 @@ exports.render = function (data) {
       // تُرسَل للمتصفح فقط لما يكون فيه أكثر من فرع — عنصر بفرع واحد يكتفي
       // بـ lat/lng أعلاه، فما نضخّم ملف البيانات بلا فائدة
       if (branches.length > 1) item.branches = branches;
-      if (meta.hasDetailPages) {
+      // hasDetailPages قسم كامل (أماكن/مقالات)، وhasDetailPage عنصر واحد بقسم
+      // مختلط (مثل مطعم له مقال بينما البقية بطاقات روابط بس) — نفس الآلية،
+      // القرار بس صار لكل عنصر بدل القسم كامل
+      if (meta.hasDetailPages || entry.data.hasDetailPage) {
         item.detailUrl = `${meta.slug}/${entry.fileSlug}.html`;
         // slug_en اختياري — لازم فقط لو ملف Markdown العربي اسمه بالعربي
         // (مثل ممشى-توبلي.md) بينما ملف النسخة الإنجليزية المقابلة له بالإنجليزي

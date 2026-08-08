@@ -35,7 +35,11 @@ function walk(dir) {
     .flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
 }
 
-const rel = (f) => f.split(path.sep).join("/").replace(SITE + "/", "");
+const rel = (f) =>
+  f
+    .split(path.sep)
+    .join("/")
+    .replace(SITE + "/", "");
 
 // صفحات مستثناة عمداً من مبدأ "لكل صفحة نسخة بلغتين":
 //   admin  — لوحة تحكم Sveltia (واجهة الأداة نفسها، مو محتوى موقع)
@@ -43,9 +47,17 @@ const rel = (f) => f.split(path.sep).join("/").replace(SITE + "/", "");
 const EXCLUDED = new Set(["admin/index.html", "404.html"]);
 
 // أسماء ملفات إنجليزية تختلف عن مقابلها العربي (لما اسم الملف العربي بالعربي)
-const SLUG_ALIASES = { "places/ممشى-توبلي.html": "places/tubli-bay-walkway.html" };
+const SLUG_ALIASES = {
+  "places/ممشى-توبلي.html": "places/tubli-bay-walkway.html",
+  "restaurants/مطعم-الجابرية.html": "restaurants/al-jabriya-restaurant.html",
+  "restaurants/معجنات-آدم.html": "restaurants/adam-pastries.html",
+  "bakeries/مخابز-المنار.html": "bakeries/al-manar-bakeries.html",
+  "bakeries/ميلتوز.html": "bakeries/meltose.html",
+};
 
-const allHtml = walk(SITE).filter((f) => f.endsWith(".html")).map(rel);
+const allHtml = walk(SITE)
+  .filter((f) => f.endsWith(".html"))
+  .map(rel);
 const arPages = allHtml.filter((f) => !f.startsWith("en/") && !EXCLUDED.has(f));
 const enPages = allHtml.filter((f) => f.startsWith("en/")).map((f) => f.slice(3));
 
@@ -137,7 +149,10 @@ for (const p of allHtml) {
       // أزرار الإغلاق/الأيقونات تعتمد على aria-label بدل نص ظاهر، ونحترم ذلك
       if (/aria-label=/.test(attrs) && tag === "button") continue;
       if (/\bid="(cookie-accept|notifyToggle)"/.test(attrs)) continue;
-      const inner = m[2].replace(/<[^>]+>/g, "").replace(/&[a-z]+;/g, "x").trim();
+      const inner = m[2]
+        .replace(/<[^>]+>/g, "")
+        .replace(/&[a-z]+;/g, "x")
+        .trim();
       if (!inner) fail(`${p}: عنصر <${tag}> فاضي بلا نص${attrs ? " —" + attrs.trim() : ""}`);
     }
   }
@@ -155,8 +170,12 @@ for (const p of enPages) {
     .replace(/<link[^>]*>/g, "")
     .replace(/<meta[^>]*>/g, "")
     .replace(/<a class="lang-switch"[^>]*>[\s\S]*?<\/a>/g, "");
-  const words = h.replace(/<[^>]+>/g, " ").split(/\s+/).filter((w) => ARABIC.test(w));
-  if (words.length) fail(`en/${p}: نص عربي ظاهر -> ${[...new Set(words)].slice(0, 10).join(" | ")}`);
+  const words = h
+    .replace(/<[^>]+>/g, " ")
+    .split(/\s+/)
+    .filter((w) => ARABIC.test(w));
+  if (words.length)
+    fail(`en/${p}: نص عربي ظاهر -> ${[...new Set(words)].slice(0, 10).join(" | ")}`);
 }
 console.log(`  فُحص ${enPages.length} صفحة إنجليزية`);
 

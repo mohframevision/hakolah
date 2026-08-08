@@ -11,15 +11,18 @@ exports.render = function (data) {
   // لما يُضاف قسم جديد من لوحة التحكم
   const EN_SECTION_SLUGS = data.sections.map((s) => s.slug);
 
-  // مسار عربي بلا امتداد .html <-> مساره الإنجليزي المقابل، لكل صفحة لها نسخة بلغتين فعلياً
-  const detailPagePairs = data.sections
-    .filter((s) => s.hasDetailPages)
-    .flatMap((s) =>
-      (data.collections[s.slug] || []).map((entry) => [
+  // مسار عربي بلا امتداد .html <-> مساره الإنجليزي المقابل، لكل صفحة لها نسخة بلغتين فعلياً.
+  // hasDetailPages (قسم كامل) أو hasDetailPage (عنصر واحد بقسم مختلط) — نفس
+  // الشرط المستخدم بـ data.js.11ty.js وitem-card.njk، والفلترة صارت لكل عنصر
+  // بدل القسم كامل حتى تشمل الأقسام المختلطة
+  const detailPagePairs = data.sections.flatMap((s) =>
+    (data.collections[s.slug] || [])
+      .filter((entry) => s.hasDetailPages || entry.data.hasDetailPage)
+      .map((entry) => [
         `${s.slug}/${entry.fileSlug}.html`,
         `en/${s.slug}/${entry.data.slug_en || entry.fileSlug}.html`,
       ])
-    );
+  );
 
   const bilingualPairs = [
     ["", "en/index.html"],

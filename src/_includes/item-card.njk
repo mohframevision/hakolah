@@ -34,7 +34,7 @@
       {%- endfor %}
     </div>
     <div class="item-actions">
-      {%- if hasDetailPages %}
+      {%- if hasDetailPages or d.hasDetailPage %}
       <a class="btn" href="{{ (('/en/' if isEn else '/') + sectionSlug + '/' + (d.slug_en if (isEn and d.slug_en) else entry.fileSlug) + '.html') | url }}">📖 {{ t.read_details }}</a>
       {%- else %}
       {%- set links = d.links or {} %}

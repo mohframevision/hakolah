@@ -1,0 +1,9 @@
+{
+  "layout": "detail-item.njk",
+  "lang": "en",
+  "navActive": "restaurants",
+  "sectionSlug": "restaurants",
+  "sectionTitle": "Restaurants",
+  "permalink": "en/restaurants/{{ page.fileSlug }}.html",
+  "eleventyExcludeFromCollections": true
+}

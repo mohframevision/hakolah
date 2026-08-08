@@ -74,8 +74,15 @@ module.exports = [
     },
   },
   {
-    // كود Node (إعدادات Eleventy، سكربتات مساعدة، مولّدات صفحات .11ty.js، ملفات بيانات _data)
-    files: ["*.js", "scripts/**/*.js", "src/**/*.11ty.js", "src/_data/**/*.js"],
+    // كود Node (إعدادات Eleventy، سكربتات مساعدة، مولّدات صفحات .11ty.js،
+    // ملفات بيانات المجلد .11tydata.js، ملفات بيانات _data)
+    files: [
+      "*.js",
+      "scripts/**/*.js",
+      "src/**/*.11ty.js",
+      "src/**/*.11tydata.js",
+      "src/_data/**/*.js",
+    ],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "commonjs",
