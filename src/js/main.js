@@ -23,6 +23,10 @@ function tagLabel(tag) {
   return tag;
 }
 
+function tagIcon(tag) {
+  return (typeof TAG_ICONS !== "undefined" && TAG_ICONS[tag]) || "";
+}
+
 // اسم القسم بلغة الصفحة الحالية — يقرأ title_en المولّد ببناء data.js من
 // sections/*.md مباشرة (مو قاموس ثابت هنا)، فقسم جديد يُضاف من لوحة التحكم
 // يظهر باسمه الإنجليزي تلقائياً بدون تعديل هذا الملف
@@ -705,6 +709,26 @@ function pinRank(item) {
   return (item.sponsored ? 2 : 0) + (item.featured ? 1 : 0);
 }
 
+/* ===== توهّج دخول خفيف عند ظهور البطاقة بمجال الرؤية (قائمة طويلة تظل حيّة
+   أثناء التمرير، لا مجرد دفعة واحدة عند التحميل). عمداً على box-shadow/
+   border-color لا opacity/transform — .item-card عندها animation shorthand
+   خاص بها (cardIn) بالفعل، وتعريف animation ثانٍ على نفس العنصر يلغي الأول
+   ويعيد الدخول من الصفر (خلل حقيقي حصل هنا قبل)؛ transition على خاصية مختلفة
+   يتجنّبه كلياً ===== */
+const cardRevealObserver =
+  "IntersectionObserver" in window
+    ? new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add("card-revealed");
+            cardRevealObserver.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.15 }
+      )
+    : null;
+
 /* ===== بناء بطاقة عنصر واحدة ===== */
 function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel = "") {
   const card = document.createElement("div");
@@ -712,12 +736,14 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
   // شكل البطاقة قبل تشغيل جافاسكربت وبعده (وبوّابة التطابق بالبناء تكشفها)
   card.className = [
     "item-card",
+    "scroll-reveal",
     item.sponsored ? "sponsored" : item.featured ? "featured" : "",
     item.verified ? "verified" : "",
   ]
     .filter(Boolean)
     .join(" ");
   card.style.animationDelay = `${Math.min(index, 10) * 45}ms`;
+  cardRevealObserver?.observe(card);
 
   const fav = isFavorite(section, item.id);
   const liked = isLikedByMe(section, item.id);
@@ -748,7 +774,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       <div class="item-meta">
         ${item.isNew ? `<span class="tag new-tag">${t("new_badge")}</span>` : ""}
         ${distanceKm !== null ? `<span class="tag distance-tag">📍 ${formatDistance(distanceKm)}${branchLabel ? ` — ${t("nearest_branch")} ${branchLabel}` : ""}</span>` : ""}
-        ${(item.tags || []).map((tag) => `<span class="tag">${tagLabel(tag)}</span>`).join("")}
+        ${(item.tags || []).map((tag) => `<span class="tag">${tagIcon(tag) ? `<span class="tag-icon">${tagIcon(tag)}</span>` : ""}${tagLabel(tag)}</span>`).join("")}
       </div>
       <div class="item-actions">
         ${buildActionsHtml(item)}
@@ -883,7 +909,7 @@ function renderSection(section) {
     visibleTags.forEach((tag) => {
       const chip = document.createElement("button");
       chip.className = "filter-chip";
-      chip.textContent = tagLabel(tag);
+      chip.textContent = tagIcon(tag) ? `${tagIcon(tag)} ${tagLabel(tag)}` : tagLabel(tag);
       chip.dataset.tag = tag;
       chip.setAttribute("aria-pressed", "false");
       chip.addEventListener("click", () => {

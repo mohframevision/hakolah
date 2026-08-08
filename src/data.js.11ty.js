@@ -128,6 +128,8 @@ exports.render = function (data) {
     `const SITE_DATA = ${JSON.stringify(out, null, 2)};\n` +
     "/* قاموس ترجمة التصنيفات — مصدره src/_data/tags_en.js، وهو نفسه المستخدم\n" +
     "   بالقوالب وقت البناء، فما تصير نسختان تنحرفان عن بعض */\n" +
-    `const TAGS_EN = ${JSON.stringify(data.tags_en, null, 2)};\n`
+    `const TAGS_EN = ${JSON.stringify(data.tags_en, null, 2)};\n` +
+    "/* أيقونات التصنيفات — مصدره src/_data/tag_icons.js، نفس مبدأ TAGS_EN */\n" +
+    `const TAG_ICONS = ${JSON.stringify(data.tag_icons, null, 2)};\n`
   );
 };

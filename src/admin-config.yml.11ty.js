@@ -128,6 +128,13 @@ function itemFields(entry) {
         name: "slug_en",
         widget: "string",
         required: false,
+      },
+      {
+        label:
+          "💬 ليش أوصي فيه (اختياري — جملة أو اثنتان شخصية تظهر بشكل بارز بصفحة المقال. اتركه فاضي إذا ما عندك رأي شخصي محدد)",
+        name: "recommendation",
+        widget: "text",
+        required: false,
       }
     );
   } else {
@@ -185,6 +192,13 @@ function itemFields(entry) {
         label: "Slug إنجليزي (اختياري — فقط لو اسم الملف الحالي بالعربي وبتفعّل الصفحة المستقلة)",
         name: "slug_en",
         widget: "string",
+        required: false,
+      },
+      {
+        label:
+          "💬 ليش أوصي فيه (اختياري — جملة أو اثنتان شخصية تظهر بشكل بارز بصفحة المقال. يظهر فقط لو فعّلت الصفحة المستقلة فوق)",
+        name: "recommendation",
+        widget: "text",
         required: false,
       }
     );

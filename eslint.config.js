@@ -25,6 +25,7 @@ module.exports = [
         ...globals.browser,
         SITE_DATA: "readonly",
         TAGS_EN: "readonly",
+        TAG_ICONS: "readonly",
       },
     },
     rules: {

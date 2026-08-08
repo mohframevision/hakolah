@@ -3,6 +3,7 @@ title: Meltose
 icon: 🍦
 desc: A local Bahraini ice cream shop, serving waffle cone ice cream starting from 400 fils, alongside other varied options for different tastes. Simple and budget-friendly.
 langSwitchUrl: "/bakeries/ميلتوز.html"
+recommendation: Waffle cone ice cream starting from 400 fils is a genuinely budget option, not just a marketing line.
 ---
 
 ## About

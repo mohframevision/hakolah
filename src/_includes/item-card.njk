@@ -10,7 +10,7 @@
   فقط ما يهم محرك البحث والزائر بدون جافاسكربت: الاسم، الوصف، التصنيفات،
   والروابط. والكلاسات نفسها عشان الشكل يكون مطابقاً قبل تدخّل جافاسكربت.
 #}
-{% macro card(entry, sectionSlug, lang, hasDetailPages, tagsEn, i18n) %}
+{% macro card(entry, sectionSlug, lang, hasDetailPages, tagsEn, i18n, tagIcons) %}
 {% set d = entry.data %}
 {% set isEn = (lang == "en") %}
 {% set title = (d.title_en or d.title) if isEn else d.title %}
@@ -30,7 +30,7 @@
     <p class="item-desc">{{ desc }}</p>
     <div class="item-meta">
       {%- for tag in (d.categories or []).concat(d.categoriesCustom or []) %}
-      <span class="tag">{{ (tagsEn[tag] or tag) if isEn else tag }}</span>
+      <span class="tag">{% if tagIcons[tag] %}<span class="tag-icon">{{ tagIcons[tag] }}</span>{% endif %}{{ (tagsEn[tag] or tag) if isEn else tag }}</span>
       {%- endfor %}
     </div>
     <div class="item-actions">

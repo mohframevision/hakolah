@@ -32,7 +32,7 @@ eleventyComputed:
 {# البطاقات مطبوعة هنا وقت البناء عشان محركات البحث تقرأ المحتوى فعلاً #}
 <div class="card-grid">
 {%- for entry in collections[sectionEntry.slug] %}
-{{ cards.card(entry, sectionEntry.slug, "en", sectionEntry.hasDetailPages, tags_en, i18n) }}
+{{ cards.card(entry, sectionEntry.slug, "en", sectionEntry.hasDetailPages, tags_en, i18n, tag_icons) }}
 {%- endfor %}
 </div>
 

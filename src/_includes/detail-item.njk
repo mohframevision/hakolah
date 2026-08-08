@@ -10,6 +10,9 @@ layout: base.njk
 <section class="page-header">
   <h1>{{ icon }} {{ title }}</h1>
 </section>
+{% if recommendation %}
+<blockquote class="recommend-quote">{{ recommendation }}</blockquote>
+{% endif %}
 <article class="prose">
 {{ content | safe }}
 </article>

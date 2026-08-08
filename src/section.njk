@@ -31,7 +31,7 @@ eleventyComputed:
    main.js يستبدلها بنسخة تفاعلية بعد التحميل (فلترة/بحث/إعجاب/مفضلة). #}
 <div class="card-grid">
 {%- for entry in collections[sectionEntry.slug] %}
-{{ cards.card(entry, sectionEntry.slug, "ar", sectionEntry.hasDetailPages, tags_en, i18n) }}
+{{ cards.card(entry, sectionEntry.slug, "ar", sectionEntry.hasDetailPages, tags_en, i18n, tag_icons) }}
 {%- endfor %}
 </div>
 
