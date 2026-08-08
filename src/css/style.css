@@ -1,20 +1,20 @@
 /* ===== المتغيرات العامة =====
-   لوحة دافئة بدل الأزرق العام (كان #2563eb — حرفياً لون Tailwind الافتراضي،
-   نفس اللون بمواقع لا تُحصى). أخضر غابة عميق دافئ كلون رئيسي، وذهبي/برونزي
-   فاتح كلون ثانٍ (كان عنبر برتقالي #f59e0b — استُبدل بطلب صريح، كان يبين
-   صحراوياً بجانب الأخضر). */
+   أبيض/أسود صريحان بدل أي درجة دافئة (كريمية أو بيج) — طلب صريح: بلا بيج
+   ولا برتقالي إطلاقاً. أخضر الغابة يبقى اللون الوحيد بالموقع (بدرجتين: غامق
+   للأزرار الرئيسية، وأفتح --color-accent للمس الثانوية) بدل الذهبي السابق،
+   اللي كان نفسه يُصنَّف بيج. الحدود والظلال رمادية محايدة، لا بنّية دافئة. */
 :root {
-  --color-bg: #faf6f0;
+  --color-bg: #ffffff;
   --color-surface: #ffffff;
-  --color-text: #241f1a;
-  --color-text-muted: #7a6f63;
+  --color-text: #111111;
+  --color-text-muted: #666666;
   --color-primary: #2d4a3e;
   --color-primary-dark: #1f352c;
-  --color-accent: #c9a355;
-  --color-border: #ece3d6;
+  --color-accent: #4a6e5d;
+  --color-border: #e0e0e0;
   --color-danger: #ef4444;
-  --shadow-card: 0 1px 3px rgba(60, 40, 20, 0.09), 0 1px 2px rgba(60, 40, 20, 0.05);
-  --shadow-card-hover: 0 10px 24px rgba(60, 40, 20, 0.13);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.09), 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 10px 24px rgba(0, 0, 0, 0.13);
   --radius: 14px;
   --max-width: 1180px;
   /* الهيدر يمتد أعرض من عمود المحتوى — القائمة صارت 8 عناصر والنصوص
@@ -38,41 +38,44 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #18120c;
-    --color-surface: #221a12;
-    --color-text: #f2ece1;
-    --color-text-muted: #a89885;
+    --color-bg: #000000;
+    --color-surface: #141414;
+    --color-text: #f0f0f0;
+    --color-text-muted: #9a9a9a;
     --color-primary: #4a6e5d;
     --color-primary-dark: #2d4a3e;
-    --color-border: #362a1e;
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --color-accent: #6b8f7a;
+    --color-border: #2a2a2a;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6);
+    --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.7);
   }
 }
 
 /* تفعيل يدوي من زر تبديل الوضع — يتغلب على تفضيل النظام */
 :root[data-theme="dark"] {
-  --color-bg: #18120c;
-  --color-surface: #221a12;
-  --color-text: #f2ece1;
-  --color-text-muted: #a89885;
+  --color-bg: #000000;
+  --color-surface: #141414;
+  --color-text: #f0f0f0;
+  --color-text-muted: #9a9a9a;
   --color-primary: #4a6e5d;
   --color-primary-dark: #2d4a3e;
-  --color-border: #362a1e;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --color-accent: #6b8f7a;
+  --color-border: #2a2a2a;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.7);
 }
 
 :root[data-theme="light"] {
-  --color-bg: #faf6f0;
+  --color-bg: #ffffff;
   --color-surface: #ffffff;
-  --color-text: #241f1a;
-  --color-text-muted: #7a6f63;
+  --color-text: #111111;
+  --color-text-muted: #666666;
   --color-primary: #2d4a3e;
   --color-primary-dark: #1f352c;
-  --color-border: #ece3d6;
-  --shadow-card: 0 1px 3px rgba(60, 40, 20, 0.09), 0 1px 2px rgba(60, 40, 20, 0.05);
-  --shadow-card-hover: 0 10px 24px rgba(60, 40, 20, 0.13);
+  --color-accent: #4a6e5d;
+  --color-border: #e0e0e0;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.09), 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 10px 24px rgba(0, 0, 0, 0.13);
 }
 
 * {
@@ -879,7 +882,7 @@ img {
 .item-card.featured {
   border-color: var(--color-accent);
   box-shadow:
-    0 0 0 2px rgba(201, 163, 85, 0.3),
+    0 0 0 2px rgba(74, 110, 93, 0.3),
     var(--shadow-card);
 }
 
@@ -919,13 +922,14 @@ img {
 }
 
 /* "زُرته شخصياً" — أقوى إشارة ثقة بالموقع، فتاخذ تمييزاً على مستوى البطاقة
-   كاملة مو شارة صغيرة بس. شريط ذهبي دافئ على الحافة البادئة + خلفية خفيفة،
-   وهذا شكل مختلف عن إطار "مميز" الكامل عشان ما تلتبس الميزتان لو اجتمعتا */
+   كاملة مو شارة صغيرة بس. شريط أخضر على الحافة البادئة + خلفية خفيفة (كان
+   ذهبياً — استُبدل مع بقية الألوان الدافئة بطلب صريح: بلا بيج ولا برتقالي).
+   هذا شكل مختلف عن إطار "مميز" الكامل عشان ما تلتبس الميزتان لو اجتمعتا */
 .item-card.verified {
-  border-inline-start: 3px solid #d4a017;
+  border-inline-start: 3px solid var(--color-accent);
   /* طبقة تلوين مسطّحة فوق لون البطاقة — بلا اتجاه، فتشتغل بالعربي والإنجليزي
      وبالوضعين الفاتح والداكن بلا قواعد إضافية */
-  background-image: linear-gradient(rgba(212, 160, 23, 0.07), rgba(212, 160, 23, 0.07));
+  background-image: linear-gradient(rgba(74, 110, 93, 0.07), rgba(74, 110, 93, 0.07));
 }
 
 .tag.new-tag {
@@ -1463,9 +1467,9 @@ img {
 }
 
 .banner-note {
-  background: rgba(201, 163, 85, 0.12);
-  border: 1px solid rgba(201, 163, 85, 0.35);
-  color: #92660a;
+  background: rgba(74, 110, 93, 0.12);
+  border: 1px solid rgba(74, 110, 93, 0.35);
+  color: var(--color-primary-dark);
   padding: 12px 16px;
   border-radius: 10px;
   font-size: 0.88rem;
@@ -1473,7 +1477,7 @@ img {
 
 @media (prefers-color-scheme: dark) {
   .banner-note {
-    color: #f2c14e;
+    color: var(--color-accent);
   }
 }
 
@@ -1814,7 +1818,7 @@ img {
   position: relative;
   margin: 20px 0 28px;
   padding: 22px 28px 22px 52px;
-  background: linear-gradient(135deg, rgba(45, 74, 62, 0.07), rgba(201, 163, 85, 0.05));
+  background: linear-gradient(135deg, rgba(45, 74, 62, 0.07), rgba(74, 110, 93, 0.05));
   border-inline-start: 3px solid var(--color-primary);
   border-radius: 4px var(--radius) var(--radius) 4px;
   font-size: 1.05rem;

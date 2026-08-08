@@ -177,9 +177,11 @@ async function main() {
     const ver = await ev(`(()=>{const c=document.querySelector(".item-card.verified");
       if(!c)return JSON.stringify({none:true});const cs=getComputedStyle(c);
       return JSON.stringify({w:cs.borderInlineStartWidth, col:cs.borderInlineStartColor})})()`);
+    // كروم headless يفتح افتراضياً بوضع داكن، فاللون المتوقّع يختلف عن الفاتح —
+    // نقبل قيمة أي من الوضعين (74,110,93 فاتح أو 107,143,122 داكن)
     check(
       "تمييز «زُرته شخصياً» مطبَّق على البطاقة",
-      ver.includes('"w":"3px"') && ver.includes("212, 160, 23"),
+      ver.includes('"w":"3px"') && (ver.includes("74, 110, 93") || ver.includes("107, 143, 122")),
       ver
     );
 
