@@ -1477,6 +1477,19 @@ function initRandomPicker() {
   });
 }
 
+function initWelcomePicker() {
+  const picks = document.querySelectorAll(".welcome-pick");
+  const nextBtn = document.getElementById("welcomeNextBtn");
+  if (!picks.length || !nextBtn) return;
+  let i = 0;
+  nextBtn.addEventListener("click", () => {
+    playClickSound();
+    picks[i].classList.remove("active");
+    i = (i + 1) % picks.length;
+    picks[i].classList.add("active");
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
   initSoundToggle();
@@ -1496,6 +1509,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page.favorites) renderFavoritesPage();
   if (page.picker) initRandomPicker();
   if (page.plan) renderDayPlan();
+  if (page.welcome) initWelcomePicker();
   if (page.home) {
     renderFeaturedPick();
     initPushNotifications();

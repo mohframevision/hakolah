@@ -112,6 +112,11 @@ module.exports = {
     plan_evening: "المساء",
     home_plan_title: "خطة اليوم",
     home_plan_desc: "خلّ هكوله يرتّب لك يوم كامل: فطور، نشاط، غداء، وسهرة.",
+    welcome_title: "قبل لا نبدأ… تعرّف على مكان حقيقي",
+    welcome_intro: "بدل ما نرمي عليك قائمة طويلة، هذي وحدة من الأماكن اللي زرناها فعلاً بالبحرين.",
+    welcome_next: "التالي ←",
+    welcome_disclosure: "من ضمن الأماكن الموثّقة بهكوله — زيارات حقيقية، لا محتوى مموّل.",
+    welcome_sections_heading: "أو شوف كل الأقسام مباشرة",
   },
   en: {
     skip_to_content: "Skip to content",
@@ -223,5 +228,10 @@ module.exports = {
     plan_evening: "Evening",
     home_plan_title: "Day Plan",
     home_plan_desc: "Let Hakolah lay out your whole day: breakfast, an outing, lunch and an evening spot.",
+    welcome_title: "Before we start… meet a real place",
+    welcome_intro: "Instead of a long list, here's one of the places we've actually visited in Bahrain.",
+    welcome_next: "Next →",
+    welcome_disclosure: "One of Hakolah's verified places — real visits, no paid content.",
+    welcome_sections_heading: "Or jump straight to all sections",
   },
 };

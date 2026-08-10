@@ -207,6 +207,7 @@
         "favorites": {{ (isFavoritesPage or false) | json | safe }},
         "picker": {{ (navActive == "picker") | json | safe }},
         "plan": {{ (navActive == "plan") | json | safe }},
+        "welcome": {{ (navActive == "welcome") | json | safe }},
         "home": {{ (navActive == "home") | json | safe }}
       },
       "i18n": {{ i18n | json | safe }}

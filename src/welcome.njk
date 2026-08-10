@@ -1,0 +1,56 @@
+---
+layout: base.njk
+permalink: "welcome.html"
+title: "جرّب البداية الجديدة | هكوله"
+description: "تجربة أولى لواجهة استقبال جديدة بهكوله — مكان حقيقي واحد أولاً، بدون خطوات إجبارية."
+navActive: "welcome"
+langSwitchUrl: "/en/welcome.html"
+noindex: true
+---
+{#
+  ⚠️ صفحة تجريبية (2026-08-11) — اتجاه "المحتوى أولاً" (واحد من 3 تصاميم
+  بديلة لتجربة أول زيارة)، بدل ما تحل محل src/index.njk. بدون رابط بالقائمة
+  الرئيسية ولا خريطة الموقع — بالرابط المباشر فقط، ومعها noindex.
+#}
+{% set t = i18n[lang or "ar"] %}
+{% import "item-card.njk" as cards %}
+{% set pickDefs = [
+  { slug: "places", fileSlug: "bahrain-fort", hasDetailPages: true },
+  { slug: "restaurants", fileSlug: "joodys", hasDetailPages: false },
+  { slug: "cafes", fileSlug: "jawjab-coffee", hasDetailPages: false }
+] %}
+
+<section class="page-header">
+  <h1>{{ t.welcome_title }}</h1>
+  <p>{{ t.welcome_intro }}</p>
+</section>
+
+<div class="welcome-picks">
+  {%- for pick in pickDefs %}
+  {%- set pickIsFirst = loop.first %}
+  {%- for entry in collections[pick.slug] %}
+  {%- if entry.fileSlug == pick.fileSlug %}
+  <div class="featured-pick-frame welcome-pick{% if pickIsFirst %} active{% endif %}">
+    {{ cards.card(entry, pick.slug, lang, pick.hasDetailPages, tags_en, i18n, tag_icons) }}
+  </div>
+  {%- endif %}
+  {%- endfor %}
+  {%- endfor %}
+</div>
+
+<div class="text-center welcome-actions">
+  <button type="button" class="btn secondary" id="welcomeNextBtn">{{ t.welcome_next }}</button>
+</div>
+
+<p class="welcome-disclosure">{{ t.welcome_disclosure }}</p>
+
+<h2 class="welcome-sections-heading">{{ t.welcome_sections_heading }}</h2>
+<section class="section-grid">
+  {% for entry in sections %}
+  <a class="section-card" data-section="{{ entry.slug }}" href="{{ ('/' + entry.slug + '.html') | url }}">
+    <span class="icon">{{ entry.icon }}</span>
+    <h3>{{ entry.title }}</h3>
+    <p>{{ entry.description }}</p>
+  </a>
+  {% endfor %}
+</section>
