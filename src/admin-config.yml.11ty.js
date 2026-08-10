@@ -320,6 +320,32 @@ exports.render = function (data) {
     ],
   };
 
+  const themeCollection = {
+    name: "theme",
+    label: "شكل الموقع",
+    files: [
+      {
+        name: "colors",
+        label: "الألوان الرئيسية",
+        file: "src/_data/theme.json",
+        fields: [
+          {
+            label:
+              "اللون الرئيسي (الوضع الفاتح) — يظهر بالأزرار والقائمة والشعار. باقي الدرجات (التحويم، اللمسة الثانوية) تُحسب تلقائياً من هذا اللون",
+            name: "primary",
+            widget: "color",
+          },
+          {
+            label:
+              "اللون الرئيسي (الوضع الداكن) — لازم أفتح من لون الوضع الفاتح، وإلا يصير باهتاً على خلفية داكنة",
+            name: "primaryDarkMode",
+            widget: "color",
+          },
+        ],
+      },
+    ],
+  };
+
   const config = {
     backend: {
       name: "github",
@@ -328,7 +354,7 @@ exports.render = function (data) {
     },
     media_folder: "src/assets/uploads",
     public_folder: "/hakolah/assets/uploads",
-    collections: [...sectionCollections, sectionsMetaCollection, pagesCollection],
+    collections: [...sectionCollections, sectionsMetaCollection, pagesCollection, themeCollection],
   };
 
   return (

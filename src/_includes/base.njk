@@ -52,7 +52,7 @@
   <link rel="alternate" hreflang="{{ 'ar' if lang == 'en' else 'en' }}" href="{{ altUrl }}" />
   <link rel="alternate" hreflang="x-default" href="{{ pageUrl if lang == 'ar' else altUrl }}" />
   {% endif %}
-  <meta name="theme-color" content="#2563eb" />
+  <meta name="theme-color" content="{{ theme.primary or '#1b4d3e' }}" />
 
   <link rel="icon" type="image/svg+xml" href="{{ '/assets/favicon.svg' | url }}" />
   <link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/favicon-32x32.png' | url }}" />
@@ -82,6 +82,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ '/css/style.css' | url }}?v={{ buildVersion }}" />
+  {# لون الموقع من لوحة التحكم (مجموعة "شكل الموقع") — ملف خارجي منفصل عمداً،
+     لأن سياسة CSP (style-src) ما تسمح بوسم <style> مضمّن، بس تسمح بملف من
+     نفس الموقع. يُحمَّل بعد style.css مباشرة فيتغلّب على قيمته الافتراضية. #}
+  <link rel="stylesheet" href="{{ '/theme.css' | url }}?v={{ buildVersion }}" />
   {% if adsense.publisherId %}
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense.publisherId }}" crossorigin="anonymous"></script>
   {% endif %}

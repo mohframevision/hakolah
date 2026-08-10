@@ -2,16 +2,21 @@
    أبيض/أسود بلا أي درجة دافئة (كريمية أو بيج) — لكن ليس أبيض ١٠٠٪ ولا أسود
    ١٠٠٪ الصريحين: الأول يبهر العين، والثاني قاسٍ بلا داعٍ. رمادي محايد فاتح
    جداً (#f7f7f7) وقريب من الأسود (#121212، معيار شائع بالتصاميم الداكنة
-   تحديداً لتفادي إجهاد العين من الأسود الخام). زمرد/باين بدل الأخضر
-   الزيتوني السابق — أكثر وضوحاً وحيوية بدل اللون المطفّى. */
+   تحديداً لتفادي إجهاد العين من الأسود الخام).
+
+   --color-primary هو المتغيّر الوحيد المقصود يُعدَّل من لوحة التحكم (theme.css
+   المولَّد من theme.json يعيد تعريفه فوق هذي القيم الافتراضية). --color-primary-dark
+   (تحويم/تركيز) و--color-accent (لمسة ثانوية) محسوبان تلقائياً منه بـcolor-mix
+   بدل قيم منفصلة يدوية — هذا يضمن تناسقهما دايماً مهما تغيّر اللون الأساسي،
+   بدل ما يحتاج كل تغيير لون تعديل ٣ قيم يدوياً بكل وضع (فاتح/داكن) كما كان. */
 :root {
   --color-bg: #f7f7f7;
   --color-surface: #ffffff;
   --color-text: #111111;
   --color-text-muted: #666666;
   --color-primary: #1b4d3e;
-  --color-primary-dark: #123529;
-  --color-accent: #2f7a5f;
+  --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
+  --color-accent: color-mix(in oklch, var(--color-primary) 65%, white);
   --color-border: #e0e0e0;
   --color-danger: #ef4444;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.09), 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -44,8 +49,8 @@
     --color-text: #f0f0f0;
     --color-text-muted: #9a9a9a;
     --color-primary: #3fa480;
-    --color-primary-dark: #1b4d3e;
-    --color-accent: #57bd97;
+    --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
+    --color-accent: color-mix(in oklch, var(--color-primary) 80%, white);
     --color-border: #2a2a2a;
     --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6);
     --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.7);
@@ -59,8 +64,8 @@
   --color-text: #f0f0f0;
   --color-text-muted: #9a9a9a;
   --color-primary: #3fa480;
-  --color-primary-dark: #1b4d3e;
-  --color-accent: #57bd97;
+  --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
+  --color-accent: color-mix(in oklch, var(--color-primary) 80%, white);
   --color-border: #2a2a2a;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.7);
@@ -72,8 +77,8 @@
   --color-text: #111111;
   --color-text-muted: #666666;
   --color-primary: #1b4d3e;
-  --color-primary-dark: #123529;
-  --color-accent: #2f7a5f;
+  --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
+  --color-accent: color-mix(in oklch, var(--color-primary) 65%, white);
   --color-border: #e0e0e0;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.09), 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0 10px 24px rgba(0, 0, 0, 0.13);
@@ -352,7 +357,7 @@ img {
 
 .sound-toggle.active {
   border-color: var(--color-primary);
-  background: rgba(27, 77, 62, 0.1);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 .nav-toggle {
@@ -525,7 +530,7 @@ img {
 }
 
 .notify-toggle.active {
-  background: rgba(27, 77, 62, 0.1);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
   border-color: var(--color-primary);
 }
@@ -603,7 +608,7 @@ img {
 }
 
 .search-suggestion:hover {
-  background: rgba(27, 77, 62, 0.1);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 /* ===== مؤشر "استكشفت X من Y قسم" (الرئيسية) ===== */
@@ -787,7 +792,7 @@ img {
 }
 
 .tag.distance-tag {
-  background: rgba(27, 77, 62, 0.18);
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
   color: var(--color-primary);
   font-weight: 800;
 }
@@ -883,7 +888,7 @@ img {
 .item-card.featured {
   border-color: var(--color-accent);
   box-shadow:
-    0 0 0 2px rgba(47, 122, 95, 0.3),
+    0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent),
     var(--shadow-card);
 }
 
@@ -930,7 +935,10 @@ img {
   border-inline-start: 3px solid var(--color-accent);
   /* طبقة تلوين مسطّحة فوق لون البطاقة — بلا اتجاه، فتشتغل بالعربي والإنجليزي
      وبالوضعين الفاتح والداكن بلا قواعد إضافية */
-  background-image: linear-gradient(rgba(47, 122, 95, 0.07), rgba(47, 122, 95, 0.07));
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--color-accent) 7%, transparent),
+    color-mix(in srgb, var(--color-accent) 7%, transparent)
+  );
 }
 
 .tag.new-tag {
@@ -1027,7 +1035,7 @@ img {
      animation الدخول (cardIn) الموجودة على .item-card ويعيد تشغيلها من الصفر */
   box-shadow:
     var(--shadow-card),
-    0 0 0 3px rgba(27, 77, 62, 0.32);
+    0 0 0 3px color-mix(in srgb, var(--color-primary) 32%, transparent);
 }
 
 .desc-toggle {
@@ -1054,7 +1062,7 @@ img {
 
 .tag {
   font-size: 0.75rem;
-  background: rgba(27, 77, 62, 0.1);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
   padding: 3px 10px;
   border-radius: 999px;
@@ -1468,8 +1476,8 @@ img {
 }
 
 .banner-note {
-  background: rgba(47, 122, 95, 0.12);
-  border: 1px solid rgba(47, 122, 95, 0.35);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
   color: var(--color-primary-dark);
   padding: 12px 16px;
   border-radius: 10px;
@@ -1604,8 +1612,8 @@ img {
 
 .picker-category.active {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(27, 77, 62, 0.2);
-  background: rgba(27, 77, 62, 0.08);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .picker-action {
@@ -1617,7 +1625,7 @@ img {
   font-size: 1.15rem;
   padding: 16px 42px;
   border-radius: 999px;
-  box-shadow: 0 6px 20px rgba(27, 77, 62, 0.35);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-primary) 35%, transparent);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -1819,7 +1827,11 @@ img {
   position: relative;
   margin: 20px 0 28px;
   padding: 22px 28px 22px 52px;
-  background: linear-gradient(135deg, rgba(27, 77, 62, 0.07), rgba(47, 122, 95, 0.05));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 7%, transparent),
+    color-mix(in srgb, var(--color-accent) 5%, transparent)
+  );
   border-inline-start: 3px solid var(--color-primary);
   border-radius: 4px var(--radius) var(--radius) 4px;
   font-size: 1.05rem;
@@ -1851,7 +1863,7 @@ img {
    حافة موجودة على أي بطاقة كانت */
 .item-card.scroll-reveal {
   box-shadow:
-    0 0 0 1px rgba(27, 77, 62, 0.28),
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 28%, transparent),
     var(--shadow-card);
   transition: box-shadow 1.1s ease 0.05s;
 }

@@ -174,14 +174,23 @@ async function main() {
       search
     );
 
+    // اللون نفسه صار متغيّراً من لوحة التحكم (theme.json) ومحسوباً بـcolor-mix،
+    // فمطابقة قيمة hex ثابتة هشّة وتنكسر مع أي تغيير لون مستقبلي (وحتى تمثيل
+    // اللون نفسه يختلف — oklch(...) بدل rgb(...) حسب صيغة color-mix المستخدمة).
+    // الفحص الصحيح: هل حافة البطاقة تطابق --color-accent الفعلي بنفس الصفحة؟
     const ver = await ev(`(()=>{const c=document.querySelector(".item-card.verified");
-      if(!c)return JSON.stringify({none:true});const cs=getComputedStyle(c);
-      return JSON.stringify({w:cs.borderInlineStartWidth, col:cs.borderInlineStartColor})})()`);
-    // كروم headless يفتح افتراضياً بوضع داكن، فاللون المتوقّع يختلف عن الفاتح —
-    // نقبل قيمة أي من الوضعين (74,110,93 فاتح أو 107,143,122 داكن)
+      if(!c)return JSON.stringify({none:true});
+      const cs=getComputedStyle(c);
+      const probe=document.createElement("div");
+      probe.style.color="var(--color-accent)";
+      document.body.appendChild(probe);
+      const accent=getComputedStyle(probe).color;
+      probe.remove();
+      return JSON.stringify({w:cs.borderInlineStartWidth, col:cs.borderInlineStartColor, accent})})()`);
+    const verData = JSON.parse(ver);
     check(
-      "تمييز «زُرته شخصياً» مطبَّق على البطاقة",
-      ver.includes('"w":"3px"') && (ver.includes("47, 122, 95") || ver.includes("87, 189, 151")),
+      "تمييز «زُرته شخصياً» مطبَّق على البطاقة (يطابق --color-accent الفعلي)",
+      verData.w === "3px" && verData.col === verData.accent,
       ver
     );
 
