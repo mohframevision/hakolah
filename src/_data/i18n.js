@@ -20,6 +20,7 @@ module.exports = {
     footer_contact: "تواصل معنا",
     footer_privacy: "سياسة الخصوصية",
     footer_terms: "شروط الاستخدام",
+    footer_youtube: "📺 قناتنا على يوتيوب",
     cookie_text_html:
       'نستخدم ملفات تعريف الارتباط (Cookies) لحفظ تفضيلاتك (كالمظهر والمفضلة) ولعرض إعلانات Google. بمتابعة تصفح الموقع فأنت توافق على <a href="{privacyUrl}">سياسة الخصوصية</a>.',
     cookie_accept: "موافق",
@@ -41,6 +42,7 @@ module.exports = {
     new_badge: "🆕 مضاف مؤخراً",
     verified_badge: "✅ زُرته شخصياً",
     liked_badge: "👍 أعجبني",
+    video_badge: "🎥 فيديو",
     near_me_active: "📍 الأقرب مني ✕",
     near_me_locating: "⏳ جاري تحديد موقعك…",
     geolocation_unsupported: "متصفحك ما يدعم تحديد الموقع",
@@ -136,6 +138,7 @@ module.exports = {
     footer_contact: "Contact",
     footer_privacy: "Privacy Policy",
     footer_terms: "Terms of Use",
+    footer_youtube: "📺 Our YouTube channel",
     cookie_text_html:
       'We use cookies to save your preferences (theme, favorites) and show Google ads. By continuing to browse, you agree to our <a href="{privacyUrl}">Privacy Policy</a>.',
     cookie_accept: "Accept",
@@ -157,6 +160,7 @@ module.exports = {
     new_badge: "🆕 New",
     verified_badge: "✅ Personally visited",
     liked_badge: "👍 Recommended",
+    video_badge: "🎥 Video",
     near_me_active: "📍 Nearest ✕",
     near_me_locating: "⏳ Locating you…",
     geolocation_unsupported: "Your browser doesn't support geolocation",

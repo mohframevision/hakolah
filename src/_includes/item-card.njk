@@ -26,7 +26,7 @@
     <div class="item-top">
       <span class="item-icon">{{ d.icon or "⭐" }}</span>
     </div>
-    <h3>{{ title }}{% if d.verified %} <span class="verified-badge">{{ t.verified_badge }}</span>{% endif %}{% if d.liked %} <span class="liked-badge">{{ t.liked_badge }}</span>{% endif %}</h3>
+    <h3>{{ title }}{% if d.verified %} <span class="verified-badge">{{ t.verified_badge }}</span>{% endif %}{% if d.liked %} <span class="liked-badge">{{ t.liked_badge }}</span>{% endif %}{% if d.video %} <span class="video-badge">{{ t.video_badge }}</span>{% endif %}</h3>
     <p class="item-desc">{{ desc }}</p>
     <div class="item-meta">
       {%- for tag in (d.categories or []).concat(d.categoriesCustom or []) %}

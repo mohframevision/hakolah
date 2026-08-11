@@ -135,6 +135,15 @@ function itemFields(entry) {
         name: "recommendation",
         widget: "text",
         required: false,
+      },
+      {
+        label: "🎥 معرّف فيديو يوتيوب (اختياري — يظهر مضمّناً بأعلى المقال)",
+        name: "video",
+        widget: "string",
+        required: false,
+        hint:
+          "الصق معرّف الفيديو فقط، مو الرابط كامل. مثال: لو الرابط " +
+          "youtube.com/watch?v=dQw4w9WgXcQ فالمعرّف هو dQw4w9WgXcQ.",
       }
     );
   } else {
@@ -200,6 +209,15 @@ function itemFields(entry) {
         name: "recommendation",
         widget: "text",
         required: false,
+      },
+      {
+        label: "🎥 معرّف فيديو يوتيوب (اختياري — يظهر مضمّناً بأعلى المقال، فقط لو فعّلت الصفحة المستقلة فوق)",
+        name: "video",
+        widget: "string",
+        required: false,
+        hint:
+          "الصق معرّف الفيديو فقط، مو الرابط كامل. مثال: لو الرابط " +
+          "youtube.com/watch?v=dQw4w9WgXcQ فالمعرّف هو dQw4w9WgXcQ.",
       }
     );
   }
@@ -346,6 +364,27 @@ exports.render = function (data) {
     ],
   };
 
+  const socialCollection = {
+    name: "social",
+    label: "روابط التواصل الاجتماعي",
+    files: [
+      {
+        name: "links",
+        label: "الروابط",
+        file: "src/_data/social.json",
+        fields: [
+          {
+            label:
+              "رابط قناة يوتيوب (اختياري — يظهر رابط لها بأسفل كل صفحة بالموقع فقط لو عبّيته. اتركه فاضي حتى تجهز القناة)",
+            name: "youtubeUrl",
+            widget: "string",
+            required: false,
+          },
+        ],
+      },
+    ],
+  };
+
   const config = {
     backend: {
       name: "github",
@@ -354,7 +393,13 @@ exports.render = function (data) {
     },
     media_folder: "src/assets/uploads",
     public_folder: "/hakolah/assets/uploads",
-    collections: [...sectionCollections, sectionsMetaCollection, pagesCollection, themeCollection],
+    collections: [
+      ...sectionCollections,
+      sectionsMetaCollection,
+      pagesCollection,
+      themeCollection,
+      socialCollection,
+    ],
   };
 
   return (
