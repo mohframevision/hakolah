@@ -21,6 +21,7 @@ module.exports = {
     footer_privacy: "سياسة الخصوصية",
     footer_terms: "شروط الاستخدام",
     footer_youtube: "📺 قناتنا على يوتيوب",
+    footer_whatsapp: "📱 قناتنا على واتساب",
     cookie_text_html:
       'نستخدم ملفات تعريف الارتباط (Cookies) لحفظ تفضيلاتك (كالمظهر والمفضلة) ولعرض إعلانات Google. بمتابعة تصفح الموقع فأنت توافق على <a href="{privacyUrl}">سياسة الخصوصية</a>.',
     cookie_accept: "موافق",
@@ -140,6 +141,7 @@ module.exports = {
     footer_privacy: "Privacy Policy",
     footer_terms: "Terms of Use",
     footer_youtube: "📺 Our YouTube channel",
+    footer_whatsapp: "📱 Our WhatsApp channel",
     cookie_text_html:
       'We use cookies to save your preferences (theme, favorites) and show Google ads. By continuing to browse, you agree to our <a href="{privacyUrl}">Privacy Policy</a>.',
     cookie_accept: "Accept",

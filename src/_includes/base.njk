@@ -185,6 +185,7 @@
         <a href="{{ ('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url }}">{{ t.footer_privacy }}</a>
         <a href="{{ ('/en/terms.html' if lang == 'en' else '/terms.html') | url }}">{{ t.footer_terms }}</a>
         {% if social.youtubeUrl %}<a href="{{ social.youtubeUrl }}" target="_blank" rel="noopener noreferrer">{{ t.footer_youtube }}</a>{% endif %}
+        {% if social.whatsappUrl %}<a href="{{ social.whatsappUrl }}" target="_blank" rel="noopener noreferrer">{{ t.footer_whatsapp }}</a>{% endif %}
       </div>
     </div>
   </footer>

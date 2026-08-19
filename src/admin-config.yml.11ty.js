@@ -380,6 +380,13 @@ exports.render = function (data) {
             widget: "string",
             required: false,
           },
+          {
+            label:
+              "رابط قناة واتساب (اختياري — يظهر رابط لها بأسفل كل صفحة بالموقع فقط لو عبّيته)",
+            name: "whatsappUrl",
+            widget: "string",
+            required: false,
+          },
         ],
       },
     ],
