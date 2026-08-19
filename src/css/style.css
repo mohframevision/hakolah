@@ -748,6 +748,10 @@ img {
   margin: 0;
 }
 
+.article-share-btn {
+  margin-top: 4px;
+}
+
 /* ===== صفحة تجريبية welcome.html — اتجاه "المحتوى أولاً" ===== */
 .welcome-picks {
   max-width: 420px;

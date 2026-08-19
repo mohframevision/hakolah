@@ -647,6 +647,17 @@ function initOutboundTracking() {
   });
 }
 
+function initArticleShare() {
+  const btn = document.querySelector(".article-share-btn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const text = `${document.title}\n${location.href}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+    trackEdge("share", { method: "whatsapp", section: (window.PAGE || {}).section || "" });
+    playClickSound();
+  });
+}
+
 function buildShareUrl(section, item) {
   const isEn = window.SITE_LANG === "en";
   const prefix = isEn ? "en/" : "";
@@ -1501,6 +1512,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initContactForm();
   fetchLikeCounts();
   initOutboundTracking();
+  initArticleShare();
 
   // ما يخص كل صفحة على حدة — كانت سكربتات مضمّنة بـ base.njk، صارت تُقرأ من
   // إعدادات الصفحة (#site-config) عشان تشتغل سياسة CSP بدون unsafe-inline
