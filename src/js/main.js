@@ -689,7 +689,18 @@ function buildActionsHtml(item) {
       const metaLabel = t(meta.labelKey);
       const cls = i === 0 ? "btn" : "btn secondary";
       if (key === "phone") {
-        return `<button type="button" class="${cls} phone-copy-btn" data-phone="${url}">${meta.icon} ${metaLabel}</button>`;
+        // يدعم أكثر من رقم بالحقل الواحد (مفصولة بفاصلة) — مثل رقم واتساب
+        // ورقم اتصال عادي مختلفين — بزر مستقل لكل رقم بدل ما نجبر عنصر واحد بس
+        const numbers = url
+          .split(",")
+          .map((n) => n.trim())
+          .filter(Boolean);
+        return numbers
+          .map((num, idx) => {
+            const label = numbers.length > 1 ? `${metaLabel} ${idx + 1}` : metaLabel;
+            return `<button type="button" class="${cls} phone-copy-btn" data-phone="${num}">${meta.icon} ${label}</button>`;
+          })
+          .join("");
       }
       const cta = window.SITE_LANG === "en" ? item.cta_en || item.cta : item.cta;
       const label = key === "website" && cta ? cta : metaLabel;
@@ -821,8 +832,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     playClickSound();
   });
 
-  const phoneBtn = card.querySelector(".phone-copy-btn");
-  if (phoneBtn) {
+  card.querySelectorAll(".phone-copy-btn").forEach((phoneBtn) => {
     phoneBtn.addEventListener("click", async () => {
       const phone = phoneBtn.dataset.phone;
       try {
@@ -834,7 +844,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       showToast(t("phone_copied"));
       playClickSound();
     });
-  }
+  });
 
   const descToggle = card.querySelector(".desc-toggle");
   if (descToggle) {

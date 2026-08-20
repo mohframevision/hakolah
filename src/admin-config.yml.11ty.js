@@ -178,6 +178,7 @@ function itemFields(entry) {
             name: "phone",
             widget: "string",
             required: false,
+            hint: "أكثر من رقم (مثل واتساب ورقم اتصال مختلف)؟ افصل بينها بفاصلة، وبيطلع زر مستقل لكل رقم.",
           },
           { label: "خرائط قوقل", name: "maps", widget: "string", required: false },
           { label: "إنستقرام", name: "instagram", widget: "string", required: false },
