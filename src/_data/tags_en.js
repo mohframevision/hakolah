@@ -121,5 +121,7 @@ module.exports = {
   "إطارات جديدة": "New Tires",
   "إطارات مستعملة": "Used Tires",
   "بطاريات": "Batteries",
-  "فرامل": "Brakes"
+  "فرامل": "Brakes",
+  "معرض سيارات": "Car Showroom",
+  "تنجيد": "Upholstery"
 };

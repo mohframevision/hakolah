@@ -44,6 +44,22 @@ module.exports = [
     tip_en: "Ask about the difference between original and aftermarket parts before deciding.",
   },
   {
+    slug: "showroom",
+    label: "معرض سيارات",
+    label_en: "Car Showroom",
+    icon: "🚗",
+    tip: "قارن بين أكثر من معرض قبل ما تشتري، واسأل عن سجل الصيانة لو السيارة مستعملة",
+    tip_en: "Compare more than one showroom before buying, and ask for the maintenance history if the car is used.",
+  },
+  {
+    slug: "upholstery",
+    label: "تنجيد",
+    label_en: "Upholstery",
+    icon: "🛋️",
+    tip: "اسأل عن نوع القماش أو الجلد المستخدم وفترة الضمان قبل ما توافق",
+    tip_en: "Ask about the fabric or leather type used and the warranty period before agreeing.",
+  },
+  {
     slug: "tires",
     label: "إطارات",
     label_en: "Tires",
