@@ -210,6 +210,7 @@
       "push": { "workerUrl": {{ push.workerUrl | json | safe }}, "vapidPublicKey": {{ push.vapidPublicKey | json | safe }} },
       "page": {
         "section": {{ (section or "") | json | safe }},
+        "typeFilter": {{ (typeFilter or "") | json | safe }},
         "favorites": {{ (isFavoritesPage or false) | json | safe }},
         "picker": {{ (navActive == "picker") | json | safe }},
         "plan": {{ (navActive == "plan") | json | safe }},

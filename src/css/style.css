@@ -906,6 +906,60 @@ img {
   padding: 6px 0 50px;
 }
 
+/* ===== بوابة محلات السيارات — أيقونات كبيرة تودّي مباشرة لصفحة النوع،
+   بدون بحث أو فلتر بهالصفحة نفسها (الهدف: وصول فوري بضغطة وحدة) ===== */
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 6px 0 50px;
+}
+
+.hub-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 28px 20px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.hub-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-primary);
+}
+
+.hub-card-icon {
+  display: block;
+  font-size: 2.6rem;
+  margin-bottom: 10px;
+}
+
+.hub-card-label {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.hub-card-tip {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.type-tip {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
 @keyframes cardIn {
   from {
     opacity: 0;

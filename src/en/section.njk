@@ -25,6 +25,17 @@ eleventyComputed:
   <p>{{ sectionEntry.description_en }}</p>
 </section>
 
+{% if sectionEntry.slug == "car-shops" %}
+<div class="hub-grid">
+{%- for type in carShopTypes %}
+  <a class="hub-card" href="{{ ('/en/car-shops/' + type.slug + '.html') | url }}">
+    <span class="hub-card-icon">{{ type.icon }}</span>
+    <h3 class="hub-card-label">{{ type.label_en }}</h3>
+    <p class="hub-card-tip">{{ type.tip_en }}</p>
+  </a>
+{%- endfor %}
+</div>
+{% else %}
 <input type="text" class="search-box" placeholder="{{ sectionEntry.searchPlaceholder_en }}" aria-label="Search {{ sectionEntry.title_en }}" />
 <button type="button" class="near-me-btn" aria-pressed="false">{{ t.near_me }}</button>
 <div class="filters"></div>
@@ -35,5 +46,6 @@ eleventyComputed:
 {{ cards.card(entry, sectionEntry.slug, "en", sectionEntry.hasDetailPages, tags_en, i18n, tag_icons) }}
 {%- endfor %}
 </div>
+{% endif %}
 
 {% include "cazasouq-promo.njk" %}

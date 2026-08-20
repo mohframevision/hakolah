@@ -12,7 +12,7 @@ const SECTIONS_DIR = path.join(__dirname, "..", "sections");
   (والتصنيف المكتوب يدوياً يحتاج ترجمة بالكود وإلا فشل النشر).
   "روابط وأدوات" و"مقالات وأدلة" مستثناة — لا موقع جغرافي لها.
 */
-const SECTIONS_WITH_AREAS = ["restaurants", "cafes", "bakeries", "stores", "places"];
+const SECTIONS_WITH_AREAS = ["restaurants", "cafes", "bakeries", "stores", "places", "car-shops"];
 
 // خيارات القسم أولاً (الأكثر استخداماً بالأعلى)، ثم المناطق بلا تكرار
 function withAreas(slug, options) {

@@ -23,6 +23,19 @@ eleventyComputed:
   <p>{{ sectionEntry.description }}</p>
 </section>
 
+{% if sectionEntry.slug == "car-shops" %}
+{# بوابة بصرية بدل قائمة+فلتر — كل نوع محل له صفحته المستقلة عشان الزائر
+   يوصل للمعلومة اللي يبيها بضغطة وحدة بدل ما يفلتر بنفسه #}
+<div class="hub-grid">
+{%- for type in carShopTypes %}
+  <a class="hub-card" href="{{ ('/car-shops/' + type.slug + '.html') | url }}">
+    <span class="hub-card-icon">{{ type.icon }}</span>
+    <h3 class="hub-card-label">{{ type.label }}</h3>
+    <p class="hub-card-tip">{{ type.tip }}</p>
+  </a>
+{%- endfor %}
+</div>
+{% else %}
 <input type="text" class="search-box" placeholder="{{ sectionEntry.searchPlaceholder }}" aria-label="البحث في {{ sectionEntry.title }}" />
 <button type="button" class="near-me-btn" aria-pressed="false">{{ t.near_me }}</button>
 <div class="filters"></div>
@@ -34,5 +47,6 @@ eleventyComputed:
 {{ cards.card(entry, sectionEntry.slug, "ar", sectionEntry.hasDetailPages, tags_en, i18n, tag_icons) }}
 {%- endfor %}
 </div>
+{% endif %}
 
 {% include "cazasouq-promo.njk" %}

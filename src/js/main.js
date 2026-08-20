@@ -873,8 +873,11 @@ function markSectionExplored(section) {
   localStorage.setItem(EXPLORED_KEY, JSON.stringify(explored));
 }
 
-/* ===== عرض قسم كامل: بحث + فلاتر + شبكة بطاقات ===== */
-function renderSection(section) {
+/* ===== عرض قسم كامل: بحث + فلاتر + شبكة بطاقات =====
+   typeFilter (اختياري): يقصر القسم على عناصر تاجها يحتوي هالقيمة — تستخدمه
+   صفحة نوع محل السيارات (car-shop-type.njk) عشان تعرض غسيل بس مثلاً، بدل
+   كل محلات السيارات. التاج نفسه يُستبعد من رقاقات الفلتر لأنه بديهي بالفعل. */
+function renderSection(section, typeFilter) {
   const data = SITE_DATA[section];
   if (!data) return;
 
@@ -887,9 +890,17 @@ function renderSection(section) {
 
   if (!grid) return;
 
+  const items = typeFilter
+    ? data.items.filter((item) => (item.tags || []).includes(typeFilter))
+    : data.items;
+
   // بناء الفلاتر من التاجات المتوفرة
   const allTags = new Set();
-  data.items.forEach((item) => (item.tags || []).forEach((t) => allTags.add(t)));
+  items.forEach((item) =>
+    (item.tags || []).forEach((t) => {
+      if (t !== typeFilter) allTags.add(t);
+    })
+  );
 
   let activeTag = "all";
   let filtersExpanded = false;
@@ -962,7 +973,7 @@ function renderSection(section) {
     const query = (searchInput?.value || "").trim();
     grid.innerHTML = "";
 
-    const filtered = data.items.filter((item) => {
+    const filtered = items.filter((item) => {
       const matchesTag = activeTag === "all" || (item.tags || []).includes(activeTag);
       const haystack = item.title + " " + (item.desc || "") + " " + (item.tags || []).join(" ");
       const matchesQuery = fuzzyIncludes(haystack, query);
@@ -989,7 +1000,7 @@ function renderSection(section) {
         : ranked.sort((a, b) => pinRank(b.item) - pinRank(a.item));
 
     if (ranked.length === 0) {
-      const isSectionEmpty = data.items.length === 0;
+      const isSectionEmpty = items.length === 0;
       grid.innerHTML = isSectionEmpty
         ? `
         <div class="empty-state full-row">
@@ -1054,7 +1065,7 @@ function renderSection(section) {
 
   if (searchInput) {
     searchInput.addEventListener("input", renderGrid);
-    initSearchSuggestions(searchInput, data.items, renderGrid);
+    initSearchSuggestions(searchInput, items, renderGrid);
   }
 }
 
@@ -1517,7 +1528,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ما يخص كل صفحة على حدة — كانت سكربتات مضمّنة بـ base.njk، صارت تُقرأ من
   // إعدادات الصفحة (#site-config) عشان تشتغل سياسة CSP بدون unsafe-inline
   const page = window.PAGE || {};
-  if (page.section) renderSection(page.section);
+  if (page.section) renderSection(page.section, page.typeFilter);
   if (page.favorites) renderFavoritesPage();
   if (page.picker) initRandomPicker();
   if (page.plan) renderDayPlan();

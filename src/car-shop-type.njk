@@ -1,0 +1,44 @@
+---
+pagination:
+  data: "carShopTypes"
+  size: 1
+  alias: "shopType"
+layout: "base.njk"
+eleventyComputed:
+  permalink: "car-shops/{{ shopType.slug }}.html"
+  title: "{{ shopType.label | safe }} — محلات السيارات | هكوله"
+  description: "دليل {{ shopType.label | safe }} السيارات في البحرين، مع فلترة حسب المنطقة."
+  navActive: "car-shops"
+  section: "car-shops"
+  typeFilter: "{{ shopType.label | safe }}"
+  langSwitchUrl: "/en/car-shops/{{ shopType.slug }}.html"
+---
+{# قوالب المحتوى تُعرض قبل القالب الأب (base.njk)، فمتغيّر t المعرّف هناك مو
+   متاح هنا — لازم كل قالب يحتاج t يعرّفه بنفسه #}
+{% set t = i18n[lang or "ar"] %}
+{% import "item-card.njk" as cards %}
+<div class="breadcrumb">
+  <a href="{{ '/index.html' | url }}">{{ t.nav_home }}</a> /
+  <a href="{{ '/car-shops.html' | url }}">محلات السيارات</a> /
+  {{ shopType.label }}
+</div>
+<section class="page-header">
+  <h1>{{ shopType.icon }} {{ shopType.label }}</h1>
+  <p class="type-tip">💡 {{ shopType.tip }}</p>
+</section>
+
+<input type="text" class="search-box" placeholder="ابحث بين محلات {{ shopType.label }}…" aria-label="البحث في {{ shopType.label }}" />
+<button type="button" class="near-me-btn" aria-pressed="false">{{ t.near_me }}</button>
+<div class="filters"></div>
+
+{# البطاقات مطبوعة هنا وقت البناء عشان محركات البحث تقرأ المحتوى فعلاً.
+   main.js يستبدلها بنسخة تفاعلية مفلترة بنفس النوع (typeFilter أعلاه). #}
+<div class="card-grid">
+{%- for entry in (collections['car-shops'] or []) %}
+{%- if shopType.label in (entry.data.categories or []).concat(entry.data.categoriesCustom or []) %}
+{{ cards.card(entry, "car-shops", "ar", false, tags_en, i18n, tag_icons) }}
+{%- endif %}
+{%- endfor %}
+</div>
+
+{% include "cazasouq-promo.njk" %}
