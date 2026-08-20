@@ -11,5 +11,6 @@ categories:
 links:
   website: ''
   phone: '33508887'
+  maps: https://maps.app.goo.gl/ek3qDkwsVwAW67f9A
   instagram: https://www.instagram.com/classic_line_shine/
 ---
