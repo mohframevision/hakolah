@@ -948,13 +948,6 @@ img {
   color: var(--color-text);
 }
 
-.hub-card-tip {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
-
 .type-tip {
   color: var(--color-text-muted);
   font-size: 0.95rem;
