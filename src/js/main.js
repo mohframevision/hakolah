@@ -1304,16 +1304,81 @@ async function initPushNotifications() {
 }
 
 /* ===== اختار لي: اختيار عشوائي من أي قسم بأنيميشن سلوت مشين ===== */
-/* ===== كشف "اختار لي" بانفجار معلومات — كل قطعة (عنوان، صورة، هاتف، موقع،
-   تصنيفات) تقفز من زاوية عشوائية بحركة مرنة وتملأ الشاشة، بدل ما تظهر
-   البطاقة الكاملة دفعة وحدة. بعد ما تستقر كل القطع نستدعي onDone اللي
-   يستبدلها بالبطاقة الفعلية القابلة للتفاعل (إعجاب/مفضلة/مشاركة...) */
-function burstReveal(item, onDone) {
+/* ===== كشف "اختار لي" بشاشة كاملة — انظر تعليق CSS .picker-reveal-overlay
+   لتفاصيل الفكرة. القطع الكبيرة (عنوان/صورة/هاتف/موقع/تصنيفات) تضل هي
+   النتيجة النهائية فوق الشاشة كاملة، ما ترجع لبطاقة صغيرة بعدها — وتحتها
+   أزرار التواصل الفعلية (اتصال/موقع/إنستقرام) وزر إعادة المحاولة والإغلاق */
+function openPickerReveal(item, { onRetry, onClose } = {}) {
+  const overlay = document.createElement("div");
+  overlay.className = "picker-reveal-overlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+
+  function close() {
+    overlay.remove();
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", onKeydown);
+    onClose?.();
+  }
+  function onKeydown(e) {
+    if (e.key === "Escape") close();
+  }
+  document.addEventListener("keydown", onKeydown);
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "btn secondary picker-reveal-close";
+  closeBtn.textContent = "✕";
+  closeBtn.setAttribute("aria-label", t("daily_pick_close"));
+  closeBtn.addEventListener("click", () => {
+    playClickSound();
+    close();
+  });
+  overlay.appendChild(closeBtn);
+
   const burst = document.createElement("div");
   burst.className = "picker-burst";
-  const stage = document.getElementById("pickerStage");
-  stage.appendChild(burst);
+  overlay.appendChild(burst);
 
+  burstPieces(item, burst, () => {
+    const actions = document.createElement("div");
+    actions.className = "picker-reveal-actions";
+    actions.innerHTML = buildActionsHtml(item);
+    overlay.appendChild(actions);
+
+    actions.querySelectorAll(".phone-copy-btn").forEach((phoneBtn) => {
+      phoneBtn.addEventListener("click", async () => {
+        const phone = phoneBtn.dataset.phone;
+        try {
+          await navigator.clipboard.writeText(phone);
+        } catch {
+          showToast(`${t("phone_copy_failed")} ${phone}`);
+          return;
+        }
+        showToast(t("phone_copied"));
+        playClickSound();
+      });
+    });
+
+    const retryBtn = document.createElement("button");
+    retryBtn.className = "btn picker-retry-btn";
+    retryBtn.textContent = t("try_again");
+    retryBtn.addEventListener("click", () => {
+      playClickSound();
+      close();
+      onRetry?.();
+    });
+    overlay.appendChild(retryBtn);
+
+    spawnConfetti(overlay);
+    playSuccessSound();
+  });
+}
+
+/* قطع المعلومات نفسها تقفز من زاوية عشوائية بحركة مرنة داخل container،
+   وتستدعي onDone بعد ما تستقر كلها */
+function burstPieces(item, container, onDone) {
   const pieces = [];
 
   const titleEl = document.createElement("div");
@@ -1355,17 +1420,16 @@ function burstReveal(item, onDone) {
 
   pieces.forEach((el, i) => {
     const angle = Math.random() * Math.PI * 2;
-    const dist = 160 + Math.random() * 220;
+    const dist = 200 + Math.random() * 260;
     el.style.setProperty("--x", `${Math.cos(angle) * dist}px`);
     el.style.setProperty("--y", `${Math.sin(angle) * dist}px`);
     el.style.setProperty("--rot", `${(Math.random() - 0.5) * 70}deg`);
     el.style.setProperty("--delay", `${i * 100}ms`);
     el.classList.add("burst-piece");
-    burst.appendChild(el);
+    container.appendChild(el);
   });
 
-  playSuccessSound();
-  const totalMs = reduceMotion ? 0 : pieces.length * 100 + 650 + 500;
+  const totalMs = reduceMotion ? 0 : pieces.length * 100 + 700 + 400;
   setTimeout(onDone, totalMs);
 }
 
@@ -1517,24 +1581,11 @@ function initRandomPicker() {
 
   function reveal(item) {
     stage.innerHTML = "";
-    burstReveal(item, () => {
-      stage.innerHTML = "";
-      const card = buildItemCard(selectedSection, item, 0);
-      card.classList.add("picker-result");
-      stage.appendChild(card);
-      spawnConfetti(stage);
-      playSuccessSound();
-
-      const retryBtn = document.createElement("button");
-      retryBtn.className = "btn secondary picker-retry-btn";
-      retryBtn.textContent = t("try_again");
-      retryBtn.addEventListener("click", () => {
-        playClickSound();
-        spin();
-      });
-      stage.appendChild(retryBtn);
-
-      spinBtn.disabled = false;
+    openPickerReveal(item, {
+      onRetry: spin,
+      onClose: () => {
+        spinBtn.disabled = false;
+      },
     });
   }
 
