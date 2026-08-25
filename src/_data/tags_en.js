@@ -35,6 +35,7 @@ module.exports = {
   "لبناني": "Lebanese",
   "إيراني": "Iranian",
   "بحريني": "Bahraini",
+  "شعبي": "Traditional",
   "قهوة مختصة": "Specialty Coffee",
   "كرك": "Karak Tea",
   "مشروبات باردة": "Cold Drinks",
