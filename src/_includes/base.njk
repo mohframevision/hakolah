@@ -151,17 +151,16 @@
         {% for entry in sections %}
         <a href="{{ (('/en/' if lang == 'en' else '/') + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active"{% endif %}>{{ entry.navLabel_en if lang == 'en' else entry.navLabel }}</a>
         {% endfor %}
-        {# على الجوال تختفي أيقونتا المفضلة و"اختار لي" من الهيدر (ضيق) وتظهران
-           هنا داخل القائمة المنسدلة بدل ما تزدحم مع الشعار #}
+        {# على الجوال تختفي أيقونة المفضلة من الهيدر (ضيق) وتظهر هنا داخل
+           القائمة المنسدلة بدل ما تزدحم مع الشعار. "اختار لي" ما تحتاج نسخة
+           هنا لأنها تبقى ظاهرة بالهيدر حتى على أضيق الشاشات (انظر icon-btn-picker) #}
         <a class="nav-only-mobile{% if navActive == "favorites" %} active{% endif %}" href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}">❤️ {{ t.nav_favorites }}</a>
-        {# رابط "خطة اليوم" مخفي مؤقتاً — الميزة تحتاج خوارزمية أفضل #}
-        <a class="nav-only-mobile{% if navActive == "picker" %} active{% endif %}" href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}">{{ t.nav_picker }}</a>
       </nav>
       <div class="header-actions">
         {# المفضلة و"اختار لي" أدوات مو أقسام محتوى — نقلناها من القائمة لهنا
            كأيقونات، عشان القائمة تضل بسطر واحد حتى لما تُضاف أقسام جديدة #}
         <a class="icon-btn{% if navActive == "favorites" %} active{% endif %}" href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}" title="{{ t.nav_favorites }}" aria-label="{{ t.nav_favorites }}">❤️</a>
-        <a class="icon-btn{% if navActive == "picker" %} active{% endif %}" href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}" title="{{ t.nav_picker }}" aria-label="{{ t.nav_picker }}">🎲</a>
+        <a class="icon-btn icon-btn-picker{% if navActive == "picker" %} active{% endif %}" href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}" title="{{ t.nav_picker }}" aria-label="{{ t.nav_picker }}">🎲</a>
         <span class="header-divider" aria-hidden="true"></span>
         {# على الشاشات الضيقة نعرض الاختصار بدل الاسم الكامل عشان يضل الهيدر بصف واحد #}
         <a class="lang-switch" href="{{ (langSwitchUrl or ('/index.html' if lang == 'en' else '/en/index.html')) | url }}" title="{{ t.lang_switch }}" aria-label="{{ t.lang_switch }}"><span class="lang-full">{{ t.lang_switch }}</span><span class="lang-short" aria-hidden="true">{{ t.lang_switch_short }}</span></a>
