@@ -1304,6 +1304,71 @@ async function initPushNotifications() {
 }
 
 /* ===== اختار لي: اختيار عشوائي من أي قسم بأنيميشن سلوت مشين ===== */
+/* ===== كشف "اختار لي" بانفجار معلومات — كل قطعة (عنوان، صورة، هاتف، موقع،
+   تصنيفات) تقفز من زاوية عشوائية بحركة مرنة وتملأ الشاشة، بدل ما تظهر
+   البطاقة الكاملة دفعة وحدة. بعد ما تستقر كل القطع نستدعي onDone اللي
+   يستبدلها بالبطاقة الفعلية القابلة للتفاعل (إعجاب/مفضلة/مشاركة...) */
+function burstReveal(item, onDone) {
+  const burst = document.createElement("div");
+  burst.className = "picker-burst";
+  const stage = document.getElementById("pickerStage");
+  stage.appendChild(burst);
+
+  const pieces = [];
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "burst-title";
+  titleEl.textContent = `${item.icon || "⭐"} ${itemTitle(item)}`;
+  pieces.push(titleEl);
+
+  if (item.image) {
+    const photoEl = document.createElement("img");
+    photoEl.className = "burst-photo";
+    photoEl.src = item.image;
+    photoEl.alt = "";
+    photoEl.loading = "lazy";
+    pieces.push(photoEl);
+  }
+
+  if (item.links?.phone) {
+    const chip = document.createElement("span");
+    chip.className = "burst-chip";
+    chip.textContent = `📞 ${item.links.phone}`;
+    pieces.push(chip);
+  }
+
+  if (item.links?.maps) {
+    const chip = document.createElement("span");
+    chip.className = "burst-chip";
+    chip.textContent = `📍 ${t("link_maps")}`;
+    pieces.push(chip);
+  }
+
+  (item.tags || []).slice(0, 4).forEach((tag) => {
+    const chip = document.createElement("span");
+    chip.className = "burst-chip";
+    chip.textContent = `${tagIcon(tag) ? tagIcon(tag) + " " : ""}${tagLabel(tag)}`;
+    pieces.push(chip);
+  });
+
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  pieces.forEach((el, i) => {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 160 + Math.random() * 220;
+    el.style.setProperty("--x", `${Math.cos(angle) * dist}px`);
+    el.style.setProperty("--y", `${Math.sin(angle) * dist}px`);
+    el.style.setProperty("--rot", `${(Math.random() - 0.5) * 70}deg`);
+    el.style.setProperty("--delay", `${i * 100}ms`);
+    el.classList.add("burst-piece");
+    burst.appendChild(el);
+  });
+
+  playSuccessSound();
+  const totalMs = reduceMotion ? 0 : pieces.length * 100 + 650 + 500;
+  setTimeout(onDone, totalMs);
+}
+
 function spawnConfetti(container) {
   const emojis = ["🎉", "✨", "⭐", "💫", "🎊"];
   for (let i = 0; i < 14; i++) {
@@ -1452,22 +1517,25 @@ function initRandomPicker() {
 
   function reveal(item) {
     stage.innerHTML = "";
-    const card = buildItemCard(selectedSection, item, 0);
-    card.classList.add("picker-result");
-    stage.appendChild(card);
-    spawnConfetti(stage);
-    playSuccessSound();
+    burstReveal(item, () => {
+      stage.innerHTML = "";
+      const card = buildItemCard(selectedSection, item, 0);
+      card.classList.add("picker-result");
+      stage.appendChild(card);
+      spawnConfetti(stage);
+      playSuccessSound();
 
-    const retryBtn = document.createElement("button");
-    retryBtn.className = "btn secondary picker-retry-btn";
-    retryBtn.textContent = t("try_again");
-    retryBtn.addEventListener("click", () => {
-      playClickSound();
-      spin();
+      const retryBtn = document.createElement("button");
+      retryBtn.className = "btn secondary picker-retry-btn";
+      retryBtn.textContent = t("try_again");
+      retryBtn.addEventListener("click", () => {
+        playClickSound();
+        spin();
+      });
+      stage.appendChild(retryBtn);
+
+      spinBtn.disabled = false;
     });
-    stage.appendChild(retryBtn);
-
-    spinBtn.disabled = false;
   }
 
   function spin() {
