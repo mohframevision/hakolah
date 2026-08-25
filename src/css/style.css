@@ -10,7 +10,10 @@
    بدل قيم منفصلة يدوية — هذا يضمن تناسقهما دايماً مهما تغيّر اللون الأساسي،
    بدل ما يحتاج كل تغيير لون تعديل ٣ قيم يدوياً بكل وضع (فاتح/داكن) كما كان. */
 :root {
-  --color-bg: #f7f7f7;
+  /* رمادي فاتح جداً قريب من روح خلفيات أبل (لا نفس القيمة الحرفية) — أفتح من
+     f7f7f7 القديم وأقرب للأبيض، لأن البطاقات صارت بلا حدود (border) وتعتمد
+     على تباين خفيف + ظل فقط للانفصال عن الخلفية */
+  --color-bg: #f6f6f8;
   --color-surface: #ffffff;
   --color-text: #111111;
   --color-text-muted: #666666;
@@ -19,9 +22,14 @@
   --color-accent: color-mix(in oklch, var(--color-primary) 65%, white);
   --color-border: #e0e0e0;
   --color-danger: #ef4444;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.09), 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-card-hover: 0 10px 24px rgba(0, 0, 0, 0.13);
-  --radius: 14px;
+  /* ظل ناعم ومنتشر بدل ظل قريب حاد — لوك أبل يعتمد على عمق خفيف بالكاد
+     يُلاحظ بدل حدود/ظلال واضحة، فالبطاقة تبان "طايفة" لا "محاطة بخط" */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 6px 20px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.1);
+  --radius: 18px;
+  /* منحنى تباطؤ متّبع بواجهات أبل (easeOutExpo تقريباً) — حركة تبدأ بسرعة
+     وتهبط بنعومة بدل ease القياسي الخطي الإحساس */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --max-width: 1180px;
   /* الهيدر يمتد أعرض من عمود المحتوى — القائمة صارت 8 عناصر والنصوص
      الإنجليزية أطول من العربية، فبعرض المحتوى نفسه كانت تفيض وتنقص */
@@ -52,8 +60,8 @@
     --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
     --color-accent: color-mix(in oklch, var(--color-primary) 80%, white);
     --color-border: #2a2a2a;
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6);
-    --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.7);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+    --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -67,12 +75,12 @@
   --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
   --color-accent: color-mix(in oklch, var(--color-primary) 80%, white);
   --color-border: #2a2a2a;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.7);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
 :root[data-theme="light"] {
-  --color-bg: #f7f7f7;
+  --color-bg: #f6f6f8;
   --color-surface: #ffffff;
   --color-text: #111111;
   --color-text-muted: #666666;
@@ -80,8 +88,8 @@
   --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
   --color-accent: color-mix(in oklch, var(--color-primary) 65%, white);
   --color-border: #e0e0e0;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.09), 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-card-hover: 0 10px 24px rgba(0, 0, 0, 0.13);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 6px 20px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -97,6 +105,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* رفع القياس الأساسي 16px → 17px يكبّر كل نص وكل مسافة مبنية على rem
+     بالموقع كامل بضربة وحدة — إحساس "فسيح وواضح" شبيه بمواقع أبل، بدل
+     تعديل كل مقاس بكل مكوّن يدوياً */
+  font-size: 106.25%;
 }
 
 body {
@@ -153,23 +165,37 @@ img {
 }
 
 /* ===== الهيدر ===== */
+/* شفاف + بلور خلفية (glassmorphism) — نفس أسلوب هيدر مواقع أبل. الخلفية شبه
+   شفافة (بدل معتمة) والبلور يخفي المحتوى المتحرك تحتها بدل ما يظهر واضحاً
+   من ورا الهيدر. متصفحات بلا دعم backdrop-filter تحصل خلفية شبه شفافة فقط
+   (تدهور بسيط لا كسر بصري) بفضل @supports بالأسفل */
 .site-header {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
   position: sticky;
   top: 0;
   z-index: 50;
-  transition: box-shadow 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .site-header {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
 }
 
 .site-header.scrolled {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  background: color-mix(in srgb, var(--color-surface) 86%, transparent);
 }
 
 .header-inner {
   display: flex;
   align-items: center;
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-4) var(--space-5);
   max-width: var(--header-max-width);
   margin: 0 auto;
   /* مسافة واحدة كبيرة تفصل المجموعات الثلاث (شعار | قائمة | أدوات) عن بعض،
@@ -452,24 +478,55 @@ img {
 
 /* ===== الهيرو (قسم الترحيب) ===== */
 .hero {
-  padding: 56px 0 40px;
+  position: relative;
+  padding: 100px 0 60px;
   text-align: center;
+  overflow: clip;
+}
+
+/* توهّج لوني خلفي ناعم (aurora) خلف عنوان الهيرو — نفس أسلوب صفحات أبل
+   التسويقية (مثل Vision Pro). طبقة خلف المحتوى (z-index: -1) ومموّهة
+   بـblur قوي فتبان سحابة لون خفيفة لا شكلاً واضحاً، ومقصوصة بحدود الهيرو
+   (overflow: clip بالأب) حتى ما تفلت فوق الهيدر أو تحت الشبكة */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 480px;
+  z-index: -1;
+  background:
+    radial-gradient(
+      circle at 25% 30%,
+      color-mix(in srgb, var(--color-primary) 22%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 75% 20%,
+      color-mix(in srgb, var(--color-accent) 20%, transparent),
+      transparent 55%
+    );
+  filter: blur(60px);
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .hero h1 {
-  font-size: clamp(1.6rem, 4vw, 2.6rem);
-  margin: 0 0 12px;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 0 0 18px;
 }
 
 .hero p {
   color: var(--color-text-muted);
   max-width: 640px;
   margin: 0 auto;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
 }
 
 .hero-search {
-  margin: 28px auto 0;
+  margin: 36px auto 0;
   max-width: 520px;
 }
 
@@ -546,12 +603,19 @@ img {
   width: 100%;
   padding: 14px 18px;
   border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
   color: var(--color-text);
   font-size: 1rem;
   font-family: inherit;
   box-shadow: var(--shadow-card);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .search-box {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
 }
 
 .search-box:focus {
@@ -585,12 +649,19 @@ img {
   top: calc(100% + 6px);
   right: 0;
   left: 0;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   border-radius: 16px;
   box-shadow: var(--shadow-card-hover);
   overflow: hidden;
   z-index: 40;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .search-suggestions {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
 }
 
 .search-suggestions.open {
@@ -650,20 +721,19 @@ img {
 .section-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 18px;
-  padding: 10px 0 50px;
+  gap: 28px;
+  padding: 16px 0 60px;
 }
 
 .section-card {
   position: relative;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 26px 22px;
+  padding: 32px 26px;
   box-shadow: var(--shadow-card);
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
   display: block;
   animation: cardIn 0.5s ease both;
 }
@@ -733,14 +803,14 @@ img {
 
 /* ===== عنوان الصفحة الداخلية ===== */
 .page-header {
-  padding: 40px 0 18px;
+  padding: 56px 0 24px;
 }
 
 .page-header h1 {
   margin: 0 0 8px;
   font-size: clamp(1.5rem, 3.4vw, 2.3rem);
   font-weight: 300;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
 }
 
 .page-header p {
@@ -902,7 +972,7 @@ img {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   align-items: start;
-  gap: 16px;
+  gap: 22px;
   padding: 6px 0 50px;
 }
 
@@ -911,22 +981,22 @@ img {
 .hub-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  gap: 22px;
   padding: 6px 0 50px;
 }
 
 .hub-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
-  padding: 28px 20px;
+  padding: 32px 24px;
   text-align: center;
   text-decoration: none;
   color: inherit;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease),
     border-color 0.2s ease;
 }
 
@@ -966,7 +1036,7 @@ img {
 
 .item-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
   display: flex;
@@ -975,8 +1045,8 @@ img {
   overflow: hidden;
   animation: cardIn 0.45s ease both;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
 }
 
 .item-card:hover {
@@ -1056,7 +1126,7 @@ img {
 }
 
 .item-card .item-body {
-  padding: 18px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1174,10 +1244,12 @@ img {
   gap: 6px;
 }
 
+/* رمادي محايد بدل تلوين كل وسم باللون الأساسي — لوك أبل يحفظ اللون
+   للتمييز الحقيقي (شارات .new-tag/.distance-tag تحته) لا للزخرفة العامة */
 .tag {
   font-size: 0.75rem;
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  color: var(--color-text-muted);
   padding: 3px 10px;
   border-radius: 999px;
   font-weight: 600;
@@ -1209,8 +1281,8 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: 10px;
+  padding: 9px 20px;
+  border-radius: 999px;
   background: var(--color-primary);
   color: #fff;
   font-weight: 700;
@@ -1220,7 +1292,7 @@ img {
   font-family: inherit;
   transition:
     background 0.18s ease,
-    transform 0.12s ease;
+    transform 0.12s var(--ease);
 }
 
 .btn:hover {
@@ -1232,9 +1304,9 @@ img {
 }
 
 .btn.secondary {
-  background: transparent;
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
   color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
 }
 
 .item-top-actions {
@@ -1444,7 +1516,7 @@ img {
   left: 50%;
   transform: translate(-50%, -20px);
   z-index: 80;
-  background: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 85%, transparent);
   color: var(--color-bg);
   padding: 10px 20px;
   border-radius: 999px;
@@ -1455,7 +1527,14 @@ img {
   pointer-events: none;
   transition:
     opacity 0.25s ease,
-    transform 0.25s ease;
+    transform 0.25s var(--ease);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .toast {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
 }
 
 .toast.open {
@@ -1475,9 +1554,16 @@ img {
   justify-content: center;
   flex-wrap: wrap;
   padding: 16px 20px;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .cookie-banner {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
 }
 
 .cookie-banner.open {
@@ -1511,10 +1597,17 @@ img {
   max-width: 260px;
   padding: 14px;
   padding-inline-start: 34px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   border-radius: var(--radius);
   box-shadow: var(--shadow-card-hover);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .daily-pick-reminder {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
 }
 
 .daily-pick-reminder.open {
@@ -1702,7 +1795,8 @@ img {
   padding: 18px 22px;
   min-width: 110px;
   border-radius: var(--radius);
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-card);
   background: var(--color-surface);
   color: var(--color-text);
   font-weight: 700;
