@@ -54,6 +54,7 @@ module.exports = {
   "ديكور منزلي": "Home Decor",
   "ألعاب": "Toys",
   "إكسسوارات": "Accessories",
+  "مجوهرات": "Jewelry",
   "رياضة": "Sports",
   "مكتبة": "Library",
   "مشتل": "Nursery",
