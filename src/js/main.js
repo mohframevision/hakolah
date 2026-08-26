@@ -1183,6 +1183,20 @@ async function renderTrendingSection() {
   });
 }
 
+/* ===== رقم حقيقي بالهيرو (الصفحة الرئيسية) — عدد العناصر الفعلي بكل
+   الأقسام، محسوب من SITE_DATA (المولَّد من ملفات src/<section>/*.md وقت
+   البناء) لا رقم مكتوب يدوياً — فيتحدّث تلقائياً كل ما أضفنا محل جديد بدون
+   الحاجة نعدّل أي نص بالموقع ===== */
+function renderSiteStats() {
+  const el = document.getElementById("siteStatsLine");
+  if (!el) return;
+
+  const total = Object.values(SITE_DATA).reduce((sum, section) => sum + (section.items || []).length, 0);
+  if (total === 0) return;
+
+  el.textContent = `${t("site_stats_prefix")} ${total} ${t("site_stats_suffix")}`;
+}
+
 /* ===== مؤشر "استكشفت X من Y قسم" (الصفحة الرئيسية) — يشجع الزائر يكمل تصفح
    باقي الأقسام بدل ما يوقف بقسم وحد (مبدأ Zeigarnik) ===== */
 function renderExploreProgress() {
@@ -1667,5 +1681,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initPushNotifications();
     renderTrendingSection();
     renderExploreProgress();
+    renderSiteStats();
   }
 });

@@ -527,6 +527,21 @@ img {
   font-size: 1.2rem;
 }
 
+.hero-stats {
+  display: inline-flex;
+  margin: 18px auto 0;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.hero-stats:empty {
+  display: none;
+}
+
 .hero-search {
   margin: 36px auto 0;
   max-width: 520px;
