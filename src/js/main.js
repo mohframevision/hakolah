@@ -652,8 +652,7 @@ function initArticleShare() {
   if (!btn) return;
   btn.addEventListener("click", () => {
     const text = `${document.title}\n${location.href}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
-    trackEdge("share", { method: "whatsapp", section: (window.PAGE || {}).section || "" });
+    shareText(text, { section: (window.PAGE || {}).section || "" });
     playClickSound();
   });
 }
@@ -671,6 +670,22 @@ function buildShareUrl(section, item) {
 function buildShareText(section, item) {
   const url = buildShareUrl(section, item);
   return `${itemTitle(item)} ${t("share_suffix")}\n${url}`;
+}
+
+/* ===== مشاركة عبر نظام المشاركة الأصلي بالجهاز (Web Share API) — يفتح نفس
+   قائمة المشاركة اللي تشوفها بإنستقرام (واتساب، رسائل، تلغرام، نسخ رابط...)
+   بدل ما يفتح واتساب دايماً بشكل مباشر. المتصفحات اللي ما تدعمها (أغلب
+   أجهزة الحاسوب) ترجع تلقائياً لفتح واتساب كما كانت الحال قبل */
+function shareText(text, trackParams) {
+  if (navigator.share) {
+    navigator
+      .share({ text })
+      .then(() => trackEdge("share", { method: "system", ...trackParams }))
+      .catch(() => {}); // المستخدم ألغى المشاركة — سلوك طبيعي، لا خطأ يُسجَّل
+  } else {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+    trackEdge("share", { method: "whatsapp", ...trackParams });
+  }
 }
 
 function buildActionsHtml(item) {
@@ -827,8 +842,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
   const shareBtn = card.querySelector(".share-btn");
   shareBtn.addEventListener("click", () => {
     const text = buildShareText(section, item);
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
-    trackEdge("share", { method: "whatsapp", section, item_name: itemTitle(item) });
+    shareText(text, { section, item_name: itemTitle(item) });
     playClickSound();
   });
 
@@ -1545,11 +1559,7 @@ function renderDayPlan() {
     shareBtn.addEventListener("click", () => {
       const lines = current.map((s) => `${s.icon} ${t("plan_" + s.key)}: ${itemTitle(s.item)}`);
       const text = `${t("plan_share_title")}\n\n${lines.join("\n")}\n\n${SITE_ORIGIN}${window.SITE_LANG === "en" ? "en/" : ""}plan.html`;
-      window.open(
-        `https://wa.me/?text=${encodeURIComponent(text)}`,
-        "_blank",
-        "noopener,noreferrer"
-      );
+      shareText(text, { section: "plan" });
       playClickSound();
     });
   }
