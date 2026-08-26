@@ -23,6 +23,7 @@ iconOptions:
   - "🎬"
   - "🎵"
   - "🤖"
+  - "🎙️"
 categoryOptions:
   - "تصميم"
   - "ألوان"
