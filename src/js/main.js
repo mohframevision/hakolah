@@ -652,7 +652,13 @@ function initArticleShare() {
   if (!btn) return;
   btn.addEventListener("click", () => {
     const text = `${document.title}\n${location.href}`;
-    shareText(text, { section: (window.PAGE || {}).section || "" });
+    // العنوان بالصفحة مكتوب "أيقونة + عنوان" بنص واحد (h1) — نفصل الإيموجي
+    // الأول عن باقي النص عشان نرسمهم منفصلين بصورة الستوري
+    const heading = document.querySelector(".page-header h1")?.textContent?.trim() || document.title;
+    const match = heading.match(/^(\p{Extended_Pictographic}(?:️)?)\s*/u);
+    const icon = match ? match[1] : "🧭";
+    const title = match ? heading.slice(match[0].length).trim() : heading;
+    shareText(text, { section: (window.PAGE || {}).section || "" }, { icon, title });
     playClickSound();
   });
 }
@@ -672,15 +678,152 @@ function buildShareText(section, item) {
   return `${itemTitle(item)} ${t("share_suffix")}\n${url}`;
 }
 
+/* ===== توليد صورة "ستوري" (1080×1920) من بيانات البطاقة — تُستخدم مع
+   navigator.share({files}) بدل نص فقط، لأن قصص إنستقرام تحتاج صورة لا رابطاً
+   (ما فيه رابط مباشر "أضف لستوري" يُفتح من متصفح ويب — فقط من تطبيقات
+   أصلية). نرسمها من الصفر بألوان الموقع الحالية (لا نصوّر البطاقة نفسها)
+   لأن مقاس البطاقة عرضي وما يناسب المقاس الطولي للستوري. */
+function loadImageEl(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+function drawImageCover(ctx, img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+// تفاف نص تلقائي عند حافة العرض المتاح — يرجّع إحداثي Y بعد آخر سطر
+function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 4) {
+  const words = text.split(" ");
+  let line = "";
+  let lines = 0;
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.fillText(line, x, y);
+      line = word;
+      y += lineHeight;
+      lines++;
+      if (lines >= maxLines - 1) break;
+    } else {
+      line = test;
+    }
+  }
+  if (line) {
+    ctx.fillText(line, x, y);
+    y += lineHeight;
+  }
+  return y;
+}
+
+async function buildStoryImage({ icon, title, subtitle, photo }) {
+  const W = 1080;
+  const H = 1920;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const primary = rootStyles.getPropertyValue("--color-primary").trim() || "#1b4d3e";
+  const primaryDark = rootStyles.getPropertyValue("--color-primary-dark").trim() || primary;
+
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, primary);
+  bg.addColorStop(1, primaryDark);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const isRtl = window.SITE_LANG !== "en";
+  ctx.direction = isRtl ? "rtl" : "ltr";
+  ctx.textAlign = "center";
+
+  if (document.fonts?.ready) {
+    try {
+      await document.fonts.load("800 76px Cairo");
+      await document.fonts.ready;
+    } catch {
+      /* خط احتياطي كافٍ لو تعذّر تحميل Cairo */
+    }
+  }
+
+  let cursorY;
+  let photoLoaded = false;
+  if (photo) {
+    try {
+      const img = await loadImageEl(photo);
+      const photoH = Math.round(H * 0.5);
+      drawImageCover(ctx, img, 0, 0, W, photoH);
+      const fade = ctx.createLinearGradient(0, photoH - 260, 0, photoH);
+      fade.addColorStop(0, "rgba(0,0,0,0)");
+      fade.addColorStop(1, primary);
+      ctx.fillStyle = fade;
+      ctx.fillRect(0, photoH - 260, W, 260);
+      cursorY = photoH + 90;
+      photoLoaded = true;
+    } catch {
+      photoLoaded = false;
+    }
+  }
+  if (!photoLoaded) {
+    ctx.font = "340px sans-serif"; // الإيموجي يُرسم بخط النظام بغض النظر عن Cairo
+    ctx.fillText(icon || "⭐", W / 2, 700);
+    cursorY = 840;
+  }
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "800 72px Cairo, sans-serif";
+  cursorY = wrapText(ctx, title, W / 2, cursorY, W - 160, 88, 3) + 30;
+
+  if (subtitle) {
+    ctx.font = "600 42px Cairo, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    wrapText(ctx, subtitle, W / 2, cursorY, W - 200, 56, 2);
+  }
+
+  ctx.font = "800 46px Cairo, sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(isRtl ? "● هكوله" : "● Hakolah", W / 2, H - 150);
+  ctx.font = "500 32px Cairo, sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.fillText(SITE_ORIGIN.replace(/^https?:\/\//, ""), W / 2, H - 100);
+
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+}
+
 /* ===== مشاركة عبر نظام المشاركة الأصلي بالجهاز (Web Share API) — يفتح نفس
-   قائمة المشاركة اللي تشوفها بإنستقرام (واتساب، رسائل، تلغرام، نسخ رابط...)
-   بدل ما يفتح واتساب دايماً بشكل مباشر. المتصفحات اللي ما تدعمها (أغلب
-   أجهزة الحاسوب) ترجع تلقائياً لفتح واتساب كما كانت الحال قبل */
-function shareText(text, trackParams) {
+   قائمة المشاركة اللي تشوفها بإنستقرام (واتساب، رسائل، تلغرام، نسخ رابط،
+   وإضافة لستوري إنستقرام لو أرفقنا صورة). المتصفحات اللي ما تدعم مشاركة
+   الملفات (أغلب أجهزة الحاسوب) ترجع تلقائياً لمشاركة نصية، وإلا لفتح واتساب
+   مباشرة كما كانت الحال قبل هذي الميزة كلها */
+async function shareText(text, trackParams, card) {
+  let file = null;
+  if (card && navigator.canShare) {
+    try {
+      const blob = await buildStoryImage(card);
+      if (blob) {
+        const candidate = new File([blob], "hakolah.png", { type: "image/png" });
+        if (navigator.canShare({ files: [candidate] })) file = candidate;
+      }
+    } catch {
+      file = null; // تعذّر توليد الصورة (مثلاً صورة المكان ما انحمّلت) — نكمل بالنص فقط
+    }
+  }
+
   if (navigator.share) {
+    const payload = file ? { text, files: [file] } : { text };
     navigator
-      .share({ text })
-      .then(() => trackEdge("share", { method: "system", ...trackParams }))
+      .share(payload)
+      .then(() => trackEdge("share", { method: file ? "system_image" : "system", ...trackParams }))
       .catch(() => {}); // المستخدم ألغى المشاركة — سلوك طبيعي، لا خطأ يُسجَّل
   } else {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
@@ -842,7 +985,13 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
   const shareBtn = card.querySelector(".share-btn");
   shareBtn.addEventListener("click", () => {
     const text = buildShareText(section, item);
-    shareText(text, { section, item_name: itemTitle(item) });
+    const subtitle = (item.tags || []).map((tag) => tagLabel(tag)).join(" · ");
+    shareText(text, { section, item_name: itemTitle(item) }, {
+      icon: item.icon,
+      title,
+      subtitle,
+      photo: item.image,
+    });
     playClickSound();
   });
 
@@ -1559,7 +1708,11 @@ function renderDayPlan() {
     shareBtn.addEventListener("click", () => {
       const lines = current.map((s) => `${s.icon} ${t("plan_" + s.key)}: ${itemTitle(s.item)}`);
       const text = `${t("plan_share_title")}\n\n${lines.join("\n")}\n\n${SITE_ORIGIN}${window.SITE_LANG === "en" ? "en/" : ""}plan.html`;
-      shareText(text, { section: "plan" });
+      shareText(text, { section: "plan" }, {
+        icon: "🗓️",
+        title: t("plan_title"),
+        subtitle: current.map((s) => itemTitle(s.item)).join(" · "),
+      });
       playClickSound();
     });
   }
