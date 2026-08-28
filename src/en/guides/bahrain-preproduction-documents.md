@@ -78,10 +78,6 @@ Bahrain is part of the **ATA Carnet** system (managed by the Bahrain Chamber of 
 
 Under Ministerial Decision No. 5 of 2026, all outdoor work under direct sunlight is banned from 12 PM to 4 PM daily, from June 15 to August 31. This is a legal restriction with fines and possible business license suspension for violations, not just a health guideline — any outdoor shoot scheduled in this window has to work around these hours.
 
-### Filming During Ramadan
-
-Public fasting laws prohibit eating, drinking, or smoking in public view during daylight hours. Catering and craft services must be fully concealed from public sight during this period.
-
 ### Restricted Zones
 
 Filming near royal palaces, military bases, or embassies requires special clearance from the Ministry of Interior, and unauthorized filming in these areas results in immediate intervention.
