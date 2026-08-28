@@ -3,7 +3,7 @@ title: "Pre-Production Documents for Filming in Bahrain — The Complete List"
 icon: "🎬"
 desc: Every document a director or producer needs before filming anything in Bahrain, ranked by priority, plus the local legal requirements (permits, filming people, drones, minors on set, and more).
 langSwitchUrl: "/guides/bahrain-preproduction-documents.html"
-aiDisclosure: "This article was written with AI assistance. Human input level: I directed an AI to research the topic, then used a second AI model (Gemini) to research it independently and cross-check the findings before relying on them. Since part of this article covers legal requirements that can change, please confirm with the relevant official bodies before relying fully on any information here to plan an actual production."
+aiDisclosure: "This article was written with AI assistance. Human input level: I directed an AI to research the topic, then used a second AI model (Gemini) to research it independently and cross-check the findings before relying on them."
 ---
 
 Any film project, no matter how small, needs a set of documents before the camera starts rolling — some are essential and non-negotiable, both legally and practically, while others only matter as the production grows in size. This guide ranks them by priority, and adds the legal requirements specific to filming in Bahrain.
