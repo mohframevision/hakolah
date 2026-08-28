@@ -41,14 +41,30 @@ function ensureSectionFolders() {
       `const { sectionDirData } = require(${JSON.stringify(helperPath)});\n` +
       `module.exports = sectionDirData(${JSON.stringify(slug)}, ${JSON.stringify(Boolean(data.hasDetailPages))}, ${JSON.stringify(data.title || slug)});\n`;
 
-    // يُعاد إنشاؤه في كل مرة عمداً (مُشتق بالكامل من sections/*.md، لا يُعدَّل يدوياً)
-    fs.writeFileSync(dirDataFile, content);
+    // نكتب فقط لو المحتوى فعلاً تغيّر. كانت تُكتب بلا شرط بكل بناء (مُشتق بالكامل
+    // من sections/*.md، لا يُعدَّل يدوياً) — لكن هذا الملف نفسه داخل src/ المراقَب
+    // بوضع npm start، فالكتابة غير المشروطة تلمس mtime حتى بمحتوى مطابق، ومراقب
+    // الملفات يعتبرها تغييراً ويعيد البناء، اللي يكتب الملف من جديد... حلقة إعادة
+    // بناء لا نهائية تحمّل المعالج وتُعيد تحميل المتصفح باستمرار بلا أي تعديل فعلي
+    if (!fs.existsSync(dirDataFile) || fs.readFileSync(dirDataFile, "utf8") !== content) {
+      fs.writeFileSync(dirDataFile, content);
+    }
   });
 }
 
 module.exports = function (eleventyConfig) {
   ensureSectionFolders();
   eleventyConfig.on("eleventy.before", ensureSectionFolders);
+  // ملفات البيانات المولَّدة نفسها (src/*/*.11tydata.js) ما لازم تُراقَب — حتى بعد
+  // إصلاح الكتابة غير المشروطة أعلاه، راقبنا السيرفر ولقينا Eleventy نفسه يبلّغ
+  // "File changed" لهذي الملفات بشكل متكرر بلا أي كتابة فعلية من كودنا (تأكدنا
+  // بتعطيل ensureSectionFolders كلياً من هوك eleventy.before والمشكلة استمرت) —
+  // على الأغلب خصوصية بمعالجة Eleventy لملفات بيانات JS (إبطال كاش require يلمس
+  // الملف). النتيجة: حلقة بناء لا نهائية تحمّل المعالج وتُعيد تحميل المتصفح
+  // باستمرار بوضع npm start. استبعادها من المراقبة صراحة يحل الجذر بغض النظر
+  // عن السبب الداخلي — هذي ملفات مُشتقة بالكامل من src/sections/*.md، لا تُعدَّل
+  // يدوياً، فمراقبتها للتغيير لا قيمة له أصلاً (زي عدم مراقبة _site/)
+  eleventyConfig.watchIgnores.add("src/*/*.11tydata.js");
 
   // ملفات ثابتة تُنسخ كما هي بدون معالجة
   eleventyConfig.addPassthroughCopy("src/css");

@@ -9,3 +9,8 @@ osm-places.csv
 
 # بيانات منتقي الأماكن — تُولّد محلياً (scripts/build-places-picker.js)
 places-picker/data.js
+
+# لقطات شاشة مؤقتة من درايفر فحص الموقع (.claude/skills/run-hakolah) — لو بقيت
+# غير مُتجاهَلة، Eleventy dev server يراقب المجلد كامل (يحترم .gitignore بافتراضه
+# استثناءات المراقبة) فكل لقطة جديدة تُطلق إعادة تحميل كاملة للصفحة أثناء القيادة
+.claude/skills/*/screenshots/

@@ -7,12 +7,15 @@ module.exports = [
     // cf-worker مشروع Cloudflare Worker مستقل تماماً بأدوات وتشغيل خاصة فيه (wrangler)
     // poster-editor/vendor مكتبة خارجية منسوخة كما هي — لا تُعدَّل ولا تُفحص
     // places-picker/data.js ملف بيانات مولّد آلياً (نحو 400 كيلوبايت)
+    // .claude/skills أدوات وكيل (agent tooling) — سكربتات Node.js عادية تشغّل خارج
+    // نظام البناء، مو جزءاً من كود الموقع المفحوص
     ignores: [
       "_site/**",
       "node_modules/**",
       "cf-worker/**",
       "poster-editor/vendor/**",
       "places-picker/data.js",
+      ".claude/skills/**",
     ],
   },
   {
