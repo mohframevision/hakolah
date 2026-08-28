@@ -3,6 +3,7 @@ title: "AI Camera Movements — A Ready-Made Camera Movement Prompt Library for 
 icon: "🎥"
 desc: A free library of 46 cinematic camera movements with ready-to-use prompts, helping AI video creators pick the right camera move and copy the prompt directly for platforms like Kling and Runway.
 langSwitchUrl: "/guides/aicameramovements.html"
+aiDisclosure: "This article was researched and written with AI assistance. The level of human review wasn't documented in detail at the time of writing."
 ---
 
 ## Why Do AI Video Creators Need a Tool Like This?

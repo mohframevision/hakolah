@@ -11,6 +11,9 @@ layout: base.njk
   <h1>{{ icon }} {{ title }}</h1>
   <button type="button" class="btn secondary article-share-btn">📤 {{ t.article_share }}</button>
 </section>
+{% if aiDisclosure %}
+<div class="banner-note ai-disclosure">🤖 {{ aiDisclosure }}</div>
+{% endif %}
 {% if video %}
 <div class="detail-video">
   <iframe

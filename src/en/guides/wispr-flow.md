@@ -3,6 +3,7 @@ title: "Wispr Flow — The AI Voice Dictation App"
 icon: "🎙️"
 desc: An introduction to Wispr Flow, which turns speech into clean, formatted text instantly, plus an explanation of its referral program.
 langSwitchUrl: "/guides/wispr-flow.html"
+aiDisclosure: "This article was written with AI assistance. Human input level: the site owner gave the AI screenshots of the app's page and its own referral link and asked for the article, and the AI researched the official app website itself to verify the features, pricing, and referral mechanics. The site owner reviewed the draft and caught two errors (the direction of the referral reward, and an inaccurate claim about the free dictation limit on Android), so the AI researched further and corrected the article based on that feedback."
 ---
 
 ## What Is Wispr Flow

@@ -8,6 +8,7 @@ categories:
   - تسويق وأعمال
 dateAdded: 2026-08-03
 langSwitchUrl: "/en/guides/anthimat-al-tasweeq-al-arbaa.html"
+aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي. لم يُوثَّق مستوى المراجعة البشرية بالتفصيل وقت الكتابة."
 ---
 
 ## خطأ شائع: البدء بالتكتيك قبل النظام

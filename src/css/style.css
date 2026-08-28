@@ -1708,6 +1708,12 @@ img {
   font-size: 0.88rem;
 }
 
+/* إفصاح "مقال بمساعدة الذكاء الاصطناعي" — نفس صندوق banner-note بس بمكانه
+   الثابت أعلى المقال (بعد العنوان مباشرة) بدل داخل المحتوى نفسه */
+.ai-disclosure {
+  margin: 0 0 20px;
+}
+
 @media (prefers-color-scheme: dark) {
   .banner-note {
     color: var(--color-accent);

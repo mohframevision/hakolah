@@ -3,6 +3,7 @@ title: "CineTemp App — A Light Meter and Sun Tracker in Your Pocket"
 icon: "🎬"
 desc: How the CineTemp app helps measure color temperature and exposure, and track the sun's path during location scouting and pre-production.
 langSwitchUrl: "/guides/cinetemp-app.html"
+aiDisclosure: "This article was researched and written with AI assistance. The level of human review wasn't documented in detail at the time of writing."
 ---
 
 ## Why Do Filmmakers Need an App Like This?

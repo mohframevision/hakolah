@@ -9,6 +9,7 @@ categories:
   - تصميم ومونتاج
 dateAdded: 2026-08-03
 langSwitchUrl: "/en/guides/jsfxr-8bit-sound-generator.html"
+aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي. لم يُوثَّق مستوى المراجعة البشرية بالتفصيل وقت الكتابة."
 ---
 
 ## طابع الـ 8-bit منتشر بقوة هذه الأيام
