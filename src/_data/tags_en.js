@@ -63,6 +63,7 @@ module.exports = {
   "كاميرات": "Cameras",
   "عدسات": "Lenses",
   "بصريات": "Optics",
+  "شحن ولوجستيات": "Shipping & Logistics",
   "مستلزمات السباكة": "Plumbing Supplies",
   "الكمبيوتر": "Computers",
   "تصحيح النصوص": "Proofreading",
