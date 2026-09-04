@@ -18,6 +18,13 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     <button type="button" class="filter-chip instrument-btn active" data-instrument="piano">🎹 بيانو</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="guitar">🎸 قيثارة</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="flute">🪈 فلوت</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="violin">🎻 كمان</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="trumpet">🎺 ترمبيت</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="sax">🎷 ساكسفون</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="banjo">🪕 بانجو</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="bell">🔔 جرس</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="accordion">🪗 أكورديون</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="musicbox">🎐 صندوق موسيقى</button>
   </div>
   <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">

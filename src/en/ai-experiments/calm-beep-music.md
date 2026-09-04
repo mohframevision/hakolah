@@ -13,6 +13,13 @@ A simple question: can a random algorithm — one that follows a few basic music
     <button type="button" class="filter-chip instrument-btn active" data-instrument="piano">🎹 Piano</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="guitar">🎸 Guitar</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="flute">🪈 Flute</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="violin">🎻 Violin</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="trumpet">🎺 Trumpet</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="sax">🎷 Saxophone</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="banjo">🪕 Banjo</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="bell">🔔 Bell</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="accordion">🪗 Accordion</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="musicbox">🎐 Music Box</button>
   </div>
   <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Play Music" data-stop-label="⏹ Stop">▶️ Play Music</button>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">

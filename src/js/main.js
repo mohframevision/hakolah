@@ -726,14 +726,18 @@ function initBeepMelodyExperiment() {
     wetGain.connect(audioCtx.destination);
   }
 
-  /* ثلاث "آلات" مصنوعة كلها تركيب توافقيات (Harmonics) — نفس أسلوب البيانو
-     السابق، بس بنِسَب وأشكال مغلاف مختلفة تحاكي طبيعة كل آلة:
-     - بيانو: هجوم فوري (قرعة مطرقة) وتلاشٍ أُسّي مباشر، بلا استقرار.
-     - قيثارة (Guitar): نتف أسرع من البيانو (وتر أرفع)، توافقيات فردية أقوى
-       (1، 3، 5) وهذا اللي يعطي طابع القيثارة المميز عن البيانو.
-     - فلوت: عكس الاثنين تماماً — هجوم بطيء تدريجي (نفخ، مو نقرة)، يستقر
-       بمستوى شبه ثابت أغلب مدة النغمة (sustain)، توافقيات ضعيفة جداً (نغمة
-       نقية قريبة من الجيب)، ومع اهتزاز خفيف بالتردد (Vibrato) — سمة النفخ. */
+  /* 10 "آلات" مصنوعة كلها تركيب توافقيات (Harmonics) — نفس الأسلوب، بس بنِسَب
+     وأشكال مغلاف مختلفة تحاكي طبيعة كل آلة (لا عيّنات صوت حقيقية، الكل تخليق):
+     - وترية مقروعة/منتوفة (بيانو، قيثارة، بانجو): هجوم فوري/شبه فوري وتلاشٍ
+       أُسّي مباشر بلا استقرار. الفرق بينها بسرعة الهجوم وميزان التوافقيات
+       (بانجو أسرع اهتزازاً وتوافقياته الفردية العليا أقوى = طنين "رنّان").
+     - نفخية (فلوت، ترمبيت، ساكسفون، أكورديون): هجوم أبطأ ويستقر بمستوى شبه
+       ثابت أغلب مدة النغمة (sustainRatio)، عكس المقروعة تماماً. الترمبيت
+       أسطع فلتراً وتوافقياته أقوى (نفخة نحاسية)، الفلوت والساكس تهتز بخفة
+       (Vibrato) وسمتها أنقى (تركيبة توافقيات أبسط).
+     - كمان: مزيج الاثنين — هجوم متوسط (قوس لا نقرة) واستقرار جزئي، مع اهتزاز.
+     - جرس وصندوق موسيقى: توافقيات بنِسَب غير صحيحة عمداً (Inharmonicity) —
+       هذا اللي يعطي الطنين المعدني المميز بدل نغمة موسيقية "نظيفة". */
   const INSTRUMENTS = {
     piano: {
       harmonics: [
@@ -773,6 +777,101 @@ function initBeepMelodyExperiment() {
       filterDarkMult: 3,
       vibrato: { rateHz: 5.5, depthRatio: 0.007 },
       ringScale: 1.15,
+    },
+    violin: {
+      harmonics: [
+        { mult: 1, weight: 1, type: "sawtooth" },
+        { mult: 2, weight: 0.3, type: "sine" },
+        { mult: 3, weight: 0.25, type: "sine" },
+        { mult: 4, weight: 0.15, type: "sine" },
+      ],
+      attack: 0.05,
+      sustainRatio: 0.65,
+      filterBrightMult: 7,
+      filterDarkMult: 2.5,
+      vibrato: { rateHz: 6, depthRatio: 0.008 },
+      ringScale: 1.05,
+    },
+    trumpet: {
+      harmonics: [
+        { mult: 1, weight: 1, type: "sawtooth" },
+        { mult: 2, weight: 0.6, type: "sawtooth" },
+        { mult: 3, weight: 0.45, type: "sine" },
+        { mult: 4, weight: 0.3, type: "sine" },
+        { mult: 5, weight: 0.18, type: "sine" },
+      ],
+      attack: 0.025,
+      sustainRatio: 0.6,
+      filterBrightMult: 14,
+      filterDarkMult: 5,
+      ringScale: 0.95,
+    },
+    sax: {
+      harmonics: [
+        { mult: 1, weight: 1, type: "triangle" },
+        { mult: 2, weight: 0.2, type: "sine" },
+        { mult: 3, weight: 0.4, type: "sine" },
+        { mult: 5, weight: 0.2, type: "sine" },
+      ],
+      attack: 0.04,
+      sustainRatio: 0.65,
+      filterBrightMult: 6,
+      filterDarkMult: 2.2,
+      vibrato: { rateHz: 5, depthRatio: 0.006 },
+      ringScale: 1.05,
+    },
+    banjo: {
+      harmonics: [
+        { mult: 1, weight: 1, type: "sawtooth" },
+        { mult: 2, weight: 0.4, type: "sine" },
+        { mult: 4, weight: 0.3, type: "sine" },
+        { mult: 6, weight: 0.15, type: "sine" },
+      ],
+      attack: 0.002,
+      sustainRatio: 0,
+      filterBrightMult: 13,
+      filterDarkMult: 3,
+      ringScale: 0.55,
+    },
+    bell: {
+      // نِسَب توافقيات غير صحيحة (2.4، 3.9، 5.4 بدل 2، 3، 4) عمداً — هذا اللي
+      // يعطي طنين الجرس المعدني المميز (Inharmonicity)، عكس بقية الآلات هنا
+      harmonics: [
+        { mult: 1, weight: 1, type: "sine" },
+        { mult: 2.4, weight: 0.5, type: "sine" },
+        { mult: 3.9, weight: 0.3, type: "sine" },
+        { mult: 5.4, weight: 0.15, type: "sine" },
+      ],
+      attack: 0.004,
+      sustainRatio: 0,
+      filterBrightMult: 10,
+      filterDarkMult: 3,
+      ringScale: 1.6,
+    },
+    accordion: {
+      harmonics: [
+        { mult: 1, weight: 1, type: "square" },
+        { mult: 2, weight: 0.35, type: "sine" },
+        { mult: 3, weight: 0.3, type: "sine" },
+        { mult: 4, weight: 0.2, type: "sine" },
+      ],
+      attack: 0.02,
+      sustainRatio: 0.85,
+      filterBrightMult: 6,
+      filterDarkMult: 4.5,
+      ringScale: 1,
+    },
+    musicbox: {
+      harmonics: [
+        { mult: 1, weight: 1, type: "sine" },
+        { mult: 2.02, weight: 0.35, type: "sine" },
+        { mult: 4.05, weight: 0.15, type: "sine" },
+      ],
+      attack: 0.003,
+      sustainRatio: 0,
+      filterBrightMult: 12,
+      filterDarkMult: 4,
+      ringScale: 0.85,
     },
   };
 
