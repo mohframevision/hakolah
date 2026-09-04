@@ -32,7 +32,11 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     <button type="button" class="filter-chip mood-btn" data-mood="happy">😊 سعيد</button>
     <button type="button" class="filter-chip mood-btn" data-mood="dreamy">🌙 حالم</button>
   </div>
-  <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>
+  <div class="beep-controls">
+    <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>
+    <button type="button" id="beepMelodyNext" class="btn secondary">⏭️ مقطوعة جديدة</button>
+  </div>
+  <button type="button" class="filter-chip keyboard-toggle" id="keyboardToggle" data-label-full="🎹 لوحة كاملة" data-label-mini="🎹 لوحة مبسطة">🎹 لوحة كاملة</button>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
     <div class="beep-white" data-pitch-class="0"></div>
     <div class="beep-white" data-pitch-class="2"></div>
@@ -46,6 +50,9 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     <div class="beep-black" data-pitch-class="6" style="left: 126px"></div>
     <div class="beep-black" data-pitch-class="8" style="left: 160px"></div>
     <div class="beep-black" data-pitch-class="10" style="left: 194px"></div>
+  </div>
+  <div class="beep-keys-scroll" id="beepKeysFullWrap" hidden>
+    <div class="beep-keys beep-keys-full" id="beepKeysFull" aria-hidden="true"></div>
   </div>
   <p class="beep-experiment-hint">🎧 يُفضَّل سماعات — وكل تشغيلة لحن مختلف تماماً، جرّب أكثر من مرة</p>
 </div>

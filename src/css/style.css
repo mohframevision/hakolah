@@ -2299,6 +2299,28 @@ img {
   justify-content: center;
 }
 
+.beep-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+/* اللوحة الكاملة أعرض من الجوال — تنزلق أفقياً داخل حاويتها بدل ما تكسر
+   عرض الصفحة كلها */
+.beep-keys-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* سمة hidden لحالها ما تكفي: ‎.beep-keys‎ تضبط display:flex بنفس تخصيصية
+   قاعدة المتصفح الافتراضية، وقواعد الصفحة تغلبها */
+.beep-keys-scroll[hidden],
+.beep-keys[hidden] {
+  display: none;
+}
+
 .beep-experiment-hint {
   font-size: 0.85rem;
   color: var(--color-text-muted);
@@ -2342,4 +2364,21 @@ img {
 
 .beep-black.active {
   background: var(--color-primary);
+}
+
+/* اللوحة الكاملة (٤ أوكتافات) — مفاتيح أصغر عشان تدخل بالشاشة. المقاسات هنا
+   لازم تطابق FULL_WHITE_W/FULL_BLACK_W بـ main.js لأن مواضع المفاتيح السوداء
+   تُحسب هناك */
+.beep-keys-full {
+  height: 80px;
+}
+
+.beep-keys-full .beep-white {
+  width: 22px;
+  height: 80px;
+}
+
+.beep-keys-full .beep-black {
+  width: 13px;
+  height: 50px;
 }

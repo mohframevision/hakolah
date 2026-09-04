@@ -678,17 +678,65 @@ function initBeepMelodyExperiment() {
   const btn = document.getElementById("beepMelodyPlay");
   if (!btn) return;
 
-  // بيانو أوكتافة وحدة حقيقي (7 بيضاء + 5 سوداء) — نضيء المفتاح حسب فئة
-  // النغمة الفعلية (Pitch Class 0-11 من الدو)، فلو التأليف طلع بمفتاح موسيقي
-  // فيه دييز (زي ري) يضيء مفتاح أسود فعلاً، مو بس البيضاء
+  /* لوحتان: المبسطة (أوكتافة وحدة، مكتوبة بالصفحة) تضيء حسب فئة النغمة
+     (Pitch Class 0-11)، والكاملة (٤ أوكتافات = ٤٨ مفتاح) تُبنى هنا بالجافاسكربت
+     وتضيء حسب النغمة المطلقة. نبنيها بالكود لا بالـ HTML عشان ما نكرر ٤٨ مفتاح
+     يدوياً بملفَّي المحتوى (عربي وإنجليزي). */
   const keyByPitchClass = {};
   document.querySelectorAll("#beepKeys [data-pitch-class]").forEach((el) => {
     keyByPitchClass[el.dataset.pitchClass] = el;
   });
 
+  const FULL_OCTAVES = 4; // النطاق اللي يعزف فيه المولّد فعلاً (دو٣ إلى سي٦)
+  const FULL_BASE_FREQ = 130.81; // دو٣ — نقطة الصفر للوحة الكاملة
+  // نفس مقاسات CSS (‎.beep-keys-full‎) — يلزم يتطابقون عشان تقع السوداء بمكانها
+  const FULL_WHITE_W = 22;
+  const FULL_BLACK_W = 13;
+  const WHITE_PITCH_CLASSES = [0, 2, 4, 5, 7, 9, 11];
+  const BLACK_PITCH_CLASSES = [1, 3, 6, 8, 10];
+  // المفتاح الأسود يقع على حدّ المفتاح الأبيض رقم كذا داخل الأوكتافة
+  const BLACK_AFTER_WHITE = [1, 2, 4, 5, 6];
+
+  const keyByAbsolute = {};
+  const fullBoard = document.getElementById("beepKeysFull");
+  if (fullBoard) {
+    for (let octave = 0; octave < FULL_OCTAVES; octave++) {
+      WHITE_PITCH_CLASSES.forEach((pitchClass) => {
+        const el = document.createElement("div");
+        el.className = "beep-white";
+        keyByAbsolute[octave * 12 + pitchClass] = el;
+        fullBoard.appendChild(el);
+      });
+    }
+    for (let octave = 0; octave < FULL_OCTAVES; octave++) {
+      BLACK_PITCH_CLASSES.forEach((pitchClass, i) => {
+        const el = document.createElement("div");
+        el.className = "beep-black";
+        el.style.left = `${(octave * 7 + BLACK_AFTER_WHITE[i]) * FULL_WHITE_W - FULL_BLACK_W / 2}px`;
+        keyByAbsolute[octave * 12 + pitchClass] = el;
+        fullBoard.appendChild(el);
+      });
+    }
+    fullBoard.style.width = `${FULL_OCTAVES * 7 * FULL_WHITE_W}px`;
+  }
+
   function pitchClassOf(freq) {
     const semitonesFromC4 = Math.round(12 * Math.log2(freq / 261.63));
     return ((semitonesFromC4 % 12) + 12) % 12;
+  }
+
+  function allKeys() {
+    return Object.values(keyByPitchClass).concat(Object.values(keyByAbsolute));
+  }
+
+  // نضيء المفتاح باللوحتين معاً (الظاهرة وحدة بس) — أبسط من تتبّع أي وحدة معروضة
+  function keysForFreq(freq) {
+    const found = [];
+    const byClass = keyByPitchClass[pitchClassOf(freq)];
+    if (byClass) found.push(byClass);
+    const byAbsolute = keyByAbsolute[Math.round(12 * Math.log2(freq / FULL_BASE_FREQ))];
+    if (byAbsolute) found.push(byAbsolute);
+    return found;
   }
 
   // سبع مفاتيح موسيقية ممكنة (C D E F G A B) — كل تشغيلة تختار وحدة عشوائياً.
@@ -999,6 +1047,21 @@ function initBeepMelodyExperiment() {
     });
   });
 
+  // مفتاح التبديل بين اللوحة المبسطة (أوكتافة) والكاملة (٤ أوكتافات)
+  const keyboardToggle = document.getElementById("keyboardToggle");
+  const miniBoard = document.getElementById("beepKeys");
+  const fullBoardWrap = document.getElementById("beepKeysFullWrap");
+  if (keyboardToggle && miniBoard && fullBoardWrap) {
+    keyboardToggle.addEventListener("click", () => {
+      const showFull = fullBoardWrap.hidden;
+      fullBoardWrap.hidden = !showFull;
+      miniBoard.hidden = showFull;
+      keyboardToggle.textContent = showFull ? keyboardToggle.dataset.labelMini : keyboardToggle.dataset.labelFull;
+      keyboardToggle.classList.toggle("active", showFull);
+      playClickSound();
+    });
+  }
+
 
   /* توليد جملة موسيقية (Motif) بقواعد حقيقية مستقاة من تحليل مجموعات ألحان
      واقعية (لا مشية عشوائية بحتة، اللي تحس منها "طفل يضغط أزرار"):
@@ -1068,13 +1131,13 @@ function initBeepMelodyExperiment() {
     return notes;
   }
 
-  function highlightKey(pitchClass, delayMs, durationMs) {
-    const key = keyByPitchClass[pitchClass];
-    if (!key) return;
-    activeTimeouts.push(
-      setTimeout(() => key.classList.add("active"), delayMs),
-      setTimeout(() => key.classList.remove("active"), delayMs + durationMs)
-    );
+  function highlightKey(freq, delayMs, durationMs) {
+    keysForFreq(freq).forEach((key) => {
+      activeTimeouts.push(
+        setTimeout(() => key.classList.add("active"), delayMs),
+        setTimeout(() => key.classList.remove("active"), delayMs + durationMs)
+      );
+    });
   }
 
   function clamp(n, min, max) {
@@ -1145,7 +1208,7 @@ function initBeepMelodyExperiment() {
       activeOscillators.push(osc);
     });
 
-    highlightKey(pitchClassOf(freq), (startTime - audioCtx.currentTime) * 1000, ringDuration * 1000);
+    highlightKey(freq, (startTime - audioCtx.currentTime) * 1000, ringDuration * 1000);
   }
 
   /* المؤلّف: قطعة من ٨ مازورات (فترة موسيقية كاملة Period) — مو نغمات متتابعة.
@@ -1246,25 +1309,40 @@ function initBeepMelodyExperiment() {
     );
   }
 
+  function stopPlayback() {
+    stopRequested = true;
+    playing = false;
+    btn.textContent = btn.dataset.playLabel;
+    activeTimeouts.forEach(clearTimeout);
+    activeOscillators.forEach((osc) => {
+      try {
+        osc.stop();
+      } catch {
+        // خلص وقت توقيته أصلاً — عادي
+      }
+    });
+    allKeys().forEach((key) => key.classList.remove("active"));
+  }
+
   btn.addEventListener("click", () => {
     if (playing) {
-      stopRequested = true;
-      playing = false;
-      btn.textContent = btn.dataset.playLabel;
-      activeTimeouts.forEach(clearTimeout);
-      activeOscillators.forEach((osc) => {
-        try {
-          osc.stop();
-        } catch {
-          // خلص وقت توقيته أصلاً — عادي
-        }
-      });
-      Object.values(keyByPitchClass).forEach((key) => key.classList.remove("active"));
+      stopPlayback();
       return;
     }
     playSequence();
     playClickSound();
   });
+
+  // "التالية": يقطع القطعة الحالية ويبدأ وحدة جديدة فوراً — بدل ما ينتظر
+  // المستخدم تخلص ثم يضغط تشغيل من جديد
+  const nextBtn = document.getElementById("beepMelodyNext");
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      stopPlayback();
+      playSequence();
+      playClickSound();
+    });
+  }
 }
 
 function buildShareUrl(section, item) {

@@ -27,7 +27,11 @@ A simple question: can a random algorithm actually compose something that feels 
     <button type="button" class="filter-chip mood-btn" data-mood="happy">😊 Happy</button>
     <button type="button" class="filter-chip mood-btn" data-mood="dreamy">🌙 Dreamy</button>
   </div>
-  <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Play Music" data-stop-label="⏹ Stop">▶️ Play Music</button>
+  <div class="beep-controls">
+    <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Play Music" data-stop-label="⏹ Stop">▶️ Play Music</button>
+    <button type="button" id="beepMelodyNext" class="btn secondary">⏭️ New Piece</button>
+  </div>
+  <button type="button" class="filter-chip keyboard-toggle" id="keyboardToggle" data-label-full="🎹 Full keyboard" data-label-mini="🎹 Simple keyboard">🎹 Full keyboard</button>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
     <div class="beep-white" data-pitch-class="0"></div>
     <div class="beep-white" data-pitch-class="2"></div>
@@ -41,6 +45,9 @@ A simple question: can a random algorithm actually compose something that feels 
     <div class="beep-black" data-pitch-class="6" style="left: 126px"></div>
     <div class="beep-black" data-pitch-class="8" style="left: 160px"></div>
     <div class="beep-black" data-pitch-class="10" style="left: 194px"></div>
+  </div>
+  <div class="beep-keys-scroll" id="beepKeysFullWrap" hidden>
+    <div class="beep-keys beep-keys-full" id="beepKeysFull" aria-hidden="true"></div>
   </div>
   <p class="beep-experiment-hint">🎧 Headphones recommended — and every play is a completely different tune, try it more than once</p>
 </div>
