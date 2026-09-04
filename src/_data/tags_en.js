@@ -131,5 +131,9 @@ module.exports = {
   "بطاريات": "Batteries",
   "فرامل": "Brakes",
   "معرض سيارات": "Car Showroom",
-  "تنجيد": "Upholstery"
+  "تنجيد": "Upholstery",
+
+  "موسيقى": "Music",
+  "نص": "Text",
+  "صورة": "Image"
 };

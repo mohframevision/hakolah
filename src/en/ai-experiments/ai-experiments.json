@@ -1,0 +1,9 @@
+{
+  "layout": "detail-item.njk",
+  "lang": "en",
+  "navActive": "ai-experiments",
+  "sectionSlug": "ai-experiments",
+  "sectionTitle": "AI Experiments",
+  "permalink": "en/ai-experiments/{{ page.fileSlug }}.html",
+  "eleventyExcludeFromCollections": true
+}

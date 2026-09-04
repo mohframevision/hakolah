@@ -667,6 +667,75 @@ function initArticleShare() {
   });
 }
 
+/* ===== تجربة "موسيقى بيب هادئة" (src/ai-experiments/calm-beep-music.md) =====
+   نغمات Web Audio عشوائية من سلّم خماسي (Pentatonic) — أي مزيج منها متناغم
+   بطبيعته، فلا حاجة لمنطق تأليف حقيقي. النص على الزر يجي من data-play-label/
+   data-stop-label بالـ HTML نفسه (لا مكتوب هنا) عشان يشتغل بالعربي والإنجليزي
+   بدون تكرار الدالة. */
+function initBeepMelodyExperiment() {
+  const btn = document.getElementById("beepMelodyPlay");
+  if (!btn) return;
+
+  const NOTES = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25]; // C D E G A C — سلّم خماسي
+  const NOTE_DURATION = 1.1;
+  const NOTE_GAP = 0.35;
+  const TOTAL_NOTES = 24;
+
+  let audioCtx = null;
+  let playing = false;
+  let stopRequested = false;
+
+  function playNote(freq, startTime) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    // تلاشٍ تدريجي بالدخول والخروج بدل قطع مفاجئ — هذا اللي يفرق بين "بيب مزعج" و"نغمة هادئة"
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.18, startTime + 0.15);
+    gain.gain.linearRampToValueAtTime(0, startTime + NOTE_DURATION);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + NOTE_DURATION + 0.05);
+  }
+
+  async function playSequence() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+
+    playing = true;
+    stopRequested = false;
+    btn.textContent = btn.dataset.stopLabel;
+
+    let t = audioCtx.currentTime + 0.1;
+    for (let i = 0; i < TOTAL_NOTES; i++) {
+      if (stopRequested) break;
+      playNote(NOTES[Math.floor(Math.random() * NOTES.length)], t);
+      t += NOTE_DURATION + NOTE_GAP;
+    }
+
+    setTimeout(
+      () => {
+        if (stopRequested) return;
+        playing = false;
+        btn.textContent = btn.dataset.playLabel;
+      },
+      (t - audioCtx.currentTime) * 1000
+    );
+  }
+
+  btn.addEventListener("click", () => {
+    if (playing) {
+      stopRequested = true;
+      playing = false;
+      btn.textContent = btn.dataset.playLabel;
+      return;
+    }
+    playSequence();
+    playClickSound();
+  });
+}
+
 function buildShareUrl(section, item) {
   const isEn = window.SITE_LANG === "en";
   const prefix = isEn ? "en/" : "";
@@ -1834,6 +1903,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchLikeCounts();
   initOutboundTracking();
   initArticleShare();
+  initBeepMelodyExperiment();
 
   // تسجيل الـ service worker بكل صفحة (لا بس الرئيسية) — شرط أساسي لصلاحية
   // "إضافة للشاشة الرئيسية" (PWA) بمعظم المتصفحات. التسجيل بدوال initPushNotifications
