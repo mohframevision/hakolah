@@ -679,9 +679,17 @@ function initBeepMelodyExperiment() {
   const keys = document.querySelectorAll("#beepKeys .beep-key");
   if (!btn) return;
 
-  // C D E G A بأوكتافين (261.63 وأضعافها) — سلّم خماسي، يطابق عدد المفاتيح بالصفحة
-  const NOTES = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99, 880.0];
+  // سبع مفاتيح موسيقية ممكنة (C D E F G A B) — كل تشغيلة تختار وحدة عشوائياً،
+  // فمو نفس اللحن دايماً بنفس الطبقة الصوتية. سلّم خماسي كبير (درجات ٠،٢،٤،٧،٩
+  // نصف-نغمية) بأوكتافين فوق كل مفتاح = ١٠ نغمات، يطابق عدد المفاتيح بالصفحة
+  const ROOT_NOTES = [261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 493.88];
+  const PENTATONIC_STEPS = [0, 2, 4, 7, 9];
 
+  function buildScale(root) {
+    return PENTATONIC_STEPS.concat(PENTATONIC_STEPS.map((s) => s + 12)).map((s) => root * 2 ** (s / 12));
+  }
+
+  let NOTES = buildScale(ROOT_NOTES[0]);
   let audioCtx = null;
   let playing = false;
   let stopRequested = false;
@@ -726,6 +734,7 @@ function initBeepMelodyExperiment() {
     stopRequested = false;
     activeOscillators = [];
     activeTimeouts = [];
+    NOTES = buildScale(ROOT_NOTES[Math.floor(Math.random() * ROOT_NOTES.length)]);
     btn.textContent = btn.dataset.stopLabel;
 
     let t = audioCtx.currentTime + 0.1;
