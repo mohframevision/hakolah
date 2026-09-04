@@ -740,6 +740,35 @@ function initBeepMelodyExperiment() {
     return min + Math.random() * (max - min);
   }
 
+  /* توليد جملة موسيقية (Motif) بقواعد حقيقية من أبحاث الإدراك الموسيقي —
+     مو مشية عشوائية بحتة (اللي تحس منها "طفل يضغط أزرار"):
+     - أغلب الحركة خطوة صغيرة (درجة أو درجتين)، القفزات (٣+) نادرة — نفس
+       نسبة الخطو/القفز بالمويقى التونالية الحقيقية (Von Hippel & Huron 2000).
+     - "Post-skip reversal": بعد أي قفزة، الحركة التالية تنعكس اتجاهها إلزامياً
+       — أكثر قاعدة مثبتة إحصائياً بأبحاث نارمور وهورون عن سبب إحساس اللحن
+       بالمنطقية بدل العشوائية.
+     - نهاية الجملة تميل نحو درجة الاستقرار (نقطة الانطلاق) بدل ما تبقى تايهة. */
+  function nextInterval(forceOppositeOf) {
+    const r = Math.random();
+    const size = r < 0.55 ? 1 : r < 0.85 ? 2 : r < 0.95 ? 3 : 4;
+    const direction = forceOppositeOf ? -Math.sign(forceOppositeOf) : Math.random() < 0.5 ? -1 : 1;
+    return size * direction;
+  }
+
+  function generateMotif(length) {
+    const motif = [0];
+    let lastInterval = 0;
+    for (let i = 1; i < length; i++) {
+      const interval = nextInterval(Math.abs(lastInterval) >= 3 ? lastInterval : 0);
+      motif.push(motif[i - 1] + interval);
+      lastInterval = interval;
+    }
+    // ميل خفيف بآخر الجملة نحو الاستقرار (درجة الانطلاق) — إحساس "هبوط وحل"
+    const last = motif[motif.length - 1];
+    if (Math.abs(last) > 2) motif[motif.length - 1] = last - Math.sign(last) * Math.round(Math.abs(last) / 2);
+    return motif;
+  }
+
   function highlightKey(pitchClass, delayMs, durationMs) {
     const key = keyByPitchClass[pitchClass];
     if (!key) return;
@@ -800,12 +829,12 @@ function initBeepMelodyExperiment() {
     highlightKey(pitchClassOf(freq), (startTime - audioCtx.currentTime) * 1000, ringDuration * 1000);
   }
 
-  /* تأليف بجمل موسيقية (Motifs) بدل نغمة عشوائية مستقلة كل مرة — كل جملة:
-     خطوات صغيرة حول درجة انطلاق (لحن متماسك لا قفزات عشوائية)، تُعزف مرتين
-     (مرة كما هي، ومرة "منقولة" Sequence لدرجة أو درجتين — أسلوب تأليف كلاسيكي
-     بسيط)، بتدرّج قوة صوت (كريشندو-ديكريشندو) داخل كل جملة، ودرجة الانطلاق
-     تنجرف تدريجياً لأعلى بالنص الأول من القطعة ولأسفل بالنص الثاني (قوس لحني
-     عام). النتيجة أقرب لمقطوعة قصيرة من مجرد نغمات عشوائية متتالية. */
+  /* تأليف بجمل موسيقية (Motifs) بقواعد حركة لحنية حقيقية (انظر generateMotif)
+     بدل نغمة عشوائية مستقلة كل مرة. كل جملة تُعزف مرتين (مرة كما هي، ومرة
+     "منقولة" Sequence لدرجة أو درجتين — أسلوب تأليف كلاسيكي بسيط)، بتدرّج قوة
+     صوت (كريشندو-ديكريشندو) داخل كل جملة، ودرجة الانطلاق تنجرف تدريجياً لأعلى
+     بالنص الأول من القطعة ولأسفل بالنص الثاني (قوس لحني عام). النتيجة أقرب
+     لمقطوعة قصيرة منطقية من مجرد نغمات عشوائية متتالية. */
   async function playSequence() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") await audioCtx.resume();
@@ -827,9 +856,7 @@ function initBeepMelodyExperiment() {
       const arcDirection = p < phraseCount / 2 ? 1 : -1;
       phraseStartDegree = clamp(phraseStartDegree + arcDirection * Math.round(randomBetween(0, 2)), 0, NOTES.length - 1);
 
-      const motifLength = Math.round(randomBetween(3, 5));
-      const motif = [0];
-      for (let i = 1; i < motifLength; i++) motif.push(motif[i - 1] + Math.round(randomBetween(-2, 2)));
+      const motif = generateMotif(Math.round(randomBetween(3, 5)));
 
       const transpositions = [0, Math.random() < 0.5 ? 2 : -2];
       for (const transpose of transpositions) {
