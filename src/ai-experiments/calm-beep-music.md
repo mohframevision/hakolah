@@ -65,8 +65,10 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     data-label-progression="تتابع الكوردات"
     data-label-form="الشكل"
     data-label-form-value="فترة من ٨ مازورات: سؤال (١-٤) + جواب (٥-٨)"
+    data-label-tempo="السرعة"
     data-label-cadence="الختام"
-    data-label-cadence-value="نصف ختام على V بالمازورة ٤، وختام تام V→I بالمازورة ٨"
+    data-label-cadence-authentic="ختام تام"
+    data-label-cadence-plagal="ختام كنسي"
     data-label-seed="البذرة"></div>
   <p class="beep-experiment-hint">🎧 يُفضَّل سماعات — وكل تشغيلة لحن مختلف تماماً، جرّب أكثر من مرة</p>
 </div>

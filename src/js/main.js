@@ -793,7 +793,19 @@ function initBeepMelodyExperiment() {
     [5, 3, 0, 4], // vi–IV–I–V
     [0, 3, 4, 0], // I–IV–V–I
     [0, 5, 1, 4], // I–vi–ii–V
+    [0, 3, 0, 4], // I–IV–I–V
+    [5, 4, 0, 3], // vi–V–I–IV
+    [3, 0, 4, 5], // IV–I–V–vi
+    [1, 4, 0, 5], // ii–V–I–vi
+    [5, 1, 3, 4], // vi–ii–IV–V
+    [0, 2, 3, 4], // I–iii–IV–V
+    [3, 4, 5, 0], // IV–V–vi–I
   ];
+
+  /* أنماط المرافقة — نفس النغمات بأشكال عزف مختلفة تماماً. هذا أقوى مصدر
+     تنويع بين مقطوعة وأخرى: نفس الوتر بنمط "مقطّع" يحس قطعة ثانية كلياً
+     مقارنة بنمط "ممدود". */
+  const ACCOMPANIMENT_STYLES = ["pad", "arpeggio", "bassOnly", "pulse"];
 
   let NOTES = buildScale(ROOT_NOTES[0], "major");
   let audioCtx = null;
@@ -989,7 +1001,7 @@ function initBeepMelodyExperiment() {
      كل قيم rhythmPool مجموعها ٤ ضربات = مازورة كاملة، فكل شي يقع على الشبكة. */
   const MOODS = {
     calm: {
-      bpm: 72,
+      bpmRange: [62, 84],
       scale: "major",
       formRepeats: 1,
       rhythmPool: [
@@ -1005,7 +1017,7 @@ function initBeepMelodyExperiment() {
       delayFeedback: 0.22,
     },
     energetic: {
-      bpm: 132,
+      bpmRange: [118, 148],
       scale: "major",
       formRepeats: 2,
       rhythmPool: [
@@ -1021,7 +1033,7 @@ function initBeepMelodyExperiment() {
       delayFeedback: 0.12,
     },
     happy: {
-      bpm: 108,
+      bpmRange: [96, 122],
       scale: "major",
       formRepeats: 1,
       rhythmPool: [
@@ -1037,7 +1049,7 @@ function initBeepMelodyExperiment() {
       delayFeedback: 0.2,
     },
     dreamy: {
-      bpm: 60,
+      bpmRange: [50, 68],
       scale: "minor",
       formRepeats: 1,
       rhythmPool: [
@@ -1170,11 +1182,15 @@ function initBeepMelodyExperiment() {
     const t = analysisBox.dataset;
     const roman = info.chords.slice(0, 4).map((degree) => ROMAN[info.mode][degree]);
     const modeLabel = info.mode === "major" ? t.labelMajor : t.labelMinor;
+    const approach = ROMAN[info.mode][info.cadenceApproach];
+    const tonic = ROMAN[info.mode][0];
+    const cadenceName = info.cadenceApproach === 4 ? t.labelCadenceAuthentic : t.labelCadencePlagal;
     analysisBox.innerHTML = `
       <div class="beep-analysis-row"><span>${t.labelKey}</span><strong>${keyName(info.rootIndex)} ${modeLabel}</strong></div>
+      <div class="beep-analysis-row"><span>${t.labelTempo}</span><strong dir="ltr">${info.bpm} BPM</strong></div>
       <div class="beep-analysis-row"><span>${t.labelProgression}</span><strong dir="ltr">${roman.join(" – ")}</strong></div>
       <div class="beep-analysis-row"><span>${t.labelForm}</span><strong>${t.labelFormValue}</strong></div>
-      <div class="beep-analysis-row"><span>${t.labelCadence}</span><strong>${t.labelCadenceValue}</strong></div>
+      <div class="beep-analysis-row"><span>${t.labelCadence}</span><strong>${cadenceName} <span dir="ltr">(${approach}→${tonic})</span></strong></div>
       <div class="beep-analysis-row"><span>${t.labelSeed}</span><strong dir="ltr">${info.seed}</strong></div>
     `;
   }
@@ -1359,33 +1375,43 @@ function initBeepMelodyExperiment() {
     NOTES = buildScale(ROOT_NOTES[rootIndex], mood.scale);
     btn.textContent = btn.dataset.stopLabel;
 
-    const beatDur = 60 / mood.bpm;
+    /* كل هذي كانت ثابتة بكل تشغيلة، فحتى مع اختلاف النغمات كانت المقطوعات
+       تحس متشابهة. الحين كلها تتغيّر مع البذرة: */
+    const bpm = Math.round(mood.bpmRange[0] + rand() * (mood.bpmRange[1] - mood.bpmRange[0]));
+    const beatDur = 60 / bpm;
     const progression = PROGRESSIONS[Math.floor(rand() * PROGRESSIONS.length)];
-    const rhythm = mood.rhythmPool[Math.floor(rand() * mood.rhythmPool.length)];
+    // إيقاعان مختلفان: واحد للجملة الأساسية وواحد لجملة الجواب — بدل إيقاع
+    // واحد يمشي على القطعة كلها. الجملة الأساسية تحتفظ بإيقاعها عند تكرارها
+    // (وإلا ضاع التكرار اللي يمسكه المستمع)
+    const themeRhythm = mood.rhythmPool[Math.floor(rand() * mood.rhythmPool.length)];
+    const answerRhythm = mood.rhythmPool[Math.floor(rand() * mood.rhythmPool.length)];
+    const accompaniment = ACCOMPANIMENT_STYLES[Math.floor(rand() * ACCOMPANIMENT_STYLES.length)];
+    // بداية اللحن من درجة مستقرة مختلفة كل مرة (أساس/ثالثة/خامسة) بدل الخامسة دايماً
+    const openingDegree = MELODY_LOW + [0, 2, 4][Math.floor(rand() * 3)];
+    // نوع الختام: تام (V→I) أو كنسي (IV→I) — الاثنان ختامان صحيحان بإحساس مختلف
+    const cadenceApproach = rand() < 0.7 ? 4 : 3;
 
-    /* كوردات الفترة: التتابع يتكرر مرتين، مع ثلاث مواضع مثبّتة عشان يطلع
-       الشكل مطابقاً للفترة الكلاسيكية (Period) بالضبط:
+    /* كوردات الفترة: التتابع يتكرر مرتين، مع مواضع الختام مثبّتة عشان يطلع
+       الشكل مطابقاً للفترة الكلاسيكية (Period):
        - مازورة ٤ = V  → نصف ختام (Half Cadence): يوقف على سؤال معلّق.
-       - مازورة ٧ = V ومازورة ٨ = I → ختام تام (Perfect Authentic Cadence).
-       بدون تثبيت الأخيرة كان اللحن يهبط على التونيك بينما الوتر تحته IV أو vi،
-       فما يحس المستمع إنها نهاية أصلاً. */
+       - مازورة ٧-٨ = ختام حقيقي ينتهي على I. */
     const chords = [0, 1, 2, 3, 0, 1, 2, 3].map((i) => progression[i]);
     chords[3] = 4;
-    chords[6] = 4;
+    chords[6] = cadenceApproach;
     chords[7] = 0;
 
     // بناء الفترة: مازورتان تتكرران (M1)، ثم جواب معلّق، ثم M1 مرة ثانية، ثم حل نهائي
     const m1 = [
-      composeBar(chords[0], rhythm, MELODY_LOW + 4),
-      composeBar(chords[1], rhythm, MELODY_LOW + 2),
+      composeBar(chords[0], themeRhythm, openingDegree),
+      composeBar(chords[1], themeRhythm, MELODY_LOW + 2),
     ];
 
     const answerHalf = [
-      composeBar(chords[2], rhythm, m1[1][m1[1].length - 1].degree),
+      composeBar(chords[2], answerRhythm, m1[1][m1[1].length - 1].degree),
       composeBar(chords[3], mood.cadenceRhythm, MELODY_LOW + 2, MELODY_LOW + 4), // ينتهي على الخامسة = سؤال
     ];
     const answerFull = [
-      composeBar(chords[6], rhythm, m1[1][m1[1].length - 1].degree),
+      composeBar(chords[6], answerRhythm, m1[1][m1[1].length - 1].degree),
       composeBar(chords[7], mood.cadenceRhythm, MELODY_LOW + 1, MELODY_LOW), // تونيك فوق وتر التونيك = جواب
     ];
     const period = [...m1, ...answerHalf, ...m1, ...answerFull];
@@ -1398,15 +1424,35 @@ function initBeepMelodyExperiment() {
         const barStart = t;
         const chordRoot = chords[bar];
 
-        // الباص: أصل الوتر بأوكتاف تحت اللحن، يمسك المازورة كلها
-        playNote(BASS_LOW + chordRoot, barStart, beatDur * 3.6, mood.gainBase * 0.55);
-        if (mood.bpm >= 100) playNote(BASS_LOW + chordRoot, barStart + beatDur * 2, beatDur * 1.8, mood.gainBase * 0.4);
-
         // المرافقة: صوتان ينتقلان لأقرب نغمة بالوتر الجديد (بلا حركة متوازية)
         voices = voiceChord(chordRoot, voices);
-        voices.forEach((degree) => {
-          playNote(BASS_LOW + degree, barStart, beatDur * 3.2, mood.gainBase * 0.3);
-        });
+        const bassGain = mood.gainBase * 0.55;
+        const padGain = mood.gainBase * 0.3;
+
+        if (accompaniment === "arpeggio") {
+          // وتر مكسور: الباص ثم الصوتان ثم الباص — يعطي حركة مستمرة تحت اللحن
+          const arp = [BASS_LOW + chordRoot, BASS_LOW + voices[0], BASS_LOW + voices[1], BASS_LOW + voices[0]];
+          arp.forEach((degree, i) => {
+            playNote(degree, barStart + i * beatDur, beatDur * 0.95, i === 0 ? bassGain : padGain);
+          });
+        } else if (accompaniment === "pulse") {
+          // نبض: الوتر كامل على كل ضربة قوية — إحساس إيقاعي أوضح
+          [0, 2].forEach((beatOffset) => {
+            playNote(BASS_LOW + chordRoot, barStart + beatOffset * beatDur, beatDur * 1.6, bassGain);
+            voices.forEach((degree) => {
+              playNote(BASS_LOW + degree, barStart + beatOffset * beatDur, beatDur * 1.4, padGain);
+            });
+          });
+        } else if (accompaniment === "bassOnly") {
+          // باص وحده — يفتح مساحة للحن، مناسب للمقطوعات الهادئة
+          playNote(BASS_LOW + chordRoot, barStart, beatDur * 3.8, bassGain * 1.15);
+        } else {
+          // ممدود: الوتر كله يمسك المازورة (النمط الافتراضي)
+          playNote(BASS_LOW + chordRoot, barStart, beatDur * 3.6, bassGain);
+          voices.forEach((degree) => {
+            playNote(BASS_LOW + degree, barStart, beatDur * 3.2, padGain);
+          });
+        }
 
         // اللحن فوقهم
         let beat = 0;
@@ -1422,7 +1468,7 @@ function initBeepMelodyExperiment() {
       }
     }
 
-    renderAnalysis({ rootIndex, mode: mood.scale, chords, seed });
+    renderAnalysis({ rootIndex, mode: mood.scale, chords, seed, bpm, cadenceApproach });
 
     activeTimeouts.push(
       setTimeout(

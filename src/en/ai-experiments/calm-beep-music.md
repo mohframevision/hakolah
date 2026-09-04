@@ -60,8 +60,10 @@ A simple question: can a random algorithm actually compose something that feels 
     data-label-progression="Chord progression"
     data-label-form="Form"
     data-label-form-value="8-bar period: antecedent (1–4) + consequent (5–8)"
+    data-label-tempo="Tempo"
     data-label-cadence="Cadence"
-    data-label-cadence-value="Half cadence on V at bar 4, perfect authentic cadence V→I at bar 8"
+    data-label-cadence-authentic="Authentic cadence"
+    data-label-cadence-plagal="Plagal cadence"
     data-label-seed="Seed"></div>
   <p class="beep-experiment-hint">🎧 Headphones recommended — and every play is a completely different tune, try it more than once</p>
 </div>
