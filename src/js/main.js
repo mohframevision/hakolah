@@ -726,15 +726,65 @@ function initBeepMelodyExperiment() {
     wetGain.connect(audioCtx.destination);
   }
 
-  // تقريب صوت بيانو حقيقي: تركيب توافقيات (Harmonics) بدل موجة واحدة — هذا
-  // اللي يعطي "جسم" الصوت. النسب هنا تشبه طيف وتر بيانو مقروع تقريباً
-  // (توافقية أساسية قوية، والباقي أخفت تدريجياً)
-  const HARMONICS = [
-    { mult: 1, weight: 1, type: "triangle" },
-    { mult: 2, weight: 0.5, type: "sine" },
-    { mult: 3, weight: 0.22, type: "sine" },
-    { mult: 4, weight: 0.12, type: "sine" },
-  ];
+  /* ثلاث "آلات" مصنوعة كلها تركيب توافقيات (Harmonics) — نفس أسلوب البيانو
+     السابق، بس بنِسَب وأشكال مغلاف مختلفة تحاكي طبيعة كل آلة:
+     - بيانو: هجوم فوري (قرعة مطرقة) وتلاشٍ أُسّي مباشر، بلا استقرار.
+     - قيثارة (Guitar): نتف أسرع من البيانو (وتر أرفع)، توافقيات فردية أقوى
+       (1، 3، 5) وهذا اللي يعطي طابع القيثارة المميز عن البيانو.
+     - فلوت: عكس الاثنين تماماً — هجوم بطيء تدريجي (نفخ، مو نقرة)، يستقر
+       بمستوى شبه ثابت أغلب مدة النغمة (sustain)، توافقيات ضعيفة جداً (نغمة
+       نقية قريبة من الجيب)، ومع اهتزاز خفيف بالتردد (Vibrato) — سمة النفخ. */
+  const INSTRUMENTS = {
+    piano: {
+      harmonics: [
+        { mult: 1, weight: 1, type: "triangle" },
+        { mult: 2, weight: 0.5, type: "sine" },
+        { mult: 3, weight: 0.22, type: "sine" },
+        { mult: 4, weight: 0.12, type: "sine" },
+      ],
+      attack: 0.008,
+      sustainRatio: 0,
+      filterBrightMult: 9,
+      filterDarkMult: 2,
+      ringScale: 1,
+    },
+    guitar: {
+      harmonics: [
+        { mult: 1, weight: 1, type: "sawtooth" },
+        { mult: 2, weight: 0.25, type: "sine" },
+        { mult: 3, weight: 0.35, type: "sine" },
+        { mult: 5, weight: 0.15, type: "sine" },
+      ],
+      attack: 0.003,
+      sustainRatio: 0,
+      filterBrightMult: 11,
+      filterDarkMult: 2.5,
+      ringScale: 0.75,
+    },
+    flute: {
+      harmonics: [
+        { mult: 1, weight: 1, type: "sine" },
+        { mult: 2, weight: 0.15, type: "sine" },
+        { mult: 3, weight: 0.05, type: "sine" },
+      ],
+      attack: 0.09,
+      sustainRatio: 0.7,
+      filterBrightMult: 4,
+      filterDarkMult: 3,
+      vibrato: { rateHz: 5.5, depthRatio: 0.007 },
+      ringScale: 1.15,
+    },
+  };
+
+  let currentInstrument = "piano";
+  const instrumentButtons = document.querySelectorAll("#instrumentPicker .instrument-btn");
+  instrumentButtons.forEach((el) => {
+    el.addEventListener("click", () => {
+      currentInstrument = el.dataset.instrument;
+      instrumentButtons.forEach((b) => b.classList.toggle("active", b === el));
+      playClickSound();
+    });
+  });
 
   function randomBetween(min, max) {
     return min + Math.random() * (max - min);
@@ -788,40 +838,60 @@ function initBeepMelodyExperiment() {
 
   function playNote(noteIndex, startTime, duration, peakGain) {
     const freq = NOTES[noteIndex];
+    const instrument = INSTRUMENTS[currentInstrument];
 
-    // بيانو حقيقي: يسار اللوحة (نغمات واطية) أوتاره أطول وأثخن فيرن أطول
-    // وأغنى، يمينها (نغمات حادة) أوتاره قصيرة رفيعة فتخفت أسرع وأنحف. نستخدم
-    // موقع النغمة داخل السلّم الحالي (0 = أوطى، الأعلى = أحدّ) كمقياس نسبي —
-    // يشتغل بأي مفتاح موسيقي عشوائي بلا ما يحتاج نغمة مرجعية ثابتة
+    // آلة وترية (يسار اللوحة = نغمات واطية بأوتار أطول وأثخن فترن أطول
+    // وأغنى، يمينها = نغمات حادة تخفت أسرع وأنحف) — يشتغل بأي مفتاح موسيقي
+    // عشوائي بلا ما يحتاج نغمة مرجعية ثابتة، ومضروب بمعامل الآلة نفسها
+    // (قيثارة تخفت أسرع من البيانو، فلوت يرن أطول لأنه آلة نفخ مستمرة)
     const registerFactor = 1.5 - (noteIndex / (NOTES.length - 1)) * 0.9; // ١٫٥ (واطي) → ٠٫٦ (حاد)
-    const ringDuration = duration * registerFactor;
+    const ringDuration = duration * registerFactor * instrument.ringScale;
 
-    // مغلاف بيانو حقيقي: هجوم شبه فوري (مطرقة تدق الوتر) ثم تلاشٍ أُسّي —
-    // مو تصاعد تدريجي كالوتريات. exponentialRamp ما يقبل صفر كهدف، فنطلع لقيمة
-    // صغيرة جداً بدل الصفر المطلق
     const envelope = audioCtx.createGain();
     envelope.gain.setValueAtTime(0.0001, startTime);
-    envelope.gain.exponentialRampToValueAtTime(Math.max(peakGain, 0.0001), startTime + 0.008);
+    envelope.gain.exponentialRampToValueAtTime(Math.max(peakGain, 0.0001), startTime + instrument.attack);
+    if (instrument.sustainRatio > 0) {
+      // آلة نفخ: تبقى قريبة من الذروة معظم مدة النغمة (نفَس مستمر) قبل تلاشٍ
+      // أخير قصير — عكس القرع الفوري بالآلات الوترية
+      const sustainEnd = Math.max(startTime + ringDuration * instrument.sustainRatio, startTime + instrument.attack + 0.01);
+      envelope.gain.setValueAtTime(Math.max(peakGain, 0.0001), sustainEnd);
+    }
     envelope.gain.exponentialRampToValueAtTime(0.0006, startTime + ringDuration);
 
-    // فلتر يبدأ ساطعاً (لحظة القرع) ويعتم تدريجياً — نفس سلوك وتر البيانو
-    // الحقيقي اللي يفقد حدّته الطيفية كل ما تلاشى
+    // فلتر يبدأ ساطعاً (لحظة القرع/النفخ) ويعتم تدريجياً — نفس سلوك أي آلة
+    // حقيقية تفقد حدّتها الطيفية كل ما تلاشت
     const filter = audioCtx.createBiquadFilter();
     filter.type = "lowpass";
     filter.Q.value = 0.6;
-    filter.frequency.setValueAtTime(clamp(freq * 9, 800, 7000), startTime);
-    filter.frequency.exponentialRampToValueAtTime(clamp(freq * 2, 400, 2000), startTime + ringDuration);
+    filter.frequency.setValueAtTime(clamp(freq * instrument.filterBrightMult, 800, 7000), startTime);
+    filter.frequency.exponentialRampToValueAtTime(clamp(freq * instrument.filterDarkMult, 400, 2000), startTime + ringDuration);
 
     envelope.connect(filter);
     filter.connect(audioCtx.destination);
     filter.connect(delayNode);
 
+    // نغمة اهتزاز خفيفة (Vibrato) — سمة آلات النفخ (الفلوت هنا)، ما تُستخدم
+    // إلا لو الآلة الحالية معرّفة لها vibrato. vibratoGain يحوّل تذبذب اللفو
+    // (بين ١- و١) لانحراف تردد صغير بالهرتز قبل ما نوصله لكل توافقية
+    let vibratoGain = null;
+    if (instrument.vibrato) {
+      const vibratoLfo = audioCtx.createOscillator();
+      vibratoLfo.frequency.value = instrument.vibrato.rateHz;
+      vibratoGain = audioCtx.createGain();
+      vibratoGain.gain.value = freq * instrument.vibrato.depthRatio;
+      vibratoLfo.connect(vibratoGain);
+      vibratoLfo.start(startTime);
+      vibratoLfo.stop(startTime + ringDuration + 0.05);
+      activeOscillators.push(vibratoLfo);
+    }
+
     // النغمات الواطية توافقياتها العليا أقوى شوي (صوت أغنى)، الحادة أخفت (أنحف)
     const harmonicRichness = clamp(registerFactor, 0.75, 1.3);
-    HARMONICS.forEach(({ mult, weight, type }) => {
+    instrument.harmonics.forEach(({ mult, weight, type }) => {
       const osc = audioCtx.createOscillator();
       osc.type = type;
       osc.frequency.value = freq * mult;
+      if (vibratoGain) vibratoGain.connect(osc.frequency);
       const harmonicGain = audioCtx.createGain();
       harmonicGain.gain.value = mult === 1 ? weight : weight * harmonicRichness;
       osc.connect(harmonicGain).connect(envelope);

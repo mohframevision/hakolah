@@ -2292,6 +2292,13 @@ img {
   padding: 14px 28px;
 }
 
+.instrument-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .beep-experiment-hint {
   font-size: 0.85rem;
   color: var(--color-text-muted);

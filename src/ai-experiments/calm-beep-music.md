@@ -14,6 +14,11 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
 سؤال بسيط: تقدر خوارزمية عشوائية — ملتزمة بس بقواعد موسيقية بسيطة (سلّم، جمل تتكرر بتنويع، تدرّج بقوة الصوت) — تؤلّف مقطوعة تحس فيها كموسيقى حقيقية؟ المولّد تحت يجرّب الإجابة مباشرة بمتصفحك، ويختلف كل مرة تشغّله. دوس شغّل واحكم بنفسك.
 
 <div class="beep-experiment">
+  <div class="instrument-picker" id="instrumentPicker">
+    <button type="button" class="filter-chip instrument-btn active" data-instrument="piano">🎹 بيانو</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="guitar">🎸 قيثارة</button>
+    <button type="button" class="filter-chip instrument-btn" data-instrument="flute">🪈 فلوت</button>
+  </div>
   <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
     <div class="beep-white" data-pitch-class="0"></div>
