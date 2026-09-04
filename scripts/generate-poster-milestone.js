@@ -1,6 +1,8 @@
-// أداة لمرة واحدة لتوليد بوستر ترويجي (1080x1080) للموقع لأجل انستقرام.
-// مو جزء من بناء الموقع — تعتمد على opentype.js وqrcode (مش من ضمن devDependencies):
-//   npm install opentype.js qrcode --no-save && node scripts/generate-poster.js
+// أداة لمرة واحدة لتوليد بوستر "وصلنا لـ X عنصر" (1080x1080) لأجل انستقرام —
+// نفس ستايل generate-poster.js (خلفية زرقاء متدرجة، شعار هكوله، QR) بس
+// بدل حبوب الأقسام، رقم إحصائية كبير + دعوة لزيارة الموقع.
+// تعتمد على opentype.js وqrcode (مش من ضمن devDependencies):
+//   npm install opentype.js qrcode --no-save && node scripts/generate-poster-milestone.js
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
@@ -9,17 +11,9 @@ const { fitGlyphInRect } = require("./heh-glyph.js");
 
 const SIZE = 1080;
 const SITE_URL = "https://mohframevision.github.io/hakolah/";
+const COUNT = "+160";
 const outDir =
   "C:\\Users\\Computia.ME\\AppData\\Local\\Temp\\claude\\D-----------\\79ddc704-5480-4e31-b983-b66d3efa52e6\\scratchpad";
-
-function pill(x, y, w, h, icon, label) {
-  const cx = x + w / 2;
-  return `
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.45)" stroke-width="2" />
-    <text x="${cx}" y="${y + h * 0.44}" font-size="46" text-anchor="middle" fill="#ffffff">${icon}</text>
-    <text x="${cx}" y="${y + h * 0.8}" font-family="Tahoma, Arial, sans-serif" font-size="27" font-weight="700" text-anchor="middle" fill="#ffffff">${label}</text>
-  `;
-}
 
 async function main() {
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
@@ -31,15 +25,7 @@ async function main() {
   });
   const qrBase64 = qrBuffer.toString("base64");
 
-  const logoGlyph = fitGlyphInRect(484, 118, 112, 112);
-
-  const pills = [
-    pill(66, 480, 300, 140, "🍽️", "مطاعم"),
-    pill(390, 480, 300, 140, "🛍️", "متاجر"),
-    pill(714, 480, 300, 140, "📍", "أماكن"),
-    pill(228, 644, 300, 140, "🔗", "روابط وأدوات"),
-    pill(552, 644, 300, 140, "🧭", "مقالات وأدلة"),
-  ].join("\n");
+  const logoGlyph = fitGlyphInRect(484, 92, 112, 112);
 
   const svg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
@@ -56,14 +42,16 @@ async function main() {
     <rect x="30" y="30" width="230" height="52" rx="26" fill="#f59e0b" />
     <text x="145" y="64" font-family="Tahoma, Arial, sans-serif" font-size="24" font-weight="800" text-anchor="middle" fill="#ffffff">🎉 مجاني بالكامل</text>
 
-    <rect x="456" y="90" width="168" height="168" rx="40" fill="#ffffff" />
-    <circle cx="586" cy="118" r="14" fill="#f59e0b" />
+    <rect x="456" y="64" width="168" height="168" rx="40" fill="#ffffff" />
+    <circle cx="586" cy="92" r="14" fill="#f59e0b" />
     <g fill="#2563eb">${logoGlyph}</g>
 
-    <text x="540" y="368" font-family="Tahoma, Arial, sans-serif" font-size="100" font-weight="800" text-anchor="middle" fill="#ffffff">هكوله</text>
-    <text x="540" y="423" font-family="Tahoma, Arial, sans-serif" font-size="36" font-weight="600" text-anchor="middle" fill="#dbeafe">كل شيء مفيد… في مكان واحد</text>
+    <text x="540" y="342" font-family="Tahoma, Arial, sans-serif" font-size="90" font-weight="800" text-anchor="middle" fill="#ffffff">هكوله</text>
 
-    ${pills}
+    <rect x="90" y="410" width="900" height="330" rx="36" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.45)" stroke-width="2" />
+    <text x="540" y="560" font-family="Tahoma, Arial, sans-serif" font-size="190" font-weight="900" text-anchor="middle" fill="#f59e0b">${COUNT}</text>
+    <text x="540" y="630" font-family="Tahoma, Arial, sans-serif" font-size="42" font-weight="700" text-anchor="middle" fill="#ffffff">محل ومطعم ومكان حقيقي بالبحرين</text>
+    <text x="540" y="690" font-family="Tahoma, Arial, sans-serif" font-size="34" font-weight="600" text-anchor="middle" fill="#dbeafe">كل شيء مفيد… في مكان واحد</text>
 
     <text x="540" y="840" font-family="Tahoma, Arial, sans-serif" font-size="32" font-weight="700" text-anchor="middle" fill="#ffffff">امسح وزُر الموقع مجاناً</text>
 
@@ -77,9 +65,9 @@ async function main() {
   await sharp(Buffer.from(svg), { density: 200 })
     .resize(SIZE, SIZE)
     .png()
-    .toFile(path.join(outDir, "poster-instagram.png"));
+    .toFile(path.join(outDir, "poster-milestone-160.png"));
 
-  console.log("wrote poster-instagram.png");
+  console.log("wrote poster-milestone-160.png");
 }
 
 main().catch((err) => {

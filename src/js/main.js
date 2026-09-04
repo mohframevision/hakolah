@@ -386,15 +386,19 @@ function initDailyPickReminder() {
 
 /* ===== قائمة الجوال ===== */
 function initNavToggle() {
-  const toggle = document.querySelector(".nav-toggle");
+  const toggles = document.querySelectorAll(".nav-toggle");
   const nav = document.querySelector(".main-nav");
-  if (!toggle || !nav) return;
-  toggle.addEventListener("click", () => {
-    const isOpen = nav.classList.toggle("open");
-    toggle.classList.toggle("open", isOpen);
-    toggle.setAttribute("aria-expanded", String(isOpen));
-    toggle.setAttribute("aria-label", isOpen ? t("nav_toggle_close") : t("nav_toggle_open"));
-    playClickSound();
+  if (!toggles.length || !nav) return;
+  toggles.forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+      const isOpen = nav.classList.toggle("open");
+      toggles.forEach((btn) => {
+        btn.classList.toggle("open", isOpen);
+        btn.setAttribute("aria-expanded", String(isOpen));
+        btn.setAttribute("aria-label", isOpen ? t("nav_toggle_close") : t("nav_toggle_open"));
+      });
+      playClickSound();
+    });
   });
 }
 
@@ -1830,6 +1834,11 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchLikeCounts();
   initOutboundTracking();
   initArticleShare();
+
+  // تسجيل الـ service worker بكل صفحة (لا بس الرئيسية) — شرط أساسي لصلاحية
+  // "إضافة للشاشة الرئيسية" (PWA) بمعظم المتصفحات. التسجيل بدوال initPushNotifications
+  // يبقى منفصل وآمن (register() على نفس الرابط يرجّع نفس التسجيل، ما يكرره)
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/hakolah/sw.js");
 
   // ما يخص كل صفحة على حدة — كانت سكربتات مضمّنة بـ base.njk، صارت تُقرأ من
   // إعدادات الصفحة (#site-config) عشان تشتغل سياسة CSP بدون unsafe-inline

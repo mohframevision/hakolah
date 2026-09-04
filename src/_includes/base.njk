@@ -189,6 +189,23 @@
     </div>
   </footer>
 
+  {# شريط سفلي بستايل التطبيقات — يظهر بنفس نقطة الكسر اللي يتحول فيها الهيدر
+     لقائمة همبرغر (1200px)، ويكرر نفس وجهات أيقونات الهيدر (لا صفحات جديدة) #}
+  <nav class="bottom-nav" aria-label="{{ t.nav_home }}">
+    <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}"{% if navActive == "home" %} class="active"{% endif %}>
+      <span class="bottom-nav-icon">🏠</span><span>{{ t.nav_home }}</span>
+    </a>
+    <a href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}"{% if navActive == "favorites" %} class="active"{% endif %}>
+      <span class="bottom-nav-icon">❤️</span><span>{{ t.nav_favorites }}</span>
+    </a>
+    <a href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}"{% if navActive == "picker" %} class="active"{% endif %}>
+      <span class="bottom-nav-icon">🎲</span><span>{{ t.nav_picker | replace("🎲 ", "") }}</span>
+    </a>
+    <button type="button" class="nav-toggle bottom-nav-menu" aria-label="{{ t.nav_toggle_open }}" aria-expanded="false" aria-controls="main-nav">
+      <span class="bottom-nav-icon">☰</span><span>{{ t.nav_toggle_open }}</span>
+    </button>
+  </nav>
+
   <div class="cookie-banner" id="cookie-banner" role="region" aria-label="{{ t.cookie_accept }}">
     <p>{{ t.cookie_text_html | replace("{privacyUrl}", (('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url)) | safe }}</p>
     <button type="button" class="btn cookie-accept" id="cookie-accept">{{ t.cookie_accept }}</button>

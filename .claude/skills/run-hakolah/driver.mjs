@@ -79,6 +79,13 @@ const COMMANDS = {
     console.log("eval ->", JSON.stringify(result));
   },
 
+  async viewport(size) {
+    if (!page) return console.log("ERROR: launch first");
+    const [w, h] = size.split("x").map(Number);
+    await page.setViewportSize({ width: w, height: h || 800 });
+    console.log("viewport ->", w, "x", h || 800);
+  },
+
   async screenshot(name) {
     if (!page) return console.log("ERROR: launch first");
     const file = path.join(SHOT_DIR, (name || `ss-${Date.now()}`) + ".png");
