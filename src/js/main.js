@@ -703,7 +703,7 @@ function initBeepMelodyExperiment() {
 
   let NOTES = buildScale(ROOT_NOTES[0]);
   let audioCtx = null;
-  let masterFilter = null; // لوباس مشترك لكل النغمات — يلطّف حدّة المثلث (Triangle)
+  let delayNode = null; // مسار صدى مشترك (Delay + Feedback) — كل نغمة ترسل له
   let playing = false;
   let stopRequested = false;
   let activeOscillators = [];
@@ -712,25 +712,29 @@ function initBeepMelodyExperiment() {
   // يُنشأ مرة وحدة لكل AudioContext — شبكة الصدى تحتاج تبقى نفسها طول التشغيلة
   // عشان الصدى يتراكم طبيعياً بين النغمات، لا يتصفّر كل نغمة
   function ensureAudioGraph() {
-    if (masterFilter) return;
-    masterFilter = audioCtx.createBiquadFilter();
-    masterFilter.type = "lowpass";
-    masterFilter.frequency.value = 2200;
-    masterFilter.connect(audioCtx.destination);
-
-    const delayNode = audioCtx.createDelay();
-    delayNode.delayTime.value = 0.26;
+    if (delayNode) return;
+    delayNode = audioCtx.createDelay();
+    delayNode.delayTime.value = 0.22;
     const feedbackGain = audioCtx.createGain();
-    feedbackGain.gain.value = 0.27;
+    feedbackGain.gain.value = 0.22;
     const wetGain = audioCtx.createGain();
-    wetGain.gain.value = 0.22;
+    wetGain.gain.value = 0.16;
 
-    masterFilter.connect(delayNode);
     delayNode.connect(feedbackGain);
     feedbackGain.connect(delayNode);
     delayNode.connect(wetGain);
     wetGain.connect(audioCtx.destination);
   }
+
+  // تقريب صوت بيانو حقيقي: تركيب توافقيات (Harmonics) بدل موجة واحدة — هذا
+  // اللي يعطي "جسم" الصوت. النسب هنا تشبه طيف وتر بيانو مقروع تقريباً
+  // (توافقية أساسية قوية، والباقي أخفت تدريجياً)
+  const HARMONICS = [
+    { mult: 1, weight: 1, type: "triangle" },
+    { mult: 2, weight: 0.5, type: "sine" },
+    { mult: 3, weight: 0.22, type: "sine" },
+    { mult: 4, weight: 0.12, type: "sine" },
+  ];
 
   function randomBetween(min, max) {
     return min + Math.random() * (max - min);
@@ -751,32 +755,38 @@ function initBeepMelodyExperiment() {
 
   function playNote(noteIndex, startTime, duration, peakGain) {
     const freq = NOTES[noteIndex];
-    const gain = audioCtx.createGain();
-    // تلاشٍ تدريجي بالدخول والخروج بدل قطع مفاجئ — هذا اللي يفرق بين "بيب مزعج" و"نغمة هادئة"
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.15);
-    gain.gain.linearRampToValueAtTime(0, startTime + duration);
-    gain.connect(masterFilter);
 
-    // مذبذبان مثلث (Triangle) بدل جيب واحد — الثاني مزاح شعرة (Detune) ومخفوت
-    // شوي، نفس حيلة "Chorus" البسيطة اللي تخلي النغمة تحس أدفأ وأغنى من بيب مفرد
-    const osc1 = audioCtx.createOscillator();
-    osc1.type = "triangle";
-    osc1.frequency.value = freq;
-    osc1.connect(gain);
-    osc1.start(startTime);
-    osc1.stop(startTime + duration + 0.05);
+    // مغلاف بيانو حقيقي: هجوم شبه فوري (مطرقة تدق الوتر) ثم تلاشٍ أُسّي —
+    // مو تصاعد تدريجي كالوتريات. exponentialRamp ما يقبل صفر كهدف، فنطلع لقيمة
+    // صغيرة جداً بدل الصفر المطلق
+    const envelope = audioCtx.createGain();
+    envelope.gain.setValueAtTime(0.0001, startTime);
+    envelope.gain.exponentialRampToValueAtTime(Math.max(peakGain, 0.0001), startTime + 0.008);
+    envelope.gain.exponentialRampToValueAtTime(0.0006, startTime + duration);
 
-    const osc2 = audioCtx.createOscillator();
-    osc2.type = "triangle";
-    osc2.frequency.value = freq * 2 ** (6 / 1200); // +6 سنت
-    const osc2Gain = audioCtx.createGain();
-    osc2Gain.gain.value = 0.45;
-    osc2.connect(osc2Gain).connect(gain);
-    osc2.start(startTime);
-    osc2.stop(startTime + duration + 0.05);
+    // فلتر يبدأ ساطعاً (لحظة القرع) ويعتم تدريجياً — نفس سلوك وتر البيانو
+    // الحقيقي اللي يفقد حدّته الطيفية كل ما تلاشى
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.Q.value = 0.6;
+    filter.frequency.setValueAtTime(clamp(freq * 9, 800, 7000), startTime);
+    filter.frequency.exponentialRampToValueAtTime(clamp(freq * 2, 400, 2000), startTime + duration);
 
-    activeOscillators.push(osc1, osc2);
+    envelope.connect(filter);
+    filter.connect(audioCtx.destination);
+    filter.connect(delayNode);
+
+    HARMONICS.forEach(({ mult, weight, type }) => {
+      const osc = audioCtx.createOscillator();
+      osc.type = type;
+      osc.frequency.value = freq * mult;
+      const harmonicGain = audioCtx.createGain();
+      harmonicGain.gain.value = weight;
+      osc.connect(harmonicGain).connect(envelope);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+      activeOscillators.push(osc);
+    });
 
     highlightKey(pitchClassOf(freq), (startTime - audioCtx.currentTime) * 1000, duration * 1000);
   }
