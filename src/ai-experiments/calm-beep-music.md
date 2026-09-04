@@ -36,7 +36,11 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>
     <button type="button" id="beepMelodyNext" class="btn secondary">⏭️ مقطوعة جديدة</button>
   </div>
-  <button type="button" class="filter-chip keyboard-toggle" id="keyboardToggle" data-label-full="🎹 لوحة كاملة" data-label-mini="🎹 لوحة مبسطة">🎹 لوحة كاملة</button>
+  <div class="instrument-picker">
+    <button type="button" class="filter-chip keyboard-toggle" id="keyboardToggle" data-label-full="🎹 لوحة كاملة" data-label-mini="🎹 لوحة مبسطة">🎹 لوحة كاملة</button>
+    <button type="button" class="filter-chip" id="noteNameToggle" data-default="solfege" data-label-letters="🔤 C D E" data-label-solfege="🎼 Do Re Mi">🔤 C D E</button>
+    <button type="button" class="filter-chip" id="beepShareSeed" data-copied="نُسخ رابط هذي المقطوعة">🔗 انسخ رابط المقطوعة</button>
+  </div>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
     <div class="beep-white" data-pitch-class="0"></div>
     <div class="beep-white" data-pitch-class="2"></div>
@@ -54,5 +58,15 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
   <div class="beep-keys-scroll" id="beepKeysFullWrap" hidden>
     <div class="beep-keys beep-keys-full" id="beepKeysFull" aria-hidden="true"></div>
   </div>
+  <div class="beep-analysis" id="beepAnalysis"
+    data-label-key="المفتاح"
+    data-label-major="كبير (Major)"
+    data-label-minor="صغير (Minor)"
+    data-label-progression="تتابع الكوردات"
+    data-label-form="الشكل"
+    data-label-form-value="فترة من ٨ مازورات: سؤال (١-٤) + جواب (٥-٨)"
+    data-label-cadence="الختام"
+    data-label-cadence-value="نصف ختام على V بالمازورة ٤، وختام تام V→I بالمازورة ٨"
+    data-label-seed="البذرة"></div>
   <p class="beep-experiment-hint">🎧 يُفضَّل سماعات — وكل تشغيلة لحن مختلف تماماً، جرّب أكثر من مرة</p>
 </div>

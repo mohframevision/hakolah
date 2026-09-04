@@ -31,7 +31,11 @@ A simple question: can a random algorithm actually compose something that feels 
     <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Play Music" data-stop-label="⏹ Stop">▶️ Play Music</button>
     <button type="button" id="beepMelodyNext" class="btn secondary">⏭️ New Piece</button>
   </div>
-  <button type="button" class="filter-chip keyboard-toggle" id="keyboardToggle" data-label-full="🎹 Full keyboard" data-label-mini="🎹 Simple keyboard">🎹 Full keyboard</button>
+  <div class="instrument-picker">
+    <button type="button" class="filter-chip keyboard-toggle" id="keyboardToggle" data-label-full="🎹 Full keyboard" data-label-mini="🎹 Simple keyboard">🎹 Full keyboard</button>
+    <button type="button" class="filter-chip" id="noteNameToggle" data-default="letters" data-label-letters="🔤 C D E" data-label-solfege="🎼 Do Re Mi">🎼 Do Re Mi</button>
+    <button type="button" class="filter-chip" id="beepShareSeed" data-copied="Link to this exact piece copied">🔗 Copy link to this piece</button>
+  </div>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
     <div class="beep-white" data-pitch-class="0"></div>
     <div class="beep-white" data-pitch-class="2"></div>
@@ -49,5 +53,15 @@ A simple question: can a random algorithm actually compose something that feels 
   <div class="beep-keys-scroll" id="beepKeysFullWrap" hidden>
     <div class="beep-keys beep-keys-full" id="beepKeysFull" aria-hidden="true"></div>
   </div>
+  <div class="beep-analysis" id="beepAnalysis"
+    data-label-key="Key"
+    data-label-major="major"
+    data-label-minor="minor"
+    data-label-progression="Chord progression"
+    data-label-form="Form"
+    data-label-form-value="8-bar period: antecedent (1–4) + consequent (5–8)"
+    data-label-cadence="Cadence"
+    data-label-cadence-value="Half cadence on V at bar 4, perfect authentic cadence V→I at bar 8"
+    data-label-seed="Seed"></div>
   <p class="beep-experiment-hint">🎧 Headphones recommended — and every play is a completely different tune, try it more than once</p>
 </div>

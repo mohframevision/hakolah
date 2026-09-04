@@ -725,6 +725,23 @@ function initBeepMelodyExperiment() {
     return ((semitonesFromC4 % 12) + 12) % 12;
   }
 
+  /* مولّد عشوائية ببذرة (mulberry32) بدل Math.random — بدونه ما يقدر أحد
+     يعيد سماع نفس المقطوعة مرتين، وهذا يمنع استخدامها كمثال ثابت بمحاضرة أو
+     مشاركتها برابط. البذرة تُعرض بلوحة التحليل وتنحفظ بالرابط. */
+  function createRng(seed) {
+    let state = seed >>> 0;
+    return function random() {
+      state = (state + 0x6d2b79f5) >>> 0;
+      let t = state;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  let rand = createRng((Math.random() * 4294967296) >>> 0);
+  let pinnedSeed = null; // بذرة جاية من الرابط — تُستخدم مرة وحدة بأول تشغيل
+
   function allKeys() {
     return Object.values(keyByPitchClass).concat(Object.values(keyByAbsolute));
   }
@@ -1076,9 +1093,9 @@ function initBeepMelodyExperiment() {
        وحفظاً بالذاكرة عبر الأجيال.
      - نهاية الجملة تميل نحو درجة الاستقرار (نقطة الانطلاق) بدل ما تبقى تايهة. */
   function nextInterval(forceOppositeOf) {
-    const r = Math.random();
+    const r = rand();
     const size = r < 0.2 ? 0 : r < 0.62 ? 1 : r < 0.88 ? 2 : 3;
-    const direction = size === 0 ? 1 : forceOppositeOf ? -Math.sign(forceOppositeOf) : Math.random() < 0.5 ? -1 : 1;
+    const direction = size === 0 ? 1 : forceOppositeOf ? -Math.sign(forceOppositeOf) : rand() < 0.5 ? -1 : 1;
     return size * direction;
   }
 
@@ -1096,7 +1113,101 @@ function initBeepMelodyExperiment() {
     }
     options.sort((a, b) => Math.abs(a - nearDeg) - Math.abs(b - nearDeg));
     // الأقرب غالباً، وأحياناً الثانية عشان ما يصير متوقعاً بشكل آلي
-    return options[Math.random() < 0.72 ? 0 : Math.min(1, options.length - 1)];
+    return options[rand() < 0.72 ? 0 : Math.min(1, options.length - 1)];
+  }
+
+  /* قيادة الأصوات (Voice Leading): كل صوت بالمرافقة ينتقل لأقرب نغمة متاحة
+     من الوتر التالي، بدل ما تُعزف كل الأوتار بوضع الأصل نفسه.
+     قبل هذا كانت كل الأصوات تتحرك بالتوازي بين وتر ووتر = "خامسات وأوكتافات
+     متوازية"، أول شي تمنعه مادة الهارموني. الحين كل صوت يمشي أقصر مسافة،
+     وهذا اللي يخلي المرافقة تحس مترابطة لا مقفولة. */
+  function voiceChord(chordRootDeg, previousVoices) {
+    const candidates = [];
+    [0, 2, 4].forEach((interval) => {
+      for (let octave = 0; octave <= 1; octave++) candidates.push(chordRootDeg + interval + octave * 7);
+    });
+    if (!previousVoices) return [chordRootDeg + 2, chordRootDeg + 4];
+
+    const used = new Set();
+    return previousVoices.map((previous) => {
+      const nearest = candidates
+        .filter((c) => !used.has(c))
+        .sort((a, b) => Math.abs(a - previous) - Math.abs(b - previous))[0];
+      used.add(nearest);
+      return nearest;
+    });
+  }
+
+  // أسماء النغمات: بالحروف (C D E) أو بالنظام اللاتيني (Do Re Mi) المستخدم
+  // بإسبانيا وأمريكا اللاتينية والتعليم الموسيقي العربي
+  const NOTE_NAMES = {
+    letters: ["C", "D", "E", "F", "G", "A", "B"],
+    solfege: ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"],
+  };
+
+  // الأرقام الرومانية — لغة التحليل الموسيقي الأكاديمي المشتركة
+  const ROMAN = {
+    major: ["I", "ii", "iii", "IV", "V", "vi", "vii°"],
+    minor: ["i", "ii°", "III", "iv", "v", "VI", "VII"],
+  };
+
+  /* لوحة التحليل: كنا نحسب المفتاح والتتابع والشكل والختام ثم نرميهم. عرضهم
+     يحوّل الأداة من "لعبة تعزف" إلى أداة تدريس: الطالب يسمع ويشوف التحليل
+     بنفس اللحظة. كل البيانات محسوبة أصلاً بـ playSequence. */
+  const analysisBox = document.getElementById("beepAnalysis");
+  const noteNameToggle = document.getElementById("noteNameToggle");
+  let noteStyle = noteNameToggle ? noteNameToggle.dataset.default || "letters" : "letters";
+  let lastAnalysis = null;
+  let currentSeed = null;
+
+  function keyName(rootIndex) {
+    return NOTE_NAMES[noteStyle][rootIndex];
+  }
+
+  function renderAnalysis(info) {
+    lastAnalysis = info;
+    if (!analysisBox) return;
+    const t = analysisBox.dataset;
+    const roman = info.chords.slice(0, 4).map((degree) => ROMAN[info.mode][degree]);
+    const modeLabel = info.mode === "major" ? t.labelMajor : t.labelMinor;
+    analysisBox.innerHTML = `
+      <div class="beep-analysis-row"><span>${t.labelKey}</span><strong>${keyName(info.rootIndex)} ${modeLabel}</strong></div>
+      <div class="beep-analysis-row"><span>${t.labelProgression}</span><strong dir="ltr">${roman.join(" – ")}</strong></div>
+      <div class="beep-analysis-row"><span>${t.labelForm}</span><strong>${t.labelFormValue}</strong></div>
+      <div class="beep-analysis-row"><span>${t.labelCadence}</span><strong>${t.labelCadenceValue}</strong></div>
+      <div class="beep-analysis-row"><span>${t.labelSeed}</span><strong dir="ltr">${info.seed}</strong></div>
+    `;
+  }
+
+  if (noteNameToggle) {
+    noteNameToggle.addEventListener("click", () => {
+      noteStyle = noteStyle === "letters" ? "solfege" : "letters";
+      // النص يعرض الخيار الثاني (اللي بيتحول له لو ضغط) — نفس منطق زر اللوحة
+      noteNameToggle.textContent =
+        noteStyle === "letters" ? noteNameToggle.dataset.labelSolfege : noteNameToggle.dataset.labelLetters;
+      if (lastAnalysis) renderAnalysis(lastAnalysis);
+      playClickSound();
+    });
+  }
+
+  /* نسخ رابط يعيد نفس المقطوعة بالضبط (بذرة + مزاج + آلة) — بدونه ما يقدر
+     أحد يشارك مثالاً ثابتاً أو يستخدمه بمحاضرة */
+  const shareSeedBtn = document.getElementById("beepShareSeed");
+  if (shareSeedBtn) {
+    shareSeedBtn.addEventListener("click", async () => {
+      if (currentSeed == null) return;
+      const url = new URL(location.href);
+      url.searchParams.set("seed", currentSeed);
+      url.searchParams.set("mood", currentMood);
+      url.searchParams.set("instrument", currentInstrument);
+      try {
+        await navigator.clipboard.writeText(url.toString());
+        showToast(shareSeedBtn.dataset.copied);
+      } catch {
+        showToast(url.toString());
+      }
+      playClickSound();
+    });
   }
 
   /* يؤلّف مازورة وحدة فوق وتر معيّن، على شبكة ضربات ثابتة:
@@ -1237,25 +1348,37 @@ function initBeepMelodyExperiment() {
     stopRequested = false;
     activeOscillators = [];
     activeTimeouts = [];
-    NOTES = buildScale(ROOT_NOTES[Math.floor(Math.random() * ROOT_NOTES.length)], mood.scale);
+
+    // بذرة التشغيلة: من الرابط لو موجودة (مثال ثابت يعاد بالضبط)، وإلا جديدة
+    const seed = pinnedSeed != null ? pinnedSeed : (Math.random() * 4294967296) >>> 0;
+    pinnedSeed = null;
+    currentSeed = seed;
+    rand = createRng(seed);
+
+    const rootIndex = Math.floor(rand() * ROOT_NOTES.length);
+    NOTES = buildScale(ROOT_NOTES[rootIndex], mood.scale);
     btn.textContent = btn.dataset.stopLabel;
 
     const beatDur = 60 / mood.bpm;
-    const progression = PROGRESSIONS[Math.floor(Math.random() * PROGRESSIONS.length)];
-    const rhythm = mood.rhythmPool[Math.floor(Math.random() * mood.rhythmPool.length)];
+    const progression = PROGRESSIONS[Math.floor(rand() * PROGRESSIONS.length)];
+    const rhythm = mood.rhythmPool[Math.floor(rand() * mood.rhythmPool.length)];
+
+    /* كوردات الفترة: التتابع يتكرر مرتين، مع ثلاث مواضع مثبّتة عشان يطلع
+       الشكل مطابقاً للفترة الكلاسيكية (Period) بالضبط:
+       - مازورة ٤ = V  → نصف ختام (Half Cadence): يوقف على سؤال معلّق.
+       - مازورة ٧ = V ومازورة ٨ = I → ختام تام (Perfect Authentic Cadence).
+       بدون تثبيت الأخيرة كان اللحن يهبط على التونيك بينما الوتر تحته IV أو vi،
+       فما يحس المستمع إنها نهاية أصلاً. */
+    const chords = [0, 1, 2, 3, 0, 1, 2, 3].map((i) => progression[i]);
+    chords[3] = 4;
+    chords[6] = 4;
+    chords[7] = 0;
 
     // بناء الفترة: مازورتان تتكرران (M1)، ثم جواب معلّق، ثم M1 مرة ثانية، ثم حل نهائي
     const m1 = [
-      composeBar(progression[0], rhythm, MELODY_LOW + 4),
-      composeBar(progression[1], rhythm, MELODY_LOW + 2),
+      composeBar(chords[0], rhythm, MELODY_LOW + 4),
+      composeBar(chords[1], rhythm, MELODY_LOW + 2),
     ];
-
-    /* كوردات الفترة كاملة: التتابع يتكرر مرتين، **إلا** المازورة الأخيرة —
-       نجبرها على وتر التونيك (I). بدون هذا يهبط اللحن على نغمة التونيك بينما
-       الوتر تحته V أو IV، فما يحس المستمع إنها نهاية أصلاً. الحل الحقيقي
-       (Authentic Cadence) لازم النغمة والوتر يوصلون للبيت مع بعض. */
-    const chords = [0, 1, 2, 3, 0, 1, 2, 3].map((i) => progression[i]);
-    chords[7] = 0;
 
     const answerHalf = [
       composeBar(chords[2], rhythm, m1[1][m1[1].length - 1].degree),
@@ -1268,6 +1391,7 @@ function initBeepMelodyExperiment() {
     const period = [...m1, ...answerHalf, ...m1, ...answerFull];
 
     let t = audioCtx.currentTime + 0.12;
+    let voices = null; // أصوات المرافقة بالمازورة السابقة — أساس قيادة الأصوات
 
     for (let repeat = 0; repeat < mood.formRepeats && !stopRequested; repeat++) {
       for (let bar = 0; bar < period.length && !stopRequested; bar++) {
@@ -1278,9 +1402,10 @@ function initBeepMelodyExperiment() {
         playNote(BASS_LOW + chordRoot, barStart, beatDur * 3.6, mood.gainBase * 0.55);
         if (mood.bpm >= 100) playNote(BASS_LOW + chordRoot, barStart + beatDur * 2, beatDur * 1.8, mood.gainBase * 0.4);
 
-        // المرافقة: ثالثة وخامسة الوتر، خافتة تحت اللحن
-        [2, 4].forEach((interval) => {
-          playNote(BASS_LOW + chordRoot + interval, barStart, beatDur * 3.2, mood.gainBase * 0.3);
+        // المرافقة: صوتان ينتقلان لأقرب نغمة بالوتر الجديد (بلا حركة متوازية)
+        voices = voiceChord(chordRoot, voices);
+        voices.forEach((degree) => {
+          playNote(BASS_LOW + degree, barStart, beatDur * 3.2, mood.gainBase * 0.3);
         });
 
         // اللحن فوقهم
@@ -1296,6 +1421,8 @@ function initBeepMelodyExperiment() {
         t = barStart + 4 * beatDur;
       }
     }
+
+    renderAnalysis({ rootIndex, mode: mood.scale, chords, seed });
 
     activeTimeouts.push(
       setTimeout(
@@ -1342,6 +1469,24 @@ function initBeepMelodyExperiment() {
       playSequence();
       playClickSound();
     });
+  }
+
+  /* رابط فيه بذرة: نثبّت نفس المزاج والآلة والبذرة عشان أول ضغطة تشغيل تعطي
+     نفس المقطوعة بالضبط اللي شاركها صاحب الرابط */
+  const params = new URLSearchParams(location.search);
+  const seedParam = Number(params.get("seed"));
+  if (Number.isFinite(seedParam) && params.get("seed")) {
+    pinnedSeed = seedParam >>> 0;
+    const moodParam = params.get("mood");
+    if (MOODS[moodParam]) {
+      currentMood = moodParam;
+      moodButtons.forEach((b) => b.classList.toggle("active", b.dataset.mood === moodParam));
+    }
+    const instrumentParam = params.get("instrument");
+    if (INSTRUMENTS[instrumentParam]) {
+      currentInstrument = instrumentParam;
+      instrumentButtons.forEach((b) => b.classList.toggle("active", b.dataset.instrument === instrumentParam));
+    }
   }
 }
 

@@ -2327,6 +2327,43 @@ img {
   margin: 0;
 }
 
+/* لوحة التحليل الموسيقي — تُملأ بالجافاسكربت بعد كل تشغيلة */
+.beep-analysis:empty {
+  display: none;
+}
+
+.beep-analysis {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  margin-top: 4px;
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  text-align: start;
+}
+
+.beep-analysis-row {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.beep-analysis-row span {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.beep-analysis-row strong {
+  color: var(--color-text);
+  text-align: end;
+}
+
 /* أوكتافة بيانو حقيقية (7 بيضاء + 5 سوداء) — دايماً LTR بغض النظر عن لغة
    الصفحة، لأن مفاتيح البيانو تُقرأ يسار-لليمين عالمياً حتى بالصفحات العربية */
 .beep-keys {
