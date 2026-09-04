@@ -11,16 +11,18 @@ A simple question: can a random algorithm — one that follows a few basic music
 <div class="beep-experiment">
   <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Play Music" data-stop-label="⏹ Stop">▶️ Play Music</button>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
-    <span class="beep-key" data-note-index="0"></span>
-    <span class="beep-key" data-note-index="1"></span>
-    <span class="beep-key" data-note-index="2"></span>
-    <span class="beep-key" data-note-index="3"></span>
-    <span class="beep-key" data-note-index="4"></span>
-    <span class="beep-key" data-note-index="5"></span>
-    <span class="beep-key" data-note-index="6"></span>
-    <span class="beep-key" data-note-index="7"></span>
-    <span class="beep-key" data-note-index="8"></span>
-    <span class="beep-key" data-note-index="9"></span>
+    <div class="beep-white" data-pitch-class="0"></div>
+    <div class="beep-white" data-pitch-class="2"></div>
+    <div class="beep-white" data-pitch-class="4"></div>
+    <div class="beep-white" data-pitch-class="5"></div>
+    <div class="beep-white" data-pitch-class="7"></div>
+    <div class="beep-white" data-pitch-class="9"></div>
+    <div class="beep-white" data-pitch-class="11"></div>
+    <div class="beep-black" data-pitch-class="1" style="left: 24px"></div>
+    <div class="beep-black" data-pitch-class="3" style="left: 58px"></div>
+    <div class="beep-black" data-pitch-class="6" style="left: 126px"></div>
+    <div class="beep-black" data-pitch-class="8" style="left: 160px"></div>
+    <div class="beep-black" data-pitch-class="10" style="left: 194px"></div>
   </div>
   <p class="beep-experiment-hint">🎧 Headphones recommended — and every play is a completely different tune, try it more than once</p>
 </div>

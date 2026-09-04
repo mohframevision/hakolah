@@ -676,8 +676,20 @@ function initArticleShare() {
    بدون تكرار الدالة. */
 function initBeepMelodyExperiment() {
   const btn = document.getElementById("beepMelodyPlay");
-  const keys = document.querySelectorAll("#beepKeys .beep-key");
   if (!btn) return;
+
+  // بيانو أوكتافة وحدة حقيقي (7 بيضاء + 5 سوداء) — نضيء المفتاح حسب فئة
+  // النغمة الفعلية (Pitch Class 0-11 من الدو)، فلو التأليف طلع بمفتاح موسيقي
+  // فيه دييز (زي ري) يضيء مفتاح أسود فعلاً، مو بس البيضاء
+  const keyByPitchClass = {};
+  document.querySelectorAll("#beepKeys [data-pitch-class]").forEach((el) => {
+    keyByPitchClass[el.dataset.pitchClass] = el;
+  });
+
+  function pitchClassOf(freq) {
+    const semitonesFromC4 = Math.round(12 * Math.log2(freq / 261.63));
+    return ((semitonesFromC4 % 12) + 12) % 12;
+  }
 
   // سبع مفاتيح موسيقية ممكنة (C D E F G A B) — كل تشغيلة تختار وحدة عشوائياً،
   // فمو نفس اللحن دايماً بنفس الطبقة الصوتية. سلّم خماسي كبير (درجات ٠،٢،٤،٧،٩
@@ -724,8 +736,8 @@ function initBeepMelodyExperiment() {
     return min + Math.random() * (max - min);
   }
 
-  function highlightKey(noteIndex, delayMs, durationMs) {
-    const key = keys[noteIndex];
+  function highlightKey(pitchClass, delayMs, durationMs) {
+    const key = keyByPitchClass[pitchClass];
     if (!key) return;
     activeTimeouts.push(
       setTimeout(() => key.classList.add("active"), delayMs),
@@ -766,7 +778,7 @@ function initBeepMelodyExperiment() {
 
     activeOscillators.push(osc1, osc2);
 
-    highlightKey(noteIndex, (startTime - audioCtx.currentTime) * 1000, duration * 1000);
+    highlightKey(pitchClassOf(freq), (startTime - audioCtx.currentTime) * 1000, duration * 1000);
   }
 
   /* تأليف بجمل موسيقية (Motifs) بدل نغمة عشوائية مستقلة كل مرة — كل جملة:
@@ -846,7 +858,7 @@ function initBeepMelodyExperiment() {
           // خلص وقت توقيته أصلاً — عادي
         }
       });
-      keys.forEach((key) => key.classList.remove("active"));
+      Object.values(keyByPitchClass).forEach((key) => key.classList.remove("active"));
       return;
     }
     playSequence();
