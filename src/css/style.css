@@ -523,6 +523,13 @@ img {
     color: var(--color-primary);
   }
 
+  /* .nav-toggle.open يلف 90 درجة — مصمم لأيقونة مربعة بالهيدر (☰ لوحدها)،
+     مو لزر الشريط السفلي اللي فيه نص تحت الأيقونة. نلغي الدوران هنا بس */
+  .bottom-nav-menu.open {
+    transform: none;
+    background: none;
+  }
+
   .bottom-nav-icon {
     font-size: 1.35rem;
     line-height: 1;
