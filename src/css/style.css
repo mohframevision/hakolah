@@ -1616,7 +1616,10 @@ img {
   position: fixed;
   inset-inline: 0;
   bottom: 0;
-  z-index: 60;
+  /* أعلى من daily-pick-reminder (60) عمداً — بانر موافقة الكوكيز إلزامي
+     التفاعل، وممكن الاثنين يظهرون مع بعض بأول زيارة ويتراكبون بزاوية
+     الشاشة؛ لازم زر "موافق" يبقى قابل للضغط دايماً */
+  z-index: 65;
   gap: 14px;
   align-items: center;
   justify-content: center;
