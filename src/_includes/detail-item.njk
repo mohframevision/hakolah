@@ -12,7 +12,10 @@ layout: base.njk
   <button type="button" class="btn secondary article-share-btn">📤 {{ t.article_share }}</button>
 </section>
 {% if aiDisclosure %}
-<div class="banner-note ai-disclosure">🤖 {{ aiDisclosure }} {{ t.guide_disclaimer }}</div>
+{# قسم "تجارب الذكاء الاصطناعي" ألعاب/تجارب استكشافية، مو مقالات معلوماتية —
+   إخلاء المسؤولية القانوني (guide_disclaimer) مصمم لمقال يحتوي معلومات
+   يُعتمَد عليها، فما ينطبق هنا ويعطي انطباع رسمي زايد عن حجم الشي #}
+<div class="banner-note ai-disclosure">🤖 {{ aiDisclosure }}{% if sectionSlug != "ai-experiments" %} {{ t.guide_disclaimer }}{% endif %}</div>
 {% endif %}
 {% if video %}
 <div class="detail-video">

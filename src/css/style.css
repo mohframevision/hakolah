@@ -2297,3 +2297,27 @@ img {
   color: var(--color-text-muted);
   margin: 0;
 }
+
+.beep-keys {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  height: 44px;
+}
+
+.beep-key {
+  width: 14px;
+  height: 24px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--color-text) 12%, transparent);
+  transition:
+    height 0.12s ease,
+    background 0.12s ease,
+    transform 0.12s ease;
+}
+
+.beep-key.active {
+  height: 44px;
+  background: var(--color-primary);
+  transform: scaleX(1.15);
+}

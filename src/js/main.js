@@ -668,35 +668,54 @@ function initArticleShare() {
 }
 
 /* ===== تجربة "موسيقى بيب هادئة" (src/ai-experiments/calm-beep-music.md) =====
-   نغمات Web Audio عشوائية من سلّم خماسي (Pentatonic) — أي مزيج منها متناغم
-   بطبيعته، فلا حاجة لمنطق تأليف حقيقي. النص على الزر يجي من data-play-label/
-   data-stop-label بالـ HTML نفسه (لا مكتوب هنا) عشان يشتغل بالعربي والإنجليزي
-   بدون تكرار الدالة. */
+   نغمات Web Audio من سلّم خماسي (Pentatonic) بأوكتافين — أي مزيج منها متناغم
+   بطبيعته، فلا حاجة لمنطق تأليف حقيقي. مدة كل نغمة وفاصلها وعدد النغمات
+   وفرصة تزامن نغمتين (وتر) كلها عشوائية بمدى واسع، فمساحة الاحتمالات كبيرة
+   كفاية إن أي تشغيلتين ما تتكرران عملياً. النص على الزر ولوحة المفاتيح يجيان
+   من data-play-label/data-stop-label بالـ HTML نفسه عشان يشتغل بأي لغة بدون
+   تكرار الدالة. */
 function initBeepMelodyExperiment() {
   const btn = document.getElementById("beepMelodyPlay");
+  const keys = document.querySelectorAll("#beepKeys .beep-key");
   if (!btn) return;
 
-  const NOTES = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25]; // C D E G A C — سلّم خماسي
-  const NOTE_DURATION = 1.1;
-  const NOTE_GAP = 0.35;
-  const TOTAL_NOTES = 24;
+  // C D E G A بأوكتافين (261.63 وأضعافها) — سلّم خماسي، يطابق عدد المفاتيح بالصفحة
+  const NOTES = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99, 880.0];
 
   let audioCtx = null;
   let playing = false;
   let stopRequested = false;
+  let activeOscillators = [];
+  let activeTimeouts = [];
 
-  function playNote(freq, startTime) {
+  function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function highlightKey(noteIndex, delayMs, durationMs) {
+    const key = keys[noteIndex];
+    if (!key) return;
+    activeTimeouts.push(
+      setTimeout(() => key.classList.add("active"), delayMs),
+      setTimeout(() => key.classList.remove("active"), delayMs + durationMs)
+    );
+  }
+
+  function playNote(noteIndex, startTime, duration) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = "sine";
-    osc.frequency.value = freq;
+    osc.frequency.value = NOTES[noteIndex];
     // تلاشٍ تدريجي بالدخول والخروج بدل قطع مفاجئ — هذا اللي يفرق بين "بيب مزعج" و"نغمة هادئة"
     gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(0.18, startTime + 0.15);
-    gain.gain.linearRampToValueAtTime(0, startTime + NOTE_DURATION);
+    gain.gain.linearRampToValueAtTime(0.16, startTime + 0.15);
+    gain.gain.linearRampToValueAtTime(0, startTime + duration);
     osc.connect(gain).connect(audioCtx.destination);
     osc.start(startTime);
-    osc.stop(startTime + NOTE_DURATION + 0.05);
+    osc.stop(startTime + duration + 0.05);
+    activeOscillators.push(osc);
+
+    highlightKey(noteIndex, (startTime - audioCtx.currentTime) * 1000, duration * 1000);
   }
 
   async function playSequence() {
@@ -705,22 +724,31 @@ function initBeepMelodyExperiment() {
 
     playing = true;
     stopRequested = false;
+    activeOscillators = [];
+    activeTimeouts = [];
     btn.textContent = btn.dataset.stopLabel;
 
     let t = audioCtx.currentTime + 0.1;
-    for (let i = 0; i < TOTAL_NOTES; i++) {
+    const totalNotes = Math.round(randomBetween(20, 36));
+    for (let i = 0; i < totalNotes; i++) {
       if (stopRequested) break;
-      playNote(NOTES[Math.floor(Math.random() * NOTES.length)], t);
-      t += NOTE_DURATION + NOTE_GAP;
+      const duration = randomBetween(0.55, 1.35);
+      const noteIndex = Math.floor(Math.random() * NOTES.length);
+      playNote(noteIndex, t, duration);
+      // ١ من ٦ فرصة نغمة ثانية (وتر ثلث/خامس بنفس السلّم) بنفس اللحظة — تنويع بلا نشاز
+      if (Math.random() < (1 / 6)) playNote((noteIndex + 2) % NOTES.length, t, duration);
+      t += duration + randomBetween(0.15, 0.6);
     }
 
-    setTimeout(
-      () => {
-        if (stopRequested) return;
-        playing = false;
-        btn.textContent = btn.dataset.playLabel;
-      },
-      (t - audioCtx.currentTime) * 1000
+    activeTimeouts.push(
+      setTimeout(
+        () => {
+          if (stopRequested) return;
+          playing = false;
+          btn.textContent = btn.dataset.playLabel;
+        },
+        (t - audioCtx.currentTime) * 1000
+      )
     );
   }
 
@@ -729,6 +757,15 @@ function initBeepMelodyExperiment() {
       stopRequested = true;
       playing = false;
       btn.textContent = btn.dataset.playLabel;
+      activeTimeouts.forEach(clearTimeout);
+      activeOscillators.forEach((osc) => {
+        try {
+          osc.stop();
+        } catch {
+          // خلص وقت توقيته أصلاً — عادي
+        }
+      });
+      keys.forEach((key) => key.classList.remove("active"));
       return;
     }
     playSequence();

@@ -8,24 +8,24 @@ categories:
   - موسيقى
 dateAdded: 2026-09-04
 langSwitchUrl: "/en/ai-experiments/calm-beep-music.html"
-aiDisclosure: "هذي التجربة (النص والمولّد التفاعلي) بُنيت بمساعدة الذكاء الاصطناعي (Claude) بناءً على فكرة طرحتها: هل تقدر نغمات بيب بسيطة تكوّن موسيقى هادئة؟"
+aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة الذكاء الاصطناعي، بس للاستكشاف والمرح."
 ---
 
-الفكرة بسيطة: أدوات توليد الأصوات البسيطة (زي [مولّد الأصوات 8-bit](/hakolah/guides/jsfxr-8bit-sound-generator.html) اللي جربته قبل) تنتج "بيب" فقط — نغمة واحدة نقية، بلا أي تعقيد. سؤالي كان: لو رتّبت مجموعة بيبات بس، بسرعة بطيئة ونغمات مريحة لبعض، هل تحس فيها كموسيقى هادئة، ولا تبقى مجرد بيبات متتالية؟
-
-## التجربة
-
-المولّد تحت يشتغل بمتصفحك مباشرة (بدون ملف صوتي جاهز) — يختار عشوائياً من ست نغمات متناغمة مع بعض (سلّم خماسي)، ويشغّلها وحدة وحدة بفواصل هادئة. جرّبه واحكم بنفسك:
+بيب واحد بس — نغمة نقية بلا أي تعقيد، زي [أدوات الصوت 8-bit](/hakolah/guides/jsfxr-8bit-sound-generator.html). جرّبت أرتّب مجموعة منها وأشوف: تطلع موسيقى هادئة، ولا تضل مجرد بيبات متتالية؟ دوس شغّل واحكم بنفسك.
 
 <div class="beep-experiment">
   <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>
-  <p class="beep-experiment-hint">🎧 يُفضَّل سماعات لتجربة أوضح</p>
+  <div class="beep-keys" id="beepKeys" aria-hidden="true">
+    <span class="beep-key" data-note-index="0"></span>
+    <span class="beep-key" data-note-index="1"></span>
+    <span class="beep-key" data-note-index="2"></span>
+    <span class="beep-key" data-note-index="3"></span>
+    <span class="beep-key" data-note-index="4"></span>
+    <span class="beep-key" data-note-index="5"></span>
+    <span class="beep-key" data-note-index="6"></span>
+    <span class="beep-key" data-note-index="7"></span>
+    <span class="beep-key" data-note-index="8"></span>
+    <span class="beep-key" data-note-index="9"></span>
+  </div>
+  <p class="beep-experiment-hint">🎧 يُفضَّل سماعات — وكل تشغيلة لحن مختلف تماماً، جرّب أكثر من مرة</p>
 </div>
-
-## وش تعلّمت منها
-
-- النغمة النقية (Sine) نفسها مو "هادئة" أو "صاخبة" — الهدوء يجي من الإيقاع والمسافة بين النغمات، مو من نوع الموجة.
-- اختيار نغمات من نفس السلّم الموسيقي (بدل عشوائي كامل) كافٍ لمنع أي تنافر مزعج، حتى لو التكرار عشوائي.
-- التلاشي التدريجي بأول وآخر كل نغمة (بدل قطع مفاجئ) هو اللي يفرق بين "بيب مزعج" و"نغمة هادئة" — تفصيلة صغيرة بس تغيّر الإحساس كله.
-
-تجربة بسيطة، بس كشفت شي ما كنت أتوقعه: الهدوء صناعة إيقاع، مو صناعة صوت.
