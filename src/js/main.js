@@ -691,17 +691,46 @@ function initBeepMelodyExperiment() {
     return ((semitonesFromC4 % 12) + 12) % 12;
   }
 
-  // سبع مفاتيح موسيقية ممكنة (C D E F G A B) — كل تشغيلة تختار وحدة عشوائياً،
-  // فمو نفس اللحن دايماً بنفس الطبقة الصوتية. سلّم خماسي كبير (درجات ٠،٢،٤،٧،٩
-  // نصف-نغمية) بأوكتافين فوق كل مفتاح = ١٠ نغمات، يطابق عدد المفاتيح بالصفحة
+  // سبع مفاتيح موسيقية ممكنة (C D E F G A B) — كل تشغيلة تختار وحدة عشوائياً.
   const ROOT_NOTES = [261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 493.88];
-  const PENTATONIC_STEPS = [0, 2, 4, 7, 9];
 
-  function buildScale(root) {
-    return PENTATONIC_STEPS.concat(PENTATONIC_STEPS.map((s) => s + 12)).map((s) => root * 2 ** (s / 12));
+  /* سلّم كامل (٧ درجات) بدل الخماسي (٥). الخماسي كان "آمن" لأنه بلا أنصاف
+     نغمات = بلا تنافر، لكن هذا بالضبط سبب إحساس التوهان: بلا توتر ما فيه شي
+     يُحَلّ، فما فيه حكاية. الكامل فيه درجات متوترة (الرابعة والسابعة) تشدّ
+     للاستقرار — والهارموني (الكوردات) هي اللي تحمينا من النشاز، مو حذف
+     النغمات المتوترة أصلاً. */
+  const SCALES = {
+    major: [0, 2, 4, 5, 7, 9, 11],
+    minor: [0, 2, 3, 5, 7, 8, 10],
+  };
+
+  /* السلّم مبني على ٣ أوكتافات = ٢٢ درجة. الدرجة ٧ هي التونيك (المفتاح نفسه):
+     ٠-٦ أوكتاف الباص (المرافقة)، ٧-٢٠ نطاق اللحن. فصل النطاقين يخلي الباص
+     تحت اللحن دايماً زي أي توزيع حقيقي. */
+  const BASS_LOW = 0;
+  const MELODY_LOW = 7;
+  const MELODY_HIGH = 20;
+
+  function buildScale(root, mode) {
+    const steps = SCALES[mode];
+    return Array.from({ length: 22 }, (_, d) => {
+      const semitone = steps[d % 7] + 12 * (Math.floor(d / 7) - 1);
+      return root * 2 ** (semitone / 12);
+    });
   }
 
-  let NOTES = buildScale(ROOT_NOTES[0]);
+  /* تتابعات كوردات حقيقية مستخدمة بآلاف الأغاني — بأرقام درجات السلّم
+     (٠=I، ٣=IV، ٤=V، ٥=vi). الكوردات هي اللي تعطي الإحساس بالذهاب والوصول،
+     وهي الطبقة اللي كانت ناقصة تماماً قبل. */
+  const PROGRESSIONS = [
+    [0, 4, 5, 3], // I–V–vi–IV
+    [0, 5, 3, 4], // I–vi–IV–V
+    [5, 3, 0, 4], // vi–IV–I–V
+    [0, 3, 4, 0], // I–IV–V–I
+    [0, 5, 1, 4], // I–vi–ii–V
+  ];
+
+  let NOTES = buildScale(ROOT_NOTES[0], "major");
   let audioCtx = null;
   let delayNode = null; // مسار صدى مشترك (Delay + Feedback) — كل نغمة ترسل له
   let delayFeedbackGain = null; // مرجع خارجي عشان نضبط كمية الصدى حسب المزاج بكل تشغيلة
@@ -886,53 +915,74 @@ function initBeepMelodyExperiment() {
     });
   });
 
-  /* أربعة "أمزجة" — كل وحدة تضبط سرعة الإيقاع وكثافة النغمات ومدى قوة الصوت
-     وكمية الصدى (الأقرب لطابع الإحساس المطلوب، مو مجرد أرقام عشوائية):
-     - هادئ: بطيء، متباعد، هادئ الصوت، صدى واسع (فضاء ودفء) — كان الافتراضي الوحيد قبل.
-     - حيوي: سريع جداً، نغمات متلاصقة، صوت أقوى، صدى قليل (إحساس "مباشر" لا "بعيد").
-     - سعيد: متوسط السرعة والقوة — بين الهادئ والحيوي.
-     - حالم: أبطأ من الهادئ نفسه، صوت خافت جداً، صدى كثيف (إحساس عائم/بعيد). */
+  /* أربعة "أمزجة" — كل وحدة تضبط سرعة النبضة (BPM) ونوع السلّم وأنماط الإيقاع
+     المتاحة وقوة الصوت وكمية الصدى:
+     - هادئ: نبضة بطيئة، إيقاع بنغمات طويلة، صدى واسع.
+     - حيوي: نبضة سريعة، إيقاع مليان بأنصاف الضربات، صدى قليل (إحساس مباشر).
+     - سعيد: متوسط السرعة، إيقاع راقص خفيف.
+     - حالم: أبطأ الكل، سلّم صغير (Minor)، نغمات طويلة جداً، صدى كثيف.
+     كل قيم rhythmPool مجموعها ٤ ضربات = مازورة كاملة، فكل شي يقع على الشبكة. */
   const MOODS = {
     calm: {
-      tempoRange: [0.42, 0.62],
-      noteGapRange: [0.06, 0.18],
-      repeatGapRange: [0.15, 0.3],
-      phraseGapRange: [0.25, 0.5],
-      phraseCountRange: [4, 7],
-      gainBase: 0.09,
-      gainSwell: 0.1,
+      bpm: 72,
+      scale: "major",
+      formRepeats: 1,
+      rhythmPool: [
+        [1, 1, 2],
+        [2, 1, 1],
+        [1, 1, 1, 1],
+        [2, 2],
+      ],
+      cadenceRhythm: [2, 2],
+      gainBase: 0.1,
+      gainSwell: 0.09,
       delayWet: 0.16,
       delayFeedback: 0.22,
     },
     energetic: {
-      tempoRange: [0.16, 0.24],
-      noteGapRange: [0.01, 0.04],
-      repeatGapRange: [0.04, 0.1],
-      phraseGapRange: [0.08, 0.18],
-      phraseCountRange: [7, 11],
-      gainBase: 0.15,
-      gainSwell: 0.14,
+      bpm: 132,
+      scale: "major",
+      formRepeats: 2,
+      rhythmPool: [
+        [0.5, 0.5, 1, 0.5, 0.5, 1],
+        [1, 0.5, 0.5, 0.5, 0.5, 1],
+        [0.5, 0.5, 0.5, 0.5, 1, 1],
+        [1, 0.5, 0.5, 1, 1],
+      ],
+      cadenceRhythm: [1, 1, 2],
+      gainBase: 0.14,
+      gainSwell: 0.12,
       delayWet: 0.08,
       delayFeedback: 0.12,
     },
     happy: {
-      tempoRange: [0.28, 0.4],
-      noteGapRange: [0.04, 0.1],
-      repeatGapRange: [0.1, 0.2],
-      phraseGapRange: [0.15, 0.3],
-      phraseCountRange: [5, 8],
+      bpm: 108,
+      scale: "major",
+      formRepeats: 1,
+      rhythmPool: [
+        [1, 0.5, 0.5, 1, 1],
+        [1, 1, 0.5, 0.5, 1],
+        [0.5, 0.5, 1, 1, 1],
+        [1, 1, 1, 1],
+      ],
+      cadenceRhythm: [1, 1, 2],
       gainBase: 0.13,
-      gainSwell: 0.12,
+      gainSwell: 0.11,
       delayWet: 0.14,
       delayFeedback: 0.2,
     },
     dreamy: {
-      tempoRange: [0.55, 0.85],
-      noteGapRange: [0.1, 0.3],
-      repeatGapRange: [0.25, 0.45],
-      phraseGapRange: [0.4, 0.7],
-      phraseCountRange: [3, 5],
-      gainBase: 0.06,
+      bpm: 60,
+      scale: "minor",
+      formRepeats: 1,
+      rhythmPool: [
+        [2, 2],
+        [4],
+        [2, 1, 1],
+        [1, 1, 2],
+      ],
+      cadenceRhythm: [4],
+      gainBase: 0.08,
       gainSwell: 0.08,
       delayWet: 0.28,
       delayFeedback: 0.34,
@@ -949,9 +999,6 @@ function initBeepMelodyExperiment() {
     });
   });
 
-  function randomBetween(min, max) {
-    return min + Math.random() * (max - min);
-  }
 
   /* توليد جملة موسيقية (Motif) بقواعد حقيقية مستقاة من تحليل مجموعات ألحان
      واقعية (لا مشية عشوائية بحتة، اللي تحس منها "طفل يضغط أزرار"):
@@ -967,23 +1014,58 @@ function initBeepMelodyExperiment() {
      - نهاية الجملة تميل نحو درجة الاستقرار (نقطة الانطلاق) بدل ما تبقى تايهة. */
   function nextInterval(forceOppositeOf) {
     const r = Math.random();
-    const size = r < 0.2 ? 0 : r < 0.55 ? 1 : r < 0.8 ? 2 : r < 0.92 ? 3 : 4;
+    const size = r < 0.2 ? 0 : r < 0.62 ? 1 : r < 0.88 ? 2 : 3;
     const direction = size === 0 ? 1 : forceOppositeOf ? -Math.sign(forceOppositeOf) : Math.random() < 0.5 ? -1 : 1;
     return size * direction;
   }
 
-  function generateMotif(length) {
-    const motif = [0];
-    let lastInterval = 0;
-    for (let i = 1; i < length; i++) {
-      const interval = nextInterval(Math.abs(lastInterval) >= 3 ? lastInterval : 0);
-      motif.push(motif[i - 1] + interval);
-      lastInterval = interval;
+  /* نغمات الوتر الحالي داخل نطاق اللحن — نختار أقربها للنغمة السابقة (حركة
+     سلسة بلا قفزات مفاجئة). هذا جوهر "اللحن يمشي مع الهارموني": النغمة اللي
+     تقع على ضربة قوية لازم تكون من نغمات الوتر، وإلا يحس المستمع إن اللحن
+     "مو محطوط عليه". */
+  function pickChordTone(chordRootDeg, nearDeg) {
+    const options = [];
+    for (let octave = 0; octave <= 1; octave++) {
+      [0, 2, 4].forEach((interval) => {
+        const degree = MELODY_LOW + chordRootDeg + interval + octave * 7;
+        if (degree >= MELODY_LOW && degree <= MELODY_HIGH) options.push(degree);
+      });
     }
-    // ميل خفيف بآخر الجملة نحو الاستقرار (درجة الانطلاق) — إحساس "هبوط وحل"
-    const last = motif[motif.length - 1];
-    if (Math.abs(last) > 2) motif[motif.length - 1] = last - Math.sign(last) * Math.round(Math.abs(last) / 2);
-    return motif;
+    options.sort((a, b) => Math.abs(a - nearDeg) - Math.abs(b - nearDeg));
+    // الأقرب غالباً، وأحياناً الثانية عشان ما يصير متوقعاً بشكل آلي
+    return options[Math.random() < 0.72 ? 0 : Math.min(1, options.length - 1)];
+  }
+
+  /* يؤلّف مازورة وحدة فوق وتر معيّن، على شبكة ضربات ثابتة:
+     - الضربة القوية (١ و٣) = نغمة من الوتر (استقرار).
+     - الضربات الضعيفة = نغمات عابرة بخطوات صغيرة (حركة).
+     - endOnDegree (اختياري) = نغمة الحل بآخر المازورة (للختام). */
+  function composeBar(chordRootDeg, rhythm, startDegree, endOnDegree) {
+    const notes = [];
+    let beat = 0;
+    let degree = startDegree;
+    let lastInterval = 0;
+
+    rhythm.forEach((length, i) => {
+      const isStrongBeat = beat === 0 || beat === 2;
+      const isLastNote = i === rhythm.length - 1;
+      const previousDegree = degree;
+
+      if (isLastNote && endOnDegree != null) {
+        degree = endOnDegree;
+      } else if (isStrongBeat) {
+        degree = pickChordTone(chordRootDeg, degree);
+      } else {
+        const interval = nextInterval(Math.abs(lastInterval) >= 3 ? lastInterval : 0);
+        degree = clamp(degree + interval, MELODY_LOW, MELODY_HIGH);
+      }
+
+      lastInterval = degree - previousDegree;
+      notes.push({ degree, length });
+      beat += length;
+    });
+
+    return notes;
   }
 
   function highlightKey(pitchClass, delayMs, durationMs) {
@@ -1066,13 +1148,19 @@ function initBeepMelodyExperiment() {
     highlightKey(pitchClassOf(freq), (startTime - audioCtx.currentTime) * 1000, ringDuration * 1000);
   }
 
-  /* تأليف بجمل موسيقية (Motifs) بقواعد حركة لحنية حقيقية (انظر generateMotif)
-     بدل نغمة عشوائية مستقلة كل مرة. كل جملة تُعزف مرتين (مرة كما هي، ومرة
-     "منقولة" Sequence لدرجة أو درجتين — أسلوب تأليف كلاسيكي بسيط)، بتدرّج قوة
-     صوت (كريشندو-ديكريشندو) داخل كل جملة، ودرجة الانطلاق تنجرف تدريجياً لأعلى
-     بالنص الأول من القطعة ولأسفل بالنص الثاني (قوس لحني عام). كل الأرقام
-     (السرعة، الفواصل، عدد الجمل، قوة الصوت، كمية الصدى) تجي من MOODS[currentMood]
-     — نفس منطق التأليف، بس بنِسَب مختلفة حسب المزاج المختار. */
+  /* المؤلّف: قطعة من ٨ مازورات (فترة موسيقية كاملة Period) — مو نغمات متتابعة.
+     الطبقات الأربع اللي كانت ناقصة وصارت أساس البناء الآن:
+
+     ١) نبضة ثابتة: كل شي محسوب بالضربات (Beats) على شبكة منتظمة، بلا أي فاصل
+        عشوائي. الدماغ يمسك النبضة فيحس إنها موسيقى لا نغمات متفرقة.
+     ٢) هارموني: تتابع كوردات حقيقي (٤ كوردات، مازورة لكل وتر، يتكرر مرتين)،
+        والنغمة على الضربة القوية لازم تكون من نغمات الوتر.
+     ٣) تكرار وشكل: الجملة الأولى (مازورة ١-٢) ترجع حرفياً بالمازورة ٥-٦، فيصير
+        فيه لحن يمسكه المستمع ويتذكره.
+     ٤) سؤال وجواب: النص الأول ينتهي على الدرجة الخامسة (معلّق = سؤال)، والنص
+        الثاني ينتهي على التونيك (استقرار = جواب). هذا اللي يعطي إحساس الاكتمال.
+
+     مع باص ومرافقة تحت اللحن (بدل خط منفرد كان يحس ناقصاً). */
   async function playSequence() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") await audioCtx.resume();
@@ -1086,39 +1174,64 @@ function initBeepMelodyExperiment() {
     stopRequested = false;
     activeOscillators = [];
     activeTimeouts = [];
-    NOTES = buildScale(ROOT_NOTES[Math.floor(Math.random() * ROOT_NOTES.length)]);
+    NOTES = buildScale(ROOT_NOTES[Math.floor(Math.random() * ROOT_NOTES.length)], mood.scale);
     btn.textContent = btn.dataset.stopLabel;
 
-    let t = audioCtx.currentTime + 0.1;
-    const baseDur = randomBetween(...mood.tempoRange);
-    const phraseCount = Math.round(randomBetween(...mood.phraseCountRange));
-    let phraseStartDegree = Math.floor(NOTES.length / 2);
+    const beatDur = 60 / mood.bpm;
+    const progression = PROGRESSIONS[Math.floor(Math.random() * PROGRESSIONS.length)];
+    const rhythm = mood.rhythmPool[Math.floor(Math.random() * mood.rhythmPool.length)];
 
-    for (let p = 0; p < phraseCount && !stopRequested; p++) {
-      const arcDirection = p < phraseCount / 2 ? 1 : -1;
-      phraseStartDegree = clamp(phraseStartDegree + arcDirection * Math.round(randomBetween(0, 2)), 0, NOTES.length - 1);
+    // بناء الفترة: مازورتان تتكرران (M1)، ثم جواب معلّق، ثم M1 مرة ثانية، ثم حل نهائي
+    const m1 = [
+      composeBar(progression[0], rhythm, MELODY_LOW + 4),
+      composeBar(progression[1], rhythm, MELODY_LOW + 2),
+    ];
 
-      const motif = generateMotif(Math.round(randomBetween(3, 5)));
+    /* كوردات الفترة كاملة: التتابع يتكرر مرتين، **إلا** المازورة الأخيرة —
+       نجبرها على وتر التونيك (I). بدون هذا يهبط اللحن على نغمة التونيك بينما
+       الوتر تحته V أو IV، فما يحس المستمع إنها نهاية أصلاً. الحل الحقيقي
+       (Authentic Cadence) لازم النغمة والوتر يوصلون للبيت مع بعض. */
+    const chords = [0, 1, 2, 3, 0, 1, 2, 3].map((i) => progression[i]);
+    chords[7] = 0;
 
-      const transpositions = [0, Math.random() < 0.5 ? 2 : -2];
-      for (const transpose of transpositions) {
-        if (stopRequested) break;
-        for (let i = 0; i < motif.length; i++) {
-          if (stopRequested) break;
-          const degree = clamp(phraseStartDegree + motif[i] + transpose, 0, NOTES.length - 1);
-          const isLastInMotif = i === motif.length - 1;
-          const duration = baseDur * (isLastInMotif ? 1.7 : 1);
-          // تدرّج قوة الصوت وسط الجملة أعلى وأطرافها أخفت (كريشندو-ديكريشندو)
-          const progress = i / (motif.length - 1 || 1);
-          const peakGain = mood.gainBase + mood.gainSwell * Math.sin(progress * Math.PI);
-          playNote(degree, t, duration, peakGain);
-          // فرصة صغيرة لنغمة وتر متزامنة (خامسة بالسلّم) — تنويع بلا نشاز
-          if (Math.random() < 1 / 7) playNote(clamp(degree + 2, 0, NOTES.length - 1), t, duration, peakGain * 0.7);
-          t += duration + randomBetween(...mood.noteGapRange);
-        }
-        t += randomBetween(...mood.repeatGapRange);
+    const answerHalf = [
+      composeBar(chords[2], rhythm, m1[1][m1[1].length - 1].degree),
+      composeBar(chords[3], mood.cadenceRhythm, MELODY_LOW + 2, MELODY_LOW + 4), // ينتهي على الخامسة = سؤال
+    ];
+    const answerFull = [
+      composeBar(chords[6], rhythm, m1[1][m1[1].length - 1].degree),
+      composeBar(chords[7], mood.cadenceRhythm, MELODY_LOW + 1, MELODY_LOW), // تونيك فوق وتر التونيك = جواب
+    ];
+    const period = [...m1, ...answerHalf, ...m1, ...answerFull];
+
+    let t = audioCtx.currentTime + 0.12;
+
+    for (let repeat = 0; repeat < mood.formRepeats && !stopRequested; repeat++) {
+      for (let bar = 0; bar < period.length && !stopRequested; bar++) {
+        const barStart = t;
+        const chordRoot = chords[bar];
+
+        // الباص: أصل الوتر بأوكتاف تحت اللحن، يمسك المازورة كلها
+        playNote(BASS_LOW + chordRoot, barStart, beatDur * 3.6, mood.gainBase * 0.55);
+        if (mood.bpm >= 100) playNote(BASS_LOW + chordRoot, barStart + beatDur * 2, beatDur * 1.8, mood.gainBase * 0.4);
+
+        // المرافقة: ثالثة وخامسة الوتر، خافتة تحت اللحن
+        [2, 4].forEach((interval) => {
+          playNote(BASS_LOW + chordRoot + interval, barStart, beatDur * 3.2, mood.gainBase * 0.3);
+        });
+
+        // اللحن فوقهم
+        let beat = 0;
+        period[bar].forEach(({ degree, length }) => {
+          if (stopRequested) return;
+          const isDownbeat = beat === 0;
+          const peakGain = mood.gainBase + mood.gainSwell * (isDownbeat ? 1 : 0.55);
+          playNote(degree, barStart + beat * beatDur, length * beatDur * 0.92, peakGain);
+          beat += length;
+        });
+
+        t = barStart + 4 * beatDur;
       }
-      t += randomBetween(...mood.phraseGapRange);
     }
 
     activeTimeouts.push(

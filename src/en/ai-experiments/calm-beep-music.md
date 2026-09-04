@@ -6,7 +6,7 @@ langSwitchUrl: "/ai-experiments/calm-beep-music.html"
 aiDisclosure: "🧪 An experiment the site owner made with AI, just to explore and have fun."
 ---
 
-A simple question: can a random algorithm — one that follows a few basic musical rules (a scale, phrases that repeat with variation, dynamic swells) — actually compose something that feels like real music? The generator below tries to answer that live in your browser, and it's different every time you play it. Hit play and judge for yourself.
+A simple question: can a random algorithm actually compose something that feels like real music? The generator below builds a fresh 8-bar piece every time — on a steady beat, over a chord progression, with a melody that comes back so you can hold onto it, and an ending that resolves home — plus bass and accompaniment underneath. Hit play and judge for yourself.
 
 <div class="beep-experiment">
   <div class="instrument-picker" id="instrumentPicker">
