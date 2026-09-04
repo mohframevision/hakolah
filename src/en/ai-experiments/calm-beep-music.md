@@ -1,7 +1,7 @@
 ---
 title: "Experiment #1: AI-Generated Random Music"
 icon: 🎵
-desc: A generator that composes a different calm piece every time — with repeating musical phrases and a coherent melody, right in your browser.
+desc: A generator that composes a different piece every time — pick the instrument and mood (calm, energetic, happy, dreamy), with repeating musical phrases and a coherent melody, right in your browser.
 langSwitchUrl: "/ai-experiments/calm-beep-music.html"
 aiDisclosure: "🧪 An experiment the site owner made with AI, just to explore and have fun."
 ---
@@ -20,6 +20,12 @@ A simple question: can a random algorithm — one that follows a few basic music
     <button type="button" class="filter-chip instrument-btn" data-instrument="bell">🔔 Bell</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="accordion">🪗 Accordion</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="musicbox">🎐 Music Box</button>
+  </div>
+  <div class="instrument-picker" id="moodPicker">
+    <button type="button" class="filter-chip mood-btn active" data-mood="calm">😌 Calm</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="energetic">⚡ Energetic</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="happy">😊 Happy</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="dreamy">🌙 Dreamy</button>
   </div>
   <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Play Music" data-stop-label="⏹ Stop">▶️ Play Music</button>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">

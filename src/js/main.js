@@ -704,26 +704,27 @@ function initBeepMelodyExperiment() {
   let NOTES = buildScale(ROOT_NOTES[0]);
   let audioCtx = null;
   let delayNode = null; // مسار صدى مشترك (Delay + Feedback) — كل نغمة ترسل له
+  let delayFeedbackGain = null; // مرجع خارجي عشان نضبط كمية الصدى حسب المزاج بكل تشغيلة
+  let delayWetGain = null;
   let playing = false;
   let stopRequested = false;
   let activeOscillators = [];
   let activeTimeouts = [];
 
   // يُنشأ مرة وحدة لكل AudioContext — شبكة الصدى تحتاج تبقى نفسها طول التشغيلة
-  // عشان الصدى يتراكم طبيعياً بين النغمات، لا يتصفّر كل نغمة
+  // عشان الصدى يتراكم طبيعياً بين النغمات، لا يتصفّر كل نغمة. القيم الفعلية
+  // (كمية الصدى) تُضبط بدالة applyMood كل تشغيلة حسب المزاج المختار
   function ensureAudioGraph() {
     if (delayNode) return;
     delayNode = audioCtx.createDelay();
     delayNode.delayTime.value = 0.22;
-    const feedbackGain = audioCtx.createGain();
-    feedbackGain.gain.value = 0.22;
-    const wetGain = audioCtx.createGain();
-    wetGain.gain.value = 0.16;
+    delayFeedbackGain = audioCtx.createGain();
+    delayWetGain = audioCtx.createGain();
 
-    delayNode.connect(feedbackGain);
-    feedbackGain.connect(delayNode);
-    delayNode.connect(wetGain);
-    wetGain.connect(audioCtx.destination);
+    delayNode.connect(delayFeedbackGain);
+    delayFeedbackGain.connect(delayNode);
+    delayNode.connect(delayWetGain);
+    delayWetGain.connect(audioCtx.destination);
   }
 
   /* 10 "آلات" مصنوعة كلها تركيب توافقيات (Harmonics) — نفس الأسلوب، بس بنِسَب
@@ -885,6 +886,69 @@ function initBeepMelodyExperiment() {
     });
   });
 
+  /* أربعة "أمزجة" — كل وحدة تضبط سرعة الإيقاع وكثافة النغمات ومدى قوة الصوت
+     وكمية الصدى (الأقرب لطابع الإحساس المطلوب، مو مجرد أرقام عشوائية):
+     - هادئ: بطيء، متباعد، هادئ الصوت، صدى واسع (فضاء ودفء) — كان الافتراضي الوحيد قبل.
+     - حيوي: سريع جداً، نغمات متلاصقة، صوت أقوى، صدى قليل (إحساس "مباشر" لا "بعيد").
+     - سعيد: متوسط السرعة والقوة — بين الهادئ والحيوي.
+     - حالم: أبطأ من الهادئ نفسه، صوت خافت جداً، صدى كثيف (إحساس عائم/بعيد). */
+  const MOODS = {
+    calm: {
+      tempoRange: [0.42, 0.62],
+      noteGapRange: [0.06, 0.18],
+      repeatGapRange: [0.15, 0.3],
+      phraseGapRange: [0.25, 0.5],
+      phraseCountRange: [4, 7],
+      gainBase: 0.09,
+      gainSwell: 0.1,
+      delayWet: 0.16,
+      delayFeedback: 0.22,
+    },
+    energetic: {
+      tempoRange: [0.16, 0.24],
+      noteGapRange: [0.01, 0.04],
+      repeatGapRange: [0.04, 0.1],
+      phraseGapRange: [0.08, 0.18],
+      phraseCountRange: [7, 11],
+      gainBase: 0.15,
+      gainSwell: 0.14,
+      delayWet: 0.08,
+      delayFeedback: 0.12,
+    },
+    happy: {
+      tempoRange: [0.28, 0.4],
+      noteGapRange: [0.04, 0.1],
+      repeatGapRange: [0.1, 0.2],
+      phraseGapRange: [0.15, 0.3],
+      phraseCountRange: [5, 8],
+      gainBase: 0.13,
+      gainSwell: 0.12,
+      delayWet: 0.14,
+      delayFeedback: 0.2,
+    },
+    dreamy: {
+      tempoRange: [0.55, 0.85],
+      noteGapRange: [0.1, 0.3],
+      repeatGapRange: [0.25, 0.45],
+      phraseGapRange: [0.4, 0.7],
+      phraseCountRange: [3, 5],
+      gainBase: 0.06,
+      gainSwell: 0.08,
+      delayWet: 0.28,
+      delayFeedback: 0.34,
+    },
+  };
+
+  let currentMood = "calm";
+  const moodButtons = document.querySelectorAll("#moodPicker .mood-btn");
+  moodButtons.forEach((el) => {
+    el.addEventListener("click", () => {
+      currentMood = el.dataset.mood;
+      moodButtons.forEach((b) => b.classList.toggle("active", b === el));
+      playClickSound();
+    });
+  });
+
   function randomBetween(min, max) {
     return min + Math.random() * (max - min);
   }
@@ -1006,12 +1070,17 @@ function initBeepMelodyExperiment() {
      بدل نغمة عشوائية مستقلة كل مرة. كل جملة تُعزف مرتين (مرة كما هي، ومرة
      "منقولة" Sequence لدرجة أو درجتين — أسلوب تأليف كلاسيكي بسيط)، بتدرّج قوة
      صوت (كريشندو-ديكريشندو) داخل كل جملة، ودرجة الانطلاق تنجرف تدريجياً لأعلى
-     بالنص الأول من القطعة ولأسفل بالنص الثاني (قوس لحني عام). النتيجة أقرب
-     لمقطوعة قصيرة منطقية من مجرد نغمات عشوائية متتالية. */
+     بالنص الأول من القطعة ولأسفل بالنص الثاني (قوس لحني عام). كل الأرقام
+     (السرعة، الفواصل، عدد الجمل، قوة الصوت، كمية الصدى) تجي من MOODS[currentMood]
+     — نفس منطق التأليف، بس بنِسَب مختلفة حسب المزاج المختار. */
   async function playSequence() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") await audioCtx.resume();
     ensureAudioGraph();
+
+    const mood = MOODS[currentMood];
+    delayFeedbackGain.gain.value = mood.delayFeedback;
+    delayWetGain.gain.value = mood.delayWet;
 
     playing = true;
     stopRequested = false;
@@ -1021,8 +1090,8 @@ function initBeepMelodyExperiment() {
     btn.textContent = btn.dataset.stopLabel;
 
     let t = audioCtx.currentTime + 0.1;
-    const baseDur = randomBetween(0.42, 0.62);
-    const phraseCount = Math.round(randomBetween(4, 7));
+    const baseDur = randomBetween(...mood.tempoRange);
+    const phraseCount = Math.round(randomBetween(...mood.phraseCountRange));
     let phraseStartDegree = Math.floor(NOTES.length / 2);
 
     for (let p = 0; p < phraseCount && !stopRequested; p++) {
@@ -1041,15 +1110,15 @@ function initBeepMelodyExperiment() {
           const duration = baseDur * (isLastInMotif ? 1.7 : 1);
           // تدرّج قوة الصوت وسط الجملة أعلى وأطرافها أخفت (كريشندو-ديكريشندو)
           const progress = i / (motif.length - 1 || 1);
-          const peakGain = 0.09 + 0.1 * Math.sin(progress * Math.PI);
+          const peakGain = mood.gainBase + mood.gainSwell * Math.sin(progress * Math.PI);
           playNote(degree, t, duration, peakGain);
           // فرصة صغيرة لنغمة وتر متزامنة (خامسة بالسلّم) — تنويع بلا نشاز
           if (Math.random() < 1 / 7) playNote(clamp(degree + 2, 0, NOTES.length - 1), t, duration, peakGain * 0.7);
-          t += duration + randomBetween(0.06, 0.18);
+          t += duration + randomBetween(...mood.noteGapRange);
         }
-        t += randomBetween(0.15, 0.3);
+        t += randomBetween(...mood.repeatGapRange);
       }
-      t += randomBetween(0.25, 0.5);
+      t += randomBetween(...mood.phraseGapRange);
     }
 
     activeTimeouts.push(

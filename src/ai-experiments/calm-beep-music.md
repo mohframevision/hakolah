@@ -1,9 +1,9 @@
 ---
 title: "تجربة #1: تأليف موسيقى عشوائية بالذكاء الاصطناعي"
 icon: 🎵
-desc: مولّد يؤلّف مقطوعة هادئة مختلفة كل مرة، بجمل موسيقية متكررة ولحن متماسك، مباشرة بمتصفحك.
+desc: مولّد يؤلّف مقطوعة مختلفة كل مرة — اختار الآلة والمزاج (هادئ، حيوي، سعيد، حالم)، بجمل موسيقية متكررة ولحن متماسك، مباشرة بمتصفحك.
 title_en: "Experiment #1: AI-Generated Random Music"
-desc_en: A generator that composes a different calm piece every time — with repeating musical phrases and a coherent melody, right in your browser.
+desc_en: A generator that composes a different piece every time — pick the instrument and mood (calm, energetic, happy, dreamy), with repeating musical phrases and a coherent melody, right in your browser.
 categories:
   - موسيقى
 dateAdded: 2026-09-04
@@ -25,6 +25,12 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     <button type="button" class="filter-chip instrument-btn" data-instrument="bell">🔔 جرس</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="accordion">🪗 أكورديون</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="musicbox">🎐 صندوق موسيقى</button>
+  </div>
+  <div class="instrument-picker" id="moodPicker">
+    <button type="button" class="filter-chip mood-btn active" data-mood="calm">😌 هادئ</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="energetic">⚡ حيوي</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="happy">😊 سعيد</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="dreamy">🌙 حالم</button>
   </div>
   <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
