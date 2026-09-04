@@ -1,9 +1,9 @@
 ---
-title: "تجربة #1: موسيقى هادئة من نغمات بيب فقط"
+title: "تجربة #1: تأليف موسيقى عشوائية بالذكاء الاصطناعي"
 icon: 🎵
-desc: هل تقدر نغمات بيب بسيطة (زي أدوات الصوت 8-bit) تكوّن موسيقى هادئة؟ جربتها هنا مباشرة بالمتصفح.
-title_en: "Experiment #1: Calm Music Made of Nothing but Beeps"
-desc_en: Can simple beep tones (like 8-bit sound tools) actually form calm music? Tried it live, right in the browser.
+desc: مولّد يؤلّف مقطوعة هادئة مختلفة كل مرة، بجمل موسيقية متكررة ولحن متماسك، مباشرة بمتصفحك.
+title_en: "Experiment #1: AI-Generated Random Music"
+desc_en: A generator that composes a different calm piece every time — with repeating musical phrases and a coherent melody, right in your browser.
 categories:
   - موسيقى
 dateAdded: 2026-09-04
@@ -11,7 +11,7 @@ langSwitchUrl: "/en/ai-experiments/calm-beep-music.html"
 aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة الذكاء الاصطناعي، بس للاستكشاف والمرح."
 ---
 
-بيب واحد بس — نغمة نقية بلا أي تعقيد، زي [أدوات الصوت 8-bit](/hakolah/guides/jsfxr-8bit-sound-generator.html). جرّبت أرتّب مجموعة منها وأشوف: تطلع موسيقى هادئة، ولا تضل مجرد بيبات متتالية؟ دوس شغّل واحكم بنفسك.
+سؤال بسيط: تقدر خوارزمية عشوائية — ملتزمة بس بقواعد موسيقية بسيطة (سلّم، جمل تتكرر بتنويع، تدرّج بقوة الصوت) — تؤلّف مقطوعة تحس فيها كموسيقى حقيقية؟ المولّد تحت يجرّب الإجابة مباشرة بمتصفحك، ويختلف كل مرة تشغّله. دوس شغّل واحكم بنفسك.
 
 <div class="beep-experiment">
   <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>

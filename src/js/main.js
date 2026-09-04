@@ -691,10 +691,34 @@ function initBeepMelodyExperiment() {
 
   let NOTES = buildScale(ROOT_NOTES[0]);
   let audioCtx = null;
+  let masterFilter = null; // لوباس مشترك لكل النغمات — يلطّف حدّة المثلث (Triangle)
   let playing = false;
   let stopRequested = false;
   let activeOscillators = [];
   let activeTimeouts = [];
+
+  // يُنشأ مرة وحدة لكل AudioContext — شبكة الصدى تحتاج تبقى نفسها طول التشغيلة
+  // عشان الصدى يتراكم طبيعياً بين النغمات، لا يتصفّر كل نغمة
+  function ensureAudioGraph() {
+    if (masterFilter) return;
+    masterFilter = audioCtx.createBiquadFilter();
+    masterFilter.type = "lowpass";
+    masterFilter.frequency.value = 2200;
+    masterFilter.connect(audioCtx.destination);
+
+    const delayNode = audioCtx.createDelay();
+    delayNode.delayTime.value = 0.26;
+    const feedbackGain = audioCtx.createGain();
+    feedbackGain.gain.value = 0.27;
+    const wetGain = audioCtx.createGain();
+    wetGain.gain.value = 0.22;
+
+    masterFilter.connect(delayNode);
+    delayNode.connect(feedbackGain);
+    feedbackGain.connect(delayNode);
+    delayNode.connect(wetGain);
+    wetGain.connect(audioCtx.destination);
+  }
 
   function randomBetween(min, max) {
     return min + Math.random() * (max - min);
@@ -714,18 +738,33 @@ function initBeepMelodyExperiment() {
   }
 
   function playNote(noteIndex, startTime, duration, peakGain) {
-    const osc = audioCtx.createOscillator();
+    const freq = NOTES[noteIndex];
     const gain = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = NOTES[noteIndex];
     // تلاشٍ تدريجي بالدخول والخروج بدل قطع مفاجئ — هذا اللي يفرق بين "بيب مزعج" و"نغمة هادئة"
     gain.gain.setValueAtTime(0, startTime);
     gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.15);
     gain.gain.linearRampToValueAtTime(0, startTime + duration);
-    osc.connect(gain).connect(audioCtx.destination);
-    osc.start(startTime);
-    osc.stop(startTime + duration + 0.05);
-    activeOscillators.push(osc);
+    gain.connect(masterFilter);
+
+    // مذبذبان مثلث (Triangle) بدل جيب واحد — الثاني مزاح شعرة (Detune) ومخفوت
+    // شوي، نفس حيلة "Chorus" البسيطة اللي تخلي النغمة تحس أدفأ وأغنى من بيب مفرد
+    const osc1 = audioCtx.createOscillator();
+    osc1.type = "triangle";
+    osc1.frequency.value = freq;
+    osc1.connect(gain);
+    osc1.start(startTime);
+    osc1.stop(startTime + duration + 0.05);
+
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = "triangle";
+    osc2.frequency.value = freq * 2 ** (6 / 1200); // +6 سنت
+    const osc2Gain = audioCtx.createGain();
+    osc2Gain.gain.value = 0.45;
+    osc2.connect(osc2Gain).connect(gain);
+    osc2.start(startTime);
+    osc2.stop(startTime + duration + 0.05);
+
+    activeOscillators.push(osc1, osc2);
 
     highlightKey(noteIndex, (startTime - audioCtx.currentTime) * 1000, duration * 1000);
   }
@@ -739,6 +778,7 @@ function initBeepMelodyExperiment() {
   async function playSequence() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") await audioCtx.resume();
+    ensureAudioGraph();
 
     playing = true;
     stopRequested = false;

@@ -1,12 +1,12 @@
 ---
-title: "Experiment #1: Calm Music Made of Nothing but Beeps"
+title: "Experiment #1: AI-Generated Random Music"
 icon: 🎵
-desc: Can simple beep tones (like 8-bit sound tools) actually form calm music? Tried it live, right in the browser.
+desc: A generator that composes a different calm piece every time — with repeating musical phrases and a coherent melody, right in your browser.
 langSwitchUrl: "/ai-experiments/calm-beep-music.html"
 aiDisclosure: "🧪 An experiment the site owner made with AI, just to explore and have fun."
 ---
 
-Just one beep — a pure tone, no complexity at all, like an [8-bit sound tool](/hakolah/en/guides/jsfxr-8bit-sound-generator.html). I tried arranging a bunch of them and seeing: does it turn into calm music, or does it just stay a string of beeps? Hit play and judge for yourself.
+A simple question: can a random algorithm — one that follows a few basic musical rules (a scale, phrases that repeat with variation, dynamic swells) — actually compose something that feels like real music? The generator below tries to answer that live in your browser, and it's different every time you play it. Hit play and judge for yourself.
 
 <div class="beep-experiment">
   <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Play Music" data-stop-label="⏹ Stop">▶️ Play Music</button>
