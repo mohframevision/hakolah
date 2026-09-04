@@ -668,12 +668,12 @@ function initArticleShare() {
 }
 
 /* ===== تجربة "موسيقى بيب هادئة" (src/ai-experiments/calm-beep-music.md) =====
-   نغمات Web Audio من سلّم خماسي (Pentatonic) بأوكتافين — أي مزيج منها متناغم
-   بطبيعته، فلا حاجة لمنطق تأليف حقيقي. مدة كل نغمة وفاصلها وعدد النغمات
-   وفرصة تزامن نغمتين (وتر) كلها عشوائية بمدى واسع، فمساحة الاحتمالات كبيرة
-   كفاية إن أي تشغيلتين ما تتكرران عملياً. النص على الزر ولوحة المفاتيح يجيان
-   من data-play-label/data-stop-label بالـ HTML نفسه عشان يشتغل بأي لغة بدون
-   تكرار الدالة. */
+   نغمات Web Audio من سلّم خماسي (Pentatonic) بأوكتافين، بمفتاح موسيقي عشوائي
+   لكل تشغيلة (ROOT_NOTES). التأليف بجمل موسيقية (Motifs) لا نغمات مستقلة —
+   انظر تعليق playSequence بالتفصيل. مساحة الاحتمالات (مفتاح + جمل + إيقاع)
+   كبيرة كفاية إن أي تشغيلتين ما تتكرران عملياً. النص على الزر ولوحة المفاتيح
+   يجيان من data-play-label/data-stop-label بالـ HTML نفسه عشان يشتغل بأي لغة
+   بدون تكرار الدالة. */
 function initBeepMelodyExperiment() {
   const btn = document.getElementById("beepMelodyPlay");
   const keys = document.querySelectorAll("#beepKeys .beep-key");
@@ -709,14 +709,18 @@ function initBeepMelodyExperiment() {
     );
   }
 
-  function playNote(noteIndex, startTime, duration) {
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function playNote(noteIndex, startTime, duration, peakGain) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = "sine";
     osc.frequency.value = NOTES[noteIndex];
     // تلاشٍ تدريجي بالدخول والخروج بدل قطع مفاجئ — هذا اللي يفرق بين "بيب مزعج" و"نغمة هادئة"
     gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(0.16, startTime + 0.15);
+    gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.15);
     gain.gain.linearRampToValueAtTime(0, startTime + duration);
     osc.connect(gain).connect(audioCtx.destination);
     osc.start(startTime);
@@ -726,6 +730,12 @@ function initBeepMelodyExperiment() {
     highlightKey(noteIndex, (startTime - audioCtx.currentTime) * 1000, duration * 1000);
   }
 
+  /* تأليف بجمل موسيقية (Motifs) بدل نغمة عشوائية مستقلة كل مرة — كل جملة:
+     خطوات صغيرة حول درجة انطلاق (لحن متماسك لا قفزات عشوائية)، تُعزف مرتين
+     (مرة كما هي، ومرة "منقولة" Sequence لدرجة أو درجتين — أسلوب تأليف كلاسيكي
+     بسيط)، بتدرّج قوة صوت (كريشندو-ديكريشندو) داخل كل جملة، ودرجة الانطلاق
+     تنجرف تدريجياً لأعلى بالنص الأول من القطعة ولأسفل بالنص الثاني (قوس لحني
+     عام). النتيجة أقرب لمقطوعة قصيرة من مجرد نغمات عشوائية متتالية. */
   async function playSequence() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") await audioCtx.resume();
@@ -738,15 +748,37 @@ function initBeepMelodyExperiment() {
     btn.textContent = btn.dataset.stopLabel;
 
     let t = audioCtx.currentTime + 0.1;
-    const totalNotes = Math.round(randomBetween(20, 36));
-    for (let i = 0; i < totalNotes; i++) {
-      if (stopRequested) break;
-      const duration = randomBetween(0.55, 1.35);
-      const noteIndex = Math.floor(Math.random() * NOTES.length);
-      playNote(noteIndex, t, duration);
-      // ١ من ٦ فرصة نغمة ثانية (وتر ثلث/خامس بنفس السلّم) بنفس اللحظة — تنويع بلا نشاز
-      if (Math.random() < (1 / 6)) playNote((noteIndex + 2) % NOTES.length, t, duration);
-      t += duration + randomBetween(0.15, 0.6);
+    const baseDur = randomBetween(0.42, 0.62);
+    const phraseCount = Math.round(randomBetween(4, 7));
+    let phraseStartDegree = Math.floor(NOTES.length / 2);
+
+    for (let p = 0; p < phraseCount && !stopRequested; p++) {
+      const arcDirection = p < phraseCount / 2 ? 1 : -1;
+      phraseStartDegree = clamp(phraseStartDegree + arcDirection * Math.round(randomBetween(0, 2)), 0, NOTES.length - 1);
+
+      const motifLength = Math.round(randomBetween(3, 5));
+      const motif = [0];
+      for (let i = 1; i < motifLength; i++) motif.push(motif[i - 1] + Math.round(randomBetween(-2, 2)));
+
+      const transpositions = [0, Math.random() < 0.5 ? 2 : -2];
+      for (const transpose of transpositions) {
+        if (stopRequested) break;
+        for (let i = 0; i < motif.length; i++) {
+          if (stopRequested) break;
+          const degree = clamp(phraseStartDegree + motif[i] + transpose, 0, NOTES.length - 1);
+          const isLastInMotif = i === motif.length - 1;
+          const duration = baseDur * (isLastInMotif ? 1.7 : 1);
+          // تدرّج قوة الصوت وسط الجملة أعلى وأطرافها أخفت (كريشندو-ديكريشندو)
+          const progress = i / (motif.length - 1 || 1);
+          const peakGain = 0.09 + 0.1 * Math.sin(progress * Math.PI);
+          playNote(degree, t, duration, peakGain);
+          // فرصة صغيرة لنغمة وتر متزامنة (خامسة بالسلّم) — تنويع بلا نشاز
+          if (Math.random() < 1 / 7) playNote(clamp(degree + 2, 0, NOTES.length - 1), t, duration, peakGain * 0.7);
+          t += duration + randomBetween(0.06, 0.18);
+        }
+        t += randomBetween(0.15, 0.3);
+      }
+      t += randomBetween(0.25, 0.5);
     }
 
     activeTimeouts.push(
