@@ -756,13 +756,20 @@ function initBeepMelodyExperiment() {
   function playNote(noteIndex, startTime, duration, peakGain) {
     const freq = NOTES[noteIndex];
 
+    // بيانو حقيقي: يسار اللوحة (نغمات واطية) أوتاره أطول وأثخن فيرن أطول
+    // وأغنى، يمينها (نغمات حادة) أوتاره قصيرة رفيعة فتخفت أسرع وأنحف. نستخدم
+    // موقع النغمة داخل السلّم الحالي (0 = أوطى، الأعلى = أحدّ) كمقياس نسبي —
+    // يشتغل بأي مفتاح موسيقي عشوائي بلا ما يحتاج نغمة مرجعية ثابتة
+    const registerFactor = 1.5 - (noteIndex / (NOTES.length - 1)) * 0.9; // ١٫٥ (واطي) → ٠٫٦ (حاد)
+    const ringDuration = duration * registerFactor;
+
     // مغلاف بيانو حقيقي: هجوم شبه فوري (مطرقة تدق الوتر) ثم تلاشٍ أُسّي —
     // مو تصاعد تدريجي كالوتريات. exponentialRamp ما يقبل صفر كهدف، فنطلع لقيمة
     // صغيرة جداً بدل الصفر المطلق
     const envelope = audioCtx.createGain();
     envelope.gain.setValueAtTime(0.0001, startTime);
     envelope.gain.exponentialRampToValueAtTime(Math.max(peakGain, 0.0001), startTime + 0.008);
-    envelope.gain.exponentialRampToValueAtTime(0.0006, startTime + duration);
+    envelope.gain.exponentialRampToValueAtTime(0.0006, startTime + ringDuration);
 
     // فلتر يبدأ ساطعاً (لحظة القرع) ويعتم تدريجياً — نفس سلوك وتر البيانو
     // الحقيقي اللي يفقد حدّته الطيفية كل ما تلاشى
@@ -770,25 +777,27 @@ function initBeepMelodyExperiment() {
     filter.type = "lowpass";
     filter.Q.value = 0.6;
     filter.frequency.setValueAtTime(clamp(freq * 9, 800, 7000), startTime);
-    filter.frequency.exponentialRampToValueAtTime(clamp(freq * 2, 400, 2000), startTime + duration);
+    filter.frequency.exponentialRampToValueAtTime(clamp(freq * 2, 400, 2000), startTime + ringDuration);
 
     envelope.connect(filter);
     filter.connect(audioCtx.destination);
     filter.connect(delayNode);
 
+    // النغمات الواطية توافقياتها العليا أقوى شوي (صوت أغنى)، الحادة أخفت (أنحف)
+    const harmonicRichness = clamp(registerFactor, 0.75, 1.3);
     HARMONICS.forEach(({ mult, weight, type }) => {
       const osc = audioCtx.createOscillator();
       osc.type = type;
       osc.frequency.value = freq * mult;
       const harmonicGain = audioCtx.createGain();
-      harmonicGain.gain.value = weight;
+      harmonicGain.gain.value = mult === 1 ? weight : weight * harmonicRichness;
       osc.connect(harmonicGain).connect(envelope);
       osc.start(startTime);
-      osc.stop(startTime + duration + 0.05);
+      osc.stop(startTime + ringDuration + 0.05);
       activeOscillators.push(osc);
     });
 
-    highlightKey(pitchClassOf(freq), (startTime - audioCtx.currentTime) * 1000, duration * 1000);
+    highlightKey(pitchClassOf(freq), (startTime - audioCtx.currentTime) * 1000, ringDuration * 1000);
   }
 
   /* تأليف بجمل موسيقية (Motifs) بدل نغمة عشوائية مستقلة كل مرة — كل جملة:
