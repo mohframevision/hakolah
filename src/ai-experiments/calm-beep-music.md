@@ -45,6 +45,11 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     <button type="button" class="filter-chip" id="beepDownloadVideo" data-working="⏳ يسجّل الفيديو" data-failed="متصفحك ما يدعم تسجيل الفيديو">🎬 تحميل فيديو</button>
     <button type="button" class="filter-chip" id="beepDownloadMidi">🎼 تحميل MIDI</button>
   </div>
+  <div class="beep-seed-row">
+    <label class="beep-seed-label" for="beepSeedInput">🌱 البذرة</label>
+    <input type="text" inputmode="numeric" id="beepSeedInput" class="beep-seed-input" placeholder="اكتب رقم بذرة" data-invalid="اكتب رقماً صحيحاً للبذرة" />
+    <button type="button" class="filter-chip" id="beepSeedPlay">▶️ شغّل هذه البذرة</button>
+  </div>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
     <div class="beep-white" data-pitch-class="0"></div>
     <div class="beep-white" data-pitch-class="2"></div>

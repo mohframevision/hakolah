@@ -40,6 +40,11 @@ A simple question: can a random algorithm actually compose something that feels 
     <button type="button" class="filter-chip" id="beepDownloadVideo" data-working="⏳ Recording" data-failed="Your browser does not support video recording">🎬 Download video</button>
     <button type="button" class="filter-chip" id="beepDownloadMidi">🎼 Download MIDI</button>
   </div>
+  <div class="beep-seed-row">
+    <label class="beep-seed-label" for="beepSeedInput">🌱 Seed</label>
+    <input type="text" inputmode="numeric" id="beepSeedInput" class="beep-seed-input" placeholder="Enter a seed number" data-invalid="Enter a valid seed number" />
+    <button type="button" class="filter-chip" id="beepSeedPlay">▶️ Play this seed</button>
+  </div>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
     <div class="beep-white" data-pitch-class="0"></div>
     <div class="beep-white" data-pitch-class="2"></div>

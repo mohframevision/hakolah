@@ -1204,6 +1204,7 @@ function initBeepMelodyExperiment() {
      يحوّل الأداة من "لعبة تعزف" إلى أداة تدريس: الطالب يسمع ويشوف التحليل
      بنفس اللحظة. كل البيانات محسوبة أصلاً بـ playSequence. */
   const analysisBox = document.getElementById("beepAnalysis");
+  const seedInput = document.getElementById("beepSeedInput");
   const noteNameToggle = document.getElementById("noteNameToggle");
   let noteStyle = noteNameToggle ? noteNameToggle.dataset.default || "letters" : "letters";
   let lastAnalysis = null;
@@ -1215,6 +1216,8 @@ function initBeepMelodyExperiment() {
 
   function renderAnalysis(info) {
     lastAnalysis = info;
+    // نعبّي خانة البذرة بالبذرة المعزوفة فعلاً — يشوفها وينسخها أو يعدّلها
+    if (seedInput && document.activeElement !== seedInput) seedInput.value = info.seed;
     if (!analysisBox) return;
     const t = analysisBox.dataset;
     const roman = info.chords.slice(0, 4).map((degree) => ROMAN[info.mode][degree]);
@@ -1978,6 +1981,39 @@ function initBeepMelodyExperiment() {
       stopPlayback();
       playSequence();
       playClickSound();
+    });
+  }
+
+  /* تشغيل بذرة يكتبها المستخدم: نفس البذرة تعطي نفس المقطوعة حرفياً، فيقدر
+     يرجع لمقطوعة أعجبته أو يجرّب بذرة شافها بفيديو أو شاركها أحد */
+  const seedPlayBtn = document.getElementById("beepSeedPlay");
+  function playTypedSeed() {
+    if (!seedInput) return;
+    const raw = seedInput.value.trim();
+    if (!raw) {
+      // خانة فاضية = تشغيل عشوائي عادي
+      if (playing) stopPlayback();
+      playSequence();
+      return;
+    }
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0) {
+      showToast(seedInput.dataset.invalid);
+      return;
+    }
+    pinnedSeed = value >>> 0;
+    if (playing) stopPlayback();
+    playSequence();
+    playClickSound();
+  }
+
+  if (seedPlayBtn) seedPlayBtn.addEventListener("click", playTypedSeed);
+  if (seedInput) {
+    seedInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        playTypedSeed();
+      }
     });
   }
 

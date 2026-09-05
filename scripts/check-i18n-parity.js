@@ -75,9 +75,11 @@ section("2. تطابق البنية (structural parity)");
 function signature(file) {
   const h = fs.readFileSync(path.join(SITE, file), "utf8");
   return {
-    ids: new Set([...h.matchAll(/id="([^"]+)"/g)].map((m) => m[1])),
+    // \b ضرورية: بدونها يلتقط الاسم أي سمة تنتهي بـ id مثل data-invalid="..."
+    // فيقارن نصاً عربياً على أنه معرّف عنصر ويفشل بلا سبب حقيقي
+    ids: new Set([...h.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1])),
     classes: new Set(
-      [...h.matchAll(/class="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)).filter(Boolean)
+      [...h.matchAll(/\bclass="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)).filter(Boolean)
     ),
     scripts: new Set(
       [...h.matchAll(/>\s*(render\w+\(\)|init\w+\(\)|renderSection\("[^"]+"\))/g)].map((m) => m[1])
