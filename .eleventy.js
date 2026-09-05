@@ -74,6 +74,13 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/sw.js");
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
+  /* تاريخ بصيغة YYYY-MM-DD. لازم فلتر: YAML يحوّل `2026-08-20` لكائن Date،
+     وطباعته كما هي بالقالب تطبع "Thu Aug 20 2026 03:00:00 GMT+0300 (...)" */
+  eleventyConfig.addFilter("isoDate", (value) => {
+    if (!value) return "";
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toISOString().slice(0, 10);
+  });
   eleventyConfig.addFilter("replace", (str, search, replacement) =>
     typeof str === "string" ? str.split(search).join(replacement) : str
   );

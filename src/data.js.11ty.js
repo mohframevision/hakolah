@@ -103,6 +103,22 @@ exports.render = function (data) {
       // تُرسَل للمتصفح فقط لما يكون فيه أكثر من فرع — عنصر بفرع واحد يكتفي
       // بـ lat/lng أعلاه، فما نضخّم ملف البيانات بلا فائدة
       if (branches.length > 1) item.branches = branches;
+
+      /* مصدر اللحم — حقل اختياري تماماً، ما يُرسَل إلا للعناصر اللي تحقّق
+         صاحب الموقع من مصدرها فعلاً. عمداً بلا أي قيمة افتراضية: غياب الحقل
+         يعني "ما تحققنا"، مو "غير معروف" (اللي توحي إننا بحثنا وما لقينا).
+         checked = تاريخ آخر تحقّق، عشان يقدّر الزائر حداثة المعلومة بنفسه. */
+      const meat = entry.data.meatSource;
+      if (meat && meat.text) {
+        item.meatSource = {
+          text: meat.text,
+          text_en: meat.text_en || "",
+          via: meat.via || "",
+          // YAML يحوّل التاريخ لكائن Date، وString() عليه تطبع نصاً طويلاً
+          // بصيغة إنجليزية — نوحّده على YYYY-MM-DD
+          checked: meat.checked ? new Date(meat.checked).toISOString().slice(0, 10) : "",
+        };
+      }
       // hasDetailPages قسم كامل (أماكن/مقالات)، وhasDetailPage عنصر واحد بقسم
       // مختلط (مثل مطعم له مقال بينما البقية بطاقات روابط بس) — نفس الآلية،
       // القرار بس صار لكل عنصر بدل القسم كامل

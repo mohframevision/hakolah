@@ -33,6 +33,22 @@
       <span class="tag">{% if tagIcons[tag] %}<span class="tag-icon">{{ tagIcons[tag] }}</span>{% endif %}{{ (tagsEn[tag] or tag) if isEn else tag }}</span>
       {%- endfor %}
     </div>
+    {#- مصدر اللحم: <details> أصلية بدل زر بجافاسكربت — تعطي زراً حقيقياً
+        (summary) ويبقى النص داخل HTML فتقرأه محركات البحث، وهذا أصلاً الهدف
+        من الحقل. يظهر فقط للعناصر اللي فيها مصدر متحقَّق منه فعلاً. -#}
+    {%- set meat = d.meatSource %}
+    {%- if meat and meat.text %}
+    <details class="meat-source">
+      <summary>🥩 {{ t.meat_source_label }}</summary>
+      <p class="meat-source-text">{{ (meat.text_en or meat.text) if isEn else meat.text }}</p>
+      <p class="meat-source-meta">
+        {%- if meat.via == "asked" %}{{ t.meat_source_via_asked }}
+        {%- elif meat.via == "instagram" %}{{ t.meat_source_via_instagram }}
+        {%- elif meat.via == "menu" %}{{ t.meat_source_via_menu }}{% endif %}
+        {%- if meat.checked %} · {{ t.meat_source_checked }}: <span dir="ltr">{{ meat.checked | isoDate }}</span>{% endif %}
+      </p>
+    </details>
+    {%- endif %}
     <div class="item-actions">
       {%- if hasDetailPages or d.hasDetailPage %}
       <a class="btn" href="{{ (('/en/' if isEn else '/') + sectionSlug + '/' + (d.slug_en if (isEn and d.slug_en) else entry.fileSlug) + '.html') | url }}">📖 {{ t.read_details }}</a>

@@ -2328,6 +2328,45 @@ img {
 }
 
 /* لوحة التحليل الموسيقي — تُملأ بالجافاسكربت بعد كل تشغيلة */
+/* ===== مصدر اللحم (بطاقات المطاعم) ===== */
+.meat-source {
+  margin: 8px 0 4px;
+  font-size: 0.85rem;
+}
+
+.meat-source summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-primary);
+  padding: 4px 0;
+  list-style: none;
+}
+
+.meat-source summary::-webkit-details-marker {
+  display: none;
+}
+
+.meat-source summary::after {
+  content: " ▾";
+  font-size: 0.75rem;
+}
+
+.meat-source[open] summary::after {
+  content: " ▴";
+}
+
+.meat-source-text {
+  margin: 4px 0 2px;
+  color: var(--color-text);
+}
+
+.meat-source-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
 .beep-analysis:empty {
   display: none;
 }

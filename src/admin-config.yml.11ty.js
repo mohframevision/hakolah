@@ -113,6 +113,40 @@ function itemFields(entry) {
         "وبدونها لن يُنشر التعديل. الأفضل اختيار تصنيف موجود من القائمة أعلاه، " +
         "أو إخباري بالتصنيف الجديد لأضيف ترجمته.",
     },
+    {
+      label: "مصدر اللحم (اتركه فاضياً إن لم تتحقق منه بنفسك)",
+      name: "meatSource",
+      widget: "object",
+      required: false,
+      collapsed: true,
+      hint:
+        "لا تملأ هذا الحقل إلا بمعلومة تحققت منها فعلاً. تركه فاضياً يعني «لم نتحقق»، " +
+        "وهذا أفضل بكثير من تخمين — المعلومة دينية وحساسة والخطأ فيها يضر الزائر والمطعم.",
+      fields: [
+        { label: "المصدر (مثال: لحم أسترالي طازج)", name: "text", widget: "string", required: false },
+        { label: "المصدر بالإنجليزية", name: "text_en", widget: "string", required: false },
+        {
+          label: "كيف عرفته؟",
+          name: "via",
+          widget: "select",
+          required: false,
+          options: [
+            { label: "سألت المطعم مباشرة", value: "asked" },
+            { label: "من حساب المطعم بإنستقرام", value: "instagram" },
+            { label: "من قائمة الطعام", value: "menu" },
+          ],
+        },
+        {
+          label: "تاريخ آخر تحقّق",
+          name: "checked",
+          widget: "datetime",
+          required: false,
+          date_format: "YYYY-MM-DD",
+          time_format: false,
+          hint: "آخر مرة تأكدت فيها من المعلومة — يعرضها الموقع للزائر ليقدّر حداثتها بنفسه.",
+        },
+      ],
+    },
   ];
 
   if (entry.hasDetailPages) {

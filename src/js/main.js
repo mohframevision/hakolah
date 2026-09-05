@@ -1704,6 +1704,40 @@ async function shareText(text, trackParams, card) {
   }
 }
 
+/* مصدر اللحم بالبطاقة التفاعلية — نفس بناء item-card.njk (عنصر <details>
+   أصلي بلا جافاسكربت للفتح)، بس نضيف هنا وصفاً لعُمر المعلومة يُحسب لحظة
+   العرض. الحساب هنا لا وقت البناء عمداً: لو ما رُفع الموقع من شهور، الوصف
+   المبني وقت النشر يصير كذباً، أما المحسوب بالمتصفح فيبقى صحيحاً دايماً. */
+function meatSourceAgeLabel(checked) {
+  if (!checked) return "";
+  const days = (Date.now() - new Date(checked).getTime()) / 86400000;
+  if (!Number.isFinite(days) || days < 0) return "";
+  if (days < 30) return t("meat_source_age_recent");
+  if (days < 365) return t("meat_source_age_months");
+  return t("meat_source_age_old");
+}
+
+function buildMeatSourceHtml(item) {
+  const meat = item.meatSource;
+  if (!meat || !meat.text) return "";
+  const isEn = window.SITE_LANG === "en";
+  const text = (isEn && meat.text_en) || meat.text;
+  const viaKey = { asked: "meat_source_via_asked", instagram: "meat_source_via_instagram", menu: "meat_source_via_menu" }[
+    meat.via
+  ];
+  const parts = [];
+  if (viaKey) parts.push(t(viaKey));
+  if (meat.checked) parts.push(`${t("meat_source_checked")}: <span dir="ltr">${meat.checked}</span>`);
+  const age = meatSourceAgeLabel(meat.checked);
+  if (age) parts.push(age);
+  return `
+      <details class="meat-source">
+        <summary>🥩 ${t("meat_source_label")}</summary>
+        <p class="meat-source-text">${text}</p>
+        <p class="meat-source-meta">${parts.join(" · ")}</p>
+      </details>`;
+}
+
 function buildActionsHtml(item) {
   if (item.detailUrl) {
     const href = window.SITE_LANG === "en" && item.detailUrlEn ? item.detailUrlEn : item.detailUrl;
@@ -1829,6 +1863,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
         ${distanceKm !== null ? `<span class="tag distance-tag">📍 ${formatDistance(distanceKm)}${branchLabel ? ` — ${t("nearest_branch")} ${branchLabel}` : ""}</span>` : ""}
         ${(item.tags || []).map((tag) => `<span class="tag">${tagIcon(tag) ? `<span class="tag-icon">${tagIcon(tag)}</span>` : ""}${tagLabel(tag)}</span>`).join("")}
       </div>
+      ${buildMeatSourceHtml(item)}
       <div class="item-actions">
         ${buildActionsHtml(item)}
       </div>
