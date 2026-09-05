@@ -35,6 +35,8 @@ A simple question: can a random algorithm actually compose something that feels 
     <button type="button" class="filter-chip keyboard-toggle" id="keyboardToggle" data-label-full="🎹 Full keyboard" data-label-mini="🎹 Simple keyboard">🎹 Full keyboard</button>
     <button type="button" class="filter-chip" id="noteNameToggle" data-default="letters" data-label-letters="🔤 C D E" data-label-solfege="🎼 Do Re Mi">🎼 Do Re Mi</button>
     <button type="button" class="filter-chip" id="beepShareSeed" data-copied="Link to this exact piece copied">🔗 Copy link to this piece</button>
+    <button type="button" class="filter-chip" id="beepDownloadWav" data-working="⏳ Preparing file...">⬇️ Download WAV</button>
+    <button type="button" class="filter-chip" id="beepDownloadMidi">🎼 Download MIDI</button>
   </div>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
     <div class="beep-white" data-pitch-class="0"></div>
@@ -61,6 +63,7 @@ A simple question: can a random algorithm actually compose something that feels 
     data-label-form="Form"
     data-label-form-value="8-bar period: antecedent (1–4) + consequent (5–8)"
     data-label-tempo="Tempo"
+    data-label-meter="Meter"
     data-label-cadence="Cadence"
     data-label-cadence-authentic="Authentic cadence"
     data-label-cadence-plagal="Plagal cadence"

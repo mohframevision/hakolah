@@ -40,6 +40,8 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     <button type="button" class="filter-chip keyboard-toggle" id="keyboardToggle" data-label-full="🎹 لوحة كاملة" data-label-mini="🎹 لوحة مبسطة">🎹 لوحة كاملة</button>
     <button type="button" class="filter-chip" id="noteNameToggle" data-default="solfege" data-label-letters="🔤 C D E" data-label-solfege="🎼 Do Re Mi">🔤 C D E</button>
     <button type="button" class="filter-chip" id="beepShareSeed" data-copied="نُسخ رابط هذي المقطوعة">🔗 انسخ رابط المقطوعة</button>
+    <button type="button" class="filter-chip" id="beepDownloadWav" data-working="⏳ يجهّز الملف...">⬇️ تحميل WAV</button>
+    <button type="button" class="filter-chip" id="beepDownloadMidi">🎼 تحميل MIDI</button>
   </div>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
     <div class="beep-white" data-pitch-class="0"></div>
@@ -66,6 +68,7 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     data-label-form="الشكل"
     data-label-form-value="فترة من ٨ مازورات: سؤال (١-٤) + جواب (٥-٨)"
     data-label-tempo="السرعة"
+    data-label-meter="الميزان"
     data-label-cadence="الختام"
     data-label-cadence-authentic="ختام تام"
     data-label-cadence-plagal="ختام كنسي"

@@ -741,6 +741,7 @@ function initBeepMelodyExperiment() {
 
   let rand = createRng((Math.random() * 4294967296) >>> 0);
   let pinnedSeed = null; // بذرة جاية من الرابط — تُستخدم مرة وحدة بأول تشغيل
+  let lastPiece = null; // آخر قطعة أُلّفت — التصدير يصدّرها هي لا وحدة جديدة
 
   function allKeys() {
     return Object.values(keyByPitchClass).concat(Object.values(keyByAbsolute));
@@ -1004,13 +1005,22 @@ function initBeepMelodyExperiment() {
       bpmRange: [62, 84],
       scale: "major",
       formRepeats: 1,
-      rhythmPool: [
-        [1, 1, 2],
-        [2, 1, 1],
-        [1, 1, 1, 1],
-        [2, 2],
-      ],
-      cadenceRhythm: [2, 2],
+      rhythms: {
+        4: [
+          [1, 1, 2],
+          [2, 1, -1],
+          [1, 1, 1, -1],
+          [2, -0.5, 1.5],
+          [-0.5, 1.5, 2],
+        ],
+        3: [
+          [1, 1, 1],
+          [2, 1],
+          [1, -0.5, 1.5],
+          [1.5, 1.5],
+        ],
+      },
+      cadenceRhythms: { 4: [2, 2], 3: [1, 2] },
       gainBase: 0.1,
       gainSwell: 0.09,
       delayWet: 0.16,
@@ -1020,13 +1030,22 @@ function initBeepMelodyExperiment() {
       bpmRange: [118, 148],
       scale: "major",
       formRepeats: 2,
-      rhythmPool: [
-        [0.5, 0.5, 1, 0.5, 0.5, 1],
-        [1, 0.5, 0.5, 0.5, 0.5, 1],
-        [0.5, 0.5, 0.5, 0.5, 1, 1],
-        [1, 0.5, 0.5, 1, 1],
-      ],
-      cadenceRhythm: [1, 1, 2],
+      rhythms: {
+        4: [
+          [0.5, 0.5, 1, 0.5, 0.5, 1],
+          [1, 0.5, 0.5, -0.5, 0.5, 1],
+          [-0.5, 0.5, 0.5, 0.5, 1, 1],
+          [1, 0.5, -0.5, 0.5, 0.5, 1],
+          [0.5, 0.5, 1, -0.5, 1.5],
+        ],
+        3: [
+          [0.5, 0.5, 1, 1],
+          [1, 0.5, 0.5, 1],
+          [-0.5, 0.5, 1, 1],
+          [0.5, 0.5, 0.5, 0.5, 1],
+        ],
+      },
+      cadenceRhythms: { 4: [1, 1, 2], 3: [1, 2] },
       gainBase: 0.14,
       gainSwell: 0.12,
       delayWet: 0.08,
@@ -1036,13 +1055,22 @@ function initBeepMelodyExperiment() {
       bpmRange: [96, 122],
       scale: "major",
       formRepeats: 1,
-      rhythmPool: [
-        [1, 0.5, 0.5, 1, 1],
-        [1, 1, 0.5, 0.5, 1],
-        [0.5, 0.5, 1, 1, 1],
-        [1, 1, 1, 1],
-      ],
-      cadenceRhythm: [1, 1, 2],
+      rhythms: {
+        4: [
+          [1, 0.5, 0.5, 1, 1],
+          [1, 1, 0.5, -0.5, 1],
+          [-0.5, 0.5, 1, 1, 1],
+          [1, 0.5, 0.5, -0.5, 1.5],
+          [1, 1, 1, -0.5, 0.5],
+        ],
+        3: [
+          [1, 0.5, 0.5, 1],
+          [1, 1, 1],
+          [-0.5, 0.5, 1, 1],
+          [1.5, 0.5, 1],
+        ],
+      },
+      cadenceRhythms: { 4: [1, 1, 2], 3: [1, 2] },
       gainBase: 0.13,
       gainSwell: 0.11,
       delayWet: 0.14,
@@ -1052,13 +1080,22 @@ function initBeepMelodyExperiment() {
       bpmRange: [50, 68],
       scale: "minor",
       formRepeats: 1,
-      rhythmPool: [
-        [2, 2],
-        [4],
-        [2, 1, 1],
-        [1, 1, 2],
-      ],
-      cadenceRhythm: [4],
+      rhythms: {
+        4: [
+          [2, 2],
+          [4],
+          [2, -1, 1],
+          [1, -1, 2],
+          [-1, 1.5, 1.5],
+        ],
+        3: [
+          [3],
+          [1.5, 1.5],
+          [1, -1, 1],
+          [-1, 2],
+        ],
+      },
+      cadenceRhythms: { 4: [4], 3: [3] },
       gainBase: 0.08,
       gainSwell: 0.08,
       delayWet: 0.28,
@@ -1188,6 +1225,7 @@ function initBeepMelodyExperiment() {
     analysisBox.innerHTML = `
       <div class="beep-analysis-row"><span>${t.labelKey}</span><strong>${keyName(info.rootIndex)} ${modeLabel}</strong></div>
       <div class="beep-analysis-row"><span>${t.labelTempo}</span><strong dir="ltr">${info.bpm} BPM</strong></div>
+      <div class="beep-analysis-row"><span>${t.labelMeter}</span><strong dir="ltr">${info.meter}/4</strong></div>
       <div class="beep-analysis-row"><span>${t.labelProgression}</span><strong dir="ltr">${roman.join(" – ")}</strong></div>
       <div class="beep-analysis-row"><span>${t.labelForm}</span><strong>${t.labelFormValue}</strong></div>
       <div class="beep-analysis-row"><span>${t.labelCadence}</span><strong>${cadenceName} <span dir="ltr">(${approach}→${tonic})</span></strong></div>
@@ -1230,18 +1268,28 @@ function initBeepMelodyExperiment() {
      - الضربة القوية (١ و٣) = نغمة من الوتر (استقرار).
      - الضربات الضعيفة = نغمات عابرة بخطوات صغيرة (حركة).
      - endOnDegree (اختياري) = نغمة الحل بآخر المازورة (للختام). */
-  function composeBar(chordRootDeg, rhythm, startDegree, endOnDegree) {
+  function composeBar(chordRootDeg, rhythm, startDegree, endOnDegree, meter) {
     const notes = [];
     let beat = 0;
     let degree = startDegree;
     let lastInterval = 0;
+    // آخر نغمة فعلية بالمازورة (تتجاهل السكتات) — عليها يقع الحل بالختام
+    const lastNoteIndex = rhythm.reduce((last, length, i) => (length > 0 ? i : last), -1);
 
     rhythm.forEach((length, i) => {
-      const isStrongBeat = beat === 0 || beat === 2;
-      const isLastNote = i === rhythm.length - 1;
+      // القيمة السالبة = سكتة: تتقدّم بالزمن بلا نغمة. السكتات هي اللي تخلي
+      // اللحن "يتنفّس" بدل ما يعزف نغمة ورا نغمة بلا توقف
+      if (length <= 0) {
+        notes.push({ degree: null, length });
+        beat += Math.abs(length);
+        return;
+      }
+
+      // بالميزان الرباعي الضربتان ١ و٣ قويتان، وبالثلاثي (فالس) الأولى فقط
+      const isStrongBeat = beat === 0 || (meter === 4 && beat === 2);
       const previousDegree = degree;
 
-      if (isLastNote && endOnDegree != null) {
+      if (i === lastNoteIndex && endOnDegree != null) {
         degree = endOnDegree;
       } else if (isStrongBeat) {
         degree = pickChordTone(chordRootDeg, degree);
@@ -1271,7 +1319,11 @@ function initBeepMelodyExperiment() {
     return Math.max(min, Math.min(max, n));
   }
 
-  function playNote(noteIndex, startTime, duration, peakGain) {
+  /* يرسم نغمة واحدة داخل أي سياق صوتي. الوسيط target يحمل السياق ووجهتيه
+     (الجافة والصدى) — بدونه ما نقدر نصدّر ملفاً صوتياً إلا بتكرار كل منطق
+     التخليق مرة ثانية. التشغيل الحي والتصدير يستخدمان نفس الدالة الآن. */
+  function playNote(target, noteIndex, startTime, duration, peakGain) {
+    const { ctx, dry, wet, live } = target;
     const freq = NOTES[noteIndex];
     const instrument = INSTRUMENTS[currentInstrument];
 
@@ -1282,7 +1334,7 @@ function initBeepMelodyExperiment() {
     const registerFactor = 1.5 - (noteIndex / (NOTES.length - 1)) * 0.9; // ١٫٥ (واطي) → ٠٫٦ (حاد)
     const ringDuration = duration * registerFactor * instrument.ringScale;
 
-    const envelope = audioCtx.createGain();
+    const envelope = ctx.createGain();
     envelope.gain.setValueAtTime(0.0001, startTime);
     envelope.gain.exponentialRampToValueAtTime(Math.max(peakGain, 0.0001), startTime + instrument.attack);
     if (instrument.sustainRatio > 0) {
@@ -1295,47 +1347,47 @@ function initBeepMelodyExperiment() {
 
     // فلتر يبدأ ساطعاً (لحظة القرع/النفخ) ويعتم تدريجياً — نفس سلوك أي آلة
     // حقيقية تفقد حدّتها الطيفية كل ما تلاشت
-    const filter = audioCtx.createBiquadFilter();
+    const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
     filter.Q.value = 0.6;
     filter.frequency.setValueAtTime(clamp(freq * instrument.filterBrightMult, 800, 7000), startTime);
     filter.frequency.exponentialRampToValueAtTime(clamp(freq * instrument.filterDarkMult, 400, 2000), startTime + ringDuration);
 
     envelope.connect(filter);
-    filter.connect(audioCtx.destination);
-    filter.connect(delayNode);
+    filter.connect(dry);
+    filter.connect(wet);
 
     // نغمة اهتزاز خفيفة (Vibrato) — سمة آلات النفخ (الفلوت هنا)، ما تُستخدم
     // إلا لو الآلة الحالية معرّفة لها vibrato. vibratoGain يحوّل تذبذب اللفو
     // (بين ١- و١) لانحراف تردد صغير بالهرتز قبل ما نوصله لكل توافقية
     let vibratoGain = null;
     if (instrument.vibrato) {
-      const vibratoLfo = audioCtx.createOscillator();
+      const vibratoLfo = ctx.createOscillator();
       vibratoLfo.frequency.value = instrument.vibrato.rateHz;
-      vibratoGain = audioCtx.createGain();
+      vibratoGain = ctx.createGain();
       vibratoGain.gain.value = freq * instrument.vibrato.depthRatio;
       vibratoLfo.connect(vibratoGain);
       vibratoLfo.start(startTime);
       vibratoLfo.stop(startTime + ringDuration + 0.05);
-      activeOscillators.push(vibratoLfo);
+      if (live) activeOscillators.push(vibratoLfo);
     }
 
     // النغمات الواطية توافقياتها العليا أقوى شوي (صوت أغنى)، الحادة أخفت (أنحف)
     const harmonicRichness = clamp(registerFactor, 0.75, 1.3);
     instrument.harmonics.forEach(({ mult, weight, type }) => {
-      const osc = audioCtx.createOscillator();
+      const osc = ctx.createOscillator();
       osc.type = type;
       osc.frequency.value = freq * mult;
       if (vibratoGain) vibratoGain.connect(osc.frequency);
-      const harmonicGain = audioCtx.createGain();
+      const harmonicGain = ctx.createGain();
       harmonicGain.gain.value = mult === 1 ? weight : weight * harmonicRichness;
       osc.connect(harmonicGain).connect(envelope);
       osc.start(startTime);
       osc.stop(startTime + ringDuration + 0.05);
-      activeOscillators.push(osc);
+      if (live) activeOscillators.push(osc);
     });
 
-    highlightKey(freq, (startTime - audioCtx.currentTime) * 1000, ringDuration * 1000);
+    if (live) highlightKey(freq, (startTime - ctx.currentTime) * 1000, ringDuration * 1000);
   }
 
   /* المؤلّف: قطعة من ٨ مازورات (فترة موسيقية كاملة Period) — مو نغمات متتابعة.
@@ -1351,6 +1403,248 @@ function initBeepMelodyExperiment() {
         الثاني ينتهي على التونيك (استقرار = جواب). هذا اللي يعطي إحساس الاكتمال.
 
      مع باص ومرافقة تحت اللحن (بدل خط منفرد كان يحس ناقصاً). */
+  /* يؤلّف القطعة كاملة ويرجّعها كقائمة أحداث خالصة (نغمة + بدايتها ومدتها
+     بالضربات) بلا أي تعامل مع الصوت. فصلها عن التشغيل هو اللي يخلي التشغيل
+     الحي وتصدير WAV وتصدير MIDI ثلاثتهم يقرؤون من نفس المصدر بدل ما نكرر
+     منطق التأليف ثلاث مرات ونخاطر باختلافهم. */
+  function composePiece(seed) {
+    const mood = MOODS[currentMood];
+    rand = createRng(seed);
+
+    const rootIndex = Math.floor(rand() * ROOT_NOTES.length);
+    NOTES = buildScale(ROOT_NOTES[rootIndex], mood.scale);
+
+    /* كل هذي كانت ثابتة بكل تشغيلة، فحتى مع اختلاف النغمات كانت المقطوعات
+       تحس متشابهة. الحين كلها تتغيّر مع البذرة: */
+    const bpm = Math.round(mood.bpmRange[0] + rand() * (mood.bpmRange[1] - mood.bpmRange[0]));
+    // الميزان: أغلب القطع ٤/٤، وواحدة من كل أربع بميزان ثلاثي (فالس) — الميزان
+    // من أقوى ما يغيّر إحساس القطعة، وكان ٤/٤ دايماً
+    const meter = rand() < 0.25 ? 3 : 4;
+    const progression = PROGRESSIONS[Math.floor(rand() * PROGRESSIONS.length)];
+    const pool = mood.rhythms[meter];
+    // إيقاعان مختلفان: واحد للجملة الأساسية وواحد لجملة الجواب. الجملة الأساسية
+    // تحتفظ بإيقاعها عند تكرارها (وإلا ضاع التكرار اللي يمسكه المستمع)
+    const themeRhythm = pool[Math.floor(rand() * pool.length)];
+    const answerRhythm = pool[Math.floor(rand() * pool.length)];
+    const accompaniment = ACCOMPANIMENT_STYLES[Math.floor(rand() * ACCOMPANIMENT_STYLES.length)];
+    const openingDegree = MELODY_LOW + [0, 2, 4][Math.floor(rand() * 3)];
+    const cadenceApproach = rand() < 0.7 ? 4 : 3;
+    const cadenceRhythm = mood.cadenceRhythms[meter];
+
+    /* كوردات الفترة: التتابع يتكرر مرتين، مع مواضع الختام مثبّتة عشان يطلع
+       الشكل مطابقاً للفترة الكلاسيكية (Period):
+       - مازورة ٤ = V  → نصف ختام (Half Cadence): يوقف على سؤال معلّق.
+       - مازورة ٧-٨ = ختام حقيقي ينتهي على I. */
+    const chords = [0, 1, 2, 3, 0, 1, 2, 3].map((i) => progression[i]);
+    chords[3] = 4;
+    chords[6] = cadenceApproach;
+    chords[7] = 0;
+
+    const m1 = [
+      composeBar(chords[0], themeRhythm, openingDegree, null, meter),
+      composeBar(chords[1], themeRhythm, MELODY_LOW + 2, null, meter),
+    ];
+    const lastThemeDegree = m1[1][m1[1].length - 1].degree;
+    const period = [
+      ...m1,
+      composeBar(chords[2], answerRhythm, lastThemeDegree, null, meter),
+      composeBar(chords[3], cadenceRhythm, MELODY_LOW + 2, MELODY_LOW + 4, meter), // ينتهي على الخامسة = سؤال
+      ...m1,
+      composeBar(chords[6], answerRhythm, lastThemeDegree, null, meter),
+      composeBar(chords[7], cadenceRhythm, MELODY_LOW + 1, MELODY_LOW, meter), // تونيك فوق وتر التونيك = جواب
+    ];
+
+    const events = [];
+    const bassGain = mood.gainBase * 0.55;
+    const padGain = mood.gainBase * 0.3;
+    let voices = null; // أصوات المرافقة بالمازورة السابقة — أساس قيادة الأصوات
+    let barBeat = 0;
+
+    for (let repeat = 0; repeat < mood.formRepeats; repeat++) {
+      for (let bar = 0; bar < period.length; bar++) {
+        const chordRoot = chords[bar];
+        voices = voiceChord(chordRoot, voices);
+        const add = (degree, startBeat, durBeats, gain) => events.push({ degree, startBeat, durBeats, gain });
+
+        if (accompaniment === "arpeggio") {
+          // وتر مكسور: نغمة على كل ضربة — حركة مستمرة تحت اللحن
+          const arp = [BASS_LOW + chordRoot, BASS_LOW + voices[0], BASS_LOW + voices[1], BASS_LOW + voices[0]];
+          for (let i = 0; i < meter; i++) add(arp[i % arp.length], barBeat + i, 0.95, i === 0 ? bassGain : padGain);
+        } else if (accompaniment === "pulse") {
+          // نبض: بالرباعي على الضربتين ١ و٣، وبالثلاثي "أوم-پا-پا" الفالس
+          if (meter === 3) {
+            add(BASS_LOW + chordRoot, barBeat, 1.1, bassGain);
+            [1, 2].forEach((offset) => voices.forEach((d) => add(BASS_LOW + d, barBeat + offset, 0.9, padGain)));
+          } else {
+            [0, 2].forEach((offset) => {
+              add(BASS_LOW + chordRoot, barBeat + offset, 1.6, bassGain);
+              voices.forEach((d) => add(BASS_LOW + d, barBeat + offset, 1.4, padGain));
+            });
+          }
+        } else if (accompaniment === "bassOnly") {
+          add(BASS_LOW + chordRoot, barBeat, meter - 0.2, bassGain * 1.15);
+        } else {
+          add(BASS_LOW + chordRoot, barBeat, meter - 0.4, bassGain);
+          voices.forEach((d) => add(BASS_LOW + d, barBeat, meter - 0.8, padGain));
+        }
+
+        // اللحن فوقهم — القيم السالبة بالإيقاع سكتات: تتقدّم بالزمن بلا نغمة
+        let beat = 0;
+        period[bar].forEach(({ degree, length }) => {
+          if (length > 0 && degree !== null) {
+            const gain = mood.gainBase + mood.gainSwell * (beat === 0 ? 1 : 0.55);
+            add(degree, barBeat + beat, length * 0.92, gain);
+          }
+          beat += Math.abs(length);
+        });
+
+        barBeat += meter;
+      }
+    }
+
+    return {
+      events,
+      meta: { seed, bpm, meter, rootIndex, mode: mood.scale, chords, cadenceApproach, totalBeats: barBeat },
+    };
+  }
+
+  // يجدول أحداث القطعة داخل أي سياق صوتي (حي أو غير متصل للتصدير)
+  function scheduleEvents(target, piece, startTime) {
+    const beatDur = 60 / piece.meta.bpm;
+    piece.events.forEach((ev) => {
+      playNote(target, ev.degree, startTime + ev.startBeat * beatDur, ev.durBeats * beatDur, ev.gain);
+    });
+  }
+
+  /* ===== تصدير الملفات ===== */
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ترميز WAV يدوياً (رأس 44 بايت + عيّنات PCM 16-bit) — أبسط من إضافة مكتبة،
+  // وWAV يشتغل بأي مشغّل وأي برنامج مونتاج بلا استثناء
+  function audioBufferToWav(buffer) {
+    const channels = buffer.numberOfChannels;
+    const samples = buffer.length;
+    const blockAlign = channels * 2;
+    const dataSize = samples * blockAlign;
+    const view = new DataView(new ArrayBuffer(44 + dataSize));
+    const writeText = (offset, text) => {
+      for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i));
+    };
+
+    writeText(0, "RIFF");
+    view.setUint32(4, 36 + dataSize, true);
+    writeText(8, "WAVE");
+    writeText(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, channels, true);
+    view.setUint32(24, buffer.sampleRate, true);
+    view.setUint32(28, buffer.sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, 16, true);
+    writeText(36, "data");
+    view.setUint32(40, dataSize, true);
+
+    const data = [];
+    for (let c = 0; c < channels; c++) data.push(buffer.getChannelData(c));
+    let offset = 44;
+    for (let i = 0; i < samples; i++) {
+      for (let c = 0; c < channels; c++) {
+        const value = Math.max(-1, Math.min(1, data[c][i]));
+        view.setInt16(offset, value < 0 ? value * 0x8000 : value * 0x7fff, true);
+        offset += 2;
+      }
+    }
+    return new Blob([view.buffer], { type: "audio/wav" });
+  }
+
+  /* يعيد عزف القطعة داخل OfflineAudioContext (أسرع من الزمن الحقيقي) بنفس
+     دوال التخليق المستخدمة بالتشغيل الحي — فالملف المصدَّر مطابق لما سمعه
+     المستخدم، لا نسخة تقريبية */
+  async function renderPieceToWav(piece) {
+    const mood = MOODS[currentMood];
+    const beatDur = 60 / piece.meta.bpm;
+    const tail = 3; // ذيل يسع رنين آخر نغمة وصداها
+    const seconds = piece.meta.totalBeats * beatDur + tail;
+    const ctx = new OfflineAudioContext(1, Math.ceil(44100 * seconds), 44100);
+
+    const delay = ctx.createDelay();
+    delay.delayTime.value = 0.22;
+    const feedback = ctx.createGain();
+    feedback.gain.value = mood.delayFeedback;
+    const wet = ctx.createGain();
+    wet.gain.value = mood.delayWet;
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(wet);
+    wet.connect(ctx.destination);
+
+    scheduleEvents({ ctx, dry: ctx.destination, wet: delay, live: false }, piece, 0.05);
+    return audioBufferToWav(await ctx.startRendering());
+  }
+
+  /* ملف MIDI من نوع 0 — صغير جداً ويفتح بأي برنامج نوتة (MuseScore وغيره)،
+     فيقدر أي أحد يشوف المقطوعة كنوتة موسيقية ويعدّلها */
+  function pieceToMidi(piece) {
+    const PPQ = 480;
+    const bytes = [];
+    const pushVarLen = (value) => {
+      const stack = [value & 0x7f];
+      let v = value >> 7;
+      while (v > 0) {
+        stack.unshift((v & 0x7f) | 0x80);
+        v >>= 7;
+      }
+      bytes.push(...stack);
+    };
+
+    // نبضة القطعة + ميزانها كأحداث تعريفية بأول المسار
+    const usPerBeat = Math.round(60000000 / piece.meta.bpm);
+    pushVarLen(0);
+    bytes.push(0xff, 0x51, 0x03, (usPerBeat >> 16) & 0xff, (usPerBeat >> 8) & 0xff, usPerBeat & 0xff);
+    pushVarLen(0);
+    bytes.push(0xff, 0x58, 0x04, piece.meta.meter, 2, 24, 8); // البسط، والمقام 4 (2^2)
+
+    const points = [];
+    piece.events.forEach((ev) => {
+      const freq = NOTES[ev.degree];
+      if (!freq) return;
+      const note = Math.round(69 + 12 * Math.log2(freq / 440));
+      if (note < 0 || note > 127) return;
+      const velocity = Math.round(clamp(ev.gain * 420, 35, 112));
+      points.push({ tick: Math.round(ev.startBeat * PPQ), on: true, note, velocity });
+      points.push({ tick: Math.round((ev.startBeat + ev.durBeats) * PPQ), on: false, note, velocity: 0 });
+    });
+    // ترتيب زمني، وإطفاء النغمة قبل تشغيلها لو تصادف نفس اللحظة
+    points.sort((a, b) => a.tick - b.tick || Number(a.on) - Number(b.on));
+
+    let previousTick = 0;
+    points.forEach((point) => {
+      pushVarLen(point.tick - previousTick);
+      previousTick = point.tick;
+      bytes.push(point.on ? 0x90 : 0x80, point.note, point.velocity);
+    });
+    pushVarLen(0);
+    bytes.push(0xff, 0x2f, 0x00); // نهاية المسار
+
+    const header = [
+      0x4d, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, (PPQ >> 8) & 0xff, PPQ & 0xff,
+      0x4d, 0x54, 0x72, 0x6b,
+      (bytes.length >> 24) & 0xff, (bytes.length >> 16) & 0xff, (bytes.length >> 8) & 0xff, bytes.length & 0xff,
+    ];
+    return new Blob([new Uint8Array(header), new Uint8Array(bytes)], { type: "audio/midi" });
+  }
+
   async function playSequence() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") await audioCtx.resume();
@@ -1369,107 +1663,17 @@ function initBeepMelodyExperiment() {
     const seed = pinnedSeed != null ? pinnedSeed : (Math.random() * 4294967296) >>> 0;
     pinnedSeed = null;
     currentSeed = seed;
-    rand = createRng(seed);
 
-    const rootIndex = Math.floor(rand() * ROOT_NOTES.length);
-    NOTES = buildScale(ROOT_NOTES[rootIndex], mood.scale);
+    const piece = composePiece(seed);
+    lastPiece = piece; // التصدير يصدّر القطعة اللي سمعها المستخدم، لا وحدة جديدة
     btn.textContent = btn.dataset.stopLabel;
 
-    /* كل هذي كانت ثابتة بكل تشغيلة، فحتى مع اختلاف النغمات كانت المقطوعات
-       تحس متشابهة. الحين كلها تتغيّر مع البذرة: */
-    const bpm = Math.round(mood.bpmRange[0] + rand() * (mood.bpmRange[1] - mood.bpmRange[0]));
-    const beatDur = 60 / bpm;
-    const progression = PROGRESSIONS[Math.floor(rand() * PROGRESSIONS.length)];
-    // إيقاعان مختلفان: واحد للجملة الأساسية وواحد لجملة الجواب — بدل إيقاع
-    // واحد يمشي على القطعة كلها. الجملة الأساسية تحتفظ بإيقاعها عند تكرارها
-    // (وإلا ضاع التكرار اللي يمسكه المستمع)
-    const themeRhythm = mood.rhythmPool[Math.floor(rand() * mood.rhythmPool.length)];
-    const answerRhythm = mood.rhythmPool[Math.floor(rand() * mood.rhythmPool.length)];
-    const accompaniment = ACCOMPANIMENT_STYLES[Math.floor(rand() * ACCOMPANIMENT_STYLES.length)];
-    // بداية اللحن من درجة مستقرة مختلفة كل مرة (أساس/ثالثة/خامسة) بدل الخامسة دايماً
-    const openingDegree = MELODY_LOW + [0, 2, 4][Math.floor(rand() * 3)];
-    // نوع الختام: تام (V→I) أو كنسي (IV→I) — الاثنان ختامان صحيحان بإحساس مختلف
-    const cadenceApproach = rand() < 0.7 ? 4 : 3;
+    const startTime = audioCtx.currentTime + 0.12;
+    scheduleEvents({ ctx: audioCtx, dry: audioCtx.destination, wet: delayNode, live: true }, piece, startTime);
 
-    /* كوردات الفترة: التتابع يتكرر مرتين، مع مواضع الختام مثبّتة عشان يطلع
-       الشكل مطابقاً للفترة الكلاسيكية (Period):
-       - مازورة ٤ = V  → نصف ختام (Half Cadence): يوقف على سؤال معلّق.
-       - مازورة ٧-٨ = ختام حقيقي ينتهي على I. */
-    const chords = [0, 1, 2, 3, 0, 1, 2, 3].map((i) => progression[i]);
-    chords[3] = 4;
-    chords[6] = cadenceApproach;
-    chords[7] = 0;
+    renderAnalysis(piece.meta);
 
-    // بناء الفترة: مازورتان تتكرران (M1)، ثم جواب معلّق، ثم M1 مرة ثانية، ثم حل نهائي
-    const m1 = [
-      composeBar(chords[0], themeRhythm, openingDegree),
-      composeBar(chords[1], themeRhythm, MELODY_LOW + 2),
-    ];
-
-    const answerHalf = [
-      composeBar(chords[2], answerRhythm, m1[1][m1[1].length - 1].degree),
-      composeBar(chords[3], mood.cadenceRhythm, MELODY_LOW + 2, MELODY_LOW + 4), // ينتهي على الخامسة = سؤال
-    ];
-    const answerFull = [
-      composeBar(chords[6], answerRhythm, m1[1][m1[1].length - 1].degree),
-      composeBar(chords[7], mood.cadenceRhythm, MELODY_LOW + 1, MELODY_LOW), // تونيك فوق وتر التونيك = جواب
-    ];
-    const period = [...m1, ...answerHalf, ...m1, ...answerFull];
-
-    let t = audioCtx.currentTime + 0.12;
-    let voices = null; // أصوات المرافقة بالمازورة السابقة — أساس قيادة الأصوات
-
-    for (let repeat = 0; repeat < mood.formRepeats && !stopRequested; repeat++) {
-      for (let bar = 0; bar < period.length && !stopRequested; bar++) {
-        const barStart = t;
-        const chordRoot = chords[bar];
-
-        // المرافقة: صوتان ينتقلان لأقرب نغمة بالوتر الجديد (بلا حركة متوازية)
-        voices = voiceChord(chordRoot, voices);
-        const bassGain = mood.gainBase * 0.55;
-        const padGain = mood.gainBase * 0.3;
-
-        if (accompaniment === "arpeggio") {
-          // وتر مكسور: الباص ثم الصوتان ثم الباص — يعطي حركة مستمرة تحت اللحن
-          const arp = [BASS_LOW + chordRoot, BASS_LOW + voices[0], BASS_LOW + voices[1], BASS_LOW + voices[0]];
-          arp.forEach((degree, i) => {
-            playNote(degree, barStart + i * beatDur, beatDur * 0.95, i === 0 ? bassGain : padGain);
-          });
-        } else if (accompaniment === "pulse") {
-          // نبض: الوتر كامل على كل ضربة قوية — إحساس إيقاعي أوضح
-          [0, 2].forEach((beatOffset) => {
-            playNote(BASS_LOW + chordRoot, barStart + beatOffset * beatDur, beatDur * 1.6, bassGain);
-            voices.forEach((degree) => {
-              playNote(BASS_LOW + degree, barStart + beatOffset * beatDur, beatDur * 1.4, padGain);
-            });
-          });
-        } else if (accompaniment === "bassOnly") {
-          // باص وحده — يفتح مساحة للحن، مناسب للمقطوعات الهادئة
-          playNote(BASS_LOW + chordRoot, barStart, beatDur * 3.8, bassGain * 1.15);
-        } else {
-          // ممدود: الوتر كله يمسك المازورة (النمط الافتراضي)
-          playNote(BASS_LOW + chordRoot, barStart, beatDur * 3.6, bassGain);
-          voices.forEach((degree) => {
-            playNote(BASS_LOW + degree, barStart, beatDur * 3.2, padGain);
-          });
-        }
-
-        // اللحن فوقهم
-        let beat = 0;
-        period[bar].forEach(({ degree, length }) => {
-          if (stopRequested) return;
-          const isDownbeat = beat === 0;
-          const peakGain = mood.gainBase + mood.gainSwell * (isDownbeat ? 1 : 0.55);
-          playNote(degree, barStart + beat * beatDur, length * beatDur * 0.92, peakGain);
-          beat += length;
-        });
-
-        t = barStart + 4 * beatDur;
-      }
-    }
-
-    renderAnalysis({ rootIndex, mode: mood.scale, chords, seed, bpm, cadenceApproach });
-
+    const endsAt = startTime + (piece.meta.totalBeats * 60) / piece.meta.bpm;
     activeTimeouts.push(
       setTimeout(
         () => {
@@ -1477,7 +1681,7 @@ function initBeepMelodyExperiment() {
           playing = false;
           btn.textContent = btn.dataset.playLabel;
         },
-        (t - audioCtx.currentTime) * 1000
+        (endsAt - audioCtx.currentTime) * 1000
       )
     );
   }
@@ -1513,6 +1717,45 @@ function initBeepMelodyExperiment() {
     nextBtn.addEventListener("click", () => {
       stopPlayback();
       playSequence();
+      playClickSound();
+    });
+  }
+
+  /* أزرار التحميل: تصدّر القطعة اللي سمعها المستخدم فعلاً (lastPiece)، وإن لم
+     يشغّل شيئاً بعد نؤلّف واحدة ونصدّرها. WAV يشتغل بأي مكان، وMIDI يفتح
+     بأي برنامج نوتة. */
+  function ensurePiece() {
+    if (!lastPiece) {
+      const seed = (Math.random() * 4294967296) >>> 0;
+      currentSeed = seed;
+      lastPiece = composePiece(seed);
+      renderAnalysis(lastPiece.meta);
+    }
+    return lastPiece;
+  }
+
+  const wavBtn = document.getElementById("beepDownloadWav");
+  if (wavBtn) {
+    wavBtn.addEventListener("click", async () => {
+      const piece = ensurePiece();
+      const original = wavBtn.textContent;
+      wavBtn.disabled = true;
+      wavBtn.textContent = wavBtn.dataset.working;
+      try {
+        downloadBlob(await renderPieceToWav(piece), `hakolah-music-${piece.meta.seed}.wav`);
+      } finally {
+        wavBtn.disabled = false;
+        wavBtn.textContent = original;
+      }
+      playClickSound();
+    });
+  }
+
+  const midiBtn = document.getElementById("beepDownloadMidi");
+  if (midiBtn) {
+    midiBtn.addEventListener("click", () => {
+      const piece = ensurePiece();
+      downloadBlob(pieceToMidi(piece), `hakolah-music-${piece.meta.seed}.mid`);
       playClickSound();
     });
   }
