@@ -46,6 +46,7 @@ noThirdParty: true
       <button type="button" class="filter-chip conv-format active" data-format="image/webp">WebP</button>
       <button type="button" class="filter-chip conv-format" data-format="image/jpeg">JPG</button>
       <button type="button" class="filter-chip conv-format" data-format="image/png">PNG</button>
+      <button type="button" class="filter-chip conv-format" data-format="image/bmp">BMP</button>
     </div>
   </div>
 
@@ -100,6 +101,9 @@ noThirdParty: true
     <label class="conv-check"><input type="checkbox" id="convMute" /> احذف الصوت</label>
   </div>
 
+  <p class="conv-option-note">
+    تقدر تسحب ملف صوت هنا بدل الفيديو — بنطلّع لك فيديو مربّع بموجات صوت متحركة عوضاً عن صورة.
+  </p>
   <p class="conv-option-note">
     تحويل الفيديو يصير بالزمن الحقيقي: مقطع دقيقتين ياخذ دقيقتين تقريباً، لأنه يُعاد ترميزه بجهازك لا بسيرفر.
     خلّ الصفحة مفتوحة إلى أن يخلص.

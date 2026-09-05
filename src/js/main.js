@@ -2248,12 +2248,13 @@ function initFileConverter() {
   let kind = "image";
   const chosen = { image: "image/webp", audio: "audio/mpeg", video: "" };
 
-  const IMAGE_EXT = { "image/webp": "webp", "image/jpeg": "jpg", "image/png": "png" };
+  const IMAGE_EXT = { "image/webp": "webp", "image/jpeg": "jpg", "image/png": "png", "image/bmp": "bmp" };
   const ACCEPT = {
     image: "image/*",
     // الفيديو مقبول بوضع الصوت: استخراج الصوت من مقطع فيديو أشهر استعمال
     audio: "audio/*,video/*",
-    video: "video/*",
+    // والصوت مقبول بوضع الفيديو كذلك: صوت + صورة موجات متحركة = فيديو
+    video: "video/*,audio/*",
   };
 
   function formatBytes(bytes) {
@@ -2269,6 +2270,23 @@ function initFileConverter() {
     return `${m}:${String(s).padStart(2, "0")}`;
   }
 
+  // أرقام داخل جملة عربية بينها حرف زائد ("/") تنقلب بصرياً باتجاه النص —
+  // نفس مشكلة البوسترات. dir="ltr" على الجزء الرقمي وحده يمنعها بلا ما يكسر
+  // اتجاه بقية الجملة
+  function durationNote(duration) {
+    return say(
+      `المدة <span dir="ltr">${formatClock(duration)}</span> — التحويل ياخذ نفس المدة تقريباً`,
+      `Duration <span dir="ltr">${formatClock(duration)}</span> — conversion takes about the same time`
+    );
+  }
+
+  function progressLabel(elapsed, duration) {
+    return say(
+      `يحوّل… <span dir="ltr">${formatClock(elapsed)} / ${formatClock(duration)}</span>`,
+      `Converting… <span dir="ltr">${formatClock(elapsed)} / ${formatClock(duration)}</span>`
+    );
+  }
+
   function changeText(before, after) {
     const change = Math.round((1 - after / before) * 100);
     const label =
@@ -2282,8 +2300,10 @@ function initFileConverter() {
       const group = button.closest(".instrument-picker");
       chosen[group.dataset.kind] = button.dataset.format;
       group.querySelectorAll(".conv-format").forEach((b) => b.classList.toggle("active", b === button));
-      // PNG بلا جودة (بلا فقد)، وWAV بلا معدّل بت — نخفي الخيار بدل ما نعرضه معطّلاً
-      if (group.dataset.kind === "image" && qualityRow) qualityRow.hidden = chosen.image === "image/png";
+      // PNG وBMP بلا فقد (بلا جودة قابلة للضبط)، وWAV بلا معدّل بت — نخفي
+      // الخيار بدل ما نعرضه معطّلاً
+      if (group.dataset.kind === "image" && qualityRow)
+        qualityRow.hidden = chosen.image === "image/png" || chosen.image === "image/bmp";
       const bitrateRow = document.getElementById("convBitrateRow");
       if (group.dataset.kind === "audio" && bitrateRow) bitrateRow.hidden = chosen.audio === "audio/wav";
     });
@@ -2368,6 +2388,44 @@ function initFileConverter() {
   }
 
   const baseNameOf = (file) => file.name.replace(/\.[^.]+$/, "");
+  // H.264 (وMediaRecorder عموماً) يطلب أبعاد فيديو زوجية
+  const even = (n) => Math.max(2, Math.round(n / 2) * 2);
+
+  /* BMP ما يدعمه canvas.toBlob بأي متصفح — تنسيقه بسيط جداً (بكسلات خام
+     بلا ضغط) فنكتبه يدوياً بنفس أسلوب WAV/MIDI اليدوي بالموقع */
+  function canvasToBmpBlob(canvas) {
+    const { width, height } = canvas;
+    const { data } = canvas.getContext("2d").getImageData(0, 0, width, height);
+    const rowSize = Math.ceil((width * 3) / 4) * 4; // كل صف يُحاذى لأربع بايتات
+    const pixelArraySize = rowSize * height;
+    const buffer = new ArrayBuffer(54 + pixelArraySize);
+    const view = new DataView(buffer);
+
+    view.setUint8(0, 0x42); // "B"
+    view.setUint8(1, 0x4d); // "M"
+    view.setUint32(2, buffer.byteLength, true);
+    view.setUint32(10, 54, true); // إزاحة بيانات البكسل
+    view.setUint32(14, 40, true); // حجم ترويسة DIB
+    view.setInt32(18, width, true);
+    view.setInt32(22, height, true);
+    view.setUint16(26, 1, true); // مستويات الألوان
+    view.setUint16(28, 24, true); // بت لكل بكسل
+    view.setUint32(34, pixelArraySize, true);
+
+    const bytes = new Uint8Array(buffer);
+    let offset = 54;
+    // BMP يخزّن صفوفه من الأسفل للأعلى وبترتيب BGR لا RGB، وبلا شفافية
+    for (let y = height - 1; y >= 0; y--) {
+      for (let x = 0; x < width; x++) {
+        const i = (y * width + x) * 4;
+        bytes[offset++] = data[i + 2];
+        bytes[offset++] = data[i + 1];
+        bytes[offset++] = data[i];
+      }
+      offset += rowSize - width * 3;
+    }
+    return new Blob([buffer], { type: "image/bmp" });
+  }
 
   /* ===== صور ===== */
   async function convertImage(file, parts) {
@@ -2391,18 +2449,21 @@ function initFileConverter() {
     canvas.width = width;
     canvas.height = height;
     const g = canvas.getContext("2d");
-    // JPG ما يدعم الشفافية — بدون خلفية بيضاء تطلع المناطق الشفافة سوداء.
-    // هذي أكثر مفاجأة تصير بمحوّلات الصور
-    if (format === "image/jpeg") {
+    // JPG وBMP ما يدعمان الشفافية — بدون خلفية بيضاء تطلع المناطق الشفافة
+    // سوداء. هذي أكثر مفاجأة تصير بمحوّلات الصور
+    if (format === "image/jpeg" || format === "image/bmp") {
       g.fillStyle = "#ffffff";
       g.fillRect(0, 0, width, height);
     }
     g.drawImage(bitmap, 0, 0, width, height);
     bitmap.close();
 
-    const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, format, format === "image/png" ? undefined : Number(quality.value) / 100)
-    );
+    const blob =
+      format === "image/bmp"
+        ? canvasToBmpBlob(canvas)
+        : await new Promise((resolve) =>
+            canvas.toBlob(resolve, format, format === "image/png" ? undefined : Number(quality.value) / 100)
+          );
     if (!blob) return fail(parts, say("تعذّر التحويل", "Conversion failed"));
 
     const url = URL.createObjectURL(blob);
@@ -2489,6 +2550,9 @@ function initFileConverter() {
     const mimeType = pickVideoType();
     if (!mimeType) return fail(parts, say("متصفحك ما يدعم تسجيل الفيديو", "Your browser can't record video"));
 
+    // ملف صوت بوضع الفيديو: نصنع له فيديو مربّع بموجات صوت متحركة بدل صورة
+    if (file.type.startsWith("audio/")) return queueAudioToVideo(file, parts, mimeType);
+
     const video = document.createElement("video");
     video.preload = "metadata";
     video.playsInline = true;
@@ -2504,10 +2568,7 @@ function initFileConverter() {
       note.className = "conv-video-note";
       // نقول المدة صراحةً قبل ما يبدأ: التحويل بالزمن الحقيقي، والصمت يخلي
       // المستخدم يظن إن الأداة معلّقة
-      note.textContent = say(
-        `المدة ${formatClock(video.duration)} — التحويل ياخذ نفس المدة تقريباً`,
-        `Duration ${formatClock(video.duration)} — conversion takes about the same time`
-      );
+      note.innerHTML = durationNote(video.duration);
       const start = document.createElement("button");
       start.type = "button";
       start.className = "btn conv-start";
@@ -2532,8 +2593,6 @@ function initFileConverter() {
 
     const limit = Number(videoWidthInput && videoWidthInput.value) || 0;
     const scale = limit > 0 && video.videoWidth > limit ? limit / video.videoWidth : 1;
-    // H.264 يطلب أبعاداً زوجية
-    const even = (n) => Math.max(2, Math.round(n / 2) * 2);
     const width = even(video.videoWidth * scale);
     const height = even(video.videoHeight * scale);
 
@@ -2574,10 +2633,7 @@ function initFileConverter() {
       g.drawImage(video, 0, 0, width, height);
       const ratio = video.duration ? video.currentTime / video.duration : 0;
       bar.style.width = `${Math.round(ratio * 100)}%`;
-      label.textContent = say(
-        `يحوّل… ${formatClock(video.currentTime)} / ${formatClock(video.duration)}`,
-        `Converting… ${formatClock(video.currentTime)} / ${formatClock(video.duration)}`
-      );
+      label.innerHTML = progressLabel(video.currentTime, video.duration);
       // requestVideoFrameCallback يرسم على الإطارات الفعلية لا على تحديث الشاشة
       if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(draw);
       else requestAnimationFrame(draw);
@@ -2611,6 +2667,136 @@ function initFileConverter() {
       blob,
       beforeSize: file.size,
       meta: `${width}×${height} · ${formatClock(video.duration)}`,
+    });
+  }
+
+  /* ===== صوت إلى فيديو =====
+     ما فيه صورة مصدر نعرضها — نرسم مربّعاً بلون الموقع مع موجات صوت متحركة
+     (AnalyserNode) واسم الملف، ونسجّله بنفس أسلوب تحويل الفيديو. */
+  async function queueAudioToVideo(file, parts, mimeType) {
+    parts.state.textContent = say("يفكّ ترميز الصوت…", "Decoding audio…");
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let buffer;
+    try {
+      buffer = await ctx.decodeAudioData(await file.arrayBuffer());
+    } catch {
+      ctx.close();
+      return fail(
+        parts,
+        say("متصفحك ما يقدر يفكّ ترميز صوت هذا الملف", "Your browser can't decode this file's audio")
+      );
+    }
+
+    parts.state.textContent = "";
+    const note = document.createElement("span");
+    note.className = "conv-video-note";
+    note.innerHTML = durationNote(buffer.duration);
+    const start = document.createElement("button");
+    start.type = "button";
+    start.className = "btn conv-start";
+    start.textContent = say("▶️ ابدأ التحويل", "▶️ Start conversion");
+    start.addEventListener("click", () => {
+      start.remove();
+      note.remove();
+      runAudioToVideo(file, parts, mimeType, ctx, buffer);
+    });
+    parts.state.append(note, start);
+  }
+
+  async function runAudioToVideo(file, parts, mimeType, ctx, buffer) {
+    const progress = document.createElement("div");
+    progress.className = "conv-progress";
+    const progressFill = document.createElement("span");
+    progress.append(progressFill);
+    const label = document.createElement("span");
+    label.className = "conv-video-note";
+    parts.state.append(label, progress);
+
+    // مربّع 1080 الافتراضي (الأنسب لمشاركة اجتماعية) — لا مصدر أبعاد نقيسه
+    // عليه أصلاً (المدخل صوت فقط)، فنصغّره فقط لو المستخدم حدّد عرضاً أصغر
+    const limit = Number(videoWidthInput && videoWidthInput.value) || 0;
+    const size = even(limit > 0 ? Math.min(1080, limit) : 1080);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const g = canvas.getContext("2d");
+
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 128;
+    const freq = new Uint8Array(analyser.frequencyBinCount);
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const dest = ctx.createMediaStreamDestination();
+    source.connect(analyser);
+    analyser.connect(dest);
+    // ما نوصلها بالسماعات: التحويل يصير بصمت مثل مسار الفيديو
+
+    const stream = canvas.captureStream(30);
+    dest.stream.getAudioTracks().forEach((track) => stream.addTrack(track));
+
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2500000 });
+    const chunks = [];
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) chunks.push(event.data);
+    };
+    const done = new Promise((resolve) => {
+      recorder.onstop = resolve;
+    });
+
+    const primary = getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim() || "#1f7a4d";
+    const title = baseNameOf(file);
+    let drawing = true;
+    let startedAt = 0;
+
+    const draw = () => {
+      if (!drawing) return;
+      analyser.getByteFrequencyData(freq);
+      g.fillStyle = primary;
+      g.fillRect(0, 0, size, size);
+
+      const bars = 40;
+      const barWidth = size / bars;
+      g.fillStyle = "#ffffff";
+      for (let i = 0; i < bars; i++) {
+        const v = freq[Math.floor((i / bars) * freq.length)] / 255;
+        const h = Math.max(size * 0.02, v * size * 0.32);
+        g.fillRect(i * barWidth + barWidth * 0.15, (size - h) / 2, barWidth * 0.7, h);
+      }
+
+      g.textAlign = "center";
+      g.font = `bold ${Math.round(size * 0.04)}px sans-serif`;
+      g.fillText(title, size / 2, size * 0.16);
+
+      const elapsed = ctx.currentTime - startedAt;
+      const ratio = buffer.duration ? elapsed / buffer.duration : 0;
+      progressFill.style.width = `${Math.min(100, Math.round(ratio * 100))}%`;
+      label.innerHTML = progressLabel(elapsed, buffer.duration);
+      requestAnimationFrame(draw);
+    };
+
+    source.onended = () => {
+      drawing = false;
+      if (recorder.state !== "inactive") recorder.stop();
+    };
+
+    recorder.start();
+    startedAt = ctx.currentTime;
+    source.start();
+    draw();
+
+    await done;
+    ctx.close();
+
+    const blob = new Blob(chunks, { type: mimeType });
+    if (!blob.size) return fail(parts, say("تعذّر التحويل", "Conversion failed"));
+
+    finish(parts, {
+      outName: `${title}.${mimeType.startsWith("video/mp4") ? "mp4" : "webm"}`,
+      blob,
+      beforeSize: file.size,
+      meta: `${size}×${size} · ${formatClock(buffer.duration)}`,
     });
   }
 

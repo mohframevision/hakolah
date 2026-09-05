@@ -41,6 +41,7 @@ Most online converters upload your file to their server, convert it there, then 
       <button type="button" class="filter-chip conv-format active" data-format="image/webp">WebP</button>
       <button type="button" class="filter-chip conv-format" data-format="image/jpeg">JPG</button>
       <button type="button" class="filter-chip conv-format" data-format="image/png">PNG</button>
+      <button type="button" class="filter-chip conv-format" data-format="image/bmp">BMP</button>
     </div>
   </div>
 
@@ -95,6 +96,10 @@ Most online converters upload your file to their server, convert it there, then 
     <label class="conv-check"><input type="checkbox" id="convMute" /> Remove the audio</label>
   </div>
 
+  <p class="conv-option-note">
+    You can drop an audio file here instead of a video — we'll turn it into a square video with an animated
+    waveform instead of a picture.
+  </p>
   <p class="conv-option-note">
     Video conversion runs in real time: a two-minute clip takes about two minutes, because it is re-encoded on your
     device rather than on a server. Keep the page open until it finishes.
