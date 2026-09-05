@@ -11,7 +11,6 @@ A simple question: can a random algorithm actually compose something that feels 
 <div class="beep-experiment">
   <div class="instrument-picker" id="instrumentPicker">
     <button type="button" class="filter-chip instrument-btn active" data-instrument="piano">🎹 Piano</button>
-    <button type="button" class="filter-chip instrument-btn" data-instrument="guitar">🎸 Guitar</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="flute">🪈 Flute</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="violin">🎻 Violin</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="trumpet">🎺 Trumpet</button>

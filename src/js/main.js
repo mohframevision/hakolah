@@ -837,7 +837,7 @@ function initBeepMelodyExperiment() {
 
   /* 10 "آلات" مصنوعة كلها تركيب توافقيات (Harmonics) — نفس الأسلوب، بس بنِسَب
      وأشكال مغلاف مختلفة تحاكي طبيعة كل آلة (لا عيّنات صوت حقيقية، الكل تخليق):
-     - وترية مقروعة/منتوفة (بيانو، قيثارة، بانجو): هجوم فوري/شبه فوري وتلاشٍ
+     - وترية مقروعة/منتوفة (بيانو، بانجو): هجوم فوري/شبه فوري وتلاشٍ
        أُسّي مباشر بلا استقرار. الفرق بينها بسرعة الهجوم وميزان التوافقيات
        (بانجو أسرع اهتزازاً وتوافقياته الفردية العليا أقوى = طنين "رنّان").
      - نفخية (فلوت، ترمبيت، ساكسفون، أكورديون): هجوم أبطأ ويستقر بمستوى شبه
@@ -860,19 +860,6 @@ function initBeepMelodyExperiment() {
       filterBrightMult: 9,
       filterDarkMult: 2,
       ringScale: 1,
-    },
-    guitar: {
-      harmonics: [
-        { mult: 1, weight: 1, type: "sawtooth" },
-        { mult: 2, weight: 0.25, type: "sine" },
-        { mult: 3, weight: 0.35, type: "sine" },
-        { mult: 5, weight: 0.15, type: "sine" },
-      ],
-      attack: 0.003,
-      sustainRatio: 0,
-      filterBrightMult: 11,
-      filterDarkMult: 2.5,
-      ringScale: 0.75,
     },
     flute: {
       harmonics: [
@@ -1342,7 +1329,7 @@ function initBeepMelodyExperiment() {
     // آلة وترية (يسار اللوحة = نغمات واطية بأوتار أطول وأثخن فترن أطول
     // وأغنى، يمينها = نغمات حادة تخفت أسرع وأنحف) — يشتغل بأي مفتاح موسيقي
     // عشوائي بلا ما يحتاج نغمة مرجعية ثابتة، ومضروب بمعامل الآلة نفسها
-    // (قيثارة تخفت أسرع من البيانو، فلوت يرن أطول لأنه آلة نفخ مستمرة)
+    // (بانجو يخفت أسرع من البيانو، فلوت يرن أطول لأنه آلة نفخ مستمرة)
     const registerFactor = 1.5 - (noteIndex / (NOTES.length - 1)) * 0.9; // ١٫٥ (واطي) → ٠٫٦ (حاد)
     const ringDuration = duration * registerFactor * instrument.ringScale;
 

@@ -16,7 +16,6 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
 <div class="beep-experiment">
   <div class="instrument-picker" id="instrumentPicker">
     <button type="button" class="filter-chip instrument-btn active" data-instrument="piano">🎹 بيانو</button>
-    <button type="button" class="filter-chip instrument-btn" data-instrument="guitar">🎸 قيثارة</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="flute">🪈 فلوت</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="violin">🎻 كمان</button>
     <button type="button" class="filter-chip instrument-btn" data-instrument="trumpet">🎺 ترمبيت</button>
