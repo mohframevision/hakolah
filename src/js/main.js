@@ -1571,7 +1571,7 @@ function initBeepMelodyExperiment() {
   /* يعيد عزف القطعة داخل OfflineAudioContext (أسرع من الزمن الحقيقي) بنفس
      دوال التخليق المستخدمة بالتشغيل الحي — فالملف المصدَّر مطابق لما سمعه
      المستخدم، لا نسخة تقريبية */
-  async function renderPieceToWav(piece) {
+  async function renderPieceToBuffer(piece) {
     const mood = MOODS[currentMood];
     const beatDur = 60 / piece.meta.bpm;
     const tail = 3; // ذيل يسع رنين آخر نغمة وصداها
@@ -1590,7 +1590,57 @@ function initBeepMelodyExperiment() {
     wet.connect(ctx.destination);
 
     scheduleEvents({ ctx, dry: ctx.destination, wet: delay, live: false }, piece, 0.05);
-    return audioBufferToWav(await ctx.startRendering());
+    return ctx.startRendering();
+  }
+
+  async function renderPieceToWav(piece) {
+    return audioBufferToWav(await renderPieceToBuffer(piece));
+  }
+
+  /* MP3 يحتاج مرمّزاً — المتصفحات ما ترمّزه أصلاً (MediaRecorder يعطي webm أو
+     mp4 لا mp3). نستضيف lamejs عندنا لا من CDN عشان تبقى سياسة CSP صارمة
+     (script-src 'self')، ونحمّله فقط عند الضغط على الزر: 156 كيلوبايت ما
+     تُنزَّل على أي زائر لا يصدّر MP3.
+     lamejs مرخّص LGPL-3.0 — يُشحن كملف مستقل بلا تعديل ومعه نص رخصته
+     بـ src/js/vendor/lamejs-LICENSE.txt. */
+  let lamePromise = null;
+  function loadLameEncoder() {
+    if (window.lamejs) return Promise.resolve(window.lamejs);
+    if (!lamePromise) {
+      lamePromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = `${SITE_ROOT_PATH}js/vendor/lame.min.js`;
+        script.onload = () => resolve(window.lamejs);
+        script.onerror = () => {
+          lamePromise = null;
+          reject(new Error("lame load failed"));
+        };
+        document.head.appendChild(script);
+      });
+    }
+    return lamePromise;
+  }
+
+  async function renderPieceToMp3(piece) {
+    const lame = await loadLameEncoder();
+    const buffer = await renderPieceToBuffer(piece);
+    const channel = buffer.getChannelData(0);
+    const samples = new Int16Array(channel.length);
+    for (let i = 0; i < channel.length; i++) {
+      const value = Math.max(-1, Math.min(1, channel[i]));
+      samples[i] = value < 0 ? value * 0x8000 : value * 0x7fff;
+    }
+
+    const encoder = new lame.Mp3Encoder(1, buffer.sampleRate, 192);
+    const chunks = [];
+    const BLOCK = 1152; // حجم إطار MP3 القياسي
+    for (let i = 0; i < samples.length; i += BLOCK) {
+      const encoded = encoder.encodeBuffer(samples.subarray(i, i + BLOCK));
+      if (encoded.length > 0) chunks.push(encoded);
+    }
+    const flushed = encoder.flush();
+    if (flushed.length > 0) chunks.push(flushed);
+    return new Blob(chunks, { type: "audio/mpeg" });
   }
 
   /* ملف MIDI من نوع 0 — صغير جداً ويفتح بأي برنامج نوتة (MuseScore وغيره)،
@@ -1746,6 +1796,25 @@ function initBeepMelodyExperiment() {
       } finally {
         wavBtn.disabled = false;
         wavBtn.textContent = original;
+      }
+      playClickSound();
+    });
+  }
+
+  const mp3Btn = document.getElementById("beepDownloadMp3");
+  if (mp3Btn) {
+    mp3Btn.addEventListener("click", async () => {
+      const piece = ensurePiece();
+      const original = mp3Btn.textContent;
+      mp3Btn.disabled = true;
+      mp3Btn.textContent = mp3Btn.dataset.working;
+      try {
+        downloadBlob(await renderPieceToMp3(piece), `hakolah-music-${piece.meta.seed}.mp3`);
+      } catch {
+        showToast(mp3Btn.dataset.failed);
+      } finally {
+        mp3Btn.disabled = false;
+        mp3Btn.textContent = original;
       }
       playClickSound();
     });

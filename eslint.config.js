@@ -14,6 +14,8 @@ module.exports = [
       "node_modules/**",
       "cf-worker/**",
       "poster-editor/vendor/**",
+      // مكتبة ترميز MP3 خارجية (lamejs) تُشحن كما هي بلا تعديل
+      "src/js/vendor/**",
       "places-picker/data.js",
       ".claude/skills/**",
     ],
