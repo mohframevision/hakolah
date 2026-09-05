@@ -10,6 +10,11 @@ categories:
   - سندويشات
   - وجبات سريعة
   - السهلة الشمالية
+meatSource:
+  text: "برجر الدجاج واللحم وصدور الدجاج من «سيرا»، والنقتس من «الدعيسي»، والكبدة (خام) صومالية."
+  text_en: "Chicken and beef burgers and chicken breasts from Seara, nuggets from Al-Duaisi, and raw liver from Somalia."
+  via: asked
+  checked: 2026-09-05
 lat: 26.2030873
 lng: 50.5310057
 cta: ''
