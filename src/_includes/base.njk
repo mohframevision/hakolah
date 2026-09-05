@@ -41,7 +41,7 @@
     default-src ويحجب تشغيل الملف المولَّد محلياً. لا يفتح أي مصدر خارجي:
     روابط blob: ينشئها كودنا نفسه بنفس الأصل.
   #}
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://*.adtrafficquality.google; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://www.googletagmanager.com https://*.adtrafficquality.google; connect-src 'self' https://api.web3forms.com https://hakolah-push.hakolah.workers.dev https://*.google-analytics.com https://*.analytics.google.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google https://lookerstudio.google.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.web3forms.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://*.adtrafficquality.google; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://www.googletagmanager.com https://*.adtrafficquality.google; connect-src 'self' https://api.web3forms.com https://hakolah-push.hakolah.workers.dev https://*.google-analytics.com https://*.analytics.google.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google https://lookerstudio.google.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.web3forms.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   {# ملف خارجي (وليس سكربت مضمّن) عمداً — يسمح بسياسة CSP صارمة script-src
      بدون unsafe-inline. يُحمَّل بدون defer/async فيشتغل قبل أول رسم للصفحة
@@ -95,12 +95,12 @@
      لأن سياسة CSP (style-src) ما تسمح بوسم <style> مضمّن، بس تسمح بملف من
      نفس الموقع. يُحمَّل بعد style.css مباشرة فيتغلّب على قيمته الافتراضية. #}
   <link rel="stylesheet" href="{{ '/theme.css' | url }}?v={{ buildVersion }}" />
-  {% if adsense.publisherId %}
+  {% if adsense.publisherId and not noThirdParty %}
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense.publisherId }}" crossorigin="anonymous"></script>
   {% endif %}
   {# ضبط gtag انتقل لـ bootstrap.js (يقرأ المعرّف من #site-config) — كان
      سكربت مضمّن يمنع سياسة CSP صارمة #}
-  {% if analytics.measurementId %}
+  {% if analytics.measurementId and not noThirdParty %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics.measurementId }}"></script>
   {% endif %}
 
@@ -227,7 +227,7 @@
   <script type="application/json" id="site-config">
     {
       "lang": {{ lang | json | safe }},
-      "gaId": {{ analytics.measurementId | json | safe }},
+      "gaId": {{ (null if noThirdParty else analytics.measurementId) | json | safe }},
       "push": { "workerUrl": {{ push.workerUrl | json | safe }}, "vapidPublicKey": {{ push.vapidPublicKey | json | safe }} },
       "page": {
         "section": {{ (section or "") | json | safe }},

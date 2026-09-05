@@ -2496,3 +2496,201 @@ img {
   width: 13px;
   height: 50px;
 }
+
+/* ===== محوّل الملفات ===== */
+.conv-kinds {
+  margin-bottom: 16px;
+}
+
+.conv-options[hidden] {
+  display: none;
+}
+
+.conv-option-note {
+  flex-basis: 100%;
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.conv-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.conv-video-note {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+/* شريط تقدّم تحويل الفيديو — التحويل بالزمن الحقيقي، فبدون مؤشّر يبان معلّقاً */
+.conv-progress {
+  width: min(260px, 60vw);
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.conv-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.25s linear;
+}
+
+.conv-start {
+  margin-top: 4px;
+}
+
+.conv-privacy {
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-radius: var(--radius);
+  font-size: 0.92rem;
+  line-height: 1.8;
+}
+
+.conv-privacy-proof {
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+}
+
+.conv-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 20px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: center;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.conv-drop.dragging {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+}
+
+.conv-drop-text {
+  margin: 0;
+  font-weight: 600;
+}
+
+.conv-drop-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.conv-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.conv-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.conv-option[hidden] {
+  display: none;
+}
+
+.conv-option-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.conv-number {
+  width: 170px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.88rem;
+}
+
+.conv-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.conv-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.conv-row-error {
+  border-color: color-mix(in srgb, #d33 45%, var(--color-border));
+}
+
+.conv-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+.conv-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.conv-row-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.conv-row-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 3px;
+}
+
+.conv-good {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.conv-warn {
+  color: #c77700;
+  font-weight: 700;
+}
+
+.conv-download {
+  flex-shrink: 0;
+}
