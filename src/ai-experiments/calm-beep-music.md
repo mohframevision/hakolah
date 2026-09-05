@@ -1,9 +1,9 @@
 ---
 title: "تجربة #1: تأليف موسيقى عشوائية بالذكاء الاصطناعي"
 icon: 🎵
-desc: مولّد يؤلّف مقطوعة مختلفة كل مرة — اختار الآلة والمزاج (هادئ، حيوي، سعيد، حالم)، بجمل موسيقية متكررة ولحن متماسك، مباشرة بمتصفحك.
+desc: مولّد يؤلّف مقطوعة مختلفة كل مرة — اختار الآلة والطابع (هادئ، رصين، سعيد، حالم)، بجمل موسيقية متكررة ولحن متماسك، مباشرة بمتصفحك.
 title_en: "Experiment #1: AI-Generated Random Music"
-desc_en: A generator that composes a different piece every time — pick the instrument and mood (calm, energetic, happy, dreamy), with repeating musical phrases and a coherent melody, right in your browser.
+desc_en: A generator that composes a different piece every time — pick the instrument and character (calm, stately, happy, dreamy), with repeating musical phrases and a coherent melody, right in your browser.
 categories:
   - موسيقى
 dateAdded: 2026-09-04
@@ -28,7 +28,7 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
   </div>
   <div class="instrument-picker" id="moodPicker">
     <button type="button" class="filter-chip mood-btn active" data-mood="calm">😌 هادئ</button>
-    <button type="button" class="filter-chip mood-btn" data-mood="energetic">⚡ حيوي</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="stately">🕊️ رصين</button>
     <button type="button" class="filter-chip mood-btn" data-mood="happy">😊 سعيد</button>
     <button type="button" class="filter-chip mood-btn" data-mood="dreamy">🌙 حالم</button>
   </div>

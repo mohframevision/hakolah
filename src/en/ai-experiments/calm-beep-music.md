@@ -1,7 +1,7 @@
 ---
 title: "Experiment #1: AI-Generated Random Music"
 icon: 🎵
-desc: A generator that composes a different piece every time — pick the instrument and mood (calm, energetic, happy, dreamy), with repeating musical phrases and a coherent melody, right in your browser.
+desc: A generator that composes a different piece every time — pick the instrument and character (calm, stately, happy, dreamy), with repeating musical phrases and a coherent melody, right in your browser.
 langSwitchUrl: "/ai-experiments/calm-beep-music.html"
 aiDisclosure: "🧪 An experiment the site owner made with AI, just to explore and have fun."
 ---
@@ -23,7 +23,7 @@ A simple question: can a random algorithm actually compose something that feels 
   </div>
   <div class="instrument-picker" id="moodPicker">
     <button type="button" class="filter-chip mood-btn active" data-mood="calm">😌 Calm</button>
-    <button type="button" class="filter-chip mood-btn" data-mood="energetic">⚡ Energetic</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="stately">🕊️ Stately</button>
     <button type="button" class="filter-chip mood-btn" data-mood="happy">😊 Happy</button>
     <button type="button" class="filter-chip mood-btn" data-mood="dreamy">🌙 Dreamy</button>
   </div>
