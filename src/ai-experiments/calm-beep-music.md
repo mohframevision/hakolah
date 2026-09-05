@@ -42,6 +42,7 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     <button type="button" class="filter-chip" id="beepShareSeed" data-copied="نُسخ رابط هذي المقطوعة">🔗 انسخ رابط المقطوعة</button>
     <button type="button" class="filter-chip" id="beepDownloadWav" data-working="⏳ يجهّز الملف...">⬇️ تحميل WAV</button>
     <button type="button" class="filter-chip" id="beepDownloadMp3" data-working="⏳ يجهّز الملف..." data-failed="تعذّر تجهيز ملف MP3">⬇️ تحميل MP3</button>
+    <button type="button" class="filter-chip" id="beepDownloadVideo" data-working="⏳ يسجّل الفيديو" data-failed="متصفحك ما يدعم تسجيل الفيديو">🎬 تحميل فيديو</button>
     <button type="button" class="filter-chip" id="beepDownloadMidi">🎼 تحميل MIDI</button>
   </div>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">

@@ -1643,6 +1643,154 @@ function initBeepMelodyExperiment() {
     return new Blob(chunks, { type: "audio/mpeg" });
   }
 
+  /* ===== تصدير فيديو =====
+     كانفس يرسم اللوحة والمفاتيح وهي تضيء + الصوت، ويسجّلهما MediaRecorder.
+     المقاس مربّع (1080×1080) لأن الاستخدام المتوقّع مشاركة اجتماعية.
+     نفضّل MP4 لو المتصفح يدعمه (يُقبل بكل مكان تقريباً)، وإلا WebM. */
+  const VIDEO_SIZE = 1080;
+
+  function pickVideoMime() {
+    const candidates = [
+      "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+      "video/mp4",
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+    ];
+    return candidates.find((type) => window.MediaRecorder && MediaRecorder.isTypeSupported(type)) || "";
+  }
+
+  // مدة رنين النغمة — نفس معادلة playNote عشان الإضاءة بالفيديو تطابق الصوت
+  function ringSecondsOf(event, beatDur) {
+    const instrument = INSTRUMENTS[currentInstrument];
+    const registerFactor = 1.5 - (event.degree / (NOTES.length - 1)) * 0.9;
+    return event.durBeats * beatDur * registerFactor * instrument.ringScale;
+  }
+
+  function drawVideoFrame(g, piece, seconds, active) {
+    const S = VIDEO_SIZE;
+    g.fillStyle = "#10241d";
+    g.fillRect(0, 0, S, S);
+    g.fillStyle = "rgba(45, 122, 96, 0.16)";
+    g.beginPath();
+    g.arc(S * 0.86, S * 0.13, S * 0.2, 0, Math.PI * 2);
+    g.fill();
+
+    g.textAlign = "center";
+    g.fillStyle = "#ffffff";
+    g.font = "800 62px Tahoma, Arial, sans-serif";
+    g.fillText("هكوله", S / 2, 120);
+    g.font = "600 30px Tahoma, Arial, sans-serif";
+    g.fillStyle = "#8fd3b6";
+    g.fillText("موسيقى مؤلَّفة عشوائياً — hakolah", S / 2, 170);
+
+    // لوحة المفاتيح: أربع أوكتافات بنفس ترتيب اللوحة بالصفحة
+    const whiteCount = FULL_OCTAVES * 7;
+    const whiteW = Math.floor((S - 120) / whiteCount);
+    const boardW = whiteW * whiteCount;
+    const left = (S - boardW) / 2;
+    const top = 330;
+    const whiteH = 320;
+    const blackW = Math.round(whiteW * 0.6);
+    const blackH = Math.round(whiteH * 0.62);
+
+    for (let i = 0; i < whiteCount; i++) {
+      const octave = Math.floor(i / 7);
+      const note = octave * 12 + WHITE_PITCH_CLASSES[i % 7];
+      g.fillStyle = active.has(note) ? "#4ade80" : "#f7f7f5";
+      g.fillRect(left + i * whiteW, top, whiteW - 2, whiteH);
+    }
+    for (let octave = 0; octave < FULL_OCTAVES; octave++) {
+      BLACK_PITCH_CLASSES.forEach((pitchClass, i) => {
+        const note = octave * 12 + pitchClass;
+        const x = left + (octave * 7 + BLACK_AFTER_WHITE[i]) * whiteW - blackW / 2;
+        g.fillStyle = active.has(note) ? "#22c55e" : "#141414";
+        g.fillRect(x, top, blackW, blackH);
+      });
+    }
+
+    // بطاقة التحليل تحت اللوحة
+    const meta = piece.meta;
+    const lines = [
+      `${keyName(meta.rootIndex)} ${meta.mode === "major" ? "Major" : "Minor"}  ·  ${meta.bpm} BPM  ·  ${meta.meter}/4`,
+      meta.chords.slice(0, 4).map((degree) => ROMAN[meta.mode][degree]).join(" – "),
+    ];
+    g.font = "700 40px Tahoma, Arial, sans-serif";
+    g.fillStyle = "#eafff5";
+    g.fillText(lines[0], S / 2, top + whiteH + 110);
+    g.font = "800 54px Tahoma, Arial, sans-serif";
+    g.fillStyle = "#4ade80";
+    g.fillText(lines[1], S / 2, top + whiteH + 185);
+
+    // شريط تقدّم بسيط
+    const progress = Math.min(1, seconds / (piece.meta.totalBeats * (60 / piece.meta.bpm)));
+    g.fillStyle = "rgba(255,255,255,0.14)";
+    g.fillRect(left, S - 120, boardW, 10);
+    g.fillStyle = "#4ade80";
+    g.fillRect(left, S - 120, boardW * progress, 10);
+  }
+
+  async function renderPieceToVideo(piece, onProgress) {
+    const mimeType = pickVideoMime();
+    if (!mimeType) throw new Error("no recorder support");
+
+    const buffer = await renderPieceToBuffer(piece);
+    const canvas = document.createElement("canvas");
+    canvas.width = VIDEO_SIZE;
+    canvas.height = VIDEO_SIZE;
+    const g = canvas.getContext("2d");
+
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const streamDestination = ctx.createMediaStreamDestination();
+    source.connect(streamDestination);
+    source.connect(ctx.destination); // يسمعها المستخدم أثناء التسجيل
+
+    const videoStream = canvas.captureStream(30);
+    const stream = new MediaStream([...videoStream.getVideoTracks(), ...streamDestination.stream.getAudioTracks()]);
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 5000000 });
+    const chunks = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size) chunks.push(e.data);
+    };
+    const stopped = new Promise((resolve) => {
+      recorder.onstop = resolve;
+    });
+
+    const beatDur = 60 / piece.meta.bpm;
+    const timeline = piece.events.map((ev) => ({
+      note: Math.round(12 * Math.log2(NOTES[ev.degree] / FULL_BASE_FREQ)),
+      start: ev.startBeat * beatDur,
+      end: ev.startBeat * beatDur + ringSecondsOf(ev, beatDur),
+    }));
+
+    recorder.start();
+    const startedAt = ctx.currentTime;
+    source.start();
+
+    await new Promise((resolve) => {
+      const frame = () => {
+        const seconds = ctx.currentTime - startedAt;
+        const active = new Set();
+        timeline.forEach((n) => {
+          if (seconds >= n.start && seconds < n.end) active.add(n.note);
+        });
+        drawVideoFrame(g, piece, seconds, active);
+        if (onProgress) onProgress(Math.min(1, seconds / buffer.duration));
+        if (seconds < buffer.duration) requestAnimationFrame(frame);
+        else resolve();
+      };
+      frame();
+    });
+
+    recorder.stop();
+    await stopped;
+    source.stop();
+    ctx.close();
+    return { blob: new Blob(chunks, { type: mimeType }), mimeType };
+  }
+
   /* ملف MIDI من نوع 0 — صغير جداً ويفتح بأي برنامج نوتة (MuseScore وغيره)،
      فيقدر أي أحد يشوف المقطوعة كنوتة موسيقية ويعدّلها */
   function pieceToMidi(piece) {
@@ -1815,6 +1963,31 @@ function initBeepMelodyExperiment() {
       } finally {
         mp3Btn.disabled = false;
         mp3Btn.textContent = original;
+      }
+      playClickSound();
+    });
+  }
+
+  /* الفيديو يُسجَّل بالزمن الحقيقي (لازم MediaRecorder يستقبل إطارات فعلية)،
+     فمدة الانتظار = مدة المقطوعة. نعرض نسبة التقدّم عشان ما يظن إنه معلّق. */
+  const videoBtn = document.getElementById("beepDownloadVideo");
+  if (videoBtn) {
+    videoBtn.addEventListener("click", async () => {
+      if (playing) stopPlayback();
+      const piece = ensurePiece();
+      const original = videoBtn.textContent;
+      videoBtn.disabled = true;
+      try {
+        const { blob, mimeType } = await renderPieceToVideo(piece, (ratio) => {
+          videoBtn.textContent = `${videoBtn.dataset.working} ${Math.round(ratio * 100)}%`;
+        });
+        const extension = mimeType.startsWith("video/mp4") ? "mp4" : "webm";
+        downloadBlob(blob, `hakolah-music-${piece.meta.seed}.${extension}`);
+      } catch {
+        showToast(videoBtn.dataset.failed);
+      } finally {
+        videoBtn.disabled = false;
+        videoBtn.textContent = original;
       }
       playClickSound();
     });

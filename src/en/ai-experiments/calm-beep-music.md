@@ -37,6 +37,7 @@ A simple question: can a random algorithm actually compose something that feels 
     <button type="button" class="filter-chip" id="beepShareSeed" data-copied="Link to this exact piece copied">🔗 Copy link to this piece</button>
     <button type="button" class="filter-chip" id="beepDownloadWav" data-working="⏳ Preparing file...">⬇️ Download WAV</button>
     <button type="button" class="filter-chip" id="beepDownloadMp3" data-working="⏳ Preparing file..." data-failed="Could not prepare the MP3 file">⬇️ Download MP3</button>
+    <button type="button" class="filter-chip" id="beepDownloadVideo" data-working="⏳ Recording" data-failed="Your browser does not support video recording">🎬 Download video</button>
     <button type="button" class="filter-chip" id="beepDownloadMidi">🎼 Download MIDI</button>
   </div>
   <div class="beep-keys" id="beepKeys" aria-hidden="true">
