@@ -743,6 +743,13 @@ function initBeepMelodyExperiment() {
   let pinnedSeed = null; // بذرة جاية من الرابط — تُستخدم مرة وحدة بأول تشغيل
   let lastPiece = null; // آخر قطعة أُلّفت — التصدير يصدّرها هي لا وحدة جديدة
 
+  /* سجلّ المقطوعات المسموعة عشان زر "السابقة". نخزّن الآلة والطابع مع البذرة
+     لا البذرة وحدها: البذرة تعطي نفس اللحن فقط لو بقي الطابع نفسه، فلو غيّر
+     المستخدم الطابع ثم رجع للخلف بيسمع مقطوعة أخرى بنفس البذرة لا نفس اللي سمعها. */
+  const seedHistory = [];
+  let historyPos = -1;
+  let navigatingHistory = false;
+
   function allKeys() {
     return Object.values(keyByPitchClass).concat(Object.values(keyByAbsolute));
   }
@@ -1925,6 +1932,16 @@ function initBeepMelodyExperiment() {
 
     const piece = composePiece(seed);
     lastPiece = piece; // التصدير يصدّر القطعة اللي سمعها المستخدم، لا وحدة جديدة
+
+    if (navigatingHistory) {
+      navigatingHistory = false;
+    } else {
+      // مقطوعة جديدة: نقصّ ما بعد الموضع الحالي (زي سجلّ المتصفح) ثم نضيفها
+      seedHistory.length = historyPos + 1;
+      seedHistory.push({ seed, mood: currentMood, instrument: currentInstrument });
+      historyPos = seedHistory.length - 1;
+    }
+    updateHistoryButton();
     btn.textContent = btn.dataset.stopLabel;
 
     const startTime = audioCtx.currentTime + 0.12;
@@ -1968,6 +1985,33 @@ function initBeepMelodyExperiment() {
     playSequence();
     playClickSound();
   });
+
+  /* "السابقة": يرجّع المقطوعة اللي قبلها بالسجلّ — يستعيد بذرتها وآلتها
+     وطابعها معاً، فيسمع نفس اللي سمعه بالضبط لا مقطوعة أخرى بنفس البذرة */
+  const prevBtn = document.getElementById("beepMelodyPrev");
+  function updateHistoryButton() {
+    if (prevBtn) prevBtn.disabled = historyPos <= 0;
+  }
+  updateHistoryButton();
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      if (historyPos <= 0) return;
+      historyPos--;
+      const entry = seedHistory[historyPos];
+
+      currentMood = entry.mood;
+      moodButtons.forEach((b) => b.classList.toggle("active", b.dataset.mood === entry.mood));
+      currentInstrument = entry.instrument;
+      instrumentButtons.forEach((b) => b.classList.toggle("active", b.dataset.instrument === entry.instrument));
+
+      pinnedSeed = entry.seed;
+      navigatingHistory = true;
+      if (playing) stopPlayback();
+      playSequence();
+      playClickSound();
+    });
+  }
 
   // "التالية": يقطع القطعة الحالية ويبدأ وحدة جديدة فوراً — بدل ما ينتظر
   // المستخدم تخلص ثم يضغط تشغيل من جديد

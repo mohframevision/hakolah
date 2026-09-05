@@ -28,6 +28,7 @@ A simple question: can a random algorithm actually compose something that feels 
   </div>
   <div class="beep-controls">
     <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Play Music" data-stop-label="⏹ Stop">▶️ Play Music</button>
+    <button type="button" id="beepMelodyPrev" class="btn secondary">⏮️ Previous</button>
     <button type="button" id="beepMelodyNext" class="btn secondary">⏭️ New Piece</button>
   </div>
   <div class="instrument-picker">

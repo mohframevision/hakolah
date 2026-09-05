@@ -2307,6 +2307,12 @@ img {
   justify-content: center;
 }
 
+.beep-experiment .btn:disabled,
+.beep-experiment .filter-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .beep-seed-row {
   display: flex;
   gap: 8px;

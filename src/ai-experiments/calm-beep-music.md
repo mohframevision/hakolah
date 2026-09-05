@@ -33,6 +33,7 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
   </div>
   <div class="beep-controls">
     <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>
+    <button type="button" id="beepMelodyPrev" class="btn secondary">⏮️ السابقة</button>
     <button type="button" id="beepMelodyNext" class="btn secondary">⏭️ مقطوعة جديدة</button>
   </div>
   <div class="instrument-picker">
