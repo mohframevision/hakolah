@@ -1667,67 +1667,118 @@ function initBeepMelodyExperiment() {
     return event.durBeats * beatDur * registerFactor * instrument.ringScale;
   }
 
-  function drawVideoFrame(g, piece, seconds, active) {
-    const S = VIDEO_SIZE;
-    g.fillStyle = "#10241d";
-    g.fillRect(0, 0, S, S);
-    g.fillStyle = "rgba(45, 122, 96, 0.16)";
+  /* ألوان الفيديو تُقرأ من متغيّرات CSS الفعلية وقت التصدير (لا مكتوبة يدوياً)،
+     فيطلع الفيديو بنفس ألوان الموقع مهما غيّر المالك اللون بلوحة التحكم.
+     نمرّر القيمة على عنصر مؤقت عشان المتصفح يحلّها لـ rgb() — القيمة الخام
+     قد تكون color-mix() اللي ما يفهمها الكانفس. */
+  function resolveCssColor(name, fallback) {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    if (!raw) return fallback;
+    const probe = document.createElement("span");
+    probe.style.color = raw;
+    probe.style.display = "none";
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved || fallback;
+  }
+
+  function mixWithWhite(rgb, ratio) {
+    const parts = rgb.match(/\d+(\.\d+)?/g);
+    if (!parts) return rgb;
+    const mixed = parts.slice(0, 3).map((v) => Math.round(Number(v) * ratio + 255 * (1 - ratio)));
+    return `rgb(${mixed.join(", ")})`;
+  }
+
+  function roundedBottomRect(g, x, y, w, h, radius) {
     g.beginPath();
-    g.arc(S * 0.86, S * 0.13, S * 0.2, 0, Math.PI * 2);
+    g.moveTo(x, y);
+    g.lineTo(x + w, y);
+    g.lineTo(x + w, y + h - radius);
+    g.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+    g.lineTo(x + radius, y + h);
+    g.quadraticCurveTo(x, y + h, x, y + h - radius);
+    g.closePath();
+  }
+
+  function drawVideoFrame(g, piece, seconds, active, theme) {
+    const S = VIDEO_SIZE;
+    const isEn = window.SITE_LANG === "en";
+    g.fillStyle = theme.bg;
+    g.fillRect(0, 0, S, S);
+
+    // بطاقة بنفس شكل صندوق التجربة بالصفحة
+    const cardMargin = 48;
+    g.fillStyle = theme.surface;
+    roundedBottomRect(g, cardMargin, cardMargin, S - cardMargin * 2, S - cardMargin * 2, 28);
     g.fill();
 
     g.textAlign = "center";
-    g.fillStyle = "#ffffff";
-    g.font = "800 62px Tahoma, Arial, sans-serif";
-    g.fillText("هكوله", S / 2, 120);
-    g.font = "600 30px Tahoma, Arial, sans-serif";
-    g.fillStyle = "#8fd3b6";
-    g.fillText("موسيقى مؤلَّفة عشوائياً — hakolah", S / 2, 170);
+    g.fillStyle = theme.text;
+    g.font = "800 66px Tahoma, Arial, sans-serif";
+    g.fillText(isEn ? "Hakolah" : "هكوله", S / 2, 168);
+    g.font = "600 32px Tahoma, Arial, sans-serif";
+    g.fillStyle = theme.muted;
+    g.fillText(isEn ? "An experiment from the Hakolah site" : "تجربة من موقع هكوله", S / 2, 218);
+    g.font = "700 34px Tahoma, Arial, sans-serif";
+    g.fillStyle = theme.primary;
+    g.fillText(isEn ? "Music composed randomly" : "موسيقى مؤلَّفة عشوائياً", S / 2, 272);
 
-    // لوحة المفاتيح: أربع أوكتافات بنفس ترتيب اللوحة بالصفحة
+    /* نفس مقاسات اللوحة بالـCSS بالضبط (أبيض 22×80، أسود 13×50، والزوايا
+       السفلية مدوّرة) مضروبة بمعامل واحد — فتطلع بنفس نِسَب واجهة الموقع */
     const whiteCount = FULL_OCTAVES * 7;
-    const whiteW = Math.floor((S - 120) / whiteCount);
+    const scale = (S - 150) / (whiteCount * FULL_WHITE_W);
+    const whiteW = FULL_WHITE_W * scale;
+    const whiteH = 80 * scale;
+    const blackW = FULL_BLACK_W * scale;
+    const blackH = 50 * scale;
     const boardW = whiteW * whiteCount;
     const left = (S - boardW) / 2;
-    const top = 330;
-    const whiteH = 320;
-    const blackW = Math.round(whiteW * 0.6);
-    const blackH = Math.round(whiteH * 0.62);
+    const top = 400;
 
+    g.lineWidth = Math.max(1, scale);
     for (let i = 0; i < whiteCount; i++) {
-      const octave = Math.floor(i / 7);
-      const note = octave * 12 + WHITE_PITCH_CLASSES[i % 7];
-      g.fillStyle = active.has(note) ? "#4ade80" : "#f7f7f5";
-      g.fillRect(left + i * whiteW, top, whiteW - 2, whiteH);
+      const note = Math.floor(i / 7) * 12 + WHITE_PITCH_CLASSES[i % 7];
+      roundedBottomRect(g, left + i * whiteW, top, whiteW, whiteH, 4 * scale);
+      g.fillStyle = active.has(note) ? theme.activeWhite : "#ffffff";
+      g.fill();
+      g.strokeStyle = theme.border;
+      g.stroke();
     }
     for (let octave = 0; octave < FULL_OCTAVES; octave++) {
       BLACK_PITCH_CLASSES.forEach((pitchClass, i) => {
         const note = octave * 12 + pitchClass;
         const x = left + (octave * 7 + BLACK_AFTER_WHITE[i]) * whiteW - blackW / 2;
-        g.fillStyle = active.has(note) ? "#22c55e" : "#141414";
-        g.fillRect(x, top, blackW, blackH);
+        roundedBottomRect(g, x, top, blackW, blackH, 3 * scale);
+        g.fillStyle = active.has(note) ? theme.primary : "#1a1a1a";
+        g.fill();
       });
     }
 
-    // بطاقة التحليل تحت اللوحة
+    // سطرا التحليل تحت اللوحة
     const meta = piece.meta;
-    const lines = [
-      `${keyName(meta.rootIndex)} ${meta.mode === "major" ? "Major" : "Minor"}  ·  ${meta.bpm} BPM  ·  ${meta.meter}/4`,
-      meta.chords.slice(0, 4).map((degree) => ROMAN[meta.mode][degree]).join(" – "),
-    ];
-    g.font = "700 40px Tahoma, Arial, sans-serif";
-    g.fillStyle = "#eafff5";
-    g.fillText(lines[0], S / 2, top + whiteH + 110);
-    g.font = "800 54px Tahoma, Arial, sans-serif";
-    g.fillStyle = "#4ade80";
-    g.fillText(lines[1], S / 2, top + whiteH + 185);
+    g.font = "700 38px Tahoma, Arial, sans-serif";
+    g.fillStyle = theme.text;
+    const modeLabel = meta.mode === "major" ? "Major" : "Minor";
+    g.fillText(`${keyName(meta.rootIndex)} ${modeLabel}  ·  ${meta.bpm} BPM  ·  ${meta.meter}/4`, S / 2, top + whiteH + 140);
+    g.font = "800 56px Tahoma, Arial, sans-serif";
+    g.fillStyle = theme.primary;
+    g.fillText(meta.chords.slice(0, 4).map((degree) => ROMAN[meta.mode][degree]).join(" – "), S / 2, top + whiteH + 220);
 
-    // شريط تقدّم بسيط
-    const progress = Math.min(1, seconds / (piece.meta.totalBeats * (60 / piece.meta.bpm)));
-    g.fillStyle = "rgba(255,255,255,0.14)";
-    g.fillRect(left, S - 120, boardW, 10);
-    g.fillStyle = "#4ade80";
-    g.fillRect(left, S - 120, boardW * progress, 10);
+    // البذرة: من يشوف الفيديو يقدر يعيد نفس المقطوعة بالموقع بالضبط
+    g.font = "600 26px Tahoma, Arial, sans-serif";
+    g.fillStyle = theme.muted;
+    g.fillText(`${isEn ? "seed" : "البذرة"} ${meta.seed}`, S / 2, top + whiteH + 292);
+
+    const progress = Math.min(1, seconds / (meta.totalBeats * (60 / meta.bpm)));
+    g.fillStyle = theme.border;
+    g.fillRect(left, S - 200, boardW, 10);
+    g.fillStyle = theme.primary;
+    g.fillRect(left, S - 200, boardW * progress, 10);
+
+    g.font = "600 28px Tahoma, Arial, sans-serif";
+    g.fillStyle = theme.muted;
+    g.fillText("hakolah", S / 2, S - 140);
   }
 
   async function renderPieceToVideo(piece, onProgress) {
@@ -1758,6 +1809,17 @@ function initBeepMelodyExperiment() {
       recorder.onstop = resolve;
     });
 
+    const primary = resolveCssColor("--color-primary", "rgb(63, 164, 128)");
+    const theme = {
+      bg: resolveCssColor("--color-bg", "rgb(28, 28, 28)"),
+      surface: resolveCssColor("--color-surface", "rgb(28, 28, 28)"),
+      text: resolveCssColor("--color-text", "rgb(240, 240, 240)"),
+      muted: resolveCssColor("--color-text-muted", "rgb(150, 150, 150)"),
+      border: resolveCssColor("--color-border", "rgb(42, 42, 42)"),
+      primary,
+      activeWhite: mixWithWhite(primary, 0.35), // نفس color-mix بالـCSS للمفتاح الأبيض المضيء
+    };
+
     const beatDur = 60 / piece.meta.bpm;
     const timeline = piece.events.map((ev) => ({
       note: Math.round(12 * Math.log2(NOTES[ev.degree] / FULL_BASE_FREQ)),
@@ -1776,7 +1838,7 @@ function initBeepMelodyExperiment() {
         timeline.forEach((n) => {
           if (seconds >= n.start && seconds < n.end) active.add(n.note);
         });
-        drawVideoFrame(g, piece, seconds, active);
+        drawVideoFrame(g, piece, seconds, active, theme);
         if (onProgress) onProgress(Math.min(1, seconds / buffer.duration));
         if (seconds < buffer.duration) requestAnimationFrame(frame);
         else resolve();
