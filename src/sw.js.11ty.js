@@ -17,7 +17,23 @@ const OFFLINE_EN = BASE + "en/offline.html";
 /* الحد الأدنى فقط: صفحتا "بلا اتصال" والواجهة الأساسية. ما نخزّن كل صفحات
    الموقع مسبقاً — تسعون صفحة تعني تنزيلاً ثقيلاً على أول زيارة، ومحتوى
    يقدم بسرعة. الباقي يُخزَّن أثناء التصفح فعلياً */
-const PRECACHE = [OFFLINE_AR, OFFLINE_EN, BASE + "css/style.css", BASE + "js/main.js"];
+/* الرئيسية مضمّنة عمداً: عامل الخدمة لا يتحكّم بأول صفحة يفتحها الزائر
+   (يُثبَّت أثناءها) فلا تُخزَّن، والرئيسية أكثر صفحة يُرجع لها بلا اتصال */
+const PRECACHE = [
+  BASE,
+  BASE + "index.html",
+  BASE + "en/index.html",
+  OFFLINE_AR,
+  OFFLINE_EN,
+  BASE + "css/style.css",
+  BASE + "theme.css",
+  // الأربعة مطلوبة لعرض أي صفحة: بلا data.js تطلع الصفحة بلا بطاقات
+  BASE + "js/theme-init.js",
+  BASE + "js/bootstrap.js",
+  BASE + "js/data.js",
+  BASE + "js/main.js",
+  BASE + "assets/fonts/cairo-arabic.woff2",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

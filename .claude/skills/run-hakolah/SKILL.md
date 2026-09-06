@@ -165,3 +165,10 @@ clean (verified this session: `npm run lint` → no output/errors,
 - **`chromium-cli: command not found`**: not installed in this environment;
   this skill's `driver.mjs` (Playwright directly) is the fallback and is
   what's documented above.
+
+- **تعديل ملف `.11ty.js` أثناء `npm start` يقتل خادم التطوير** بخطأ مضلّل:
+  `Eleventy fatal watch error: Dependency Cycle Found: ./src/sw.js.11ty.js ->
+  ./src/sitemap.xml.11ty.js -> ./src/sitemap.xml.11ty.js`. الحلقة وهمية (خلل
+  برسم التبعيات بوضع المراقبة، لاحظ إشارة الملف لنفسه)، و**البناء الحقيقي
+  `npm run build` سليم تماماً**. الحل: أعد تشغيل الخادم بعد تعديل أي
+  ملف `.11ty.js`.
