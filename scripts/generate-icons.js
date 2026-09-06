@@ -11,6 +11,7 @@ const assetsDir = path.join(__dirname, "..", "src", "assets");
 async function main() {
   const favicon = fs.readFileSync(path.join(assetsDir, "favicon.svg"));
   const iconSquare = fs.readFileSync(path.join(assetsDir, "icon-square.svg"));
+  const iconMaskable = fs.readFileSync(path.join(assetsDir, "icon-maskable.svg"));
   const ogSource = fs.readFileSync(path.join(assetsDir, "og-source.svg"));
 
   const jobs = [
@@ -19,6 +20,9 @@ async function main() {
     { buf: iconSquare, size: 180, out: "apple-touch-icon.png" },
     { buf: iconSquare, size: 192, out: "android-chrome-192x192.png" },
     { buf: iconSquare, size: 512, out: "android-chrome-512x512.png" },
+    // نسخ maskable منفصلة — أندرويد يقصّ الأيقونة بأشكال مختلفة
+    { buf: iconMaskable, size: 192, out: "maskable-192x192.png" },
+    { buf: iconMaskable, size: 512, out: "maskable-512x512.png" },
   ];
 
   for (const job of jobs) {

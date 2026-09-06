@@ -13,12 +13,46 @@
     {
       "src": "/hakolah/assets/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/hakolah/assets/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/hakolah/assets/maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/hakolah/assets/maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pick for me",
+      "short_name": "Pick for me",
+      "description": "Picks a random place for you",
+      "url": "/hakolah/en/picker.html"
+    },
+    {
+      "name": "Favorites",
+      "short_name": "Favorites",
+      "description": "The places you saved",
+      "url": "/hakolah/en/favorites.html"
+    },
+    {
+      "name": "Expense calculator",
+      "short_name": "Calculator",
+      "description": "Log your income and expenses",
+      "url": "/hakolah/en/ai-experiments/expense-calculator.html"
     }
   ]
 }

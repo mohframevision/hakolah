@@ -13,12 +13,46 @@
     {
       "src": "/hakolah/assets/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/hakolah/assets/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/hakolah/assets/maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/hakolah/assets/maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "اختار لي",
+      "short_name": "اختار لي",
+      "description": "يختار لك مكاناً عشوائياً",
+      "url": "/hakolah/picker.html"
+    },
+    {
+      "name": "المفضلة",
+      "short_name": "المفضلة",
+      "description": "الأماكن اللي حفظتها",
+      "url": "/hakolah/favorites.html"
+    },
+    {
+      "name": "حاسبة المصروفات",
+      "short_name": "الحاسبة",
+      "description": "سجّل دخلك ومصروفاتك",
+      "url": "/hakolah/ai-experiments/expense-calculator.html"
     }
   ]
 }

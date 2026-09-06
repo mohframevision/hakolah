@@ -69,6 +69,11 @@
   <link rel="shortcut icon" href="{{ '/assets/favicon.ico' | url }}" />
   <link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/apple-touch-icon.png' | url }}" />
   <link rel="manifest" href="{{ (('/assets/site-en.webmanifest' if lang == 'en' else '/assets/site.webmanifest')) | url }}" />
+  {# آيفون يتجاهل أغلب ملف المانيفست — بلا هالوسمين يفتح المختصر بشريط
+     متصفح كامل بدل ما يفتح كتطبيق مستقل #}
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="{{ 'Hakolah' if lang == 'en' else 'هكوله' }}" />
 
   <meta property="og:type" content="{{ ogType }}" />
   <meta property="og:site_name" content="{{ site.name }}" />
