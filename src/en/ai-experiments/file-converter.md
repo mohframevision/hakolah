@@ -7,6 +7,8 @@ categories:
   - صوت
   - فيديو
 dateAdded: 2026-09-05
+# مؤرشفة مؤقتاً لين ما تُصلَّح — شِل هذا السطر بعد الإصلاح
+hideFromNewest: true
 langSwitchUrl: "/ai-experiments/file-converter.html"
 aiDisclosure: "🧪 An experiment built by the site's owner with the help of AI, just for exploration and fun."
 noThirdParty: true

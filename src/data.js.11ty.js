@@ -95,6 +95,9 @@ exports.render = function (data) {
         sponsored: Boolean(entry.data.sponsored),
         verified: Boolean(entry.data.verified),
         liked: Boolean(entry.data.liked),
+        // مؤرشف أو تحت الإصلاح: يبقى ظاهراً بقسمه، لكن ما نروّج له بشريط
+        // "أحدث الإضافات" بالصفحة الرئيسية
+        hideFromNewest: Boolean(entry.data.hideFromNewest),
         isNew: !Number.isNaN(addedAt) && now - addedAt < NEW_BADGE_DAYS * 86400000,
         // وقت الإضافة نفسه (لا مجرد "جديد أو لا") عشان شريط "أحدث الإضافات"
         // بالرئيسية يقدر يرتّب فعلاً بالأحدث

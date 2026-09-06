@@ -4284,6 +4284,7 @@ function renderNewestItems(container) {
   const all = [];
   Object.keys(SITE_DATA).forEach((section) => {
     (SITE_DATA[section].items || []).forEach((item) => {
+      if (item.hideFromNewest) return;
       if (item.addedAt && `${section}:${item.id}` !== FEATURED_PICK_KEY) all.push({ section, item });
     });
   });

@@ -74,6 +74,14 @@ function itemFields(entry) {
       default: false,
     },
     {
+      label:
+        "🙈 لا تعرضه بشريط «أحدث الإضافات» بالصفحة الرئيسية — للأشياء المؤرشفة أو اللي تحت الإصلاح. تبقى ظاهرة بقسمها عادي، بس ما نروّج لها بالواجهة",
+      name: "hideFromNewest",
+      widget: "boolean",
+      required: false,
+      default: false,
+    },
+    {
       label: "التصنيفات (اختر واحد أو أكثر من القائمة الجاهزة)",
       name: "categories",
       widget: "select",
