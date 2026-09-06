@@ -96,7 +96,6 @@ noThirdParty: true
     <label class="calc-field-label" for="calcNote">ملاحظة (اختياري)</label>
     <input type="text" id="calcNote" class="calc-input calc-input-wide" placeholder="مثال: فاتورة شهر أغسطس" />
   </div>
-
   <button type="button" id="calcAddBtn" class="btn calc-add-btn">➕ إضافة</button>
 </form>
 

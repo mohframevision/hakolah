@@ -94,7 +94,6 @@ It answers the two questions that actually matter: **how much do I have left?** 
     <label class="calc-field-label" for="calcNote">Note (optional)</label>
     <input type="text" id="calcNote" class="calc-input calc-input-wide" placeholder="e.g. August's bill" />
   </div>
-
   <button type="button" id="calcAddBtn" class="btn calc-add-btn">➕ Add</button>
 </form>
 

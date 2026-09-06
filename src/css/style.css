@@ -2966,8 +2966,23 @@ img {
   border-style: dashed;
 }
 
+/* زر الإضافة لاصق بأسفل الشاشة ما دام النموذج معروضاً — بالجوال النموذج
+   أطول من شاشتين (لوحة أرقام + شبكة فئات)، وكان الزر بآخره فما يلقاه أحد.
+   62 = فوق تذكير اختيار اليوم (60) لأنه الفعل الأساسي بالصفحة، وتحت بانر
+   الكوكيز (65) والشريط السفلي (70) فما يغطّيهما */
 .calc-add-btn {
   width: 100%;
+  position: sticky;
+  bottom: 16px;
+  z-index: 62;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 1200px) {
+  /* فوق الشريط السفلي (60px) لا تحته */
+  .calc-add-btn {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .calc-filter-row {
