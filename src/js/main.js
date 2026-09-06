@@ -2834,6 +2834,360 @@ function initFileConverter() {
   });
 }
 
+/* ===== حاسبة المصروفات والدخل =====
+   كل البيانات تُحفظ بـlocalStorage فقط — ما فيه سيرفر ولا حساب، فهذي بيانات
+   مالية شخصية. نفس روح noThirdParty بالمحوّل: صفحة بلا أي طرف ثالث. */
+function initExpenseCalculator() {
+  const form = document.getElementById("calcForm");
+  const list = document.getElementById("calcEntries");
+  if (!form || !list) return;
+
+  const isEn = window.SITE_LANG === "en";
+  const say = (ar, en) => (isEn ? en : ar);
+  const CURRENCY = say("د.ب", "BHD");
+  const STORAGE_KEY = "hakolah-expense-entries-v1";
+
+  const typeButtons = document.querySelectorAll(".calc-type");
+  const amountInput = document.getElementById("calcAmount");
+  const categoryInput = document.getElementById("calcCategory");
+  const categoryList = document.getElementById("calcCategoryList");
+  const noteInput = document.getElementById("calcNote");
+  const dateInput = document.getElementById("calcDate");
+  const monthInput = document.getElementById("calcMonth");
+  const allTimeToggle = document.getElementById("calcAllTime");
+  const summaryIncome = document.getElementById("calcSummaryIncome");
+  const summaryExpense = document.getElementById("calcSummaryExpense");
+  const summaryBalance = document.getElementById("calcSummaryBalance");
+  const breakdown = document.getElementById("calcBreakdown");
+  const emptyNote = document.getElementById("calcEmpty");
+  const exportBtn = document.getElementById("calcExport");
+  const importInput = document.getElementById("calcImport");
+
+  let type = "expense";
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+  const thisMonthStr = () => new Date().toISOString().slice(0, 7);
+  if (dateInput) dateInput.value = todayStr();
+  if (monthInput) monthInput.value = thisMonthStr();
+
+  function loadEntries() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  let entries = loadEntries();
+  let saveFailed = false;
+  function saveEntries() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      saveFailed = false;
+    } catch {
+      // خزنة ممتلئة أو وضع تصفّح خاص — نبلّغ المستخدم بدل فشل صامت لبيانات
+      // يهمّه ضياعها
+      saveFailed = true;
+    }
+  }
+
+  const SEED_CATEGORIES = say(
+    [
+      "كهرباء وماء",
+      "إيجار",
+      "بقالة",
+      "مواصلات وبنزين",
+      "اتصالات وإنترنت",
+      "صيانة",
+      "ترفيه",
+      "صحة",
+      "تعليم",
+      "راتب",
+      "دخل إيجار",
+      "أخرى",
+    ],
+    [
+      "Electricity & Water",
+      "Rent",
+      "Groceries",
+      "Transport & Fuel",
+      "Phone & Internet",
+      "Maintenance",
+      "Entertainment",
+      "Health",
+      "Education",
+      "Salary",
+      "Rental Income",
+      "Other",
+    ]
+  );
+
+  function refreshCategoryList() {
+    if (!categoryList) return;
+    const used = entries.map((e) => e.category).filter(Boolean);
+    const all = [...new Set([...SEED_CATEGORIES, ...used])];
+    categoryList.innerHTML = "";
+    all.forEach((cat) => {
+      const opt = document.createElement("option");
+      opt.value = cat;
+      categoryList.append(opt);
+    });
+  }
+
+  // مبلغ واحد نعرضه زي ما دخل، لكن مجاميع أكثر من عملية نجمعها بوحدة الفلس
+  // الصحيحة لا بالكسور العشرية — عشان لا يتراكم خطأ التقريب الثنائي
+  // (0.1 + 0.2 بالجافاسكربت) على قائمة عمليات طويلة
+  const toFils = (bhd) => Math.round(bhd * 1000);
+  const fromFils = (fils) => fils / 1000;
+
+  function formatAmount(n) {
+    const sign = n < 0 ? "-" : "";
+    return `${sign}${Math.abs(n).toFixed(3)}`;
+  }
+
+  function moneyHtml(n, colorClass) {
+    return `<span dir="ltr"${colorClass ? ` class="${colorClass}"` : ""}>${formatAmount(n)}</span> ${CURRENCY}`;
+  }
+
+  typeButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      type = btn.dataset.type;
+      typeButtons.forEach((b) => b.classList.toggle("active", b === btn));
+    });
+  });
+
+  function currentFilterEntries() {
+    if (allTimeToggle && allTimeToggle.checked) return entries;
+    const month = monthInput && monthInput.value;
+    if (!month) return entries;
+    return entries.filter((e) => e.date && e.date.slice(0, 7) === month);
+  }
+
+  let toastTimer = null;
+  function showToast(message, actionLabel, onAction) {
+    let toast = document.getElementById("calcToast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "calcToast";
+      toast.className = "calc-toast";
+      document.body.append(toast);
+    }
+    toast.innerHTML = "";
+    const span = document.createElement("span");
+    span.textContent = message;
+    toast.append(span);
+    if (actionLabel && onAction) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "calc-toast-action";
+      btn.textContent = actionLabel;
+      btn.addEventListener("click", () => {
+        onAction();
+        toast.classList.remove("show");
+      });
+      toast.append(btn);
+    }
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 5000);
+  }
+
+  function removeEntry(id) {
+    const index = entries.findIndex((e) => e.id === id);
+    if (index === -1) return;
+    const [removed] = entries.splice(index, 1);
+    saveEntries();
+    render();
+    // حذف فوري بلا نافذة تأكيد تقاطع المستخدم، مع تراجع لثوانٍ بدل الندم
+    showToast(say("تم الحذف", "Deleted"), say("↩️ تراجع", "↩️ Undo"), () => {
+      entries.splice(index, 0, removed);
+      saveEntries();
+      render();
+    });
+  }
+
+  function render() {
+    refreshCategoryList();
+    const filtered = currentFilterEntries()
+      .slice()
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+
+    let incomeFils = 0;
+    let expenseFils = 0;
+    const byCategoryFils = new Map();
+    filtered.forEach((e) => {
+      const fils = toFils(e.amount);
+      if (e.type === "income") {
+        incomeFils += fils;
+      } else {
+        expenseFils += fils;
+        const key = e.category || say("بلا فئة", "Uncategorized");
+        byCategoryFils.set(key, (byCategoryFils.get(key) || 0) + fils);
+      }
+    });
+    const balanceFils = incomeFils - expenseFils;
+
+    if (summaryIncome) summaryIncome.innerHTML = moneyHtml(fromFils(incomeFils));
+    if (summaryExpense) summaryExpense.innerHTML = moneyHtml(fromFils(expenseFils));
+    if (summaryBalance) {
+      summaryBalance.innerHTML = moneyHtml(fromFils(balanceFils), balanceFils < 0 ? "calc-negative" : "calc-positive");
+    }
+
+    if (breakdown) {
+      breakdown.innerHTML = "";
+      const rows = [...byCategoryFils.entries()].sort((a, b) => b[1] - a[1]);
+      if (!rows.length) {
+        const p = document.createElement("p");
+        p.className = "calc-empty-note";
+        p.textContent = say("ما فيه مصروفات بهذي الفترة", "No expenses in this period");
+        breakdown.append(p);
+      } else {
+        const max = rows[0][1];
+        rows.forEach(([cat, fils]) => {
+          const row = document.createElement("div");
+          row.className = "calc-cat-row";
+          const nameEl = document.createElement("span");
+          nameEl.className = "calc-cat-name";
+          nameEl.textContent = cat;
+          const barWrap = document.createElement("span");
+          barWrap.className = "calc-cat-bar";
+          const bar = document.createElement("span");
+          bar.style.width = `${Math.round((fils / max) * 100)}%`;
+          barWrap.append(bar);
+          const amountEl = document.createElement("span");
+          amountEl.className = "calc-cat-amount";
+          amountEl.innerHTML = moneyHtml(fromFils(fils));
+          row.append(nameEl, barWrap, amountEl);
+          breakdown.append(row);
+        });
+      }
+    }
+
+    list.innerHTML = "";
+    if (emptyNote) emptyNote.hidden = filtered.length > 0;
+    filtered.forEach((entry) => {
+      const row = document.createElement("div");
+      row.className = "calc-entry";
+
+      const info = document.createElement("div");
+      info.className = "calc-entry-info";
+      const catEl = document.createElement("div");
+      catEl.className = "calc-entry-category";
+      catEl.textContent = entry.category || say("بلا فئة", "Uncategorized");
+      const metaEl = document.createElement("div");
+      metaEl.className = "calc-entry-meta";
+      const dateSpan = document.createElement("span");
+      dateSpan.setAttribute("dir", "ltr");
+      dateSpan.textContent = entry.date;
+      metaEl.append(dateSpan);
+      if (entry.note) {
+        metaEl.append(document.createTextNode(" · "));
+        const noteSpan = document.createElement("span");
+        noteSpan.textContent = entry.note;
+        metaEl.append(noteSpan);
+      }
+      info.append(catEl, metaEl);
+
+      const amountEl = document.createElement("div");
+      amountEl.className = "calc-entry-amount";
+      amountEl.innerHTML = moneyHtml(
+        entry.type === "income" ? entry.amount : -entry.amount,
+        entry.type === "income" ? "calc-positive" : "calc-negative"
+      );
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "calc-entry-delete";
+      delBtn.setAttribute("aria-label", say("احذف", "Delete"));
+      delBtn.textContent = "🗑️";
+      delBtn.addEventListener("click", () => removeEntry(entry.id));
+
+      row.append(info, amountEl, delBtn);
+      list.append(row);
+    });
+
+    if (saveFailed) {
+      showToast(say("تعذّر الحفظ — المساحة ممتلئة أو المتصفح بوضع خاص", "Couldn't save — storage full or private browsing"));
+    }
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const amount = Number(amountInput.value);
+    if (!(amount > 0)) {
+      amountInput.reportValidity();
+      return;
+    }
+    entries.push({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      date: dateInput.value || todayStr(),
+      type,
+      amount,
+      category: (categoryInput.value || "").trim(),
+      note: (noteInput.value || "").trim(),
+    });
+    saveEntries();
+    amountInput.value = "";
+    categoryInput.value = "";
+    noteInput.value = "";
+    render();
+    amountInput.focus(); // تسجيل سريع متتالي بلا رجوع بالماوس للحقل
+  });
+
+  if (monthInput) monthInput.addEventListener("change", render);
+  if (allTimeToggle) {
+    allTimeToggle.addEventListener("change", () => {
+      if (monthInput) monthInput.disabled = allTimeToggle.checked;
+      render();
+    });
+  }
+
+  if (exportBtn) {
+    exportBtn.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `hakolah-expenses-${todayStr()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  if (importInput) {
+    importInput.addEventListener("change", async () => {
+      const file = importInput.files[0];
+      importInput.value = "";
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        if (!Array.isArray(data)) throw new Error("bad shape");
+        let added = 0;
+        data.forEach((item) => {
+          if (!item || typeof item.amount !== "number" || (item.type !== "income" && item.type !== "expense")) return;
+          entries.push({
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${added}`,
+            date: typeof item.date === "string" ? item.date : todayStr(),
+            type: item.type,
+            amount: item.amount,
+            category: String(item.category || "").slice(0, 60),
+            note: String(item.note || "").slice(0, 200),
+          });
+          added++;
+        });
+        saveEntries();
+        render();
+        showToast(say(`تمت إضافة ${added} عملية`, `Added ${added} entries`));
+      } catch {
+        showToast(say("ملف غير صالح", "Invalid file"));
+      }
+    });
+  }
+
+  render();
+}
+
 function buildShareUrl(section, item) {
   const isEn = window.SITE_LANG === "en";
   const prefix = isEn ? "en/" : "";
@@ -4038,6 +4392,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initArticleShare();
   initBeepMelodyExperiment();
   initFileConverter();
+  initExpenseCalculator();
 
   // تسجيل الـ service worker بكل صفحة (لا بس الرئيسية) — شرط أساسي لصلاحية
   // "إضافة للشاشة الرئيسية" (PWA) بمعظم المتصفحات. التسجيل بدوال initPushNotifications
