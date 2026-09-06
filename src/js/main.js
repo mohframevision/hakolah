@@ -3277,6 +3277,23 @@ function initExpenseCalculator() {
 
     if (settings.mode === "personal") {
       if (analysisTitleEl) analysisTitleEl.textContent = say("قاعدة ٥٠/٣٠/٢٠", "The 50/30/20 rule");
+
+      /* القاعدة كلها نِسَب من الدخل — بلا دخل مسجّل بالفترة تصير القسمة على
+         صفر، فتطلع نِسَب شرطات و"ادخار سالب" مقابل "هدف ٢٠٪"، وهذا كلام
+         بلا معنى يربك القارئ. نقولها صراحة بدل ما نعرض أرقاماً فاضية */
+      if (incomeFils <= 0) {
+        const note = document.createElement("p");
+        note.className = "calc-empty-note";
+        note.textContent = expenseFils > 0
+          ? say(
+              "سجّلت مصروفات بلا دخل بهذي الفترة، وقاعدة ٥٠/٣٠/٢٠ نِسَب من الدخل — سجّل دخلك عشان تبان النسب.",
+              "You logged expenses but no income this period, and 50/30/20 is a split of income — add your income to see the split."
+            )
+          : say("ما فيه عمليات بهذي الفترة بعد.", "No entries in this period yet.");
+        analysisEl.append(note);
+        return;
+      }
+
       const needs = byClass.need || 0;
       const wants = byClass.want || 0;
       analysisEl.append(
@@ -4185,6 +4202,10 @@ function renderFavoritesPage() {
 /* ===== اختيار اليوم: عنصر واحد ثابت طوال اليوم، يتغيّر تلقائياً كل يوم
    (نفس الاختيار لكل الزوار بنفس اليوم — يعتمد على تاريخ اليوم كبذرة ثابتة،
    بدون عشوائية حقيقية ولا خادم، فيدور على كل العناصر بالتناوب بمرور الأيام) ===== */
+// مفتاح اختيار اليوم — يستعمله شريط "أحدث الإضافات" ليتفادى تكرار نفس
+// البطاقة مرّتين بنفس الصف
+let FEATURED_PICK_KEY = "";
+
 function renderFeaturedPick() {
   const container = document.getElementById("homeCarousel");
   if (!container) return;
@@ -4208,6 +4229,7 @@ function renderFeaturedPick() {
 
   const daysSinceEpoch = Math.floor(Date.now() / 86400000);
   const { section, item } = allItems[daysSinceEpoch % allItems.length];
+  FEATURED_PICK_KEY = `${section}:${item.id}`;
 
   const wrapper = document.createElement("div");
   wrapper.className = "carousel-item";
@@ -4223,21 +4245,21 @@ async function renderTrendingSection() {
   if (!container) return;
 
   const config = window.PUSH_CONFIG;
-  if (!config || !config.workerUrl) return;
-
-  let weekCounts;
-  try {
-    const res = await fetch(`${config.workerUrl}/likes/week`);
-    weekCounts = await res.json();
-  } catch {
-    return;
+  let ranked = [];
+  if (config && config.workerUrl) {
+    try {
+      const res = await fetch(`${config.workerUrl}/likes/week`);
+      const weekCounts = await res.json();
+      ranked = Object.entries(weekCounts)
+        .filter(([, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+    } catch {
+      ranked = [];
+    }
   }
 
-  const ranked = Object.entries(weekCounts)
-    .filter(([, count]) => count > 0)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6);
-
+  let added = 0;
   ranked.forEach(([key], index) => {
     const sepIndex = key.indexOf(":");
     const itemSection = key.slice(0, sepIndex);
@@ -4249,7 +4271,34 @@ async function renderTrendingSection() {
     wrapper.innerHTML = `<span class="carousel-label">🔥 ${t("trending_label")}</span>`;
     wrapper.appendChild(buildItemCard(itemSection, item, index));
     container.appendChild(wrapper);
+    added++;
   });
+
+  /* ما فيه إعجابات هالأسبوع (أو تعذّر جلبها) — فيبقى بالشريط كرت واحد
+     "اختيار اليوم" ويبان الصف ناقصاً بالشاشات العريضة. نملأه بأحدث ما
+     أُضيف للموقع: محتوى حقيقي يفيد الزائر بدل فراغ */
+  if (added === 0) renderNewestItems(container);
+}
+
+function renderNewestItems(container) {
+  const all = [];
+  Object.keys(SITE_DATA).forEach((section) => {
+    (SITE_DATA[section].items || []).forEach((item) => {
+      if (item.addedAt && `${section}:${item.id}` !== FEATURED_PICK_KEY) all.push({ section, item });
+    });
+  });
+  if (!all.length) return;
+
+  all
+    .sort((a, b) => b.item.addedAt - a.item.addedAt)
+    .slice(0, 6)
+    .forEach(({ section, item }, index) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "carousel-item";
+      wrapper.innerHTML = `<span class="carousel-label">🆕 ${t("newest_label")}</span>`;
+      wrapper.appendChild(buildItemCard(section, item, index));
+      container.appendChild(wrapper);
+    });
 }
 
 /* ===== رقم حقيقي بالهيرو (الصفحة الرئيسية) — عدد العناصر الفعلي بكل

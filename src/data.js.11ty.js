@@ -96,6 +96,9 @@ exports.render = function (data) {
         verified: Boolean(entry.data.verified),
         liked: Boolean(entry.data.liked),
         isNew: !Number.isNaN(addedAt) && now - addedAt < NEW_BADGE_DAYS * 86400000,
+        // وقت الإضافة نفسه (لا مجرد "جديد أو لا") عشان شريط "أحدث الإضافات"
+        // بالرئيسية يقدر يرتّب فعلاً بالأحدث
+        addedAt: Number.isNaN(addedAt) ? null : addedAt,
         lat: coords ? coords.lat : typeof entry.data.lat === "number" ? entry.data.lat : null,
         lng: coords ? coords.lng : typeof entry.data.lng === "number" ? entry.data.lng : null,
         tags: [...(entry.data.categories || []), ...(entry.data.categoriesCustom || [])],
