@@ -3669,6 +3669,142 @@ function initExpenseCalculator() {
   render();
 }
 
+/* ===== اختبار سرعة الكتابة بالعربية =====
+   الجُمَل عربية فصيحة قصيرة ومتفاوتة الطول. لا مكتبات: مقارنة حرف بحرف. */
+function initTypingTest() {
+  const promptEl = document.getElementById("typePrompt");
+  const input = document.getElementById("typeInput");
+  if (!promptEl || !input) return;
+
+  const isEn = window.SITE_LANG === "en";
+  const say = (ar, en) => (isEn ? en : ar);
+  const BEST_KEY = "hakolah-typing-best-v1";
+
+  const speedEl = document.getElementById("typeSpeed");
+  const accuracyEl = document.getElementById("typeAccuracy");
+  const timeEl = document.getElementById("typeTime");
+  const bestEl = document.getElementById("typeBest");
+  const hintEl = document.getElementById("typeHint");
+  const restartBtn = document.getElementById("typeRestart");
+
+  const SENTENCES = [
+    "العلم في الصغر كالنقش على الحجر، وما ينفع المرء إلا ما تعلمه وعمل به.",
+    "من سار على الدرب وصل، ومن جدّ وجد، ومن زرع حصد ما زرعه.",
+    "البحرين جزيرة صغيرة في الخليج، لكن تاريخها أطول من مساحتها بكثير.",
+    "القراءة تفتح للعقل نوافذ لا يبلغها السفر، وتختصر عليك تجارب غيرك.",
+    "لا تؤجل عمل اليوم إلى الغد، فالوقت أثمن ما تملك ولا يُشترى بمال.",
+    "الكتابة السريعة مهارة تُكتسب بالتمرين، لا موهبة يولد بها الإنسان.",
+    "خير الكلام ما قلّ ودلّ، وأسوأ الحديث ما طال بلا فائدة تُذكر.",
+    "من أراد أن يتقن شيئاً فليكرره حتى يصير طبعاً لا يحتاج إلى تفكير.",
+  ];
+
+  let target = "";
+  let startedAt = 0;
+  let timer = null;
+
+  function loadBest() {
+    try {
+      const value = Number(localStorage.getItem(BEST_KEY));
+      return Number.isFinite(value) && value > 0 ? value : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  function saveBest(wpm) {
+    try {
+      localStorage.setItem(BEST_KEY, String(wpm));
+    } catch {
+      // تصفّح خاص أو خزنة ممتلئة — الاختبار يشتغل، بس بلا حفظ أفضل نتيجة
+    }
+  }
+
+  function renderBest() {
+    const best = loadBest();
+    if (bestEl) bestEl.textContent = best ? String(best) : "—";
+  }
+
+  /* نرسم الجملة حرفاً حرفاً ونلوّنها حسب ما كُتب: أخضر للمطابق وأحمر
+     للمختلف، والحرف التالي مؤشَّر — فيرى المستخدم خطأه لحظة وقوعه */
+  function paint() {
+    const typed = input.value;
+    promptEl.textContent = "";
+    for (let i = 0; i < target.length; i++) {
+      const span = document.createElement("span");
+      span.textContent = target[i];
+      if (i < typed.length) span.className = typed[i] === target[i] ? "type-ok" : "type-bad";
+      else if (i === typed.length) span.className = "type-next";
+      promptEl.append(span);
+    }
+  }
+
+  function stats() {
+    const typed = input.value;
+    const elapsed = startedAt ? (Date.now() - startedAt) / 1000 : 0;
+    let correct = 0;
+    for (let i = 0; i < typed.length; i++) if (typed[i] === target[i]) correct++;
+    // معيار متعارف عليه: "كلمة" = خمسة محارف، فتُقارَن النتائج بين نصوص مختلفة
+    const wpm = elapsed > 0 ? Math.round((correct / 5 / elapsed) * 60) : 0;
+    const accuracy = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+    return { elapsed, wpm, accuracy, correct };
+  }
+
+  function tick() {
+    const { elapsed, wpm, accuracy } = stats();
+    if (timeEl) timeEl.textContent = String(Math.round(elapsed));
+    if (speedEl) speedEl.textContent = String(wpm);
+    if (accuracyEl) accuracyEl.textContent = String(accuracy);
+  }
+
+  function finish() {
+    clearInterval(timer);
+    timer = null;
+    const { wpm, accuracy } = stats();
+    // لا تُسجَّل نتيجة بدقة متدنّية: الكتابة العشوائية السريعة ليست إنجازاً
+    if (accuracy >= 80 && wpm > loadBest()) {
+      saveBest(wpm);
+      renderBest();
+      if (hintEl) hintEl.textContent = say(`🎉 رقم جديد: ${wpm} كلمة/دقيقة`, `🎉 New best: ${wpm} words/min`);
+      return;
+    }
+    if (hintEl) {
+      hintEl.textContent =
+        accuracy >= 80
+          ? say("خلصت. جرّب جملة جديدة", "Done. Try a new sentence")
+          : say("خلصت، لكن الدقة أقل من ٨٠٪ فما تُحتسب", "Done, but accuracy under 80% doesn't count");
+    }
+  }
+
+  function reset() {
+    clearInterval(timer);
+    timer = null;
+    startedAt = 0;
+    target = SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
+    input.value = "";
+    input.disabled = false;
+    paint();
+    if (timeEl) timeEl.textContent = "0";
+    if (speedEl) speedEl.textContent = "—";
+    if (accuracyEl) accuracyEl.textContent = "—";
+    if (hintEl) hintEl.textContent = say("اضغط أي حرف لتبدأ", "Type any letter to start");
+  }
+
+  input.addEventListener("input", () => {
+    if (!startedAt && input.value.length) {
+      startedAt = Date.now();
+      timer = setInterval(tick, 200);
+    }
+    if (input.value.length > target.length) input.value = input.value.slice(0, target.length);
+    paint();
+    tick();
+    if (input.value.length === target.length) finish();
+  });
+
+  if (restartBtn) restartBtn.addEventListener("click", reset);
+  renderBest();
+  reset();
+}
+
 function buildShareUrl(section, item) {
   const isEn = window.SITE_LANG === "en";
   const prefix = isEn ? "en/" : "";
@@ -4925,6 +5061,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initBeepMelodyExperiment();
   initFileConverter();
   initExpenseCalculator();
+  initTypingTest();
 
   // تسجيل الـ service worker بكل صفحة (لا بس الرئيسية) — شرط أساسي لصلاحية
   // "إضافة للشاشة الرئيسية" (PWA) بمعظم المتصفحات. التسجيل بدوال initPushNotifications

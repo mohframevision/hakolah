@@ -3348,3 +3348,100 @@ img {
   position: relative;
   z-index: 62;
 }
+
+/* ===== اختبار سرعة الكتابة ===== */
+.type-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.type-stat {
+  padding: 14px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.type-stat-label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.type-stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.type-stat-unit {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.type-prompt {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 1.3rem;
+  line-height: 2.2;
+}
+
+.type-ok {
+  color: var(--color-primary);
+}
+
+.type-bad {
+  color: var(--color-danger);
+  text-decoration: underline wavy;
+}
+
+/* الحرف التالي — علامة بصرية تقول "أنت هنا" بلا تحريك النص */
+.type-next {
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  border-radius: 3px;
+}
+
+.type-input {
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 1.1rem;
+  line-height: 1.9;
+  resize: vertical;
+}
+
+.type-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.type-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.type-hint {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 560px) {
+  .type-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .type-prompt {
+    font-size: 1.1rem;
+  }
+}
