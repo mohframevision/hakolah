@@ -1,7 +1,7 @@
 ---
 title: "Experiment Four: Arabic Typing Speed Test"
 icon: ⌨️
-desc: Measure your Arabic typing speed and accuracy on a real sentence — the timer starts with your first keystroke, and your best score is saved on your device.
+desc: "A real challenge to your speed and accuracy — sentences in literary Arabic, rich in hamzas and hard letter forms, not simplified language. The timer starts with your first keystroke."
 categories:
   - نص
 dateAdded: 2026-09-06
@@ -13,7 +13,8 @@ noThirdParty: true
 
 <details class="calc-intro">
   <summary>ℹ️ What does this experiment do?</summary>
-  <p>Most typing tests are in English, and Arabic is genuinely different: letters join up, hamzas and taa marbuta matter, and the Arabic keyboard has its own rhythm. Here you type a real Arabic sentence, the timer starts on your first keystroke rather than before it, and letters colour as you go: green for correct, red for wrong.</p>
+  <p>Most typing tests are in English, and Arabic is genuinely different: letters join up, hamzas and taa marbuta matter, and the Arabic keyboard has its own rhythm.</p>
+  <p>The sentences here are deliberately in literary Arabic — not simplified, not colloquial. This is a challenge, not a beginner drill: it is dense with the different hamza forms that fast typists get wrong most often. The timer starts on your first keystroke rather than before it, and letters colour as you go: green for correct, red for wrong.</p>
   <p>Your score is saved in your browser alone — no account, no server — so you're competing with yourself.</p>
 </details>
 
