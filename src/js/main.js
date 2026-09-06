@@ -2914,6 +2914,7 @@ function initExpenseCalculator() {
   const keypadButtons = document.querySelectorAll(".calc-key");
   const categoryGrid = document.getElementById("calcCategoryGrid");
   const noteInput = document.getElementById("calcNote");
+  const repeatInput = document.getElementById("calcRepeat");
   const dateInput = document.getElementById("calcDate");
   const monthInput = document.getElementById("calcMonth");
   const allTimeToggle = document.getElementById("calcAllTime");
@@ -2964,6 +2965,62 @@ function initExpenseCalculator() {
     }
   }
 
+  /* ===== العمليات المتكررة شهرياً (راتب، إيجار، اشتراك) =====
+     تُولَّد النسخ الناقصة من تاريخ العملية الأصلية حتى اليوم. المعرّف
+     مشتقّ من (الأصل + الشهر) فإعادة التشغيل لا تكرّر شيئاً */
+  function addMonths(dateStr, count) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const target = new Date(Date.UTC(y, m - 1 + count, 1));
+    const year = target.getUTCFullYear();
+    const month = target.getUTCMonth();
+    // عملية يوم 31 بشهر من 30 يوماً تُثبَّت على آخر يوم فيه بدل ما تقفز للشهر التالي
+    const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const day = Math.min(d, lastDay);
+    return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  function materializeRecurring() {
+    const today = todayStr();
+    const ids = new Set(entries.map((e) => e.id));
+    let created = 0;
+    // نسخة من القائمة: نضيف للأصل داخل الحلقة
+    entries.slice().forEach((source) => {
+      if (source.repeat !== "monthly") return;
+      // سقف 24 شهراً: عملية بتاريخ قديم جداً ما تولّد عشرات النسخ فجأة
+      for (let n = 1; n <= 24; n++) {
+        const date = addMonths(source.date, n);
+        if (date > today) break;
+        const genId = `${source.id}-r${date.slice(0, 7)}`;
+        // نسخة حذفها المستخدم عمداً (شهر ما استلم فيه راتبه مثلاً) لا تُعاد
+        if (ids.has(genId) || skippedRecurring().includes(genId)) continue;
+        // النسخة المولَّدة لا تتكرر بذاتها، وتحمل مرجع أصلها
+        entries.push({ ...source, id: genId, date, repeat: "", from: source.id });
+        ids.add(genId);
+        created++;
+      }
+    });
+    if (created) saveEntries();
+    return created;
+  }
+
+  const SKIP_KEY = "hakolah-expense-skipped-v1";
+  function skippedRecurring() {
+    try {
+      const raw = localStorage.getItem(SKIP_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  function setSkippedRecurring(list) {
+    try {
+      localStorage.setItem(SKIP_KEY, JSON.stringify(list));
+    } catch {
+      saveFailed = true;
+    }
+  }
+
   /* رصيد البداية ونمط الاستخدام — منفصلين عن العمليات لأنهما إعداد لا حركة */
   const SETTINGS_KEY = "hakolah-expense-settings-v1";
   function loadSettings() {
@@ -2978,6 +3035,8 @@ function initExpenseCalculator() {
       return { opening: 0, mode: "personal" };
     }
   }
+
+  materializeRecurring();
 
   let settings = loadSettings();
   function saveSettings() {
@@ -3280,11 +3339,14 @@ function initExpenseCalculator() {
     const index = entries.findIndex((e) => e.id === id);
     if (index === -1) return;
     const [removed] = entries.splice(index, 1);
+    // نسخة مولَّدة من عملية متكررة: نسجّلها كمتخطّاة وإلا رجعت بإعادة التحميل
+    if (removed.from) setSkippedRecurring(skippedRecurring().concat(removed.id));
     saveEntries();
     render();
     // حذف فوري بلا نافذة تأكيد تقاطع المستخدم، مع تراجع لثوانٍ بدل الندم
     showToast(say("تم الحذف", "Deleted"), say("↩️ تراجع", "↩️ Undo"), () => {
       entries.splice(index, 0, removed);
+      if (removed.from) setSkippedRecurring(skippedRecurring().filter((id) => id !== removed.id));
       saveEntries();
       render();
     });
@@ -3477,7 +3539,9 @@ function initExpenseCalculator() {
       info.className = "calc-entry-info";
       const catEl = document.createElement("div");
       catEl.className = "calc-entry-category";
-      catEl.textContent = entry.category || say("بلا فئة", "Uncategorized");
+      // 🔁 على الأصل وعلى نسخه المولَّدة معاً، فيعرف المستخدم مصدر العملية
+      const repeatMark = entry.repeat === "monthly" || entry.from ? "🔁 " : "";
+      catEl.textContent = repeatMark + (entry.category || say("بلا فئة", "Uncategorized"));
       const metaEl = document.createElement("div");
       metaEl.className = "calc-entry-meta";
       const dateSpan = document.createElement("span");
@@ -3535,13 +3599,17 @@ function initExpenseCalculator() {
         amount,
         category: selectedCategory,
         cls: type === "expense" ? selectedClass : "",
+        repeat: repeatInput && repeatInput.checked ? "monthly" : "",
         note: (noteInput.value || "").trim(),
       });
       saveEntries();
+      materializeRecurring();
       // النوع والتاريخ والفئة تبقى كما هي: تسجيل متتالي سريع لعمليات مشابهة
       // (فواتير متعددة بنفس التاريخ، عدة مصروفات بنفس الفئة) بلا إعادة اختيار
       resetAmount();
       noteInput.value = "";
+      // التكرار خيار لعملية بعينها لا وضع دائم — يُصفَّر كالمبلغ والملاحظة
+      if (repeatInput) repeatInput.checked = false;
       render();
     });
   }
@@ -3584,6 +3652,7 @@ function initExpenseCalculator() {
             amount: item.amount,
             category: String(item.category || "").slice(0, 60),
             cls: ["need", "want", "cogs", "operating"].includes(item.cls) ? item.cls : "",
+            repeat: item.repeat === "monthly" ? "monthly" : "",
             note: String(item.note || "").slice(0, 200),
           });
           added++;

@@ -96,6 +96,10 @@ noThirdParty: true
   </div>
 
   <div class="calc-field">
+    <label class="calc-check"><input type="checkbox" id="calcRepeat" /> 🔁 Repeats monthly (salary, rent, subscription)</label>
+  </div>
+
+  <div class="calc-field">
     <label class="calc-field-label" for="calcNote">Note (optional)</label>
     <input type="text" id="calcNote" class="calc-input calc-input-wide" placeholder="e.g. August's bill" />
   </div>

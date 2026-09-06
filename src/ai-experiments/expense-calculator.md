@@ -98,6 +98,10 @@ noThirdParty: true
   </div>
 
   <div class="calc-field">
+    <label class="calc-check"><input type="checkbox" id="calcRepeat" /> 🔁 يتكرر كل شهر (راتب، إيجار، اشتراك)</label>
+  </div>
+
+  <div class="calc-field">
     <label class="calc-field-label" for="calcNote">ملاحظة (اختياري)</label>
     <input type="text" id="calcNote" class="calc-input calc-input-wide" placeholder="مثال: فاتورة شهر أغسطس" />
   </div>
