@@ -8,13 +8,16 @@ categories:
   - مال
 dateAdded: 2026-09-06
 langSwitchUrl: "/en/ai-experiments/expense-calculator.html"
+wideLayout: true
 aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة الذكاء الاصطناعي، بس للاستكشاف والمرح."
 noThirdParty: true
 ---
 
-حاسبة بسيطة لدخلك ومصروفاتك — فاتورة كهرباء، إيجار، عقار مؤجّر، أي شي تحتاج تتابعه. تدوس رقم على الآلة الحاسبة، تختار فئة بلمسة وحدة، وتضغط إضافة — بلا كيبورد ولا كتابة ولا نافذة تقاطعك.
-
-وتجاوب على السؤالين اللي يفرقون فعلاً: **كم باقي عندي؟** (رصيد البداية + كل دخلك − كل مصروفاتك) و**وين راحت فلوس هالشهر؟** — وهما سؤالان مختلفان، وخلطهما أشهر غلط بأدوات المصروفات. وفيها نمطان: شخصي يحلّل صرفك بقاعدة ٥٠/٣٠/٢٠ المعروفة، وتجاري يطلّع لك قائمة دخل فيها مجمل الربح وصافيه بهوامشهما.
+<details class="calc-intro">
+  <summary>ℹ️ وش تسوي هذي الأداة؟</summary>
+  <p>حاسبة بسيطة لدخلك ومصروفاتك — فاتورة كهرباء، إيجار، عقار مؤجّر، أي شي تحتاج تتابعه. تدوس رقم على الآلة الحاسبة، تختار فئة بلمسة وحدة، وتضغط إضافة — بلا كيبورد ولا كتابة ولا نافذة تقاطعك.</p>
+  <p>وتجاوب على السؤالين اللي يفرقون فعلاً: <strong>كم باقي عندي؟</strong> (رصيد البداية + كل دخلك − كل مصروفاتك) و<strong>وين راحت فلوس هالشهر؟</strong> — وهما سؤالان مختلفان، وخلطهما أشهر غلط بأدوات المصروفات. وفيها نمطان: شخصي يحلّل صرفك بقاعدة ٥٠/٣٠/٢٠ المعروفة، وتجاري يطلّع لك قائمة دخل فيها مجمل الربح وصافيه بهوامشهما.</p>
+</details>
 
 <div class="conv-privacy">
   <strong>🔒 بياناتك ما تطلع من متصفحك.</strong>
@@ -42,6 +45,8 @@ noThirdParty: true
   </div>
 </div>
 
+<div class="calc-layout">
+<div class="calc-col-entry">
 <form class="calc-form" id="calcForm">
   <div class="calc-type-row">
     <div class="instrument-picker">
@@ -98,6 +103,8 @@ noThirdParty: true
   </div>
   <button type="button" id="calcAddBtn" class="btn calc-add-btn">➕ إضافة</button>
 </form>
+</div>
+<div class="calc-col-results">
 
 <div class="calc-filter-row">
   <div class="calc-field">
@@ -140,4 +147,7 @@ noThirdParty: true
   <button type="button" id="calcExport" class="btn secondary">📤 تنزيل نسخة احتياطية</button>
   <input type="file" id="calcImport" accept="application/json" hidden />
   <label class="btn secondary" for="calcImport">📥 استيراد نسخة احتياطية</label>
+</div>
+
+</div>
 </div>

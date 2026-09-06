@@ -6,13 +6,16 @@ categories:
   - مال
 dateAdded: 2026-09-06
 langSwitchUrl: "/ai-experiments/expense-calculator.html"
+wideLayout: true
 aiDisclosure: "🧪 An experiment built by the site's owner with the help of AI, just for exploration and fun."
 noThirdParty: true
 ---
 
-A simple calculator for your income and expenses — an electricity bill, rent, a rental property, anything you need to track. Tap numbers on the built-in calculator, pick a category with one tap, and hit Add — no keyboard, no typing, no dialog interrupting you.
-
-It answers the two questions that actually matter: **how much do I have left?** (opening balance + all your income − all your expenses) and **where did this month's money go?** — two different questions, and conflating them is the most common mistake in expense tools. It has two modes: personal, which analyses your spending against the well-known 50/30/20 rule, and business, which lays out an income statement with gross and net profit and their margins.
+<details class="calc-intro">
+  <summary>ℹ️ What does this tool do?</summary>
+  <p>A simple calculator for your income and expenses — an electricity bill, rent, a rental property, anything you need to track. Tap numbers on the built-in calculator, pick a category with one tap, and hit Add — no keyboard, no typing, no dialog interrupting you.</p>
+  <p>It answers the two questions that actually matter: <strong>how much do I have left?</strong> (opening balance + all your income − all your expenses) and <strong>where did this month's money go?</strong> — two different questions, and conflating them is the most common mistake in expense tools. It has two modes: personal, which analyses your spending against the well-known 50/30/20 rule, and business, which lays out an income statement with gross and net profit and their margins.</p>
+</details>
 
 <div class="conv-privacy">
   <strong>🔒 Your data never leaves your browser.</strong>
@@ -40,6 +43,8 @@ It answers the two questions that actually matter: **how much do I have left?** 
   </div>
 </div>
 
+<div class="calc-layout">
+<div class="calc-col-entry">
 <form class="calc-form" id="calcForm">
   <div class="calc-type-row">
     <div class="instrument-picker">
@@ -96,6 +101,8 @@ It answers the two questions that actually matter: **how much do I have left?** 
   </div>
   <button type="button" id="calcAddBtn" class="btn calc-add-btn">➕ Add</button>
 </form>
+</div>
+<div class="calc-col-results">
 
 <div class="calc-filter-row">
   <div class="calc-field">
@@ -138,4 +145,7 @@ It answers the two questions that actually matter: **how much do I have left?** 
   <button type="button" id="calcExport" class="btn secondary">📤 Download a backup</button>
   <input type="file" id="calcImport" accept="application/json" hidden />
   <label class="btn secondary" for="calcImport">📥 Import a backup</label>
+</div>
+
+</div>
 </div>

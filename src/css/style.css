@@ -30,10 +30,13 @@
   /* منحنى تباطؤ متّبع بواجهات أبل (easeOutExpo تقريباً) — حركة تبدأ بسرعة
      وتهبط بنعومة بدل ease القياسي الخطي الإحساس */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --max-width: 1180px;
-  /* الهيدر يمتد أعرض من عمود المحتوى — القائمة صارت 8 عناصر والنصوص
-     الإنجليزية أطول من العربية، فبعرض المحتوى نفسه كانت تفيض وتنقص */
-  --header-max-width: 1320px;
+  /* 1550 لا عرض الشاشة كامل: على شاشة 1920 يبقى ~185px هامش كل جهة بدل
+     370 — نصف الفراغ السابق، توسعة محسوسة بلا تحوّل كبير بشكل الموقع */
+  --max-width: 1550px;
+  /* الهيدر بنفس عرض المحتوى: كان 1320 وقت ما كان المحتوى 1180، وبعد توسيع
+     المحتوى لـ1550 صار الهيدر أضيق منه فتُقَصّ آخر عناصر القائمة (10 أقسام
+     + الشعار + الأدوات). التساوي يحاذي الشعار مع حافة المحتوى كذلك */
+  --header-max-width: var(--max-width);
 
   /* سلّم مسافات موحّد — كل المسافات بالموقع مضاعفات 4px، عشان الإيقاع البصري
      يكون منتظم بدل أرقام عشوائية (14px هنا، 16 هناك، 4 هناك) */
@@ -265,6 +268,14 @@ img {
   display: none;
 }
 
+/* يُضاف بالجافاسكربت حين تفيض القائمة فعلاً: تلاشي الطرفين يقول "فيه بقية،
+   اسحبني" بدل ما يبان العنصر الأخير مقصوصاً. الاتجاهان معاً فيشتغل
+   بالعربي والإنجليزي بلا فرق */
+.main-nav.is-scrollable {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+}
+
 /* مجموعة أدوات الهيدر (اللغة/المظهر/الصوت/زر القائمة) — تتجمع بمسافة
    داخلية صغيرة ومتساوية، ومفصولة عن القائمة بمسافة المجموعات الكبيرة */
 .header-actions {
@@ -395,10 +406,11 @@ img {
   background: var(--color-bg);
 }
 
-/* نقطة الكسر مربوطة بعرض القائمة الفعلي (الرئيسية + 7 أقسام بالعربي) وليس
-   بحجم "جوال" تقليدي — كانت 800px فتضل القائمة ظاهرة ومزدحمة لين 800px
-   وتنكسر لسطرين فوقها */
-@media (max-width: 1200px) {
+/* نقطة الكسر مربوطة بعرض القائمة الفعلي (الرئيسية + الأقسام) وليس بحجم
+   "جوال" تقليدي. رُفعت من 1200 لـ1300 لأن القائمة صارت 10 عناصر وكانت
+   تُقَصّ 71px عند 1280 (مقاس لابتوب شائع) بلا أي إشارة للمستخدم.
+   ملاحظة: كل قسم جديد يُضاف للقائمة يرفع هذي النقطة مجدداً */
+@media (max-width: 1300px) {
   .nav-toggle {
     display: inline-flex;
   }
@@ -483,7 +495,7 @@ img {
   display: none;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1300px) {
   body {
     padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   }
@@ -888,9 +900,13 @@ img {
   letter-spacing: -0.01em;
 }
 
+/* بعد توسيع الحاوية لـ1550، أي فقرة تمتد عليها كاملة يصير سطرها طويلاً
+   جداً على العين. الحاوية توسّعت للشبكات والبطاقات، لا للنص — فنحصر كل
+   كتلة نصية تقرأها العين بعرض مريح */
 .page-header p {
   color: var(--color-text-muted);
   margin: 0;
+  max-width: 900px;
 }
 
 .article-share-btn {
@@ -1724,7 +1740,7 @@ img {
    لازم القاعدتين هنا (بعد التعريف الأصلي) عشان يفوزوا بترتيب الـ cascade،
    قاعدة بنفس التخصيصية بمدية استعلام أسبق بالملف تُهزَم لو التعريف الأصلي
    بلا استعلام جاء بعدها بالملف */
-@media (max-width: 1200px) {
+@media (max-width: 1300px) {
   .cookie-banner {
     bottom: 60px;
   }
@@ -1781,6 +1797,8 @@ img {
   padding: 12px 16px;
   border-radius: 10px;
   font-size: 0.88rem;
+  /* نص إخلاء المسؤولية يقع خارج .prose، فبلا حدّ يمتد على الحاوية كاملة */
+  max-width: 1000px;
 }
 
 /* إفصاح "مقال بمساعدة الذكاء الاصطناعي" — نفس صندوق banner-note بس بمكانه
@@ -2219,6 +2237,7 @@ img {
    التحكم (recommendation)؛ يختفي كلياً لو ما عبّاه صاحب الموقع ===== */
 .recommend-quote {
   position: relative;
+  max-width: 1000px;
   margin: 20px 0 28px;
   padding: 22px 28px 22px 52px;
   background: linear-gradient(
@@ -2695,7 +2714,69 @@ img {
   flex-shrink: 0;
 }
 
+/* صفحة أداة لا مقال: تاخذ عرض الحاوية كامل بدل 760px.
+   لكن النص القارئ داخلها يبقى ضيقاً — السطر بعرض الحاوية يتعب العين لأنها
+   تضيع مكانها وهي ترجع لبداية السطر التالي، وهذا سبب تحديد عرض المقالات
+   أصلاً، فما نلغيه بل نطبّقه على النص وحده */
+.prose-wide {
+  max-width: none;
+}
+
+.prose-wide > p,
+.prose-wide > .calc-intro,
+.prose-wide > .conv-privacy {
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+/* عمودان بالشاشات العريضة: الإدخال بجهة والنتائج بجهة، فتشوف الأرقام
+   تتغيّر وأنت تسجّل بدل ما تنزل لها */
+@media (min-width: 1000px) {
+  .calc-layout {
+    display: grid;
+    grid-template-columns: minmax(340px, 420px) 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+}
+
 /* ===== حاسبة المصروفات ===== */
+/* الشرح مطوي افتراضياً: الأداة نفسها هي المطلوب، والشرح ياخذ نص شاشة
+   بالجوال قبل ما يوصل المستخدم لأول زر */
+.calc-intro {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.calc-intro summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-primary);
+  list-style: none;
+}
+
+.calc-intro summary::-webkit-details-marker {
+  display: none;
+}
+
+.calc-intro summary::after {
+  content: " ▾";
+  font-size: 0.75rem;
+}
+
+.calc-intro[open] summary::after {
+  content: " ▴";
+}
+
+.calc-intro p {
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
 .calc-form {
   display: flex;
   flex-direction: column;
@@ -2978,7 +3059,7 @@ img {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1300px) {
   /* فوق الشريط السفلي (60px) لا تحته */
   .calc-add-btn {
     bottom: calc(72px + env(safe-area-inset-bottom, 0px));

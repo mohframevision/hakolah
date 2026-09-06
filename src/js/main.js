@@ -416,6 +416,16 @@ function initHeaderScroll() {
     document.documentElement.style.setProperty("--header-h", `${header.offsetHeight}px`);
   setHeaderHeight();
   window.addEventListener("resize", setHeaderHeight, { passive: true });
+
+  /* القائمة تنزلق أفقياً لو فاضت، لكن الانزلاق بلا إشارة يبان "قصّاً" —
+     وهذا اللي صار لما وصلت الأقسام لعشرة. نعلّمها لتتلاشى أطرافها فيفهم
+     المستخدم إن فيه بقية. يشتغل تلقائياً مع أي قسم يُضاف مستقبلاً */
+  const nav = header.querySelector(".main-nav");
+  if (nav) {
+    const syncNavOverflow = () => nav.classList.toggle("is-scrollable", nav.scrollWidth > nav.clientWidth + 1);
+    syncNavOverflow();
+    window.addEventListener("resize", syncNavOverflow, { passive: true });
+  }
 }
 
 /* ===== تحديث تلقائي: يكتشف نسخة جديدة من الموقع ويعيد التحميل بدون تدخل المستخدم =====

@@ -31,7 +31,9 @@ layout: base.njk
 {% if recommendation %}
 <blockquote class="recommend-quote">{{ recommendation }}</blockquote>
 {% endif %}
-<article class="prose">
+{# صفحات الأدوات (لا المقالات) تحتاج عرض الحاوية كامل: فيها لوحات وشبكات
+   وجداول لا نصاً يُقرأ، وحصرها بعرض النص يضيّع نصف الشاشة بالكمبيوتر #}
+<article class="prose{% if wideLayout %} prose-wide{% endif %}">
 {{ content | safe }}
 </article>
 
