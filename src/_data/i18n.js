@@ -108,7 +108,9 @@ module.exports = {
     nearest_branch: "أقرب فرع:",
     unit_meters: "م",
     unit_km: "كم",
-    promo_ad_label: "إعلان",
+    install_app: "ثبّت التطبيق",
+    promo_ad_label: "ترشيح من هكوله",
+    promo_affiliate_note: "رابط بعمولة — يدعم الموقع بلا أي تكلفة عليك",
     promo_cazasouq_title: "كازاسوق",
     promo_cazasouq_desc:
       "أجهزة ألعاب، ملحقات كمبيوتر، ومعدات قيمنق بالبحرين — توصيل لجميع المناطق.",
@@ -240,7 +242,9 @@ module.exports = {
     nearest_branch: "nearest:",
     unit_meters: "m",
     unit_km: "km",
-    promo_ad_label: "Ad",
+    install_app: "Install the app",
+    promo_ad_label: "Hakolah pick",
+    promo_affiliate_note: "Affiliate link — supports the site at no extra cost to you",
     promo_cazasouq_title: "Cazasouq",
     promo_cazasouq_desc:
       "Gaming consoles, computer accessories, and gaming gear in Bahrain — delivery to all areas.",

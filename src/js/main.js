@@ -403,6 +403,36 @@ function initNavToggle() {
 }
 
 /* ===== ظل الهيدر عند التمرير ===== */
+/* زر "ثبّت التطبيق" — المتصفح يطلق beforeinstallprompt فقط لو الموقع مستوفٍ
+   شروط التثبيت وغير مثبَّت أصلاً. نخزّن الحدث ونظهر الزر عنده فقط: زر ظاهر
+   لا يعمل (بمتصفح لا يدعم، أو والتطبيق مثبَّت) أسوأ من غيابه */
+function initInstallPrompt() {
+  const btn = document.getElementById("installBtn");
+  if (!btn) return;
+  let deferred = null;
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferred = event;
+    btn.hidden = false;
+  });
+
+  btn.addEventListener("click", async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    const { outcome } = await deferred.userChoice;
+    // الحدث يُستهلك بعد أول عرض ولا يُعاد استخدامه
+    deferred = null;
+    if (outcome === "accepted") btn.hidden = true;
+  });
+
+  // ثُبِّت من داخل الصفحة أو من قائمة المتصفح — ما عاد للزر معنى
+  window.addEventListener("appinstalled", () => {
+    deferred = null;
+    btn.hidden = true;
+  });
+}
+
 function initHeaderScroll() {
   const header = document.querySelector(".site-header");
   if (!header) return;
@@ -3831,6 +3861,21 @@ const cardRevealObserver =
       )
     : null;
 
+/* شارة القسم — تظهر فقط حين تختلط الأقسام ببعضها (الرئيسية، المفضلة،
+   "اختار لي"): هناك يصعب تمييز مطعم بحريني من أداة رقمية بنظرة واحدة.
+   بصفحة القسم نفسه كل العناصر من قسم واحد فالشارة ضجيج بلا فائدة. */
+function sectionBadge(section) {
+  if (!section || (window.PAGE && window.PAGE.section === section)) return "";
+  const meta = SITE_DATA[section];
+  if (!meta) return "";
+  const isEn = window.SITE_LANG === "en";
+  const label = (isEn && meta.title_en) || meta.title;
+  if (!label) return "";
+  const span = document.createElement("span");
+  span.textContent = label;
+  return `<span class="section-badge">${meta.icon || ""} ${span.innerHTML}</span>`;
+}
+
 /* ===== بناء بطاقة عنصر واحدة ===== */
 function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel = "") {
   const card = document.createElement("div");
@@ -3858,6 +3903,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     ${item.image ? `<img class="item-photo" src="${item.image}" alt="${title}" loading="lazy" decoding="async" />` : ""}
     ${item.sponsored ? `<span class="sponsored-badge">${t("sponsored_badge")}</span>` : item.featured ? `<span class="featured-badge">${t("featured_badge")}</span>` : ""}
     <div class="item-body">
+      ${sectionBadge(section)}
       <div class="item-top">
         <span class="item-icon">${item.icon || "⭐"}</span>
         <div class="item-top-actions">
@@ -4781,6 +4827,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initDailyPickReminder();
   initNavToggle();
   initHeaderScroll();
+  initInstallPrompt();
   initAutoUpdateCheck();
   initContactForm();
   fetchLikeCounts();
