@@ -54,6 +54,28 @@ function auditSection(slug) {
   return issues;
 }
 
+/* جمل اختبار الكتابة: أي حركة (شدّة/ضمّة/تنوين) تجعل الجملة غير قابلة
+   للمطابقة عملياً — المستخدم لا يكتب الحركات، فتظهر أخطاء حمراء دائمة.
+   يُفحص هنا لأن الخلل لا يظهر إلا بتجربة الاختبار فعلياً. */
+function checkTypingSentences() {
+  const mainJs = path.join(__dirname, "..", "src", "js", "main.js");
+  if (!fs.existsSync(mainJs)) return;
+  const block = fs.readFileSync(mainJs, "utf8").match(/const SENTENCES = \[([\s\S]*?)\];/);
+  if (!block) return;
+
+  const sentences = [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  const diacritics = /[ً-ْٰ]/;
+  const flagged = sentences.filter((s) => diacritics.test(s));
+
+  console.log(`\nجمل اختبار الكتابة: ${sentences.length} جملة`);
+  if (!flagged.length) {
+    console.log("  ✅ كلها بلا حركات — قابلة للكتابة الطبيعية");
+    return;
+  }
+  console.log(`  ⚠️  ${flagged.length} فيها حركات تمنع المطابقة:`);
+  flagged.forEach((s) => console.log(`     ${s}`));
+}
+
 function main() {
   const only = process.argv[2];
   const sections = fs
@@ -85,7 +107,10 @@ function main() {
     }
   }
 
-  if (!only) console.table(summary);
+  if (!only) {
+    console.table(summary);
+    checkTypingSentences();
+  }
   const clean = totalItems - totalFlagged;
   console.log(`\nالمجموع: ${totalItems} عنصراً — ${clean} مكتمل، ${totalFlagged} يحتاج عملاً.`);
   if (!only && totalFlagged) console.log("للتفاصيل: node scripts/check-data-quality.js <اسم القسم>");
