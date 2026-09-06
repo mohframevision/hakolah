@@ -1,0 +1,24 @@
+---
+layout: base.njk
+permalink: "offline.html"
+title: "ما فيه اتصال | هكوله"
+description: "يبدو إنك غير متصل بالإنترنت."
+eleventyExcludeFromCollections: true
+# صفحة احتياطية يعرضها عامل الخدمة حين تفشل الشبكة ولا تكون الصفحة مخزّنة —
+# فلا معنى لإعلانات أو تحليلات فيها (ولا تُحمَّل أصلاً بلا اتصال)
+noThirdParty: true
+langSwitchUrl: "/en/offline.html"
+---
+<section class="page-header">
+  <h1>📴 ما فيه اتصال</h1>
+  <p>يبدو إنك غير متصل بالإنترنت، وهذي الصفحة ما زرتها من قبل عشان تكون محفوظة بجهازك.</p>
+</section>
+
+<div class="empty-state">
+  <span class="icon">📶</span>
+  <p>الصفحات اللي فتحتها سابقاً تشتغل عادي بلا اتصال. جرّب ترجع لها، أو تأكد من الإنترنت وأعد المحاولة.</p>
+</div>
+
+<div class="text-center">
+  <a href="{{ '/index.html' | url }}" class="btn">🏠 الرجوع للرئيسية</a>
+</div>

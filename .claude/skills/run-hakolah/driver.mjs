@@ -86,6 +86,14 @@ const COMMANDS = {
     console.log("viewport ->", w, "x", h || 800);
   },
 
+  // قطع/وصل الشبكة — لاختبار عمل الموقع بلا اتصال (عامل الخدمة)
+  async offline(state) {
+    if (!page) return console.log("ERROR: launch first");
+    const off = state !== "false" && state !== "off";
+    await page.context().setOffline(off);
+    console.log("offline ->", off);
+  },
+
   async screenshot(name) {
     if (!page) return console.log("ERROR: launch first");
     const file = path.join(SHOT_DIR, (name || `ss-${Date.now()}`) + ".png");

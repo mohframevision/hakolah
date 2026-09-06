@@ -71,7 +71,6 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/js");
   eleventyConfig.addPassthroughCopy("src/admin");
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
-  eleventyConfig.addPassthroughCopy("src/sw.js");
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
   /* تاريخ بصيغة YYYY-MM-DD. لازم فلتر: YAML يحوّل `2026-08-20` لكائن Date،
