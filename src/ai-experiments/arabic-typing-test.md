@@ -20,6 +20,13 @@ noThirdParty: true
   <p>النتيجة تُحفظ بمتصفحك وحده — بلا حساب ولا سيرفر — فتنافس نفسك لا غيرك.</p>
 </details>
 
+<div class="instrument-picker type-levels">
+  <button type="button" class="filter-chip type-level" data-level="beginner">🌱 مبتدئ</button>
+  <button type="button" class="filter-chip type-level" data-level="easy">🙂 سهل</button>
+  <button type="button" class="filter-chip type-level active" data-level="medium">⚡ متوسط</button>
+  <button type="button" class="filter-chip type-level" data-level="hard">🔥 صعب</button>
+</div>
+
 <div class="type-stats">
   <div class="type-stat">
     <div class="type-stat-label">السرعة</div>
@@ -37,7 +44,7 @@ noThirdParty: true
     <div class="type-stat-unit">ثانية</div>
   </div>
   <div class="type-stat">
-    <div class="type-stat-label">أفضل نتيجة</div>
+    <div class="type-stat-label">أفضلك بهذا المستوى</div>
     <div class="type-stat-value" id="typeBest">—</div>
     <div class="type-stat-unit">كلمة/دقيقة</div>
   </div>

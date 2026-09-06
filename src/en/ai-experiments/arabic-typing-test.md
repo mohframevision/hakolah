@@ -18,6 +18,13 @@ noThirdParty: true
   <p>Your score is saved in your browser alone — no account, no server — so you're competing with yourself.</p>
 </details>
 
+<div class="instrument-picker type-levels">
+  <button type="button" class="filter-chip type-level" data-level="beginner">🌱 Beginner</button>
+  <button type="button" class="filter-chip type-level" data-level="easy">🙂 Easy</button>
+  <button type="button" class="filter-chip type-level active" data-level="medium">⚡ Medium</button>
+  <button type="button" class="filter-chip type-level" data-level="hard">🔥 Hard</button>
+</div>
+
 <div class="type-stats">
   <div class="type-stat">
     <div class="type-stat-label">Speed</div>
@@ -35,7 +42,7 @@ noThirdParty: true
     <div class="type-stat-unit">seconds</div>
   </div>
   <div class="type-stat">
-    <div class="type-stat-label">Best score</div>
+    <div class="type-stat-label">Your best at this level</div>
     <div class="type-stat-value" id="typeBest">—</div>
     <div class="type-stat-unit">words/min</div>
   </div>

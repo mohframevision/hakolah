@@ -60,14 +60,30 @@ function auditSection(slug) {
 function checkTypingSentences() {
   const mainJs = path.join(__dirname, "..", "src", "js", "main.js");
   if (!fs.existsSync(mainJs)) return;
-  const block = fs.readFileSync(mainJs, "utf8").match(/const SENTENCES = \[([\s\S]*?)\];/);
-  if (!block) return;
-
-  const sentences = [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  const src = fs.readFileSync(mainJs, "utf8");
   const diacritics = /[ً-ْٰ]/;
-  const flagged = sentences.filter((s) => diacritics.test(s));
+  const shiftLetters = /[أإآؤئءةى]/g;
+  const rows = [];
+  const flagged = [];
 
-  console.log(`\nجمل اختبار الكتابة: ${sentences.length} جملة`);
+  for (const level of ["beginner", "easy", "medium", "hard"]) {
+    const start = src.indexOf(`    ${level}: [`);
+    if (start === -1) continue;
+    const sentences = [...src.slice(start, src.indexOf("],", start)).matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    sentences.forEach((s) => {
+      if (diacritics.test(s)) flagged.push(s);
+    });
+    rows.push({
+      المستوى: level,
+      عدد: sentences.length,
+      "متوسط الطول": Math.round(sentences.reduce((a, s) => a + s.length, 0) / sentences.length),
+      // كثافة الحروف التي تحتاج Shift هي مقياس الصعوبة الفعلي بالعربية
+      "حروف Shift": +(sentences.reduce((a, s) => a + (s.match(shiftLetters) || []).length, 0) / sentences.length).toFixed(1),
+    });
+  }
+
+  console.log("\nجمل اختبار الكتابة:");
+  console.table(rows);
   if (!flagged.length) {
     console.log("  ✅ كلها بلا حركات — قابلة للكتابة الطبيعية");
     return;
