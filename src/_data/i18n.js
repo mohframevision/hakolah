@@ -111,7 +111,7 @@ module.exports = {
     promo_ad_label: "إعلان",
     promo_cazasouq_title: "كازاسوق",
     promo_cazasouq_desc:
-      "أجهزة ألعاب، ملحقات كمبيوتر، ومعدات جيمنج بالبحرين — توصيل لجميع المناطق.",
+      "أجهزة ألعاب، ملحقات كمبيوتر، ومعدات قيمنق بالبحرين — توصيل لجميع المناطق.",
     promo_shop_now: "تسوق الآن",
     promo_devo_headphones: "سماعة ديفو",
     promo_gaming_tables: "طاولات قيمنق",
