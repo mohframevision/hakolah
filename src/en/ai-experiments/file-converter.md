@@ -7,21 +7,15 @@ categories:
   - صوت
   - فيديو
 dateAdded: 2026-09-05
-# مؤرشفة مؤقتاً لين ما تُصلَّح — شِل هذا السطر بعد الإصلاح
-hideFromNewest: true
 langSwitchUrl: "/ai-experiments/file-converter.html"
 aiDisclosure: "🧪 An experiment built by the site's owner with the help of AI, just for exploration and fun."
 noThirdParty: true
 ---
 
-Most online converters upload your file to their server, convert it there, then hand you back a result to download. You have no way to know where that file was stored, for how long, or who can reach it. And this is not a theoretical worry: a photo of a document, a private voice recording, a family video — each one passes through a stranger's machine. Browsers today can do the conversion itself without the file ever leaving your device, and this experiment proves it.
-
-<div class="conv-privacy">
-  <strong>🔒 Your file never leaves your device.</strong>
-  The whole conversion happens inside your browser, and we send your file nowhere.
-  <br />
-  <span class="conv-privacy-proof">Want to verify it yourself? Disconnect the internet after the page loads — it keeps working.</span>
-</div>
+<details class="calc-intro">
+  <summary>ℹ️ Why a converter with no server?</summary>
+  <p>Most online converters upload your file to their server, convert it there, then hand you back a result to download. You have no way to know where that file was stored, for how long, or who can reach it. And this is not a theoretical worry: a photo of a document, a private voice recording, a family video — each one passes through a stranger's machine. Browsers today can do the conversion itself without the file ever leaving your device, and this experiment proves it.</p>
+</details>
 
 <div class="instrument-picker conv-kinds">
   <button type="button" class="filter-chip conv-kind active" data-kind="image">🖼️ Images</button>
@@ -34,6 +28,13 @@ Most online converters upload your file to their server, convert it there, then 
   <label class="btn" for="convInput">📂 Choose files</label>
   <input type="file" id="convInput" multiple hidden />
   <p class="conv-drop-hint">You can pick several files at once</p>
+</div>
+
+<div class="conv-privacy">
+  <strong>🔒 Your file never leaves your device.</strong>
+  The whole conversion happens inside your browser, and we send your file nowhere.
+  <br />
+  <span class="conv-privacy-proof">Want to verify it yourself? Disconnect the internet after the page loads — it keeps working.</span>
 </div>
 
 <div class="conv-options" id="convImageOpts">
