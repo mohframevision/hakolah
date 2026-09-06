@@ -27,9 +27,15 @@ langSwitchUrl: "/index.html"
 
 <div class="explore-progress" id="exploreProgress"></div>
 
-<section class="section-grid">
+<div class="section-filter" id="sectionFilter">
+  <button type="button" class="filter-chip section-filter-btn active" data-group="all">All</button>
+  <button type="button" class="filter-chip section-filter-btn" data-group="places">📍 Places in Bahrain</button>
+  <button type="button" class="filter-chip section-filter-btn" data-group="tools">🔧 Tools & content</button>
+</div>
+
+<section class="section-grid" id="sectionGrid">
   {% for entry in sections %}
-  <a class="section-card" data-section="{{ entry.slug }}" href="{{ ('/en/' + entry.slug + '.html') | url }}">
+  <a class="section-card" data-section="{{ entry.slug }}" data-group="{{ 'places' if entry.isPlace else 'tools' }}" href="{{ ('/en/' + entry.slug + '.html') | url }}">
     <span class="icon">{{ entry.icon }}</span>
     <h3>{{ entry.title_en }}</h3>
     <p>{{ entry.description_en }}</p>

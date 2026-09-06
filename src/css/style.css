@@ -3328,3 +3328,16 @@ img {
   font-size: 0.7rem;
   font-weight: 700;
 }
+
+/* فلترة أقسام الرئيسية */
+.section-filter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 28px 0 4px;
+}
+
+.section-card[hidden] {
+  display: none;
+}

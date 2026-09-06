@@ -403,6 +403,25 @@ function initNavToggle() {
 }
 
 /* ===== ظل الهيدر عند التمرير ===== */
+/* فلترة بطاقات الأقسام بالرئيسية بين "أماكن" و"أدوات ومحتوى".
+   بطاقة المفضلة بلا data-group فتبقى ظاهرة دائماً — هي أداة للاثنين معاً */
+function initSectionFilter() {
+  const filter = document.getElementById("sectionFilter");
+  const grid = document.getElementById("sectionGrid");
+  if (!filter || !grid) return;
+
+  filter.addEventListener("click", (event) => {
+    const btn = event.target.closest(".section-filter-btn");
+    if (!btn) return;
+    const group = btn.dataset.group;
+    filter.querySelectorAll(".section-filter-btn").forEach((b) => b.classList.toggle("active", b === btn));
+    grid.querySelectorAll(".section-card").forEach((card) => {
+      const cardGroup = card.dataset.group;
+      card.hidden = Boolean(cardGroup) && group !== "all" && cardGroup !== group;
+    });
+  });
+}
+
 /* زر "ثبّت التطبيق" — المتصفح يطلق beforeinstallprompt فقط لو الموقع مستوفٍ
    شروط التثبيت وغير مثبَّت أصلاً. نخزّن الحدث ونظهر الزر عنده فقط: زر ظاهر
    لا يعمل (بمتصفح لا يدعم، أو والتطبيق مثبَّت) أسوأ من غيابه */
@@ -4828,6 +4847,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNavToggle();
   initHeaderScroll();
   initInstallPrompt();
+  initSectionFilter();
   initAutoUpdateCheck();
   initContactForm();
   fetchLikeCounts();

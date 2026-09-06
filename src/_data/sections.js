@@ -51,6 +51,10 @@ module.exports = () => {
       searchPlaceholder_en: data.searchPlaceholder_en || data.searchPlaceholder || "Search…",
       navLabel_en: data.navLabel_en || data.navLabel || data.title || slug,
       order: typeof data.order === "number" ? data.order : 999,
+      /* أقسام لها موقع فعلي بالبحرين مقابل أقسام رقمية (أدوات ومقالات
+         وتجارب) — نستعمل نفس القائمة المعرّفة أصلاً للمناطق بدل حقل جديد
+         بكل ملف قسم. تُستخدم لفلترة الرئيسية بين النوعين */
+      isPlace: SECTIONS_WITH_AREAS.includes(slug),
       hasDetailPages: Boolean(data.hasDetailPages),
       iconOptions:
         Array.isArray(data.iconOptions) && data.iconOptions.length
