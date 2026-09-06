@@ -2848,9 +2848,12 @@ function initExpenseCalculator() {
   const STORAGE_KEY = "hakolah-expense-entries-v1";
 
   const typeButtons = document.querySelectorAll(".calc-type");
-  const amountInput = document.getElementById("calcAmount");
-  const categoryInput = document.getElementById("calcCategory");
-  const categoryList = document.getElementById("calcCategoryList");
+  const amountDisplay = document.getElementById("calcAmountDisplay");
+  const amountPendingEl = document.getElementById("calcAmountPending");
+  const amountValueEl = document.getElementById("calcAmountValue");
+  const backspaceBtn = document.getElementById("calcBackspace");
+  const keypadButtons = document.querySelectorAll(".calc-key");
+  const categoryGrid = document.getElementById("calcCategoryGrid");
   const noteInput = document.getElementById("calcNote");
   const dateInput = document.getElementById("calcDate");
   const monthInput = document.getElementById("calcMonth");
@@ -2862,8 +2865,18 @@ function initExpenseCalculator() {
   const emptyNote = document.getElementById("calcEmpty");
   const exportBtn = document.getElementById("calcExport");
   const importInput = document.getElementById("calcImport");
+  const addBtn = document.getElementById("calcAddBtn");
+  const currentBalanceEl = document.getElementById("calcCurrentBalance");
+  const openingInput = document.getElementById("calcOpeningBalance");
+  const savingsRateEl = document.getElementById("calcSavingsRate");
+  const modeButtons = document.querySelectorAll(".calc-mode");
+  const classChips = document.getElementById("calcClassChips");
+  const analysisEl = document.getElementById("calcAnalysis");
+  const analysisTitleEl = document.getElementById("calcAnalysisTitle");
 
   let type = "expense";
+  let selectedCategory = "";
+  let selectedClass = "";
   const todayStr = () => new Date().toISOString().slice(0, 10);
   const thisMonthStr = () => new Date().toISOString().slice(0, 7);
   if (dateInput) dateInput.value = todayStr();
@@ -2888,6 +2901,30 @@ function initExpenseCalculator() {
     } catch {
       // خزنة ممتلئة أو وضع تصفّح خاص — نبلّغ المستخدم بدل فشل صامت لبيانات
       // يهمّه ضياعها
+      saveFailed = true;
+    }
+  }
+
+  /* رصيد البداية ونمط الاستخدام — منفصلين عن العمليات لأنهما إعداد لا حركة */
+  const SETTINGS_KEY = "hakolah-expense-settings-v1";
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return {
+        opening: typeof parsed.opening === "number" ? parsed.opening : 0,
+        mode: parsed.mode === "business" ? "business" : "personal",
+      };
+    } catch {
+      return { opening: 0, mode: "personal" };
+    }
+  }
+
+  let settings = loadSettings();
+  function saveSettings() {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
       saveFailed = true;
     }
   }
@@ -2923,16 +2960,56 @@ function initExpenseCalculator() {
     ]
   );
 
-  function refreshCategoryList() {
-    if (!categoryList) return;
+  const SEED_ICONS = ["⚡", "🏠", "🛒", "🚗", "📶", "🔧", "🎉", "🏥", "🎓", "💵", "🏢", "📦"];
+  const seedIconMap = {};
+  SEED_CATEGORIES.forEach((cat, i) => {
+    seedIconMap[cat] = SEED_ICONS[i];
+  });
+  // فئة قديمة من نسخة سابقة كانت تُكتب حرة بلا أيقونة معروفة — نعطيها
+  // أيقونة عامة بدل ما نكسر عرضها
+  const categoryIcon = (cat) => seedIconMap[cat] || "🏷️";
+
+  function renderCategoryGrid() {
+    if (!categoryGrid) return;
     const used = entries.map((e) => e.category).filter(Boolean);
     const all = [...new Set([...SEED_CATEGORIES, ...used])];
-    categoryList.innerHTML = "";
+    categoryGrid.innerHTML = "";
     all.forEach((cat) => {
-      const opt = document.createElement("option");
-      opt.value = cat;
-      categoryList.append(opt);
+      const tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "calc-cat-tile";
+      if (cat === selectedCategory) tile.classList.add("active");
+      const icon = document.createElement("span");
+      icon.className = "calc-cat-tile-icon";
+      icon.textContent = categoryIcon(cat);
+      const label = document.createElement("span");
+      label.className = "calc-cat-tile-label";
+      label.textContent = cat;
+      tile.append(icon, label);
+      tile.addEventListener("click", () => {
+        selectedCategory = cat;
+        renderCategoryGrid();
+      });
+      categoryGrid.append(tile);
     });
+
+    const addTile = document.createElement("button");
+    addTile.type = "button";
+    addTile.className = "calc-cat-tile calc-cat-tile-add";
+    const addIcon = document.createElement("span");
+    addIcon.className = "calc-cat-tile-icon";
+    addIcon.textContent = "➕";
+    const addLabel = document.createElement("span");
+    addLabel.className = "calc-cat-tile-label";
+    addLabel.textContent = say("جديدة", "New");
+    addTile.append(addIcon, addLabel);
+    addTile.addEventListener("click", () => {
+      const name = (window.prompt(say("اسم الفئة الجديدة:", "New category name:")) || "").trim();
+      if (!name) return;
+      selectedCategory = name;
+      renderCategoryGrid();
+    });
+    categoryGrid.append(addTile);
   }
 
   // مبلغ واحد نعرضه زي ما دخل، لكن مجاميع أكثر من عملية نجمعها بوحدة الفلس
@@ -2950,12 +3027,159 @@ function initExpenseCalculator() {
     return `<span dir="ltr"${colorClass ? ` class="${colorClass}"` : ""}>${formatAmount(n)}</span> ${CURRENCY}`;
   }
 
+  /* تصنيف المصروف — يخدم إطارين معروفين:
+     شخصي: ضرورة/كمالية، أساس قاعدة 50/30/20 (نصف الدخل ضروريات، ثلثه
+       كماليات، الباقي ادخار)
+     تجاري: تكلفة مباشرة/تشغيلي، أساس قائمة الدخل (إيراد − تكلفة مباشرة =
+       مجمل الربح، وناقص التشغيلي = صافي الربح)
+     ما نخلّي "ادخار" تصنيفاً بحد ذاته: الادخار = الدخل ناقص كل المصروفات،
+     ولو صار تصنيفاً لانحسب مرّتين */
+  const CLASS_OPTIONS = {
+    personal: [
+      { value: "need", label: say("🧺 ضرورة", "🧺 Need") },
+      { value: "want", label: say("✨ كمالية", "✨ Want") },
+    ],
+    business: [
+      { value: "cogs", label: say("📦 تكلفة مباشرة", "📦 Direct cost") },
+      { value: "operating", label: say("🏢 تشغيلي", "🏢 Operating") },
+    ],
+  };
+
+  function renderClassChips() {
+    if (!classChips) return;
+    classChips.innerHTML = "";
+    // التصنيف يخص المصروفات فقط — الدخل إيراد بحد ذاته
+    classChips.hidden = type !== "expense";
+    if (type !== "expense") return;
+    CLASS_OPTIONS[settings.mode].forEach((option) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "filter-chip calc-class";
+      if (option.value === selectedClass) chip.classList.add("active");
+      chip.textContent = option.label;
+      chip.addEventListener("click", () => {
+        selectedClass = selectedClass === option.value ? "" : option.value;
+        renderClassChips();
+      });
+      classChips.append(chip);
+    });
+  }
+
+  function applyTypeColor() {
+    if (!amountDisplay) return;
+    amountDisplay.classList.toggle("calc-type-income", type === "income");
+    amountDisplay.classList.toggle("calc-type-expense", type === "expense");
+  }
+  applyTypeColor();
+
   typeButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       type = btn.dataset.type;
       typeButtons.forEach((b) => b.classList.toggle("active", b === btn));
+      applyTypeColor();
+      renderClassChips();
     });
   });
+
+  modeButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      settings.mode = btn.dataset.mode;
+      saveSettings();
+      modeButtons.forEach((b) => b.classList.toggle("active", b === btn));
+      // تصنيف النمط السابق ما له معنى بالنمط الجديد
+      selectedClass = "";
+      renderClassChips();
+      render();
+    });
+  });
+  modeButtons.forEach((b) => b.classList.toggle("active", b.dataset.mode === settings.mode));
+
+  if (openingInput) {
+    openingInput.value = settings.opening ? String(settings.opening) : "";
+    openingInput.addEventListener("input", () => {
+      const value = Number(openingInput.value);
+      settings.opening = isNaN(value) ? 0 : value;
+      saveSettings();
+      render();
+    });
+  }
+
+  // آلة حاسبة صغيرة بدل حقل رقمي عادي: تلمس أسرع من لوحة مفاتيح نظام
+  // التشغيل، وتفيد لجمع أكثر من مبلغ (فاتورتين، مقبوضتين) قبل ما تضيف
+  let calcState = { acc: null, op: null, current: "0" };
+
+  function updateAmountDisplay() {
+    if (amountPendingEl) {
+      amountPendingEl.textContent = calcState.acc !== null && calcState.op ? `${formatAmount(calcState.acc)} ${calcState.op}` : "";
+    }
+    if (amountValueEl) amountValueEl.textContent = calcState.current;
+  }
+
+  function applyPending(state) {
+    const val = parseFloat(state.current);
+    const num = isNaN(val) ? 0 : val;
+    if (state.acc === null) {
+      state.acc = num;
+      return;
+    }
+    if (!state.op) return;
+    switch (state.op) {
+      case "+":
+        state.acc += num;
+        break;
+      case "-":
+        state.acc -= num;
+        break;
+      case "×":
+        state.acc *= num;
+        break;
+      case "÷":
+        if (num !== 0) state.acc /= num;
+        break;
+    }
+  }
+
+  function pressKey(key) {
+    if (/^[0-9]$/.test(key)) {
+      calcState.current = calcState.current === "0" ? key : calcState.current + key;
+    } else if (key === ".") {
+      if (!calcState.current.includes(".")) calcState.current += ".";
+    } else if (key === "+" || key === "-" || key === "×" || key === "÷") {
+      applyPending(calcState);
+      calcState.op = key;
+      calcState.current = "0";
+    } else if (key === "=") {
+      applyPending(calcState);
+      calcState.current = String(Math.round(calcState.acc * 1000) / 1000);
+      calcState.acc = null;
+      calcState.op = null;
+    }
+    updateAmountDisplay();
+  }
+
+  function resetAmount() {
+    calcState = { acc: null, op: null, current: "0" };
+    updateAmountDisplay();
+  }
+
+  // القيمة النهائية تُحسب بلا حاجة للضغط على "=" — عشان "٥+٣" ثم "إضافة"
+  // مباشرة يشتغل زي ما يتوقعه أي مستخدم لآلة حاسبة
+  function finalAmount() {
+    const state = { ...calcState };
+    applyPending(state);
+    return state.acc === null ? 0 : state.acc;
+  }
+
+  keypadButtons.forEach((btn) => {
+    btn.addEventListener("click", () => pressKey(btn.dataset.key));
+  });
+  if (backspaceBtn) {
+    backspaceBtn.addEventListener("click", () => {
+      calcState.current = calcState.current.length > 1 ? calcState.current.slice(0, -1) : "0";
+      updateAmountDisplay();
+    });
+  }
+  updateAmountDisplay();
 
   function currentFilterEntries() {
     if (allTimeToggle && allTimeToggle.checked) return entries;
@@ -3007,8 +3231,92 @@ function initExpenseCalculator() {
     });
   }
 
+  function analysisRow(label, fils, note, options) {
+    const row = document.createElement("div");
+    row.className = `calc-analysis-row${options && options.strong ? " calc-analysis-strong" : ""}`;
+    const labelEl = document.createElement("span");
+    labelEl.className = "calc-analysis-label";
+    labelEl.textContent = label;
+    const valueEl = document.createElement("span");
+    valueEl.className = "calc-analysis-value";
+    valueEl.innerHTML = moneyHtml(fromFils(fils), options && options.color ? options.color : "");
+    const noteEl = document.createElement("span");
+    noteEl.className = "calc-analysis-note";
+    noteEl.textContent = note || "";
+    row.append(labelEl, valueEl, noteEl);
+    return row;
+  }
+
+  /* لوحة التحليل — تترجم الأرقام الخام لإطار معروف يُستعمل فعلاً:
+     الشخصي قاعدة 50/30/20، والتجاري قائمة الدخل بمجمل الربح وصافيه */
+  function renderAnalysis(filtered, incomeFils, expenseFils, balanceFils) {
+    if (!analysisEl) return;
+    analysisEl.innerHTML = "";
+    const pct = (fils) => (incomeFils > 0 ? `${Math.round((fils / incomeFils) * 100)}%` : "—");
+
+    let classifiedFils = 0;
+    const byClass = {};
+    filtered.forEach((e) => {
+      if (e.type !== "expense") return;
+      const cls = e.cls || "";
+      if (!cls) return;
+      byClass[cls] = (byClass[cls] || 0) + toFils(e.amount);
+      classifiedFils += toFils(e.amount);
+    });
+    const unclassifiedFils = expenseFils - classifiedFils;
+
+    if (settings.mode === "personal") {
+      if (analysisTitleEl) analysisTitleEl.textContent = say("قاعدة ٥٠/٣٠/٢٠", "The 50/30/20 rule");
+      const needs = byClass.need || 0;
+      const wants = byClass.want || 0;
+      analysisEl.append(
+        analysisRow(say("🧺 ضروريات", "🧺 Needs"), needs, `${pct(needs)} ${say("— الهدف ٥٠٪", "— target 50%")}`)
+      );
+      analysisEl.append(
+        analysisRow(say("✨ كماليات", "✨ Wants"), wants, `${pct(wants)} ${say("— الهدف ٣٠٪", "— target 30%")}`)
+      );
+      analysisEl.append(
+        analysisRow(say("💰 المتبقي (ادخار)", "💰 Left over (savings)"), balanceFils, `${pct(balanceFils)} ${say("— الهدف ٢٠٪", "— target 20%")}`, {
+          strong: true,
+          color: balanceFils < 0 ? "calc-negative" : "calc-positive",
+        })
+      );
+      if (unclassifiedFils > 0) {
+        analysisEl.append(
+          analysisRow(say("❔ غير مصنّف", "❔ Unclassified"), unclassifiedFils, say("صنّفها عشان تضبط النسب", "classify these to fix the split"))
+        );
+      }
+      return;
+    }
+
+    if (analysisTitleEl) analysisTitleEl.textContent = say("قائمة الدخل", "Income statement");
+    const cogs = byClass.cogs || 0;
+    const operating = byClass.operating || 0;
+    const grossFils = incomeFils - cogs;
+    const margin = (fils) => (incomeFils > 0 ? `${Math.round((fils / incomeFils) * 100)}%` : "—");
+    analysisEl.append(analysisRow(say("الإيرادات", "Revenue"), incomeFils, ""));
+    analysisEl.append(analysisRow(say("− التكاليف المباشرة", "− Direct costs"), cogs, ""));
+    analysisEl.append(
+      analysisRow(say("= مجمل الربح", "= Gross profit"), grossFils, `${say("هامش", "margin")} ${margin(grossFils)}`, {
+        strong: true,
+        color: grossFils < 0 ? "calc-negative" : "calc-positive",
+      })
+    );
+    analysisEl.append(analysisRow(say("− المصروفات التشغيلية", "− Operating expenses"), operating, ""));
+    if (unclassifiedFils > 0) {
+      analysisEl.append(analysisRow(say("− غير مصنّف", "− Unclassified"), unclassifiedFils, say("صنّفها عشان يضبط التحليل", "classify these for an accurate split")));
+    }
+    analysisEl.append(
+      analysisRow(say("= صافي الربح", "= Net profit"), balanceFils, `${say("هامش", "margin")} ${margin(balanceFils)}`, {
+        strong: true,
+        color: balanceFils < 0 ? "calc-negative" : "calc-positive",
+      })
+    );
+  }
+
   function render() {
-    refreshCategoryList();
+    renderCategoryGrid();
+    renderClassChips();
     const filtered = currentFilterEntries()
       .slice()
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
@@ -3033,6 +3341,25 @@ function initExpenseCalculator() {
     if (summaryBalance) {
       summaryBalance.innerHTML = moneyHtml(fromFils(balanceFils), balanceFils < 0 ? "calc-negative" : "calc-positive");
     }
+
+    /* الرصيد الحالي = رصيد البداية + كل دخل − كل مصروف، على كل العمليات لا
+       على الشهر المعروض. هذا جواب سؤال "كم باقي عندي فعلاً"، وهو غير صافي
+       الشهر تماماً — خلطهما أشهر غلط بأدوات المصروفات */
+    let allTimeFils = toFils(settings.opening);
+    entries.forEach((e) => {
+      allTimeFils += e.type === "income" ? toFils(e.amount) : -toFils(e.amount);
+    });
+    if (currentBalanceEl) {
+      currentBalanceEl.innerHTML = moneyHtml(fromFils(allTimeFils), allTimeFils < 0 ? "calc-negative" : "calc-positive");
+    }
+
+    // نسبة الادخار = ما لم يُصرف من دخل الفترة ÷ دخل الفترة
+    if (savingsRateEl) {
+      savingsRateEl.textContent = incomeFils > 0 ? `${Math.round((balanceFils / incomeFils) * 100)}%` : "—";
+      savingsRateEl.className = `calc-summary-value ${balanceFils < 0 ? "calc-negative" : "calc-positive"}`;
+    }
+
+    renderAnalysis(filtered, incomeFils, expenseFils, balanceFils);
 
     if (breakdown) {
       breakdown.innerHTML = "";
@@ -3112,28 +3439,36 @@ function initExpenseCalculator() {
     }
   }
 
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const amount = Number(amountInput.value);
-    if (!(amount > 0)) {
-      amountInput.reportValidity();
-      return;
-    }
-    entries.push({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      date: dateInput.value || todayStr(),
-      type,
-      amount,
-      category: (categoryInput.value || "").trim(),
-      note: (noteInput.value || "").trim(),
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      const amount = finalAmount();
+      if (!(amount > 0)) {
+        // بلا حقل نموذج أصلي هنا نسوّي التحقق يدوياً — هزّة بصرية بدل تنبيه يقاطع
+        if (amountDisplay) {
+          amountDisplay.classList.remove("calc-shake");
+          // إعادة تشغيل الأنيميشن تحتاج إعادة تدفّق فعلية، لا مجرد إزالة/إضافة الصنف بنفس اللفة
+          void amountDisplay.offsetWidth;
+          amountDisplay.classList.add("calc-shake");
+        }
+        return;
+      }
+      entries.push({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        date: dateInput.value || todayStr(),
+        type,
+        amount,
+        category: selectedCategory,
+        cls: type === "expense" ? selectedClass : "",
+        note: (noteInput.value || "").trim(),
+      });
+      saveEntries();
+      // النوع والتاريخ والفئة تبقى كما هي: تسجيل متتالي سريع لعمليات مشابهة
+      // (فواتير متعددة بنفس التاريخ، عدة مصروفات بنفس الفئة) بلا إعادة اختيار
+      resetAmount();
+      noteInput.value = "";
+      render();
     });
-    saveEntries();
-    amountInput.value = "";
-    categoryInput.value = "";
-    noteInput.value = "";
-    render();
-    amountInput.focus(); // تسجيل سريع متتالي بلا رجوع بالماوس للحقل
-  });
+  }
 
   if (monthInput) monthInput.addEventListener("change", render);
   if (allTimeToggle) {
@@ -3172,6 +3507,7 @@ function initExpenseCalculator() {
             type: item.type,
             amount: item.amount,
             category: String(item.category || "").slice(0, 60),
+            cls: ["need", "want", "cogs", "operating"].includes(item.cls) ? item.cls : "",
             note: String(item.note || "").slice(0, 200),
           });
           added++;

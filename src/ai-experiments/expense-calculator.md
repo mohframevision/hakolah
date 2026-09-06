@@ -12,7 +12,9 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
 noThirdParty: true
 ---
 
-حاسبة بسيطة لدخلك ومصروفاتك — فاتورة كهرباء، إيجار، عقار مؤجّر، أي شي تحتاج تتابعه. تكتب المبلغ والفئة وتضغط إضافة، وخلاص: الرصيد وتوزيع المصروفات يتحدّثون فوراً بلا أي خطوة زايدة ولا نافذة تقاطعك.
+حاسبة بسيطة لدخلك ومصروفاتك — فاتورة كهرباء، إيجار، عقار مؤجّر، أي شي تحتاج تتابعه. تدوس رقم على الآلة الحاسبة، تختار فئة بلمسة وحدة، وتضغط إضافة — بلا كيبورد ولا كتابة ولا نافذة تقاطعك.
+
+وتجاوب على السؤالين اللي يفرقون فعلاً: **كم باقي عندي؟** (رصيد البداية + كل دخلك − كل مصروفاتك) و**وين راحت فلوس هالشهر؟** — وهما سؤالان مختلفان، وخلطهما أشهر غلط بأدوات المصروفات. وفيها نمطان: شخصي يحلّل صرفك بقاعدة ٥٠/٣٠/٢٠ المعروفة، وتجاري يطلّع لك قائمة دخل فيها مجمل الربح وصافيه بهوامشهما.
 
 <div class="conv-privacy">
   <strong>🔒 بياناتك ما تطلع من متصفحك.</strong>
@@ -21,37 +23,81 @@ noThirdParty: true
   <span class="conv-privacy-proof">ولهذا وجه ثاني: البيانات محفوظة بهذا الجهاز والمتصفح فقط، وما تنتقل لجهاز ثاني تلقائياً. نزّل نسخة احتياطية بين فترة وأخرى من الأسفل لو تبي تنقلها أو تحافظ عليها.</span>
 </div>
 
+<div class="calc-balance-card">
+  <div class="calc-balance-label">💵 الرصيد الحالي — اللي باقي فعلاً</div>
+  <div class="calc-balance-value" id="calcCurrentBalance">—</div>
+  <div class="calc-balance-formula">رصيد البداية + كل الدخل − كل المصروفات (مو شهر واحد)</div>
+  <div class="calc-balance-settings">
+    <div class="calc-field">
+      <label class="calc-field-label" for="calcOpeningBalance">رصيد البداية (اللي بحسابك اليوم)</label>
+      <input type="number" id="calcOpeningBalance" class="calc-input" step="0.001" placeholder="0.000" />
+    </div>
+    <div class="calc-field">
+      <span class="calc-field-label">نوع الاستخدام</span>
+      <div class="instrument-picker">
+        <button type="button" class="filter-chip calc-mode active" data-mode="personal">👤 شخصي</button>
+        <button type="button" class="filter-chip calc-mode" data-mode="business">🏢 تجاري</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <form class="calc-form" id="calcForm">
-  <div class="calc-field">
-    <span class="calc-field-label">النوع</span>
+  <div class="calc-type-row">
     <div class="instrument-picker">
       <button type="button" class="filter-chip calc-type" data-type="income">💰 دخل</button>
       <button type="button" class="filter-chip calc-type active" data-type="expense">💸 مصروف</button>
     </div>
+    <div class="calc-field">
+      <label class="calc-field-label" for="calcDate">التاريخ</label>
+      <input type="date" id="calcDate" class="calc-input" />
+    </div>
+  </div>
+
+  <div class="calc-amount-display" id="calcAmountDisplay">
+    <div class="calc-amount-pending" id="calcAmountPending"></div>
+    <div class="calc-amount-main">
+      <span class="calc-amount-value" id="calcAmountValue">0</span>
+      <span class="calc-amount-currency">د.ب</span>
+      <button type="button" class="calc-backspace" id="calcBackspace" aria-label="احذف رقم">⌫</button>
+    </div>
+  </div>
+
+  <div class="calc-keypad" id="calcKeypad">
+    <button type="button" class="calc-key" data-key="1">1</button>
+    <button type="button" class="calc-key" data-key="2">2</button>
+    <button type="button" class="calc-key" data-key="3">3</button>
+    <button type="button" class="calc-key calc-key-op" data-key="+">+</button>
+    <button type="button" class="calc-key" data-key="4">4</button>
+    <button type="button" class="calc-key" data-key="5">5</button>
+    <button type="button" class="calc-key" data-key="6">6</button>
+    <button type="button" class="calc-key calc-key-op" data-key="-">−</button>
+    <button type="button" class="calc-key" data-key="7">7</button>
+    <button type="button" class="calc-key" data-key="8">8</button>
+    <button type="button" class="calc-key" data-key="9">9</button>
+    <button type="button" class="calc-key calc-key-op" data-key="×">×</button>
+    <button type="button" class="calc-key" data-key=".">.</button>
+    <button type="button" class="calc-key" data-key="0">0</button>
+    <button type="button" class="calc-key calc-key-op" data-key="=">=</button>
+    <button type="button" class="calc-key calc-key-op" data-key="÷">÷</button>
   </div>
 
   <div class="calc-field">
-    <label class="calc-field-label" for="calcAmount">المبلغ (د.ب)</label>
-    <input type="number" id="calcAmount" class="calc-input" min="0.001" step="0.001" placeholder="0.000" required />
+    <span class="calc-field-label">الفئة</span>
+    <div class="calc-cat-grid" id="calcCategoryGrid"></div>
   </div>
 
-  <div class="calc-field calc-field-grow">
-    <label class="calc-field-label" for="calcCategory">الفئة</label>
-    <input type="text" id="calcCategory" class="calc-input calc-input-wide" list="calcCategoryList" placeholder="مثال: كهرباء وماء" />
-    <datalist id="calcCategoryList"></datalist>
+  <div class="calc-field">
+    <span class="calc-field-label">التصنيف (اختياري — يضبط التحليل تحت)</span>
+    <div class="instrument-picker" id="calcClassChips"></div>
   </div>
 
-  <div class="calc-field calc-field-grow">
+  <div class="calc-field">
     <label class="calc-field-label" for="calcNote">ملاحظة (اختياري)</label>
     <input type="text" id="calcNote" class="calc-input calc-input-wide" placeholder="مثال: فاتورة شهر أغسطس" />
   </div>
 
-  <div class="calc-field">
-    <label class="calc-field-label" for="calcDate">التاريخ</label>
-    <input type="date" id="calcDate" class="calc-input" />
-  </div>
-
-  <button type="submit" class="btn">➕ إضافة</button>
+  <button type="button" id="calcAddBtn" class="btn calc-add-btn">➕ إضافة</button>
 </form>
 
 <div class="calc-filter-row">
@@ -72,10 +118,17 @@ noThirdParty: true
     <div class="calc-summary-value" id="calcSummaryExpense">—</div>
   </div>
   <div class="calc-summary-card">
-    <div class="calc-summary-label">الرصيد</div>
+    <div class="calc-summary-label">صافي الشهر</div>
     <div class="calc-summary-value" id="calcSummaryBalance">—</div>
   </div>
+  <div class="calc-summary-card">
+    <div class="calc-summary-label">نسبة الادخار</div>
+    <div class="calc-summary-value" id="calcSavingsRate">—</div>
+  </div>
 </div>
+
+<h2 id="calcAnalysisTitle">قاعدة ٥٠/٣٠/٢٠</h2>
+<div class="calc-analysis" id="calcAnalysis"></div>
 
 <h2>توزيع المصروفات حسب الفئة</h2>
 <div class="calc-breakdown" id="calcBreakdown"></div>
