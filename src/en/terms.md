@@ -19,7 +19,7 @@ Hakolah is a directory that gathers links, tools, restaurants, stores, and place
 
 ## External links
 
-The site contains links to external sites, stores, and social media accounts that we don't own or manage. We're not responsible for their content, policies, or any dealings between you and them.
+The site contains links to external sites, stores, and social media accounts that we don't own or manage. We're not responsible for their content, policies, or any dealings between you and them. Some of these links are affiliate links through which we may earn a small commission at no extra cost to you — see the [privacy policy]({{ '/en/privacy-policy.html' | url }}) for details.
 
 ## Content rights
 

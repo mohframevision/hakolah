@@ -35,7 +35,11 @@ Google may use cookies to show relevant ads based on your visits to this site an
 
 ## External links
 
-The site contains links to external sites (tools, restaurants, stores, social media accounts). We're not responsible for the privacy policies or content on those sites.
+The site contains links to external sites (tools, restaurants, stores, social media accounts). We're not responsible for the privacy policies or content on those sites. Some of these links (such as the Casa Souq link) are affiliate links — we may earn a small commission if you purchase through them, at no extra cost to you, and this is also noted next to the link itself.
+
+## Your data rights
+
+Under Bahrain's Personal Data Protection Law (PDPL), you have the right to access any personal data we hold about you, and to request its correction or deletion. You can exercise this right by contacting us as described below.
 
 ## Contact us
 
