@@ -33,6 +33,16 @@ function forbidden() {
   return new Response("Forbidden", { status: 403, headers: corsHeaders() });
 }
 
+// جسم طلب تالف (فارغ أو JSON غير صالح) يرمي استثناء من request.json() —
+// نرجع null هنا بدل ما نخلي الاستثناء يفلت غير مُمسوك لكل نقطة استدعاء
+async function readJson(request) {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
 /*
   حد بسيط لعدد الإعجابات لكل زائر بالدقيقة. مبني على تجزئة (hash) لعنوان
   الـ IP وليس العنوان نفسه — ما نخزّن أي عنوان IP خام إطلاقاً، والمفتاح
@@ -111,17 +121,22 @@ export default {
     if (isMutating && !isAllowedOrigin(request)) return forbidden();
 
     if (request.method === "POST" && url.pathname === "/subscribe") {
-      const sub = await request.json();
+      const sub = await readJson(request);
       if (!sub || !sub.endpoint) {
         return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       }
+      if (await isRateLimited(request, env)) return tooManyRequests();
       await env.SUBSCRIPTIONS.put(await keyFor(sub.endpoint), JSON.stringify(sub));
       return new Response("OK", { headers: corsHeaders() });
     }
 
     if (request.method === "POST" && url.pathname === "/unsubscribe") {
-      const { endpoint } = await request.json();
-      if (endpoint) await env.SUBSCRIPTIONS.delete(await keyFor(endpoint));
+      const body = await readJson(request);
+      if (!body || !body.endpoint) {
+        return new Response("Bad Request", { status: 400, headers: corsHeaders() });
+      }
+      if (await isRateLimited(request, env)) return tooManyRequests();
+      await env.SUBSCRIPTIONS.delete(await keyFor(body.endpoint));
       return new Response("OK", { headers: corsHeaders() });
     }
 
@@ -137,7 +152,8 @@ export default {
     if (request.method === "POST" && url.pathname === "/like") {
       // التحقق من صحة الطلب أولاً (مجاني)، وبعدين فحص الحد (يكلّف كتابة) —
       // فالطلبات الناقصة/العبثية ما تستهلك حصة الكتابة إطلاقاً
-      const { section, id } = await request.json();
+      const likeBody = await readJson(request);
+      const { section, id } = likeBody || {};
       if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       if (await isRateLimited(request, env)) return tooManyRequests();
       const key = likeKey(section, id);
@@ -156,7 +172,8 @@ export default {
     }
 
     if (request.method === "POST" && url.pathname === "/unlike") {
-      const { section, id } = await request.json();
+      const unlikeBody = await readJson(request);
+      const { section, id } = unlikeBody || {};
       if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       if (await isRateLimited(request, env)) return tooManyRequests();
       const key = likeKey(section, id);
