@@ -43,6 +43,10 @@
   #}
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://*.adtrafficquality.google; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://www.googletagmanager.com https://*.adtrafficquality.google; connect-src 'self' https://api.web3forms.com https://hakolah-push.hakolah.workers.dev https://*.google-analytics.com https://*.analytics.google.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google https://lookerstudio.google.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.web3forms.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {# preconnect لأصول خارجية تُستخدم فعلياً بالصفحة (تسريع DNS/TLS قبل أول fetch/سكربت) #}
+  <link rel="preconnect" href="https://hakolah-push.hakolah.workers.dev" />
+  {% if adsense.publisherId and not noThirdParty %}<link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />{% endif %}
+  {% if analytics.measurementId and not noThirdParty %}<link rel="preconnect" href="https://www.googletagmanager.com" />{% endif %}
   {# ملف خارجي (وليس سكربت مضمّن) عمداً — يسمح بسياسة CSP صارمة script-src
      بدون unsafe-inline. يُحمَّل بدون defer/async فيشتغل قبل أول رسم للصفحة
      (يمنع "وميض" المظهر الفاتح قبل تطبيق المظهر الداكن المحفوظ) #}
@@ -95,7 +99,7 @@
 
   {# الخط صار مستضافاً عندنا (@font-face بـ style.css) — نُحمّله مسبقاً لأنه
      يُكتشف متأخراً داخل ملف CSS، فبلا preload يتأخر ظهور النص بخطه #}
-  <link rel="preload" href="{{ '/assets/fonts/cairo-arabic.woff2' | url }}" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="{{ ('/assets/fonts/cairo-latin.woff2' if lang == 'en' else '/assets/fonts/cairo-arabic.woff2') | url }}" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="{{ '/css/style.css' | url }}?v={{ buildVersion }}" />
   {# لون الموقع من لوحة التحكم (مجموعة "شكل الموقع") — ملف خارجي منفصل عمداً،
      لأن سياسة CSP (style-src) ما تسمح بوسم <style> مضمّن، بس تسمح بملف من

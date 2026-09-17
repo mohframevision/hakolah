@@ -35,10 +35,17 @@ function ensureSectionFolders() {
     // مع الملف المحسوب لو بقيت من بناء سابق (كلاهما يعرّف نفس مفتاح tags/permalink)
     if (fs.existsSync(legacyJsonFile)) fs.unlinkSync(legacyJsonFile);
 
-    const helperPath = path.join(__dirname, "eleventy-section-data.js");
+    // مسار نسبي (لا مطلق) عمداً — الملف المولَّد يُرفع بـgit، ولو كان المسار
+    // مطلقاً (path.join(__dirname, ...)) فكل بناء من جهاز/بيئة مختلفة (جهاز
+    // محمد بويندوز مقابل جلسة سحابية) يكتب مساراً مختلفاً بالكامل، فيصير الملف
+    // "متغيّراً" بـgit diff بلا أي تغيير فعلي بالمنطق — كان يسبب churn متكرر.
+    const helperRelative = path
+      .relative(contentDir, path.join(__dirname, "eleventy-section-data.js"))
+      .split(path.sep)
+      .join("/");
     const content =
       `// يُنشأ تلقائياً من src/sections/${file} — لا تعدّله يدوياً هنا\n` +
-      `const { sectionDirData } = require(${JSON.stringify(helperPath)});\n` +
+      `const { sectionDirData } = require(${JSON.stringify(helperRelative)});\n` +
       `module.exports = sectionDirData(${JSON.stringify(slug)}, ${JSON.stringify(Boolean(data.hasDetailPages))}, ${JSON.stringify(data.title || slug)});\n`;
 
     // نكتب فقط لو المحتوى فعلاً تغيّر. كانت تُكتب بلا شرط بكل بناء (مُشتق بالكامل

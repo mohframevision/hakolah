@@ -198,8 +198,10 @@ export default {
         if (key.name.startsWith("likes:week:")) continue;
         counts[key.name.slice("likes:".length)] = Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
       }
+      // Cache-Control قصير (60 ثانية) — يقلل استدعاءات KV.list() المتكررة
+      // على كل تحميل صفحة عنصر بلا أي فرق محسوس للزائر (عداد إعجابات).
       return new Response(JSON.stringify(counts), {
-        headers: { ...corsHeaders(), "Content-Type": "application/json" },
+        headers: { ...corsHeaders(), "Content-Type": "application/json", "Cache-Control": "public, max-age=60" },
       });
     }
 
@@ -211,7 +213,7 @@ export default {
         counts[key.name.slice(prefix.length)] = Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
       }
       return new Response(JSON.stringify(counts), {
-        headers: { ...corsHeaders(), "Content-Type": "application/json" },
+        headers: { ...corsHeaders(), "Content-Type": "application/json", "Cache-Control": "public, max-age=60" },
       });
     }
 
