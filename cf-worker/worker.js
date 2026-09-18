@@ -82,6 +82,32 @@ function tooManyRequests() {
   });
 }
 
+// الأقسام الفعلية بالموقع (slug بكل ملف src/sections/*.md) — لو انضاف قسم
+// جديد لازم يُضاف هنا يدوياً، وإلا إعجابات القسم الجديد تُرفض بـ400.
+const VALID_LIKE_SECTIONS = new Set([
+  "ai-experiments",
+  "bakeries",
+  "cafes",
+  "car-shops",
+  "guides",
+  "links-tools",
+  "places",
+  "restaurants",
+  "stores",
+]);
+
+// تحقّق شكلي قبل الكتابة على KV: يمنع إغراق KV (حصة الكتابة اليومية
+// المشتركة مع /subscribe و/unsubscribe) بمفاتيح إعجاب وهمية عشوائية —
+// section لازم يكون من الأقسام الفعلية، وid بطول معقول (أسماء الملفات
+// الحقيقية أقصر بكثير من هذا بكثير).
+function isValidLikeTarget(section, id) {
+  if (typeof section !== "string" || typeof id !== "string") return false;
+  if (!VALID_LIKE_SECTIONS.has(section)) return false;
+  const trimmedId = id.trim();
+  if (!trimmedId || trimmedId.length > 100) return false;
+  return true;
+}
+
 function likeKey(section, id) {
   return `likes:${section}:${id}`;
 }
@@ -154,7 +180,7 @@ export default {
       // فالطلبات الناقصة/العبثية ما تستهلك حصة الكتابة إطلاقاً
       const likeBody = await readJson(request);
       const { section, id } = likeBody || {};
-      if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
+      if (!isValidLikeTarget(section, id)) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       if (await isRateLimited(request, env)) return tooManyRequests();
       const key = likeKey(section, id);
       const wKey = weekKey(section, id);
@@ -174,7 +200,7 @@ export default {
     if (request.method === "POST" && url.pathname === "/unlike") {
       const unlikeBody = await readJson(request);
       const { section, id } = unlikeBody || {};
-      if (!section || !id) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
+      if (!isValidLikeTarget(section, id)) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       if (await isRateLimited(request, env)) return tooManyRequests();
       const key = likeKey(section, id);
       const wKey = weekKey(section, id);
