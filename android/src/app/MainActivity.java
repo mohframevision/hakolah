@@ -35,6 +35,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private JSONArray sectionOrder;
     private String currentSlug;
     private JSONArray currentItems = new JSONArray();
+    private boolean currentHasDetailPages;
     private String currentTag;
     private String searchQuery = "";
 
@@ -154,12 +155,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     static JSONObject cachedSections;
     static JSONArray cachedSectionOrder;
 
-    // أقسام "أدلة"/"أماكن" (hasDetailPages) عندها مقالات كاملة، وما فيه عارض
-    // مقالات أصلي بالتطبيق بعد — تُخفى من التنقّل مؤقتاً (ومن "اختار لي" أيضاً،
-    // PickerActivity يستدعي هذي نفسها) بدل ما نفتح متصفح خارجي ونكسر وعد
-    // "بلا متصفح". انظر project_dalili_android.md بالذاكرة.
+    // كل قسم فيه عناصر يظهر بالتنقّل — أقسام "أدلة"/"أماكن" (hasDetailPages)
+    // كانت تُخفى قبل وجود ArticleActivity (عارض مقالات أصلي)، الآن تظهر مثل
+    // أي قسم. الاسم باقٍ من تلك المرحلة؛ يتحقق فقط من وجود عناصر فعلية
     static boolean isBrowsable(JSONObject section) {
-        return section != null && !section.optBoolean("hasDetailPages", false);
+        JSONArray items = section == null ? null : section.optJSONArray("items");
+        return items != null && items.length() > 0;
     }
 
     private String firstBrowsableSlug() {
@@ -201,6 +202,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
         currentItems = section.optJSONArray("items");
         if (currentItems == null) currentItems = new JSONArray();
+        currentHasDetailPages = section.optBoolean("hasDetailPages", false);
         currentTag = null;
         searchQuery = "";
         searchBox.removeTextChangedListener(this);
@@ -283,7 +285,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             emptyView.setVisibility(View.VISIBLE);
         } else {
             emptyView.setVisibility(View.GONE);
-            itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered));
+            itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered, currentHasDetailPages));
             itemList.setVisibility(View.VISIBLE);
         }
     }

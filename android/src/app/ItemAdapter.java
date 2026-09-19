@@ -27,11 +27,13 @@ import org.json.JSONObject;
 class ItemAdapter extends BaseAdapter implements View.OnClickListener {
     private final Context context;
     private final String section;
+    private final boolean hasDetailPages;
     private final List<JSONObject> items = new ArrayList<>();
 
-    ItemAdapter(Context context, String section, JSONArray itemsJson) {
+    ItemAdapter(Context context, String section, JSONArray itemsJson, boolean hasDetailPages) {
         this.context = context;
         this.section = section;
+        this.hasDetailPages = hasDetailPages;
         for (int i = 0; i < itemsJson.length(); i++) {
             // optJSONObject يرجع null لأي عنصر مش كائن JSON فعلي (ملف بيانات
             // تالف جزئياً مثلاً) — نتجاهله هنا بدل ما getView() يفشل بـNPE
@@ -122,7 +124,28 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             holder.tags.setVisibility(View.GONE);
         }
 
-        LinkButtons.build(context, holder.actions, item, HakolahApi.ORIGIN, this);
+        if (hasDetailPages) {
+            // أقسام "أدلة"/"أماكن": مقال كامل يُعرض أصلياً بـArticleActivity
+            // بدل زر رابط خارجي — انظر LinkButtons لبقية الأقسام
+            holder.actions.removeAllViews();
+            TextView readBtn = new TextView(context);
+            readBtn.setText("📖 قراءة المقال");
+            readBtn.setTextSize(14f);
+            readBtn.setTypeface(null, android.graphics.Typeface.BOLD);
+            readBtn.setTextColor(0xFFFFFFFF);
+            readBtn.setBackgroundResource(R.drawable.btn_pill_primary);
+            int padH = LinkButtons.dp(context, 20);
+            int padV = LinkButtons.dp(context, 9);
+            readBtn.setPadding(padH, padV, padH, padV);
+            readBtn.setClickable(true);
+            readBtn.setFocusable(true);
+            readBtn.setGravity(android.view.Gravity.CENTER);
+            readBtn.setTag("article:" + position);
+            readBtn.setOnClickListener(this);
+            holder.actions.addView(readBtn);
+        } else {
+            LinkButtons.build(context, holder.actions, item, HakolahApi.ORIGIN, this);
+        }
 
         return row;
     }
@@ -149,21 +172,40 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             int position = Integer.parseInt(tag.substring(6));
             SoundPlayer.playClick(context);
             shareItem(items.get(position));
+        } else if (tag.startsWith("article:")) {
+            int position = Integer.parseInt(tag.substring(8));
+            SoundPlayer.playClick(context);
+            openArticle(items.get(position));
         }
     }
 
-    // نفس buildShareText/buildShareUrl بالموقع بالضبط: العنوان + لاحقة عربية
-    // ثابتة + رابط القسم مع ?q=العنوان (العنصر بلا صفحة تفاصيل مستقلة بهذي
-    // النسخة) — عبر مشاركة النظام الأصلية (ACTION_SEND) بدل Web Share API
+    private void openArticle(JSONObject item) {
+        Intent intent = new Intent(context, ArticleActivity.class);
+        intent.putExtra(ArticleActivity.EXTRA_TITLE, item.optString("title", ""));
+        intent.putExtra(ArticleActivity.EXTRA_ICON, item.optString("icon", "⭐"));
+        intent.putExtra(ArticleActivity.EXTRA_CONTENT, item.optString("contentHtml", ""));
+        intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, item.optString("detailUrl", ""));
+        context.startActivity(intent);
+    }
+
+    // نفس buildShareText/buildShareUrl بالموقع بالضبط: يفضّل detailUrl لو
+    // موجود (أقسام المقالات)، وإلا رابط القسم مع ?q=العنوان — عبر مشاركة
+    // النظام الأصلية (ACTION_SEND) بدل Web Share API
     private void shareItem(JSONObject item) {
         String title = item.optString("title", "");
-        String encodedTitle;
-        try {
-            encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8.name());
-        } catch (Exception e) {
-            encodedTitle = title;
+        String detailUrl = item.optString("detailUrl", "");
+        String url;
+        if (!detailUrl.isEmpty()) {
+            url = HakolahApi.ORIGIN + detailUrl;
+        } else {
+            String encodedTitle;
+            try {
+                encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8.name());
+            } catch (Exception e) {
+                encodedTitle = title;
+            }
+            url = HakolahApi.ORIGIN + section + ".html?q=" + encodedTitle;
         }
-        String url = HakolahApi.ORIGIN + section + ".html?q=" + encodedTitle;
         String text = title + " — على موقع هكوله 👇\n" + url;
 
         Intent send = new Intent(Intent.ACTION_SEND);
