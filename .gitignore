@@ -14,3 +14,7 @@ places-picker/data.js
 # غير مُتجاهَلة، Eleventy dev server يراقب المجلد كامل (يحترم .gitignore بافتراضه
 # استثناءات المراقبة) فكل لقطة جديدة تُطلق إعادة تحميل كاملة للصفحة أثناء القيادة
 .claude/skills/*/screenshots/
+
+# تطبيق أندرويد هكوله: الـAPK نفسه مُخرَج بناء (android/build.sh يعيد إنتاجه)،
+# يُسلَّم مباشرة للمستخدم بدل رفعه بالمستودع — نفس عرف StudyApp
+android/hakolah.apk
