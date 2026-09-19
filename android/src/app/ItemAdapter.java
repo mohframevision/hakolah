@@ -2,9 +2,6 @@ package bh.mohframevision.hakolah;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
-import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -125,36 +122,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             holder.tags.setVisibility(View.GONE);
         }
 
-        holder.actions.removeAllViews();
-        String detailUrl = item.optString("detailUrl", "");
-        if (!detailUrl.isEmpty()) {
-            addActionButton(holder.actions, "📖 التفاصيل", "url:" + HakolahApi.ORIGIN + detailUrl, true);
-        } else {
-            JSONObject links = item.optJSONObject("links");
-            if (links != null) {
-                // optString(key, "") لا has(key): حقول الروابط بالمحتوى الحقيقي
-                // تُحفظ أحياناً كسلسلة فاضية "" لا غائبة تماماً (مثال:
-                // src/restaurants/ameen-kebab.md) — has() كان يعتبرها موجودة
-                // ويبني زراً ميتاً ما يسوي شي عند الضغط
-                boolean first = true;
-                if (!links.optString("website", "").isEmpty()) {
-                    addActionButton(holder.actions, "🌐 زيارة", "url:" + links.optString("website"), first);
-                    first = false;
-                }
-                if (!links.optString("phone", "").isEmpty()) {
-                    String phone = links.optString("phone").split(",")[0].trim();
-                    addActionButton(holder.actions, "📞 اتصال", "tel:" + phone, first);
-                    first = false;
-                }
-                if (!links.optString("maps", "").isEmpty()) {
-                    addActionButton(holder.actions, "📍 الخريطة", "url:" + links.optString("maps"), first);
-                    first = false;
-                }
-                if (!links.optString("instagram", "").isEmpty()) {
-                    addActionButton(holder.actions, "📷 إنستقرام", "url:" + links.optString("instagram"), first);
-                }
-            }
-        }
+        LinkButtons.build(context, holder.actions, item, HakolahApi.ORIGIN, this);
 
         return row;
     }
@@ -164,49 +132,14 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         btn.setTextColor(active ? 0xFFE0245E : context.getColor(R.color.text_muted));
     }
 
-    private int dp(float value) {
-        return (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, value, context.getResources().getDisplayMetrics());
-    }
-
-    // نفس .btn بالموقع بالضبط: padding 9px20px، radius حبة كاملة، أول زر
-    // بارز (primary)، الباقي خافت (secondary) — بفاصل 8dp بينهم
-    private void addActionButton(LinearLayout container, String label, String tag, boolean primary) {
-        TextView btn = new TextView(context);
-        btn.setText(label);
-        btn.setTextSize(14f);
-        btn.setTypeface(null, android.graphics.Typeface.BOLD);
-        if (primary) {
-            btn.setTextColor(0xFFFFFFFF);
-            btn.setBackgroundResource(R.drawable.btn_pill_primary);
-        } else {
-            btn.setTextColor(context.getColor(R.color.text_muted));
-            btn.setBackgroundResource(R.drawable.btn_pill_secondary);
-        }
-        btn.setPadding(dp(20), dp(9), dp(20), dp(9));
-        btn.setClickable(true);
-        btn.setFocusable(true);
-        btn.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMarginEnd(dp(8));
-        btn.setLayoutParams(lp);
-        btn.setTag(tag);
-        btn.setOnClickListener(this);
-        container.addView(btn);
-    }
-
     @Override
     public void onClick(View v) {
         Object tagObj = v.getTag();
         if (!(tagObj instanceof String)) return;
         String tag = (String) tagObj;
-        if (tag.startsWith("url:")) {
+        if (tag.startsWith("url:") || tag.startsWith("tel:")) {
             SoundPlayer.playClick(context);
-            openUrl(tag.substring(4));
-        } else if (tag.startsWith("tel:")) {
-            SoundPlayer.playClick(context);
-            dialPhone(tag.substring(4));
+            LinkButtons.handleClick(context, tag);
         } else if (tag.startsWith("fav:")) {
             String id = tag.substring(4);
             Prefs.toggleFavorite(context, section, id);
@@ -242,18 +175,4 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         }
     }
 
-    private void openUrl(String url) {
-        try {
-            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-        } catch (Exception ignored) {
-            // ما فيه تطبيق يقدر يفتح هالرابط بالجهاز — نتجاهل بصمت بدل كراش
-        }
-    }
-
-    private void dialPhone(String phone) {
-        try {
-            context.startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone)));
-        } catch (Exception ignored) {
-        }
-    }
 }

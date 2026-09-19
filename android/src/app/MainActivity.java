@@ -95,10 +95,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (value.startsWith("chip:")) {
             SoundPlayer.playClick(this);
             selectTag(value.substring(5));
+        } else if (PICKER_TAG.equals(value)) {
+            SoundPlayer.playClick(this);
+            startActivity(new android.content.Intent(this, PickerActivity.class));
         } else {
             selectSection(value);
         }
     }
+
+    private static final String PICKER_TAG = "__picker__";
 
     // ---- TextWatcher (بحث حيّ، نفس debounce-less input بالموقع) ----
     @Override
@@ -124,6 +129,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     public void onSuccess(JSONObject data, boolean fromCache) {
         sections = data.optJSONObject("sections");
         sectionOrder = data.optJSONArray("sectionOrder");
+        // مرجع ساكن يقرأه PickerActivity مباشرة (تطبيق مستخدم واحد بعملية
+        // واحدة) بدل إعادة جلب/تحليل نفس JSON من جديد
+        cachedSections = sections;
+        cachedSectionOrder = sectionOrder;
         String firstBrowsable = firstBrowsableSlug();
         if (sections == null || firstBrowsable == null) {
             showError("لا يوجد محتوى حالياً");
@@ -142,10 +151,14 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     }
     // -----------------------------
 
+    static JSONObject cachedSections;
+    static JSONArray cachedSectionOrder;
+
     // أقسام "أدلة"/"أماكن" (hasDetailPages) عندها مقالات كاملة، وما فيه عارض
-    // مقالات أصلي بالتطبيق بعد — تُخفى من التنقّل مؤقتاً بدل ما نفتح متصفح
-    // خارجي ونكسر وعد "بلا متصفح". انظر project_dalili_android.md بالذاكرة.
-    private boolean isBrowsable(JSONObject section) {
+    // مقالات أصلي بالتطبيق بعد — تُخفى من التنقّل مؤقتاً (ومن "اختار لي" أيضاً،
+    // PickerActivity يستدعي هذي نفسها) بدل ما نفتح متصفح خارجي ونكسر وعد
+    // "بلا متصفح". انظر project_dalili_android.md بالذاكرة.
+    static boolean isBrowsable(JSONObject section) {
         return section != null && !section.optBoolean("hasDetailPages", false);
     }
 
@@ -172,6 +185,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             tab.setOnClickListener(this);
             bottomNav.addView(tab);
         }
+
+        View pickerTab = getLayoutInflater().inflate(R.layout.nav_tab, bottomNav, false);
+        ((TextView) pickerTab.findViewById(R.id.tabIcon)).setText("🎲");
+        ((TextView) pickerTab.findViewById(R.id.tabLabel)).setText("اختار لي");
+        pickerTab.setTag(PICKER_TAG);
+        pickerTab.setOnClickListener(this);
+        bottomNav.addView(pickerTab);
     }
 
     private void selectSection(String slug) {
