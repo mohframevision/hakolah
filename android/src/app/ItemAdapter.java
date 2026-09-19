@@ -125,11 +125,14 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         }
 
         if (hasDetailPages) {
-            // أقسام "أدلة"/"أماكن": مقال كامل يُعرض أصلياً بـArticleActivity
-            // بدل زر رابط خارجي — انظر LinkButtons لبقية الأقسام
+            // "أدلة"/"أماكن": مقال يُعرض أصلياً بـArticleActivity. "تجارب
+            // الذكاء الاصطناعي": أدوات JS تفاعلية ثقيلة (مولّد ألحان، محوّل
+            // ملفات...) — تُفتح بـWebViewActivity (نفس الصفحة الحقيقية داخل
+            // التطبيق) بدل إعادة كتابة مئات الأسطر جافا لكل أداة
+            boolean isExperiment = "ai-experiments".equals(section);
             holder.actions.removeAllViews();
             TextView readBtn = new TextView(context);
-            readBtn.setText("📖 قراءة المقال");
+            readBtn.setText(isExperiment ? "🧪 افتح التجربة" : "📖 قراءة المقال");
             readBtn.setTextSize(14f);
             readBtn.setTypeface(null, android.graphics.Typeface.BOLD);
             readBtn.setTextColor(0xFFFFFFFF);
@@ -140,7 +143,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             readBtn.setClickable(true);
             readBtn.setFocusable(true);
             readBtn.setGravity(android.view.Gravity.CENTER);
-            readBtn.setTag("article:" + position);
+            readBtn.setTag((isExperiment ? "webview:" : "article:") + position);
             readBtn.setOnClickListener(this);
             holder.actions.addView(readBtn);
         } else {
@@ -176,6 +179,10 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             int position = Integer.parseInt(tag.substring(8));
             SoundPlayer.playClick(context);
             openArticle(items.get(position));
+        } else if (tag.startsWith("webview:")) {
+            int position = Integer.parseInt(tag.substring(8));
+            SoundPlayer.playClick(context);
+            openWebView(items.get(position));
         }
     }
 
@@ -185,6 +192,13 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         intent.putExtra(ArticleActivity.EXTRA_ICON, item.optString("icon", "⭐"));
         intent.putExtra(ArticleActivity.EXTRA_CONTENT, item.optString("contentHtml", ""));
         intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, item.optString("detailUrl", ""));
+        context.startActivity(intent);
+    }
+
+    private void openWebView(JSONObject item) {
+        Intent intent = new Intent(context, WebViewActivity.class);
+        intent.putExtra(WebViewActivity.EXTRA_TITLE, item.optString("title", ""));
+        intent.putExtra(WebViewActivity.EXTRA_URL, HakolahApi.ORIGIN + item.optString("detailUrl", ""));
         context.startActivity(intent);
     }
 
