@@ -1,6 +1,7 @@
 package bh.mohframevision.hakolah;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebSettings;
@@ -20,6 +21,11 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
     static final String EXTRA_URL = "url";
 
     private WebView webView;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(Prefs.wrapThemeContext(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +64,7 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         if (v.getId() == R.id.webviewCloseButton) {
             finish();
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            overridePendingTransition(0, 0);
         }
     }
 
@@ -68,7 +74,7 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
             webView.goBack();
         } else {
             super.onBackPressed();
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            overridePendingTransition(0, 0);
         }
     }
 }

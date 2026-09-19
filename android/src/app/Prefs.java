@@ -2,6 +2,7 @@ package bh.mohframevision.hakolah;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,6 +39,20 @@ class Prefs {
 
     static void setThemeMode(Context context, String mode) {
         sp(context).edit().putString(KEY_THEME, mode).apply();
+    }
+
+    // نفس initThemeToggle بالموقع (localStorage + matchMedia) — بدون AppCompat
+    // (يحتاج Gradle)، الآلية الأصلية: تعديل Configuration.uiMode قبل إنشاء
+    // النشاط، فتنحل موارد values-night/ أو لا حسب التفضيل. مشترك بين كل
+    // Activity بالتطبيق (attachBaseContext) — كان بـMainActivity بس، فأي
+    // شاشة ثانية كانت تتبع مظهر النظام مباشرة بدل تفضيل المستخدم بالتطبيق.
+    static Context wrapThemeContext(Context base) {
+        String mode = getThemeMode(base);
+        if (THEME_AUTO.equals(mode)) return base;
+        Configuration config = new Configuration(base.getResources().getConfiguration());
+        int nightBit = THEME_DARK.equals(mode) ? Configuration.UI_MODE_NIGHT_YES : Configuration.UI_MODE_NIGHT_NO;
+        config.uiMode = (config.uiMode & ~Configuration.UI_MODE_NIGHT_MASK) | nightBit;
+        return base.createConfigurationContext(config);
     }
 
     private static String favKey(String section, String id) {

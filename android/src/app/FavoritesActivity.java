@@ -1,6 +1,7 @@
 package bh.mohframevision.hakolah;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ListView;
@@ -13,6 +14,11 @@ import org.json.JSONObject;
 // PickerActivity) بدل إعادة جلب البيانات، ويحقن "_section" بكل عنصر عشان
 // ItemAdapter يعرف قسمه الحقيقي رغم اختلاط الأقسام بقائمة واحدة.
 public class FavoritesActivity extends Activity implements View.OnClickListener {
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(Prefs.wrapThemeContext(newBase));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,14 +38,14 @@ public class FavoritesActivity extends Activity implements View.OnClickListener 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        overridePendingTransition(0, 0);
     }
 
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.favoritesCloseButton) {
             finish();
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            overridePendingTransition(0, 0);
         }
     }
 

@@ -64,14 +64,14 @@ class BottomNav implements View.OnClickListener {
         SoundPlayer.playClick(activity);
         if (HOME.equals(tag)) {
             activity.finish();
-            activity.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            activity.overridePendingTransition(0, 0);
         } else if (SETTINGS.equals(tag)) {
             SettingsPanel.show(activity);
         } else {
             Class<?> target = PICKER.equals(tag) ? PickerActivity.class : FavoritesActivity.class;
             activity.startActivity(new Intent(activity, target));
             activity.finish();
-            activity.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            activity.overridePendingTransition(0, 0);
         }
     }
 }

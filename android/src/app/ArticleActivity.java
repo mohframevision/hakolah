@@ -1,6 +1,7 @@
 package bh.mohframevision.hakolah;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
@@ -21,6 +22,11 @@ public class ArticleActivity extends Activity implements View.OnClickListener {
 
     private String title;
     private String detailUrl;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(Prefs.wrapThemeContext(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +55,7 @@ public class ArticleActivity extends Activity implements View.OnClickListener {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        overridePendingTransition(0, 0);
     }
 
     @Override
@@ -57,7 +63,7 @@ public class ArticleActivity extends Activity implements View.OnClickListener {
         int id = v.getId();
         if (id == R.id.articleCloseButton) {
             finish();
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            overridePendingTransition(0, 0);
         } else if (id == R.id.articleShareButton) {
             SoundPlayer.playClick(this);
             share();

@@ -2,6 +2,7 @@ package bh.mohframevision.hakolah;
 
 import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,6 +39,11 @@ public class PickerActivity extends Activity implements View.OnClickListener {
     private JSONObject sections;
     private String selectedSection;
     private JSONArray currentItems;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(Prefs.wrapThemeContext(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,14 +110,14 @@ public class PickerActivity extends Activity implements View.OnClickListener {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        overridePendingTransition(0, 0);
     }
 
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.pickerCloseButton) {
             finish();
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            overridePendingTransition(0, 0);
             return;
         }
         if (v.getId() == R.id.pickerSpinBtn) {

@@ -3,7 +3,6 @@ package bh.mohframevision.hakolah;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -48,22 +47,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private Double userLng;
     private static final int LOCATION_PERMISSION_REQUEST = 1;
 
-    // نفس initThemeToggle بالموقع (localStorage + matchMedia) — بدون AppCompat
-    // (يحتاج Gradle)، الآلية الأصلية المتاحة: تعديل Configuration.uiMode على
-    // سياق النشاط نفسه قبل إنشائه، فتنحل موارد values-night/ أو لا حسب التفضيل
     @Override
     protected void attachBaseContext(Context newBase) {
-        String mode = Prefs.getThemeMode(newBase);
-        if (Prefs.THEME_AUTO.equals(mode)) {
-            super.attachBaseContext(newBase);
-            return;
-        }
-        Configuration config = new Configuration(newBase.getResources().getConfiguration());
-        int nightBit = Prefs.THEME_DARK.equals(mode)
-                ? Configuration.UI_MODE_NIGHT_YES
-                : Configuration.UI_MODE_NIGHT_NO;
-        config.uiMode = (config.uiMode & ~Configuration.UI_MODE_NIGHT_MASK) | nightBit;
-        super.attachBaseContext(newBase.createConfigurationContext(config));
+        super.attachBaseContext(Prefs.wrapThemeContext(newBase));
     }
 
     @Override
@@ -114,11 +100,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         } else if (PICKER_TAG.equals(value)) {
             SoundPlayer.playClick(this);
             startActivity(new android.content.Intent(this, PickerActivity.class));
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            overridePendingTransition(0, 0);
         } else if (FAVORITES_TAG.equals(value)) {
             SoundPlayer.playClick(this);
             startActivity(new android.content.Intent(this, FavoritesActivity.class));
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            overridePendingTransition(0, 0);
         } else if (SETTINGS_TAG.equals(value)) {
             SoundPlayer.playClick(this);
             SettingsPanel.show(this);

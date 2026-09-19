@@ -219,7 +219,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         intent.putExtra(ArticleActivity.EXTRA_CONTENT, item.optString("contentHtml", ""));
         intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, item.optString("detailUrl", ""));
         context.startActivity(intent);
-        context.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        context.overridePendingTransition(0, 0);
     }
 
     private void openWebView(JSONObject item) {
@@ -227,7 +227,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         intent.putExtra(WebViewActivity.EXTRA_TITLE, item.optString("title", ""));
         intent.putExtra(WebViewActivity.EXTRA_URL, HakolahApi.ORIGIN + item.optString("detailUrl", ""));
         context.startActivity(intent);
-        context.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        context.overridePendingTransition(0, 0);
     }
 
     // نفس buildShareText/buildShareUrl بالموقع بالضبط: يفضّل detailUrl لو
