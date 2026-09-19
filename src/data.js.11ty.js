@@ -94,6 +94,11 @@ exports.render = function (data) {
         // نص حر بدون أي معالجة عمداً — عرض بسيط حالياً، حساب "مفتوح الآن" قيد النقاش
         hours: entry.data.hours || "",
         hours_en: entry.data.hours_en || "",
+        // قائمة الطعام التفاعلية: اسم وسعر بس، بلا صور — القرار الصريح لصاحب
+        // الموقع (يريدها كلها مبنية بالموقع نفسه، بلا أي اعتماد على صور خارجية)
+        menuItems: (entry.data.menuItems || [])
+          .filter((mi) => mi && mi.name)
+          .map((mi) => ({ name: mi.name, name_en: mi.name_en || "", price: mi.price || "" })),
         featured: Boolean(entry.data.featured),
         sponsored: Boolean(entry.data.sponsored),
         verified: Boolean(entry.data.verified),

@@ -20,4 +20,26 @@ meatSource:
   text_en: "Chicken: Al Tanmia — Meat: Al Dabbagh Butchery and Bahrain Livestock"
   via: instagram
   checked: 2026-09-19
+menuItems:
+  - name: "بتر جكن"
+    name_en: "Butter Chicken"
+    price: "3.000 BD"
+  - name: "مبهر دجاج (١/٢ دجاجة)"
+    name_en: "Mabhar Chicken (Half)"
+    price: "3.000 BD"
+  - name: "مدفون دجاج (١/٢ دجاجة)"
+    name_en: "Madfoon Chicken (Half)"
+    price: "3.000 BD"
+  - name: "مبهر دجاج (دجاجة كاملة)"
+    name_en: "Mabhar Chicken (Whole)"
+    price: "5.800 BD"
+  - name: "مدفون دجاج (دجاجة كاملة)"
+    name_en: "Madfoon Chicken (Whole)"
+    price: "5.800 BD"
+  - name: "مبهر لحم (لشخص)"
+    name_en: "Mabhar Meat (Per Person)"
+    price: "3.500 BD"
+  - name: "مدفون لحم أرقاب (لشخص)"
+    name_en: "Madfoon Neck Meat (Per Person)"
+    price: "3.500 BD"
 ---

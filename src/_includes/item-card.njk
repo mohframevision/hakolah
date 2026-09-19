@@ -51,6 +51,20 @@
       </p>
     </details>
     {%- endif %}
+    {#- قائمة الطعام التفاعلية: نسخة <details> بلا جافاسكربت هنا (تقرأها
+        محركات البحث)، وmain.js يستبدلها ببطاقة منبثقة متحركة بعد التحميل —
+        نفس مبدأ مصدر اللحم أعلاه، اسم وسعر بس بلا صور (قرار صريح). -#}
+    {%- set menuItems = d.menuItems or [] %}
+    {%- if menuItems.length %}
+    <details class="menu-list">
+      <summary>📋 {{ t.link_menu }}</summary>
+      <ul class="menu-items">
+        {%- for mi in menuItems %}
+        <li><span class="menu-item-name">{{ (mi.name_en or mi.name) if isEn else mi.name }}</span>{% if mi.price %}<span class="menu-item-price">{{ mi.price }}</span>{% endif %}</li>
+        {%- endfor %}
+      </ul>
+    </details>
+    {%- endif %}
     <div class="item-actions">
       {%- if hasDetailPages or d.hasDetailPage %}
       <a class="btn" href="{{ (('/en/' if isEn else '/') + sectionSlug + '/' + (d.slug_en if (isEn and d.slug_en) else entry.fileSlug) + '.html') | url }}">📖 {{ t.read_details }}</a>
@@ -61,7 +75,7 @@
       {%- if links.phone %}<a class="btn{{ '' if primary == 'phone' else ' secondary' }}" href="tel:{{ links.phone.split(',')[0] }}">📞 {{ t.link_phone }}</a>{% endif %}
       {%- if links.maps %}<a class="btn{{ '' if primary == 'maps' else ' secondary' }}" href="{{ links.maps }}" target="_blank" rel="noopener noreferrer">📍 {{ t.link_maps }}</a>{% endif %}
       {%- if links.instagram %}<a class="btn{{ '' if primary == 'instagram' else ' secondary' }}" href="{{ links.instagram }}" target="_blank" rel="noopener noreferrer">📷 {{ t.link_instagram }}</a>{% endif %}
-      {%- if links.menu %}<a class="btn{{ '' if primary == 'menu' else ' secondary' }}" href="{{ links.menu }}" target="_blank" rel="noopener noreferrer">📋 {{ t.link_menu }}</a>{% endif %}
+      {%- if links.menu and not menuItems.length %}<a class="btn{{ '' if primary == 'menu' else ' secondary' }}" href="{{ links.menu }}" target="_blank" rel="noopener noreferrer">📋 {{ t.link_menu }}</a>{% endif %}
       {%- endif %}
     </div>
   </div>

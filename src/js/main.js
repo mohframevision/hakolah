@@ -4096,11 +4096,14 @@ function buildActionsHtml(item) {
     const href = window.SITE_LANG === "en" && item.detailUrlEn ? item.detailUrlEn : item.detailUrl;
     return `<a class="btn" href="${href}">📖 ${t("read_details")}</a>`;
   }
-  const links = item.links || (item.url ? { website: item.url } : {});
+  // قائمة الطعام التفاعلية تحل محل زر صورة المنيو العادي، لا تظهران معاً
+  const hasStructuredMenu = Array.isArray(item.menuItems) && item.menuItems.length > 0;
+  const links = { ...(item.links || (item.url ? { website: item.url } : {})) };
+  if (hasStructuredMenu) delete links.menu;
   const orderedKeys = Object.keys(links)
     .filter((key) => links[key])
     .sort((a, b) => LINK_ORDER.indexOf(a) - LINK_ORDER.indexOf(b));
-  return orderedKeys
+  let html = orderedKeys
     .map((key, i) => {
       const url = links[key];
       const meta = LINK_META[key] || { icon: "🔗", labelKey: "link_generic" };
@@ -4125,6 +4128,11 @@ function buildActionsHtml(item) {
       return `<a class="${cls}" href="${url}" target="_blank" rel="noopener noreferrer">${meta.icon} ${label}</a>`;
     })
     .join("");
+  if (hasStructuredMenu) {
+    const cls = orderedKeys.length ? "btn secondary" : "btn";
+    html += `<button type="button" class="${cls} menu-open-btn">📋 ${t("link_menu")}</button>`;
+  }
+  return html;
 }
 
 /* ===== رسالة تأكيد عابرة (Toast) ===== */
@@ -4299,6 +4307,14 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
         setTimeout(() => card.classList.remove("just-expanded"), 900);
       }
       playClickSound();
+    });
+  }
+
+  const menuBtn = card.querySelector(".menu-open-btn");
+  if (menuBtn) {
+    menuBtn.addEventListener("click", () => {
+      playClickSound();
+      openMenuOverlay(item);
     });
   }
 
@@ -4849,6 +4865,14 @@ function openPickerReveal(item, { onRetry, onClose } = {}) {
       });
     });
 
+    const menuBtn = actions.querySelector(".menu-open-btn");
+    if (menuBtn) {
+      menuBtn.addEventListener("click", () => {
+        playClickSound();
+        openMenuOverlay(item);
+      });
+    }
+
     const retryBtn = document.createElement("button");
     retryBtn.className = "btn picker-retry-btn";
     retryBtn.textContent = t("try_again");
@@ -4862,6 +4886,55 @@ function openPickerReveal(item, { onRetry, onClose } = {}) {
     spawnConfetti(overlay);
     playSuccessSound();
   });
+}
+
+/* ===== بطاقة القائمة التفاعلية — نفس حاجز الشاشة الكاملة اللي "اختار لي"
+   يستخدمه (.picker-reveal-overlay)، بس ببطاقة بسيطة بدلاً من burstPieces.
+   اسم وسعر بس بلا صور — قرار صريح من صاحب الموقع. ===== */
+function openMenuOverlay(item) {
+  const overlay = document.createElement("div");
+  overlay.className = "picker-reveal-overlay menu-overlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+
+  function close() {
+    overlay.remove();
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", onKeydown);
+  }
+  function onKeydown(e) {
+    if (e.key === "Escape") close();
+  }
+  document.addEventListener("keydown", onKeydown);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "btn secondary picker-reveal-close";
+  closeBtn.textContent = "✕";
+  closeBtn.setAttribute("aria-label", t("daily_pick_close"));
+  closeBtn.addEventListener("click", () => {
+    playClickSound();
+    close();
+  });
+  overlay.appendChild(closeBtn);
+
+  const card = document.createElement("div");
+  card.className = "menu-card";
+  const rows = (item.menuItems || [])
+    .map((mi) => {
+      const name = window.SITE_LANG === "en" && mi.name_en ? mi.name_en : mi.name;
+      return `<li><span class="menu-item-name">${name}</span>${mi.price ? `<span class="menu-item-price">${mi.price}</span>` : ""}</li>`;
+    })
+    .join("");
+  card.innerHTML = `
+    <h3>${item.icon || "🍽️"} ${itemTitle(item)}</h3>
+    <ul class="menu-items">${rows}</ul>
+  `;
+  overlay.appendChild(card);
 }
 
 /* قطع المعلومات نفسها تقفز من زاوية عشوائية بحركة مرنة داخل container،

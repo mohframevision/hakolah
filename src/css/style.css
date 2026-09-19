@@ -2486,6 +2486,98 @@ img {
   line-height: 1.6;
 }
 
+/* ===== قائمة الطعام التفاعلية — نسخة <details> بلا جافاسكربت (بطاقات
+   مطاعم/كافيهات)، نفس أسلوب مصدر اللحم أعلاه بالضبط ===== */
+.menu-list {
+  margin: 8px 0 4px;
+  font-size: 0.85rem;
+}
+
+.menu-list summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-primary);
+  padding: 4px 0;
+  list-style: none;
+}
+
+.menu-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-list summary::after {
+  content: " ▾";
+  font-size: 0.75rem;
+}
+
+.menu-list[open] summary::after {
+  content: " ▴";
+}
+
+.menu-items {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--color-border);
+  color: var(--color-text);
+}
+
+.menu-items li:last-child {
+  border-bottom: none;
+}
+
+.menu-item-price {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== بطاقة القائمة المنبثقة (بعد تشغيل الجافاسكربت) — تستخدم نفس حاجز
+   الشاشة الكاملة .picker-reveal-overlay الموجود أصلاً، بلا تكرار CSS ===== */
+.menu-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 22px;
+  width: min(92vw, 420px);
+  max-height: 76vh;
+  overflow-y: auto;
+  animation: menuCardIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes menuCardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.menu-card h3 {
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.menu-card .menu-items {
+  font-size: 0.95rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-card {
+    animation: none;
+  }
+}
+
 .beep-analysis:empty {
   display: none;
 }
