@@ -65,6 +65,22 @@
             android:textColor="@color/text"
             android:textColorHint="@color/text_muted" />
 
+        <TextView
+            android:id="@+id/nearMeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="📍 الأقرب مني"
+            android:textSize="13sp"
+            android:textColor="@color/text"
+            android:background="@drawable/filter_chip_bg"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="7dp"
+            android:paddingBottom="7dp"
+            android:clickable="true"
+            android:focusable="true" />
+
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -135,7 +151,7 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             android:divider="@null"
-            android:dividerHeight="0dp"
+            android:dividerHeight="16dp"
             android:clipChildren="false"
             android:clipToPadding="false"
             android:paddingTop="16dp"

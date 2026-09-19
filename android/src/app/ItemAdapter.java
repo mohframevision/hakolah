@@ -113,13 +113,23 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             holder.hours.setVisibility(View.GONE);
         }
 
+        StringBuilder sb = new StringBuilder();
+        // نفس formatDistance/nearest_branch بالموقع — يظهر أول ما دام "قريب
+        // مني" مفعّلاً وله إحداثيات (annotateDistance بـMainActivity حاطّته)
+        if (item.has("_distanceKm")) {
+            double km = item.optDouble("_distanceKm");
+            sb.append("📍 ").append(km < 1 ? Math.round(km * 1000) + " م" : String.format(java.util.Locale.US, "%.1f كم", km));
+            String branchLabel = item.optString("_branchLabel", "");
+            if (!branchLabel.isEmpty()) sb.append(" — أقرب فرع: ").append(branchLabel);
+        }
         JSONArray tags = item.optJSONArray("tags");
         if (tags != null && tags.length() > 0) {
-            StringBuilder sb = new StringBuilder();
             for (int i = 0; i < tags.length(); i++) {
-                if (i > 0) sb.append(" · ");
+                if (sb.length() > 0) sb.append(" · ");
                 sb.append(tags.optString(i));
             }
+        }
+        if (sb.length() > 0) {
             holder.tags.setText(sb.toString());
             holder.tags.setVisibility(View.VISIBLE);
         } else {

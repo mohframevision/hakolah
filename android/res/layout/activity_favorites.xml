@@ -51,7 +51,7 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             android:divider="@null"
-            android:dividerHeight="0dp"
+            android:dividerHeight="16dp"
             android:clipChildren="false"
             android:clipToPadding="false"
             android:paddingTop="16dp"

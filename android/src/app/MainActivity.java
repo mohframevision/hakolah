@@ -2,7 +2,10 @@ package bh.mohframevision.hakolah;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -12,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
@@ -30,6 +34,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private TextView headerTitle;
     private EditText searchBox;
     private LinearLayout filterChips;
+    private TextView nearMeButton;
 
     private JSONObject sections;
     private JSONArray sectionOrder;
@@ -37,6 +42,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private JSONArray currentItems = new JSONArray();
     private String currentTag;
     private String searchQuery = "";
+    private boolean sortByDistance;
+    private Double userLat;
+    private Double userLng;
+    private static final int LOCATION_PERMISSION_REQUEST = 1;
 
     // نفس initThemeToggle بالموقع (localStorage + matchMedia) — بدون AppCompat
     // (يحتاج Gradle)، الآلية الأصلية المتاحة: تعديل Configuration.uiMode على
@@ -70,8 +79,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         headerTitle = findViewById(R.id.headerTitle);
         searchBox = findViewById(R.id.searchBox);
         filterChips = findViewById(R.id.filterChips);
+        nearMeButton = findViewById(R.id.nearMeButton);
         findViewById(R.id.retryButton).setOnClickListener(this);
         findViewById(R.id.settingsButton).setOnClickListener(this);
+        nearMeButton.setOnClickListener(this);
         searchBox.addTextChangedListener(this);
 
         loadData();
@@ -87,6 +98,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (id == R.id.settingsButton) {
             SoundPlayer.playClick(this);
             SettingsPanel.show(this);
+            return;
+        }
+        if (id == R.id.nearMeButton) {
+            SoundPlayer.playClick(this);
+            toggleNearMe();
             return;
         }
         Object tag = v.getTag();
@@ -213,6 +229,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         currentItems = section.optJSONArray("items");
         if (currentItems == null) currentItems = new JSONArray();
         currentTag = null;
+        sortByDistance = false;
+        clearDistanceAnnotations();
+        updateNearMeButton();
         searchQuery = "";
         searchBox.removeTextChangedListener(this);
         searchBox.setText("");
@@ -277,17 +296,26 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
                 android.util.TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics());
     }
 
-    // نفس دمج البحث والفلترة بالموقع (AND بين tag النشط ونص البحث الضبابي)
+    // نفس دمج البحث والفلترة بالموقع (AND بين tag النشط ونص البحث الضبابي)،
+    // + ترتيب "قريب مني" كمرحلة أخيرة لو مفعّل
     private void applyFilters() {
-        JSONArray filtered = new JSONArray();
+        List<JSONObject> matched = new ArrayList<>();
         for (int i = 0; i < currentItems.length(); i++) {
             JSONObject item = currentItems.optJSONObject(i);
             if (item == null) continue;
             if (currentTag != null && !hasTag(item, currentTag)) continue;
             String haystack = item.optString("title", "") + " " + item.optString("desc", "");
             if (!SearchUtil.fuzzyIncludes(haystack, searchQuery)) continue;
-            filtered.put(item);
+            matched.add(item);
         }
+
+        if (sortByDistance && userLat != null) {
+            for (JSONObject item : matched) annotateDistance(item);
+            sortByDistanceAscending(matched);
+        }
+
+        JSONArray filtered = new JSONArray();
+        for (JSONObject item : matched) filtered.put(item);
 
         if (filtered.length() == 0) {
             itemList.setVisibility(View.GONE);
@@ -306,6 +334,134 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             if (tag.equals(tags.optString(i))) return true;
         }
         return false;
+    }
+
+    // ---- "قريب مني" — نفس haversineKm/nearestBranch/formatDistance بالموقع ----
+    private void toggleNearMe() {
+        if (sortByDistance) {
+            sortByDistance = false;
+            clearDistanceAnnotations();
+            updateNearMeButton();
+            applyFilters();
+            return;
+        }
+        if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST);
+            return;
+        }
+        locateAndSort();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST
+                && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            locateAndSort();
+        }
+    }
+
+    // ponytail: يعتمد على آخر موقع معروف بس (getLastKnownLocation) بدل طلب
+    // تحديث حي — أبسط بكثير ويكفي غالب الأجهزة (خدمة الموقع مفعّلة عادة أصلاً
+    // بسبب تطبيقات أخرى). لو صار فارغاً بشكل متكرر، أضف requestSingleUpdate.
+    private void locateAndSort() {
+        LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+        Location best = null;
+        for (String provider : new String[]{LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER}) {
+            try {
+                Location loc = lm.getLastKnownLocation(provider);
+                if (loc != null && (best == null || loc.getTime() > best.getTime())) best = loc;
+            } catch (Exception ignored) {
+            }
+        }
+        if (best == null) {
+            Toast.makeText(this, "تعذّر تحديد موقعك — تأكد من تفعيل خدمة الموقع بالجهاز", Toast.LENGTH_LONG).show();
+            return;
+        }
+        userLat = best.getLatitude();
+        userLng = best.getLongitude();
+        sortByDistance = true;
+        updateNearMeButton();
+        applyFilters();
+    }
+
+    // annotateDistance() يعدّل عناصر JSONObject بنفس المرجع المخزَّن بـ
+    // cachedSections (لا نسخة) — بدونها تضل شارة المسافة عالقة بعد إيقاف
+    // "قريب مني" أو بشاشات أخرى (المفضلة/اختار لي) تقرأ نفس المرجع
+    private void clearDistanceAnnotations() {
+        for (int i = 0; i < currentItems.length(); i++) {
+            JSONObject item = currentItems.optJSONObject(i);
+            if (item == null) continue;
+            item.remove("_distanceKm");
+            item.remove("_branchLabel");
+        }
+    }
+
+    private void updateNearMeButton() {
+        nearMeButton.setActivated(sortByDistance);
+        nearMeButton.setText(sortByDistance ? "📍 الأقرب مني ✕" : "📍 الأقرب مني");
+        nearMeButton.setTextColor(sortByDistance ? getColor(R.color.white) : getColor(R.color.text));
+    }
+
+    private static double haversineKm(double lat1, double lng1, double lat2, double lng2) {
+        double r = 6371;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.pow(Math.sin(dLat / 2), 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.pow(Math.sin(dLng / 2), 2);
+        return r * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // فرع متعدد (branches) يقيس لكل فرع ويرجّع الأقرب — نفس nearestBranch
+    // بالموقع؛ فرع واحد يستخدم lat/lng مباشرة. يخزّن النتيجة بحقلين مؤقتين
+    // بالعنصر نفسه ("_distanceKm"، "_branchLabel") يقرأهما ItemAdapter للعرض
+    private void annotateDistance(JSONObject item) {
+        try {
+            item.remove("_distanceKm");
+            item.remove("_branchLabel");
+            JSONArray branches = item.optJSONArray("branches");
+            Double bestKm = null;
+            String bestLabel = "";
+            if (branches != null && branches.length() > 0) {
+                for (int i = 0; i < branches.length(); i++) {
+                    JSONObject b = branches.optJSONObject(i);
+                    if (b == null || !b.has("lat") || !b.has("lng")) continue;
+                    double km = haversineKm(userLat, userLng, b.optDouble("lat"), b.optDouble("lng"));
+                    if (bestKm == null || km < bestKm) {
+                        bestKm = km;
+                        bestLabel = b.optString("label", "");
+                    }
+                }
+            } else if (!item.isNull("lat") && !item.isNull("lng")) {
+                bestKm = haversineKm(userLat, userLng, item.optDouble("lat"), item.optDouble("lng"));
+            }
+            if (bestKm != null) {
+                item.put("_distanceKm", bestKm);
+                item.put("_branchLabel", bestLabel);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    // ترتيب إدراج يدوي بدل Comparator<JSONObject> — تطبيق الواجهة العامّة
+    // (generic) يولّد bridge method مصنَّعاً يفشّل d8 بهذي البيئة، نفس عائلة
+    // مشكلة الكلاسات المجهولة الموثّقة. القوائم هنا صغيرة (عناصر قسم واحد)
+    // فالتكلفة O(n²) لا تُحس فعلياً. عناصر بلا موقع تُدفع لنهاية الترتيب.
+    private void sortByDistanceAscending(List<JSONObject> list) {
+        for (int i = 1; i < list.size(); i++) {
+            JSONObject key = list.get(i);
+            double keyDist = key.has("_distanceKm") ? key.optDouble("_distanceKm") : Double.MAX_VALUE;
+            int j = i - 1;
+            while (j >= 0) {
+                JSONObject cur = list.get(j);
+                double curDist = cur.has("_distanceKm") ? cur.optDouble("_distanceKm") : Double.MAX_VALUE;
+                if (curDist <= keyDist) break;
+                list.set(j + 1, cur);
+                j--;
+            }
+            list.set(j + 1, key);
+        }
     }
 
     private void highlightActiveTab() {
