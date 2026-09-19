@@ -91,6 +91,9 @@ exports.render = function (data) {
         title_en: entry.data.title_en || "",
         desc_en: entry.data.desc_en || "",
         image: entry.data.image || null,
+        // نص حر بدون أي معالجة عمداً — عرض بسيط حالياً، حساب "مفتوح الآن" قيد النقاش
+        hours: entry.data.hours || "",
+        hours_en: entry.data.hours_en || "",
         featured: Boolean(entry.data.featured),
         sponsored: Boolean(entry.data.sponsored),
         verified: Boolean(entry.data.verified),

@@ -15,6 +15,10 @@ function itemDesc(item) {
   return window.SITE_LANG === "en" && item.desc_en ? item.desc_en : item.desc || "";
 }
 
+function itemHours(item) {
+  return window.SITE_LANG === "en" && item.hours_en ? item.hours_en : item.hours || "";
+}
+
 // قاموس ترجمة التصنيفات يجي من ملف data.js (متغيّر TAGS_EN)، ومصدره
 // الأصلي src/_data/tags_en.js — نفسه اللي تستخدمه القوالب وقت البناء.
 
@@ -629,11 +633,12 @@ const LINK_META = {
   phone: { icon: "📞", labelKey: "link_phone" },
   maps: { icon: "📍", labelKey: "link_maps" },
   instagram: { icon: "📷", labelKey: "link_instagram" },
+  menu: { icon: "📋", labelKey: "link_menu" },
 };
 
 // ترتيب ثابت للأزرار بغض النظر عن ترتيب الحقول باللوحة — رابط الموقع (website)
 // دايماً أول زر وبتنسيق أساسي (بارز)، والباقي أزرار ثانوية بعده
-const LINK_ORDER = ["website", "phone", "maps", "instagram"];
+const LINK_ORDER = ["website", "phone", "maps", "instagram", "menu"];
 
 /* ===== ترتيب "قريب مني" حسب المسافة ===== */
 function haversineKm(lat1, lng1, lat2, lng2) {
@@ -724,6 +729,20 @@ function initArticleShare() {
     const icon = match ? match[1] : "🧭";
     const title = match ? heading.slice(match[0].length).trim() : heading;
     shareText(text, { section: (window.PAGE || {}).section || "" }, { icon, title });
+    playClickSound();
+  });
+}
+
+function initArticleListen() {
+  const btn = document.querySelector(".article-listen-btn");
+  const player = document.querySelector(".article-audio-player");
+  if (!btn || !player) return;
+  btn.addEventListener("click", () => {
+    // يتحمّل الملف بأول ضغطة بس (preload="none" بالقالب) — ما يحمّل صوت
+    // كل مقال لزائر ما بيسمعه أصلاً
+    if (!player.src) player.src = btn.dataset.audioSrc;
+    player.classList.remove("hidden");
+    if (player.paused) player.play(); else player.pause();
     playClickSound();
   });
 }
@@ -4208,6 +4227,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       <h3>${title}${item.verified ? ` <span class="verified-badge" title="${t("verified_badge")}">${t("verified_badge")}</span>` : ""}${item.liked ? ` <span class="liked-badge" title="${t("liked_badge")}">${t("liked_badge")}</span>` : ""}</h3>
       <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
       ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">${t("read_more")}</button>` : ""}
+      ${itemHours(item) ? `<p class="item-hours">🕐 ${itemHours(item)}</p>` : ""}
       <div class="item-meta">
         ${item.isNew ? `<span class="tag new-tag">${t("new_badge")}</span>` : ""}
         ${distanceKm !== null ? `<span class="tag distance-tag">📍 ${formatDistance(distanceKm)}${branchLabel ? ` — ${t("nearest_branch")} ${branchLabel}` : ""}</span>` : ""}
@@ -5123,6 +5143,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchLikeCounts();
   initOutboundTracking();
   initArticleShare();
+  initArticleListen();
   initBeepMelodyExperiment();
   initFileConverter();
   initExpenseCalculator();

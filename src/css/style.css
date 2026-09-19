@@ -937,6 +937,19 @@ img {
   letter-spacing: -0.01em;
 }
 
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.article-audio-player {
+  height: 40px;
+  max-width: 320px;
+  flex: 1 1 240px;
+}
+
 /* بعد توسيع الحاوية لـ1550، أي فقرة تمتد عليها كاملة يصير سطرها طويلاً
    جداً على العين. الحاوية توسّعت للشبكات والبطاقات، لا للنص — فنحصر كل
    كتلة نصية تقرأها العين بعرض مريح */
@@ -1340,6 +1353,12 @@ img {
   height: 1.6em;
   background: linear-gradient(to bottom, transparent, var(--color-surface));
   pointer-events: none;
+}
+
+.item-card .item-hours {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  margin: 2px 0 0;
 }
 
 .item-card.just-expanded {

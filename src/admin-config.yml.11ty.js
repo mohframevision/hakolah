@@ -205,6 +205,20 @@ function itemFields(entry) {
         hint: "مثال: Order now",
       },
       {
+        label: "ساعات العمل (اختياري)",
+        name: "hours",
+        widget: "string",
+        required: false,
+        hint: "⚠️ لو عبّيته، لازم تعبّي الحقل الإنجليزي تحته أيضاً وإلا لن يُنشر التعديل. نص حر كما هو، مثال: يومياً ١١ص - ٥م. عرض بسيط حالياً بلا حساب \"مفتوح الآن\" — قيد التطوير.",
+      },
+      {
+        label: "ساعات العمل بالإنجليزية (مطلوب فقط لو عبّيت الحقل العربي فوقه)",
+        name: "hours_en",
+        widget: "string",
+        required: false,
+        hint: "مثال: Daily 11am - 5pm",
+      },
+      {
         label: "الروابط",
         name: "links",
         widget: "object",
@@ -224,6 +238,13 @@ function itemFields(entry) {
           },
           { label: "خرائط قوقل", name: "maps", widget: "string", required: false },
           { label: "إنستقرام", name: "instagram", widget: "string", required: false },
+          {
+            label: "صورة المنيو (اختياري)",
+            name: "menu",
+            widget: "image",
+            required: false,
+            hint: "ارفع صورة لقائمة الطعام لو ما فيه موقع طلب أونلاين — يفتح كزر مستقل بجانب باقي الروابط.",
+          },
         ],
       },
       {
