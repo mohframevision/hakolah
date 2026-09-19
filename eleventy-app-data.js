@@ -125,7 +125,16 @@ function buildSiteData(data) {
       return item;
     });
 
-    out[meta.slug] = { title: meta.title, title_en: meta.title_en, icon: meta.icon, items };
+    // يفرّق تطبيق الأندرويد بين قسم "بطاقات روابط" وقسم "مقالات كاملة"
+    // (أدلة/أماكن) — الأخير يحتاج فتح متصفح حالياً لعدم وجود عارض مقالات
+    // أصلي بالتطبيق بعد، فيُخفى من التنقّل مؤقتاً بدل ما يكسر وعد "بلا متصفح"
+    out[meta.slug] = {
+      title: meta.title,
+      title_en: meta.title_en,
+      icon: meta.icon,
+      hasDetailPages: Boolean(meta.hasDetailPages),
+      items,
+    };
   }
 
   return out;

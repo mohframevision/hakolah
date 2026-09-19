@@ -18,6 +18,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private View errorView;
     private TextView errorText;
     private ListView itemList;
+    private TextView emptyView;
     private LinearLayout bottomNav;
     private TextView headerTitle;
 
@@ -34,6 +35,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         errorView = findViewById(R.id.errorView);
         errorText = findViewById(R.id.errorText);
         itemList = findViewById(R.id.itemList);
+        emptyView = findViewById(R.id.emptyView);
         bottomNav = findViewById(R.id.bottomNav);
         headerTitle = findViewById(R.id.headerTitle);
         findViewById(R.id.retryButton).setOnClickListener(this);
@@ -61,12 +63,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     public void onSuccess(JSONObject data, boolean fromCache) {
         sections = data.optJSONObject("sections");
         sectionOrder = data.optJSONArray("sectionOrder");
-        if (sections == null || sectionOrder == null || sectionOrder.length() == 0) {
+        String firstBrowsable = firstBrowsableSlug();
+        if (sections == null || firstBrowsable == null) {
             showError("لا يوجد محتوى حالياً");
             return;
         }
         buildBottomNav();
-        selectSection(sectionOrder.optString(0));
+        selectSection(firstBrowsable);
+        if (fromCache) {
+            headerTitle.append(" (بيانات محفوظة، بلا اتصال)");
+        }
     }
 
     @Override
@@ -75,12 +81,28 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     }
     // -----------------------------
 
+    // أقسام "أدلة"/"أماكن" (hasDetailPages) عندها مقالات كاملة، وما فيه عارض
+    // مقالات أصلي بالتطبيق بعد — تُخفى من التنقّل مؤقتاً بدل ما نفتح متصفح
+    // خارجي ونكسر وعد "بلا متصفح". انظر project_dalili_android.md بالذاكرة.
+    private boolean isBrowsable(JSONObject section) {
+        return section != null && !section.optBoolean("hasDetailPages", false);
+    }
+
+    private String firstBrowsableSlug() {
+        if (sectionOrder == null || sections == null) return null;
+        for (int i = 0; i < sectionOrder.length(); i++) {
+            String slug = sectionOrder.optString(i);
+            if (isBrowsable(sections.optJSONObject(slug))) return slug;
+        }
+        return null;
+    }
+
     private void buildBottomNav() {
         bottomNav.removeAllViews();
         for (int i = 0; i < sectionOrder.length(); i++) {
             String slug = sectionOrder.optString(i);
             JSONObject section = sections.optJSONObject(slug);
-            if (section == null) continue;
+            if (!isBrowsable(section)) continue;
 
             View tab = getLayoutInflater().inflate(R.layout.nav_tab, bottomNav, false);
             ((TextView) tab.findViewById(R.id.tabIcon)).setText(section.optString("icon", "⭐"));
@@ -97,8 +119,17 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (section == null) return;
 
         JSONArray items = section.optJSONArray("items");
-        itemList.setAdapter(new ItemAdapter(this, items != null ? items : new JSONArray()));
+        if (items == null) items = new JSONArray();
         headerTitle.setText("هكوله — " + section.optString("title", ""));
+
+        if (items.length() == 0) {
+            itemList.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
+        } else {
+            emptyView.setVisibility(View.GONE);
+            itemList.setAdapter(new ItemAdapter(this, items));
+            itemList.setVisibility(View.VISIBLE);
+        }
         showList();
         highlightActiveTab();
     }
@@ -118,6 +149,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         loadingView.setVisibility(View.VISIBLE);
         errorView.setVisibility(View.GONE);
         itemList.setVisibility(View.GONE);
+        emptyView.setVisibility(View.GONE);
     }
 
     private void showError(String message) {
@@ -125,11 +157,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         loadingView.setVisibility(View.GONE);
         errorView.setVisibility(View.VISIBLE);
         itemList.setVisibility(View.GONE);
+        emptyView.setVisibility(View.GONE);
     }
 
+    // يُستدعى بعد تحديد القسم — يتكفّل الوضوح بين قائمة فعلية أو حالة فاضية
+    // selectSection() نفسها
     private void showList() {
         loadingView.setVisibility(View.GONE);
         errorView.setVisibility(View.GONE);
-        itemList.setVisibility(View.VISIBLE);
     }
 }

@@ -51,58 +51,85 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         return position;
     }
 
+    // كلاس أعلى (مو مجهول) يخزّن مراجع عناصر الصف — نفس نمط ViewHolder
+    // المعتاد بـListView، يمنع إعادة findViewById() وinflate() بكل سكرول
+    private static class ViewHolder {
+        TextView icon;
+        TextView title;
+        TextView desc;
+        TextView hours;
+        TextView tags;
+        LinearLayout actions;
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View row = LayoutInflater.from(context).inflate(R.layout.item_row, parent, false);
-        JSONObject item = items.get(position);
+        View row;
+        ViewHolder holder;
+        if (convertView == null) {
+            row = LayoutInflater.from(context).inflate(R.layout.item_row, parent, false);
+            holder = new ViewHolder();
+            holder.icon = row.findViewById(R.id.itemIcon);
+            holder.title = row.findViewById(R.id.itemTitle);
+            holder.desc = row.findViewById(R.id.itemDesc);
+            holder.hours = row.findViewById(R.id.itemHours);
+            holder.tags = row.findViewById(R.id.itemTags);
+            holder.actions = row.findViewById(R.id.itemActions);
+            row.setTag(holder);
+        } else {
+            row = convertView;
+            holder = (ViewHolder) row.getTag();
+        }
 
-        ((TextView) row.findViewById(R.id.itemIcon)).setText(item.optString("icon", "⭐"));
-        ((TextView) row.findViewById(R.id.itemTitle)).setText(item.optString("title", ""));
-        ((TextView) row.findViewById(R.id.itemDesc)).setText(item.optString("desc", ""));
+        JSONObject item = items.get(position);
+        holder.icon.setText(item.optString("icon", "⭐"));
+        holder.title.setText(item.optString("title", ""));
+        holder.desc.setText(item.optString("desc", ""));
 
         String hours = item.optString("hours", "");
-        TextView hoursView = row.findViewById(R.id.itemHours);
         if (!hours.isEmpty()) {
-            hoursView.setText("🕐 " + hours);
-            hoursView.setVisibility(View.VISIBLE);
+            holder.hours.setText("🕐 " + hours);
+            holder.hours.setVisibility(View.VISIBLE);
+        } else {
+            holder.hours.setVisibility(View.GONE);
         }
 
         JSONArray tags = item.optJSONArray("tags");
-        TextView tagsView = row.findViewById(R.id.itemTags);
         if (tags != null && tags.length() > 0) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < tags.length(); i++) {
                 if (i > 0) sb.append(" · ");
                 sb.append(tags.optString(i));
             }
-            tagsView.setText(sb.toString());
-            tagsView.setVisibility(View.VISIBLE);
+            holder.tags.setText(sb.toString());
+            holder.tags.setVisibility(View.VISIBLE);
+        } else {
+            holder.tags.setVisibility(View.GONE);
         }
 
-        LinearLayout actions = row.findViewById(R.id.itemActions);
-        actions.removeAllViews();
+        holder.actions.removeAllViews();
         String detailUrl = item.optString("detailUrl", "");
         if (!detailUrl.isEmpty()) {
-            addActionButton(actions, "📖 التفاصيل", "url:" + SITE_ORIGIN + detailUrl, true);
+            addActionButton(holder.actions, "📖 التفاصيل", "url:" + SITE_ORIGIN + detailUrl, true);
         } else {
             JSONObject links = item.optJSONObject("links");
             if (links != null) {
                 boolean first = true;
                 if (links.has("website")) {
-                    addActionButton(actions, "🌐 زيارة", "url:" + links.optString("website"), first);
+                    addActionButton(holder.actions, "🌐 زيارة", "url:" + links.optString("website"), first);
                     first = false;
                 }
                 if (links.has("phone")) {
                     String phone = links.optString("phone").split(",")[0].trim();
-                    addActionButton(actions, "📞 اتصال", "tel:" + phone, first);
+                    addActionButton(holder.actions, "📞 اتصال", "tel:" + phone, first);
                     first = false;
                 }
                 if (links.has("maps")) {
-                    addActionButton(actions, "📍 الخريطة", "url:" + links.optString("maps"), first);
+                    addActionButton(holder.actions, "📍 الخريطة", "url:" + links.optString("maps"), first);
                     first = false;
                 }
                 if (links.has("instagram")) {
-                    addActionButton(actions, "📷 إنستقرام", "url:" + links.optString("instagram"), first);
+                    addActionButton(holder.actions, "📷 إنستقرام", "url:" + links.optString("instagram"), first);
                 }
             }
         }

@@ -91,6 +91,16 @@
             android:paddingTop="16dp"
             android:paddingBottom="16dp"
             android:layoutAnimation="@anim/list_layout_controller" />
+
+        <TextView
+            android:id="@+id/emptyView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="لا توجد عناصر بهذا القسم بعد"
+            android:textColor="@color/text_muted"
+            android:textSize="15sp"
+            android:visibility="gone" />
     </FrameLayout>
 
     <HorizontalScrollView
