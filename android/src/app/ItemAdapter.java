@@ -24,15 +24,17 @@ import org.json.JSONObject;
 // بدون lambdas ولا كلاسات مجهولة عمداً — d8 بهذي البيئة يفشل عليها. كل زر
 // يحمل "tag" نصي (مثال "url:https://...")، وonClick وحد بالمحوّل نفسه يفكّه.
 class ItemAdapter extends BaseAdapter implements View.OnClickListener {
-    private static final String SITE_ORIGIN = "https://mohframevision.github.io/hakolah/";
-
     private final Context context;
     private final List<JSONObject> items = new ArrayList<>();
 
     ItemAdapter(Context context, JSONArray itemsJson) {
         this.context = context;
         for (int i = 0; i < itemsJson.length(); i++) {
-            items.add(itemsJson.optJSONObject(i));
+            // optJSONObject يرجع null لأي عنصر مش كائن JSON فعلي (ملف بيانات
+            // تالف جزئياً مثلاً) — نتجاهله هنا بدل ما getView() يفشل بـNPE
+            // لاحقاً لما يحاول يقرأ حقوله
+            JSONObject item = itemsJson.optJSONObject(i);
+            if (item != null) items.add(item);
         }
     }
 
@@ -110,25 +112,29 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         holder.actions.removeAllViews();
         String detailUrl = item.optString("detailUrl", "");
         if (!detailUrl.isEmpty()) {
-            addActionButton(holder.actions, "📖 التفاصيل", "url:" + SITE_ORIGIN + detailUrl, true);
+            addActionButton(holder.actions, "📖 التفاصيل", "url:" + HakolahApi.ORIGIN + detailUrl, true);
         } else {
             JSONObject links = item.optJSONObject("links");
             if (links != null) {
+                // optString(key, "") لا has(key): حقول الروابط بالمحتوى الحقيقي
+                // تُحفظ أحياناً كسلسلة فاضية "" لا غائبة تماماً (مثال:
+                // src/restaurants/ameen-kebab.md) — has() كان يعتبرها موجودة
+                // ويبني زراً ميتاً ما يسوي شي عند الضغط
                 boolean first = true;
-                if (links.has("website")) {
+                if (!links.optString("website", "").isEmpty()) {
                     addActionButton(holder.actions, "🌐 زيارة", "url:" + links.optString("website"), first);
                     first = false;
                 }
-                if (links.has("phone")) {
+                if (!links.optString("phone", "").isEmpty()) {
                     String phone = links.optString("phone").split(",")[0].trim();
                     addActionButton(holder.actions, "📞 اتصال", "tel:" + phone, first);
                     first = false;
                 }
-                if (links.has("maps")) {
+                if (!links.optString("maps", "").isEmpty()) {
                     addActionButton(holder.actions, "📍 الخريطة", "url:" + links.optString("maps"), first);
                     first = false;
                 }
-                if (links.has("instagram")) {
+                if (!links.optString("instagram", "").isEmpty()) {
                     addActionButton(holder.actions, "📷 إنستقرام", "url:" + links.optString("instagram"), first);
                 }
             }

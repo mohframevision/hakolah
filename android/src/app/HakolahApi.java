@@ -1,11 +1,10 @@
 package bh.mohframevision.hakolah;
 
 import android.app.Activity;
-import android.content.Context;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -20,7 +19,10 @@ import org.json.JSONObject;
 // بدون كلاسات مجهولة (anonymous) ولا lambdas هنا عمداً — d8 بهذي البيئة يفشل
 // عليها (نفس مشكلة StudyApp الموثّقة)، فكل شي كلاس علوي حقيقي.
 class HakolahApi {
-    private static final String DATA_URL = "https://mohframevision.github.io/hakolah/app-data.json";
+    // مصدر واحد للنطاق — ItemAdapter يستخدم نفس الثابت لبناء روابط "التفاصيل"
+    // بدل ما يكرّر نفس السلسلة النصية بملف ثانٍ
+    static final String ORIGIN = "https://mohframevision.github.io/hakolah/";
+    private static final String DATA_URL = ORIGIN + "app-data.json";
     private static final String CACHE_FILE = "hakolah-data-cache.json";
 
     interface Callback {
@@ -28,8 +30,11 @@ class HakolahApi {
         void onError(String message);
     }
 
-    static void fetch(Context context, Callback callback) {
-        new FetchThread(context, callback).start();
+    // Activity لا Context عمداً: الاستدعاء الوحيد فعلياً هو runOnUiThread، اللي
+    // Context العادي ما يوفّره — تضييق التوقيع هنا يمنع استثناء تحويل نوع
+    // (ClassCastException) لاحقاً بدل ما يُكتشف وقت التصريف
+    static void fetch(Activity activity, Callback callback) {
+        new FetchThread(activity, callback).start();
     }
 
     private static String fetchFresh() {
@@ -40,7 +45,10 @@ class HakolahApi {
             conn.setReadTimeout(15000);
             conn.setRequestMethod("GET");
             if (conn.getResponseCode() != 200) return null;
-            return readStream(conn.getInputStream());
+            String body = readStream(conn.getInputStream());
+            // ردّ 200 بجسم فاضي (عطل شبكة/وسيط) لازم يُعامَل كفشل، لا كبيانات
+            // طازجة — وإلا يمسح نسخة الكاش الجيدة بملف فاضٍ بلا داعٍ
+            return body.isEmpty() ? null : body;
         } catch (Exception e) {
             return null;
         } finally {
@@ -57,10 +65,10 @@ class HakolahApi {
         return sb.toString();
     }
 
-    private static void writeCache(Context context, String json) {
+    private static void writeCache(Activity activity, String json) {
         FileOutputStream out = null;
         try {
-            out = new FileOutputStream(new File(context.getFilesDir(), CACHE_FILE));
+            out = new FileOutputStream(new File(activity.getFilesDir(), CACHE_FILE));
             out.write(json.getBytes(StandardCharsets.UTF_8));
         } catch (Exception ignored) {
             // فشل الحفظ ما يوقف عرض البيانات الطازجة اللي وصلت لتوها
@@ -74,25 +82,16 @@ class HakolahApi {
         }
     }
 
-    private static String readCache(Context context) {
-        File file = new File(context.getFilesDir(), CACHE_FILE);
+    // ponytail: بدون قفل بين الكتابة والقراءة — تطبيق شخصي لمستخدم واحد،
+    // احتمال تصادم كتابتين متزامنتين ضئيل جداً. لو صار التطبيق متعدد
+    // المستخدمين/الخيوط فعلاً، أضف مزامنة على مستوى ملف الكاش هنا.
+    private static String readCache(Activity activity) {
+        File file = new File(activity.getFilesDir(), CACHE_FILE);
         if (!file.exists()) return null;
-        BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new FileReader(file));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) sb.append(line);
-            return sb.toString();
+            return readStream(new FileInputStream(file));
         } catch (Exception e) {
             return null;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (Exception ignored) {
-                }
-            }
         }
     }
 
@@ -100,11 +99,11 @@ class HakolahApi {
     // محفوظة، ولو ما فيه ولا وحدة يبلّغ خطأ — كل هذا بخيط الخلفية، والتسليم
     // النهائي (deliver) يصير بخيط الواجهة عبر DeliverResult.
     private static class FetchThread extends Thread {
-        private final Context context;
+        private final Activity activity;
         private final Callback callback;
 
-        FetchThread(Context context, Callback callback) {
-            this.context = context;
+        FetchThread(Activity activity, Callback callback) {
+            this.activity = activity;
             this.callback = callback;
         }
 
@@ -112,15 +111,15 @@ class HakolahApi {
         public void run() {
             String fresh = fetchFresh();
             if (fresh != null) {
-                writeCache(context, fresh);
+                writeCache(activity, fresh);
                 deliver(fresh, false);
                 return;
             }
-            String cached = readCache(context);
+            String cached = readCache(activity);
             if (cached != null) {
                 deliver(cached, true);
             } else {
-                ((Activity) context).runOnUiThread(
+                activity.runOnUiThread(
                         new DeliverResult(callback, null, "تعذّر تحميل البيانات — تأكد من الاتصال بالإنترنت", false));
             }
         }
@@ -130,10 +129,10 @@ class HakolahApi {
             try {
                 obj = new JSONObject(json);
             } catch (Exception e) {
-                ((Activity) context).runOnUiThread(new DeliverResult(callback, null, "بيانات غير صالحة", false));
+                activity.runOnUiThread(new DeliverResult(callback, null, "بيانات غير صالحة", false));
                 return;
             }
-            ((Activity) context).runOnUiThread(new DeliverResult(callback, obj, null, fromCache));
+            activity.runOnUiThread(new DeliverResult(callback, obj, null, fromCache));
         }
     }
 

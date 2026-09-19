@@ -3,6 +3,13 @@
 // نقي، بدل ما يتكرر ويصير له نسختان تنحرفان عن بعض بمرور الوقت.
 const NEW_BADGE_DAYS = 7;
 
+// يُحسب مرة وحدة وقت تحميل هذا الموديول، لا داخل buildSiteData() — الموديول
+// نفسه يُخزَّن بذاكرة Node (require cache)، فكل من data.js.11ty.js وapp-
+// data.json.11ty.js يشتركان بنفس القيمة تماماً. لو كل استدعاء يحسب Date.now()
+// بنفسه، فالملفان (اللي المفروض يكونان "نفس المصدر" بالضبط) ممكن يختلفان
+// بعلامة isNew لعنصر وصل حده الزمني (7 أيام) بالضبط بين الاستدعاءين
+const BUILD_TIME = Date.now();
+
 /*
   يستخرج الإحداثيات من حقل "coords" الواحد بلوحة التحكم، أياً كانت الصيغة
   اللي نسخها المستخدم — بدل ما يضطر يفصلها بيده لحقلين (lat/lng).
@@ -72,7 +79,7 @@ function parseBranches(raw) {
 function buildSiteData(data) {
   const sections = data.sections;
   const out = {};
-  const now = Date.now();
+  const now = BUILD_TIME;
 
   for (const meta of sections) {
     const items = (data.collections[meta.slug] || []).map((entry) => {
