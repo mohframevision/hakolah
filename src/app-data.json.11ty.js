@@ -9,7 +9,7 @@ exports.data = {
 const { buildSiteData } = require("../eleventy-app-data.js");
 
 exports.render = function (data) {
-  const sections = buildSiteData(data);
+  const sections = buildSiteData(data, { includeContent: true });
   return JSON.stringify({
     // ترتيب الأقسام صريح هنا: ترتيب مفاتيح كائن JSON غير مضمون بكل مكتبات
     // التفكيك (بعكس JS بالمتصفح) — التطبيق يعتمد على هذي القائمة، مو على

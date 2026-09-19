@@ -76,7 +76,8 @@ function parseBranches(raw) {
     .filter(Boolean);
 }
 
-function buildSiteData(data) {
+function buildSiteData(data, options = {}) {
+  const includeContent = Boolean(options.includeContent);
   const sections = data.sections;
   const out = {};
   const now = BUILD_TIME;
@@ -124,6 +125,9 @@ function buildSiteData(data) {
       if (meta.hasDetailPages || entry.data.hasDetailPage) {
         item.detailUrl = `${meta.slug}/${entry.fileSlug}.html`;
         item.detailUrlEn = `${meta.slug}/${entry.data.slug_en || entry.fileSlug}.html`;
+        // app-data.json فقط (لا data.js اللي يحمّله كل زائر متصفح) — تطبيق
+        // الأندرويد يحتاج نص المقال الفعلي ليعرضه محلياً بدل فتح رابط خارجي
+        if (includeContent) item.contentHtml = entry.templateContent || "";
       } else {
         item.links = entry.data.links || {};
         item.cta = entry.data.cta || null;
