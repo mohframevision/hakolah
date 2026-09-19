@@ -31,6 +31,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private ListView itemList;
     private TextView emptyView;
     private LinearLayout bottomNav;
+    private LinearLayout sectionTabs;
     private TextView headerTitle;
     private EditText searchBox;
     private LinearLayout filterChips;
@@ -76,14 +77,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         itemList = findViewById(R.id.itemList);
         emptyView = findViewById(R.id.emptyView);
         bottomNav = findViewById(R.id.bottomNav);
+        sectionTabs = findViewById(R.id.sectionTabs);
         headerTitle = findViewById(R.id.headerTitle);
         searchBox = findViewById(R.id.searchBox);
         filterChips = findViewById(R.id.filterChips);
         nearMeButton = findViewById(R.id.nearMeButton);
         findViewById(R.id.retryButton).setOnClickListener(this);
-        findViewById(R.id.settingsButton).setOnClickListener(this);
         nearMeButton.setOnClickListener(this);
         searchBox.addTextChangedListener(this);
+        buildMainNav();
 
         loadData();
     }
@@ -93,11 +95,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         int id = v.getId();
         if (id == R.id.retryButton) {
             loadData();
-            return;
-        }
-        if (id == R.id.settingsButton) {
-            SoundPlayer.playClick(this);
-            SettingsPanel.show(this);
             return;
         }
         if (id == R.id.nearMeButton) {
@@ -111,19 +108,58 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (value.startsWith("chip:")) {
             SoundPlayer.playClick(this);
             selectTag(value.substring(5));
+        } else if (HOME_TAG.equals(value)) {
+            SoundPlayer.playClick(this);
+            resetToHome();
         } else if (PICKER_TAG.equals(value)) {
             SoundPlayer.playClick(this);
             startActivity(new android.content.Intent(this, PickerActivity.class));
         } else if (FAVORITES_TAG.equals(value)) {
             SoundPlayer.playClick(this);
             startActivity(new android.content.Intent(this, FavoritesActivity.class));
+        } else if (SETTINGS_TAG.equals(value)) {
+            SoundPlayer.playClick(this);
+            SettingsPanel.show(this);
         } else {
             selectSection(value);
         }
     }
 
+    private static final String HOME_TAG = "__home__";
     private static final String PICKER_TAG = "__picker__";
     private static final String FAVORITES_TAG = "__favorites__";
+    private static final String SETTINGS_TAG = "__settings__";
+
+    // 4 وجهات ثابتة بس — لا تتغيّر مع البيانات، تُبنى مرة وحدة. انظر
+    // sectionTabs للأقسام الفعلية (بيانات القسم القابلة للتغيّر)
+    private void buildMainNav() {
+        addMainNavTab("🏠", "الرئيسية", HOME_TAG);
+        addMainNavTab("🎲", "اختار لي", PICKER_TAG);
+        addMainNavTab("♥", "المفضلة", FAVORITES_TAG);
+        addMainNavTab("⚙️", "الإعدادات", SETTINGS_TAG);
+    }
+
+    private void addMainNavTab(String icon, String label, String tag) {
+        View tab = getLayoutInflater().inflate(R.layout.nav_tab, bottomNav, false);
+        ((TextView) tab.findViewById(R.id.tabIcon)).setText(icon);
+        ((TextView) tab.findViewById(R.id.tabLabel)).setText(label);
+        tab.setTag(tag);
+        tab.setOnClickListener(this);
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
+        lp.width = 0;
+        lp.weight = 1;
+        tab.setLayoutParams(lp);
+        bottomNav.addView(tab);
+        if (HOME_TAG.equals(tag)) {
+            ((TextView) tab.findViewById(R.id.tabLabel)).setTextColor(getColor(R.color.brand_accent));
+        }
+    }
+
+    // زر "الرئيسية" بالشريط السفلي — نرجّع القسم الحالي لحالته الافتراضية
+    // (بلا بحث ولا فلترة ولا ترتيب مسافة) بدل ما يكون بلا أثر فعلي
+    private void resetToHome() {
+        if (currentSlug != null) selectSection(currentSlug);
+    }
 
     // ---- TextWatcher (بحث حيّ، نفس debounce-less input بالموقع) ----
     @Override
@@ -158,7 +194,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             showError("لا يوجد محتوى حالياً");
             return;
         }
-        buildBottomNav();
+        buildSectionTabs();
         selectSection(firstBrowsable);
         if (fromCache) {
             headerTitle.append(" (بيانات محفوظة، بلا اتصال)");
@@ -191,34 +227,22 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         return null;
     }
 
-    private void buildBottomNav() {
-        bottomNav.removeAllViews();
+    // صف الأقسام أعلى الصفحة (نفس فكرة صف التصنيفات بتطبيقات التوصيل) —
+    // بيانات، يُعاد بناؤه فقط بعد نجاح الجلب، بعكس buildMainNav() الثابت
+    private void buildSectionTabs() {
+        sectionTabs.removeAllViews();
         for (int i = 0; i < sectionOrder.length(); i++) {
             String slug = sectionOrder.optString(i);
             JSONObject section = sections.optJSONObject(slug);
             if (!isBrowsable(section)) continue;
 
-            View tab = getLayoutInflater().inflate(R.layout.nav_tab, bottomNav, false);
+            View tab = getLayoutInflater().inflate(R.layout.nav_tab, sectionTabs, false);
             ((TextView) tab.findViewById(R.id.tabIcon)).setText(section.optString("icon", "⭐"));
             ((TextView) tab.findViewById(R.id.tabLabel)).setText(section.optString("title", slug));
             tab.setTag(slug);
             tab.setOnClickListener(this);
-            bottomNav.addView(tab);
+            sectionTabs.addView(tab);
         }
-
-        View pickerTab = getLayoutInflater().inflate(R.layout.nav_tab, bottomNav, false);
-        ((TextView) pickerTab.findViewById(R.id.tabIcon)).setText("🎲");
-        ((TextView) pickerTab.findViewById(R.id.tabLabel)).setText("اختار لي");
-        pickerTab.setTag(PICKER_TAG);
-        pickerTab.setOnClickListener(this);
-        bottomNav.addView(pickerTab);
-
-        View favTab = getLayoutInflater().inflate(R.layout.nav_tab, bottomNav, false);
-        ((TextView) favTab.findViewById(R.id.tabIcon)).setText("♥");
-        ((TextView) favTab.findViewById(R.id.tabLabel)).setText("المفضلة");
-        favTab.setTag(FAVORITES_TAG);
-        favTab.setOnClickListener(this);
-        bottomNav.addView(favTab);
     }
 
     private void selectSection(String slug) {
@@ -465,8 +489,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     }
 
     private void highlightActiveTab() {
-        for (int i = 0; i < bottomNav.getChildCount(); i++) {
-            View tab = bottomNav.getChildAt(i);
+        for (int i = 0; i < sectionTabs.getChildCount(); i++) {
+            View tab = sectionTabs.getChildAt(i);
             boolean active = currentSlug.equals(tab.getTag());
             TextView label = tab.findViewById(R.id.tabLabel);
             label.setTextColor(active

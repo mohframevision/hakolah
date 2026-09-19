@@ -20,25 +20,34 @@
 
         <TextView
             android:id="@+id/headerTitle"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="هكوله"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/settingsButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:text="⚙️"
-            android:textSize="18sp"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
     </LinearLayout>
+
+    <!-- شريط الأقسام: صف أفقي أعلى الصفحة (نفس فكرة صف التصنيفات بتطبيقات
+         التوصيل مثل Keeta) بدل تبويبات بالشريط السفلي — الشريط السفلي محجوز
+         الآن لـ4 وجهات ثابتة بس (الرئيسية/اختار لي/المفضلة/الإعدادات) بدل
+         ما يتمدد مع كل قسم جديد يُضاف بالموقع -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        android:elevation="2dp"
+        android:scrollbars="none"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <LinearLayout
+            android:id="@+id/sectionTabs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical" />
+    </HorizontalScrollView>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -169,19 +178,14 @@
             android:visibility="gone" />
     </FrameLayout>
 
-    <HorizontalScrollView
+    <!-- 4 وجهات ثابتة بس (لا تتمدد مع الأقسام) — نفس حد الـ5 عناصر الموصى به
+         بأي شريط تنقّل سفلي، ونفس نمط تطبيقات فعلية شفناها (كيتا: 3 عناصر) -->
+    <LinearLayout
+        android:id="@+id/bottomNav"
         android:layout_width="match_parent"
         android:layout_height="60dp"
+        android:orientation="horizontal"
         android:background="@color/surface"
-        android:elevation="4dp"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/bottomNav"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center_vertical" />
-    </HorizontalScrollView>
+        android:elevation="4dp" />
 
 </LinearLayout>
