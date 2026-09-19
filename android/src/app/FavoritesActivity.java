@@ -18,6 +18,7 @@ public class FavoritesActivity extends Activity implements View.OnClickListener 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
         findViewById(R.id.favoritesCloseButton).setOnClickListener(this);
+        BottomNav.attach(this, findViewById(R.id.bottomNav), BottomNav.FAVORITES);
     }
 
     @Override

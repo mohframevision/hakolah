@@ -49,6 +49,7 @@ public class PickerActivity extends Activity implements View.OnClickListener {
         spinBtn = findViewById(R.id.pickerSpinBtn);
         stage = findViewById(R.id.pickerStage);
         findViewById(R.id.pickerCloseButton).setOnClickListener(this);
+        BottomNav.attach(this, findViewById(R.id.bottomNav), BottomNav.PICKER);
         spinBtn.setOnClickListener(this);
 
         buildCategories();

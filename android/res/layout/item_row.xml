@@ -2,18 +2,17 @@
 <!-- المساحات والقياسات هنا منسوخة بالضبط من .item-card بموقع هكوله (style.css):
      padding 20px، فجوة 8px بين العناصر، عنوان 1.05rem، وصف 0.9rem،
      أيقونة 1.8rem، radius 18dp (card_bg.xml) — مو أرقام مخمّنة.
-     الفجوة الرأسية بين الكروت تجيء من dividerHeight بـListView نفسه لا من
-     layout_marginBottom هنا — ListView يتجاهل الهامش السفلي لجذر عنصر القائمة
-     (مشكلة منصّة معروفة)، فأي قيمة هنا كانت بلا أثر فعلي. -->
+     التباعد الرأسي والأفقي بين الكروت وحواف الشاشة يجيء من ListView نفسه
+     (dividerHeight + padding) لا من layout_margin هنا — ListView يتجاهل أي
+     هامش (رأسي أو أفقي) على جذر عنصر القائمة تماماً (مشكلة منصّة معروفة)،
+     فكل قيمة margin هنا كانت بلا أثر فعلي رغم وجودها بالـXML. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/card_bg"
     android:elevation="3dp"
-    android:padding="20dp"
-    android:layout_marginStart="16dp"
-    android:layout_marginEnd="16dp">
+    android:padding="20dp">
 
     <LinearLayout
         android:layout_width="match_parent"

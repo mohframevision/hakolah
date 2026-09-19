@@ -163,6 +163,8 @@
             android:dividerHeight="16dp"
             android:clipChildren="false"
             android:clipToPadding="false"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:paddingTop="16dp"
             android:paddingBottom="16dp"
             android:layoutAnimation="@anim/list_layout_controller" />
