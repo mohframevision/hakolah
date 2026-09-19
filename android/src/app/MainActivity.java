@@ -114,9 +114,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         } else if (PICKER_TAG.equals(value)) {
             SoundPlayer.playClick(this);
             startActivity(new android.content.Intent(this, PickerActivity.class));
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         } else if (FAVORITES_TAG.equals(value)) {
             SoundPlayer.playClick(this);
             startActivity(new android.content.Intent(this, FavoritesActivity.class));
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         } else if (SETTINGS_TAG.equals(value)) {
             SoundPlayer.playClick(this);
             SettingsPanel.show(this);

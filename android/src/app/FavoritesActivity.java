@@ -30,8 +30,17 @@ public class FavoritesActivity extends Activity implements View.OnClickListener 
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+    @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.favoritesCloseButton) finish();
+        if (v.getId() == R.id.favoritesCloseButton) {
+            finish();
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        }
     }
 
     private void render() {

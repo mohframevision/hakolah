@@ -56,7 +56,10 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.webviewCloseButton) finish();
+        if (v.getId() == R.id.webviewCloseButton) {
+            finish();
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        }
     }
 
     @Override
@@ -65,6 +68,7 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
             webView.goBack();
         } else {
             super.onBackPressed();
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         }
     }
 }

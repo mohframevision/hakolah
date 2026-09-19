@@ -47,10 +47,17 @@ public class ArticleActivity extends Activity implements View.OnClickListener {
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+    @Override
     public void onClick(View v) {
         int id = v.getId();
         if (id == R.id.articleCloseButton) {
             finish();
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         } else if (id == R.id.articleShareButton) {
             SoundPlayer.playClick(this);
             share();

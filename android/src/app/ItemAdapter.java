@@ -1,6 +1,6 @@
 package bh.mohframevision.hakolah;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,14 +25,17 @@ import org.json.JSONObject;
 // بدون lambdas ولا كلاسات مجهولة عمداً — d8 بهذي البيئة يفشل عليها. كل زر
 // يحمل "tag" نصي (مثال "url:https://...")، وonClick وحد بالمحوّل نفسه يفكّه.
 class ItemAdapter extends BaseAdapter implements View.OnClickListener {
-    private final Context context;
+    // Activity لا Context عام — يحتاجها overridePendingTransition() عند فتح
+    // المقال/التجربة (نفس نمط HakolahApi.Callback: توقيع النوع نفسه يمنع
+    // الخطأ، لا فحص instanceof وقت التشغيل)
+    private final Activity context;
     private final String section;
     private final List<JSONObject> items = new ArrayList<>();
 
     // القسم الافتراضي لكل عناصر القائمة (شاشة قسم واحد عادية). شاشة المفضلة
     // (تجمع عناصر من كذا قسم) تمرّر حقل "_section" داخل كل عنصر يتجاوز هذا
     // الافتراضي — انظر itemSection()
-    ItemAdapter(Context context, String section, JSONArray itemsJson) {
+    ItemAdapter(Activity context, String section, JSONArray itemsJson) {
         this.context = context;
         this.section = section;
         for (int i = 0; i < itemsJson.length(); i++) {
@@ -216,6 +219,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         intent.putExtra(ArticleActivity.EXTRA_CONTENT, item.optString("contentHtml", ""));
         intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, item.optString("detailUrl", ""));
         context.startActivity(intent);
+        context.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
     private void openWebView(JSONObject item) {
@@ -223,6 +227,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         intent.putExtra(WebViewActivity.EXTRA_TITLE, item.optString("title", ""));
         intent.putExtra(WebViewActivity.EXTRA_URL, HakolahApi.ORIGIN + item.optString("detailUrl", ""));
         context.startActivity(intent);
+        context.overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
     // نفس buildShareText/buildShareUrl بالموقع بالضبط: يفضّل detailUrl لو

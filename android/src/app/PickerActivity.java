@@ -102,9 +102,16 @@ public class PickerActivity extends Activity implements View.OnClickListener {
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+    @Override
     public void onClick(View v) {
         if (v.getId() == R.id.pickerCloseButton) {
             finish();
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
             return;
         }
         if (v.getId() == R.id.pickerSpinBtn) {
