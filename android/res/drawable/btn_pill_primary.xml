@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- نفس .btn بالموقع: شكل حبة كاملة (pill)، لون أساسي، مع ripple لمسة حقيقية
+     بدل تفاعل ثابت -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple_on_primary">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/brand_primary" />
+            <corners android:radius="40dp" />
+        </shape>
+    </item>
+</ripple>

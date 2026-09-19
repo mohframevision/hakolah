@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- نفس @keyframes cardIn بموقع هكوله: opacity 0→1 + translateY(14px)→0, 450ms -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@interpolator/site_ease">
+    <alpha
+        android:fromAlpha="0"
+        android:toAlpha="1"
+        android:duration="450" />
+    <translate
+        android:fromYDelta="14dp"
+        android:toYDelta="0dp"
+        android:duration="450" />
+</set>

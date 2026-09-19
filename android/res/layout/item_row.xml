@@ -1,25 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- المساحات والقياسات هنا منسوخة بالضبط من .item-card بموقع هكوله (style.css):
+     padding 20px، فجوة 8px بين العناصر، عنوان 1.05rem، وصف 0.9rem،
+     أيقونة 1.8rem، radius 18dp (card_bg.xml) — مو أرقام مخمّنة. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/card_bg"
-    android:padding="14dp"
-    android:layout_marginStart="12dp"
-    android:layout_marginEnd="12dp"
-    android:layout_marginBottom="10dp">
+    android:elevation="3dp"
+    android:padding="20dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="top">
 
         <TextView
             android:id="@+id/itemIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="22sp"
+            android:textSize="28sp"
             android:layout_marginStart="8dp" />
 
         <TextView
@@ -29,7 +33,8 @@
             android:layout_weight="1"
             android:textSize="17sp"
             android:textStyle="bold"
-            android:textColor="@color/text" />
+            android:textColor="@color/text"
+            android:gravity="center_vertical" />
     </LinearLayout>
 
     <TextView
@@ -37,8 +42,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="14sp"
+        android:lineSpacingMultiplier="1.3"
         android:textColor="@color/text_muted"
-        android:layout_marginTop="4dp" />
+        android:layout_marginTop="8dp" />
 
     <TextView
         android:id="@+id/itemHours"
@@ -46,23 +52,34 @@
         android:layout_height="wrap_content"
         android:textSize="12sp"
         android:textColor="@color/text_muted"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="8dp"
         android:visibility="gone" />
 
+    <!-- ponytail: خانات التصنيف مدمجة بسطر نص واحد بدل رقاقات (chips) منفصلة
+         زي الموقع — يحتاج flexbox للف تلقائي وغير متوفر بدون Gradle. أضفها
+         لو صار عدد التصنيفات لكل عنصر يستاهل التمييز البصري الفعلي. -->
     <TextView
         android:id="@+id/itemTags"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="12sp"
-        android:textColor="@color/brand_accent"
-        android:layout_marginTop="6dp"
+        android:textStyle="bold"
+        android:textColor="@color/text_muted"
+        android:layout_marginTop="8dp"
         android:visibility="gone" />
 
-    <LinearLayout
-        android:id="@+id/itemActions"
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="4dp"
+        android:scrollbars="none"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:id="@+id/itemActions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
 
 </LinearLayout>

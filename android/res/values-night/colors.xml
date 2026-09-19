@@ -8,4 +8,7 @@
     <color name="text_muted">#A0A0A0</color>
     <color name="border">#2E2E2E</color>
     <color name="white">#FFFFFF</color>
+    <color name="secondary_btn_bg">#1AF0F0F0</color>
+    <color name="ripple_on_primary">#33FFFFFF</color>
+    <color name="ripple_on_secondary">#26FFFFFF</color>
 </resources>
