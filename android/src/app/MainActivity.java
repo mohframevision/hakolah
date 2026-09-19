@@ -35,7 +35,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private JSONArray sectionOrder;
     private String currentSlug;
     private JSONArray currentItems = new JSONArray();
-    private boolean currentHasDetailPages;
     private String currentTag;
     private String searchQuery = "";
 
@@ -99,12 +98,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         } else if (PICKER_TAG.equals(value)) {
             SoundPlayer.playClick(this);
             startActivity(new android.content.Intent(this, PickerActivity.class));
+        } else if (FAVORITES_TAG.equals(value)) {
+            SoundPlayer.playClick(this);
+            startActivity(new android.content.Intent(this, FavoritesActivity.class));
         } else {
             selectSection(value);
         }
     }
 
     private static final String PICKER_TAG = "__picker__";
+    private static final String FAVORITES_TAG = "__favorites__";
 
     // ---- TextWatcher (بحث حيّ، نفس debounce-less input بالموقع) ----
     @Override
@@ -193,6 +196,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         pickerTab.setTag(PICKER_TAG);
         pickerTab.setOnClickListener(this);
         bottomNav.addView(pickerTab);
+
+        View favTab = getLayoutInflater().inflate(R.layout.nav_tab, bottomNav, false);
+        ((TextView) favTab.findViewById(R.id.tabIcon)).setText("♥");
+        ((TextView) favTab.findViewById(R.id.tabLabel)).setText("المفضلة");
+        favTab.setTag(FAVORITES_TAG);
+        favTab.setOnClickListener(this);
+        bottomNav.addView(favTab);
     }
 
     private void selectSection(String slug) {
@@ -202,7 +212,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
         currentItems = section.optJSONArray("items");
         if (currentItems == null) currentItems = new JSONArray();
-        currentHasDetailPages = section.optBoolean("hasDetailPages", false);
         currentTag = null;
         searchQuery = "";
         searchBox.removeTextChangedListener(this);
@@ -285,7 +294,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             emptyView.setVisibility(View.VISIBLE);
         } else {
             emptyView.setVisibility(View.GONE);
-            itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered, currentHasDetailPages));
+            itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered));
             itemList.setVisibility(View.VISIBLE);
         }
     }

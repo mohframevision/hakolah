@@ -27,13 +27,14 @@ import org.json.JSONObject;
 class ItemAdapter extends BaseAdapter implements View.OnClickListener {
     private final Context context;
     private final String section;
-    private final boolean hasDetailPages;
     private final List<JSONObject> items = new ArrayList<>();
 
-    ItemAdapter(Context context, String section, JSONArray itemsJson, boolean hasDetailPages) {
+    // القسم الافتراضي لكل عناصر القائمة (شاشة قسم واحد عادية). شاشة المفضلة
+    // (تجمع عناصر من كذا قسم) تمرّر حقل "_section" داخل كل عنصر يتجاوز هذا
+    // الافتراضي — انظر itemSection()
+    ItemAdapter(Context context, String section, JSONArray itemsJson) {
         this.context = context;
         this.section = section;
-        this.hasDetailPages = hasDetailPages;
         for (int i = 0; i < itemsJson.length(); i++) {
             // optJSONObject يرجع null لأي عنصر مش كائن JSON فعلي (ملف بيانات
             // تالف جزئياً مثلاً) — نتجاهله هنا بدل ما getView() يفشل بـNPE
@@ -98,9 +99,10 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         String id = item.optString("id", "");
         holder.icon.setText(item.optString("icon", "⭐"));
         holder.title.setText(item.optString("title", ""));
+        String itemSection = itemSection(item);
         holder.shareBtn.setTag("share:" + position);
-        holder.favBtn.setTag("fav:" + id);
-        applyFavStyle(holder.favBtn, Prefs.isFavorite(context, section, id));
+        holder.favBtn.setTag("fav:" + position);
+        applyFavStyle(holder.favBtn, Prefs.isFavorite(context, itemSection, id));
         holder.desc.setText(item.optString("desc", ""));
 
         String hours = item.optString("hours", "");
@@ -124,12 +126,16 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             holder.tags.setVisibility(View.GONE);
         }
 
+        // hasDetailPages يُشتق من وجود detailUrl بالعنصر نفسه لا من ثابت
+        // بمستوى القائمة — يسمح لشاشة المفضلة تخلط عناصر من أقسام مختلفة
+        // (بعضها مقالات وبعضها بطاقات روابط) بنفس ItemAdapter
+        boolean hasDetailPages = !item.optString("detailUrl", "").isEmpty();
         if (hasDetailPages) {
             // "أدلة"/"أماكن": مقال يُعرض أصلياً بـArticleActivity. "تجارب
             // الذكاء الاصطناعي": أدوات JS تفاعلية ثقيلة (مولّد ألحان، محوّل
             // ملفات...) — تُفتح بـWebViewActivity (نفس الصفحة الحقيقية داخل
             // التطبيق) بدل إعادة كتابة مئات الأسطر جافا لكل أداة
-            boolean isExperiment = "ai-experiments".equals(section);
+            boolean isExperiment = "ai-experiments".equals(itemSection);
             holder.actions.removeAllViews();
             TextView readBtn = new TextView(context);
             readBtn.setText(isExperiment ? "🧪 افتح التجربة" : "📖 قراءة المقال");
@@ -153,6 +159,11 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         return row;
     }
 
+    private String itemSection(JSONObject item) {
+        String override = item.optString("_section", "");
+        return override.isEmpty() ? section : override;
+    }
+
     private void applyFavStyle(TextView btn, boolean active) {
         btn.setText(active ? "♥" : "♡");
         btn.setTextColor(active ? 0xFFE0245E : context.getColor(R.color.text_muted));
@@ -167,10 +178,12 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             SoundPlayer.playClick(context);
             LinkButtons.handleClick(context, tag);
         } else if (tag.startsWith("fav:")) {
-            String id = tag.substring(4);
-            Prefs.toggleFavorite(context, section, id);
+            JSONObject item = items.get(Integer.parseInt(tag.substring(4)));
+            String itemSection = itemSection(item);
+            String id = item.optString("id", "");
+            Prefs.toggleFavorite(context, itemSection, id);
             SoundPlayer.playClick(context);
-            applyFavStyle((TextView) v, Prefs.isFavorite(context, section, id));
+            applyFavStyle((TextView) v, Prefs.isFavorite(context, itemSection, id));
         } else if (tag.startsWith("share:")) {
             int position = Integer.parseInt(tag.substring(6));
             SoundPlayer.playClick(context);
@@ -218,7 +231,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             } catch (Exception e) {
                 encodedTitle = title;
             }
-            url = HakolahApi.ORIGIN + section + ".html?q=" + encodedTitle;
+            url = HakolahApi.ORIGIN + itemSection(item) + ".html?q=" + encodedTitle;
         }
         String text = title + " — على موقع هكوله 👇\n" + url;
 
