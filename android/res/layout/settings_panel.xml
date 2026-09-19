@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="4dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="المظهر"
+        android:textStyle="bold"
+        android:textColor="@color/text"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:id="@+id/themeAuto"
+        style="@style/SettingsRow">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="تلقائي (حسب الجهاز)" android:textColor="@color/text" android:textSize="14sp" />
+        <TextView android:id="@+id/themeAutoCheck" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="✓" android:textColor="@color/brand_primary" android:textStyle="bold" android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/themeLight"
+        style="@style/SettingsRow">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="فاتح" android:textColor="@color/text" android:textSize="14sp" />
+        <TextView android:id="@+id/themeLightCheck" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="✓" android:textColor="@color/brand_primary" android:textStyle="bold" android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/themeDark"
+        style="@style/SettingsRow">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="داكن" android:textColor="@color/text" android:textSize="14sp" />
+        <TextView android:id="@+id/themeDarkCheck" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="✓" android:textColor="@color/brand_primary" android:textStyle="bold" android:visibility="gone" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="12dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="الأصوات"
+            android:textColor="@color/text"
+            android:textSize="14sp" />
+
+        <Switch
+            android:id="@+id/soundSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+</LinearLayout>

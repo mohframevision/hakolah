@@ -11,4 +11,5 @@
     <color name="secondary_btn_bg">#0F1A1A1A</color>
     <color name="ripple_on_primary">#33FFFFFF</color>
     <color name="ripple_on_secondary">#1A000000</color>
+    <color name="search_box_bg">#C7FFFFFF</color>
 </resources>
