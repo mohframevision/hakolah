@@ -121,6 +121,7 @@ public class PickerActivity extends Activity implements View.OnClickListener {
             return;
         }
         if (v.getId() == R.id.pickerSpinBtn) {
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
             SoundPlayer.playClick(this);
             spin();
             return;

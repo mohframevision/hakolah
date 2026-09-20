@@ -5,6 +5,10 @@
         <item name="android:statusBarColor">@color/brand_primary</item>
         <item name="android:colorPrimary">@color/brand_primary</item>
         <item name="android:colorAccent">@color/brand_accent</item>
+        <!-- نفس خط الموقع بالضبط (Cairo، مستضاف عندنا بالموقع أيضاً) — عبر
+             سمة التطبيق فيسري تلقائياً على كل TextView/EditText/Button، بلا
+             حاجة لاستبدال كل وسم TextView بكلاس مخصّص -->
+        <item name="android:fontFamily">@font/cairo</item>
     </style>
 
     <style name="SettingsRow">

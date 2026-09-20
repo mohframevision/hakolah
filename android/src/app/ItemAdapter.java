@@ -218,6 +218,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             JSONObject item = items.get(Integer.parseInt(tag.substring(4)));
             String itemSection = itemSection(item);
             String id = item.optString("id", "");
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
             Prefs.toggleFavorite(context, itemSection, id);
             SoundPlayer.playClick(context);
             applyFavStyle((TextView) v, Prefs.isFavorite(context, itemSection, id));
