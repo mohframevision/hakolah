@@ -284,7 +284,7 @@ function initSoundToggle() {
 
   function apply(enabled) {
     btn.classList.toggle("active", enabled);
-    btn.textContent = enabled ? "🔊" : "🔇";
+    btn.innerHTML = enabled ? TOGGLE_ICON_SVG.volumeOn : TOGGLE_ICON_SVG.volumeOff;
     const label = enabled ? t("sound_on") : t("sound_off");
     btn.setAttribute("aria-label", label);
     btn.title = label;
@@ -300,13 +300,28 @@ function initSoundToggle() {
   });
 }
 
+/* ===== أيقونات SVG مضمّنة لأزرار الهيدر التبديلية (مظهر/صوت) =====
+   نفس أيقونات Material Symbols المستخدَمة بـicon.njk (القوالب) — هنا لازم
+   نص جافاسكربت خام بدل الماكرو لأن الحالة (فاتح/داكن/تلقائي، مفعّل/مطفأ)
+   تتغيّر وقت التشغيل لا وقت البناء. fill="currentColor" يخلّيها تتبع لون
+   الزر تلقائياً بدل لون إيموجي ثابت لا يتجاوب مع hover/active. */
+const TOGGLE_ICON_SVG = {
+  light: '<svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-360q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35Zm0 80q-83 0-141.5-58.5T280-480q0-83 58.5-141.5T480-680q83 0 141.5 58.5T680-480q0 83-58.5 141.5T480-280ZM200-440H40v-80h160v80Zm720 0H760v-80h160v80ZM440-760v-160h80v160h-80Zm0 720v-160h80v160h-80ZM256-650l-101-97 57-59 96 100-52 56Zm492 496-97-101 53-55 101 97-57 59Zm-98-550 97-101 59 57-100 96-56-52ZM154-212l101-97 55 53-97 101-59-57Zm326-268Z"/></svg>',
+  dark: '<svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"/></svg>',
+  auto: '<svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M312-320h64l32-92h146l32 92h62L512-680h-64L312-320Zm114-144 52-150h4l52 150H426Zm54 436L346-160H160v-186L28-480l132-134v-186h186l134-132 134 132h186v186l132 134-132 134v186H614L480-28Zm0-112 100-100h140v-140l100-100-100-100v-140H580L480-820 380-720H240v140L140-480l100 100v140h140l100 100Zm0-340Z"/></svg>',
+  volumeOn:
+    '<svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M560-131v-82q90-26 145-100t55-168q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 127-78 224.5T560-131ZM120-360v-240h160l200-200v640L280-360H120Zm440 40v-322q47 22 73.5 66t26.5 96q0 51-26.5 94.5T560-320ZM400-606l-86 86H200v80h114l86 86v-252ZM300-480Z"/></svg>',
+  volumeOff:
+    '<svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M792-56 671-177q-25 16-53 27.5T560-131v-82q14-5 27.5-10t25.5-12L480-368v208L280-360H120v-240h128L56-792l56-56 736 736-56 56Zm-8-232-58-58q17-31 25.5-65t8.5-70q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 53-14.5 102T784-288ZM650-422l-90-90v-130q47 22 73.5 66t26.5 96q0 15-2.5 29.5T650-422ZM480-592 376-696l104-104v208Zm-80 238v-94l-72-72H200v80h114l86 86Zm-36-130Z"/></svg>',
+};
+
 /* ===== تبديل المظهر: تلقائي (يتبع النظام) / فاتح / داكن ===== */
 function initThemeToggle() {
   const btn = document.querySelector(".theme-toggle");
   if (!btn) return;
 
   const KEY = "site_theme_pref";
-  const ICONS = { auto: "🌓", light: "☀️", dark: "🌙" };
+  const ICONS = { auto: TOGGLE_ICON_SVG.auto, light: TOGGLE_ICON_SVG.light, dark: TOGGLE_ICON_SVG.dark };
   const NEXT = { auto: "light", light: "dark", dark: "auto" };
 
   function getPref() {
@@ -321,7 +336,7 @@ function initThemeToggle() {
       document.documentElement.setAttribute("data-theme", pref);
     }
     // أيقونة فقط داخل الزر (الزر مربّع بالهيدر) والشرح النصي بالـ title/aria
-    btn.textContent = ICONS[pref];
+    btn.innerHTML = ICONS[pref];
     const label = `${t("theme_current_label")}: ${t(`theme_label_${pref}`)} — ${t("theme_click_to_toggle")}`;
     btn.title = label;
     btn.setAttribute("aria-label", label);
@@ -584,6 +599,7 @@ async function toggleLike(section, id, btn) {
   countEl.textContent = optimisticCount;
   iconEl.textContent = alreadyLiked ? "♡" : "♥";
   btn.classList.toggle("active", !alreadyLiked);
+  btn.setAttribute("aria-pressed", String(!alreadyLiked));
   if (alreadyLiked) delete liked[key];
   else liked[key] = true;
   saveLikedItems(liked);
@@ -609,6 +625,7 @@ async function toggleLike(section, id, btn) {
     countEl.textContent = currentCount;
     iconEl.textContent = alreadyLiked ? "♥" : "♡";
     btn.classList.toggle("active", alreadyLiked);
+    btn.setAttribute("aria-pressed", String(alreadyLiked));
     if (alreadyLiked) liked[key] = true;
     else delete liked[key];
     saveLikedItems(liked);
@@ -3332,6 +3349,8 @@ function initExpenseCalculator() {
       toast = document.createElement("div");
       toast.id = "calcToast";
       toast.className = "calc-toast";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
       document.body.append(toast);
     }
     toast.innerHTML = "";
@@ -4143,6 +4162,8 @@ function showToast(message) {
     toast = document.createElement("div");
     toast.id = "site-toast";
     toast.className = "toast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
     document.body.appendChild(toast);
   }
   toast.textContent = message;
@@ -4223,11 +4244,11 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       <div class="item-top">
         <span class="item-icon">${item.icon || "⭐"}</span>
         <div class="item-top-actions">
-          <button class="like-btn ${liked ? "active" : ""}" data-section="${section}" data-id="${item.id}" title="${t("like_action")}" aria-label="${t("like_action")}">
+          <button class="like-btn ${liked ? "active" : ""}" data-section="${section}" data-id="${item.id}" title="${t("like_action")}" aria-label="${t("like_action")}" aria-pressed="${liked}">
             <span class="like-icon">${liked ? "♥" : "♡"}</span> <span class="like-count">${likeCount}</span>
           </button>
           <button class="share-btn" title="${t("share_whatsapp")}" aria-label="${t("share_whatsapp")}">📤</button>
-          <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? t("fav_remove") : t("fav_add")}" aria-label="${fav ? t("fav_remove") : t("fav_add")}">
+          <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? t("fav_remove") : t("fav_add")}" aria-label="${fav ? t("fav_remove") : t("fav_add")}" aria-pressed="${fav}">
             ${fav ? "♥" : "♡"}
           </button>
         </div>
@@ -4262,6 +4283,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     const label = nowFav ? t("fav_remove") : t("fav_add");
     favBtn.title = label;
     favBtn.setAttribute("aria-label", label);
+    favBtn.setAttribute("aria-pressed", String(nowFav));
     favBtn.classList.remove("pop");
     void favBtn.offsetWidth;
     favBtn.classList.add("pop");
@@ -4813,10 +4835,14 @@ async function initPushNotifications() {
    النتيجة النهائية فوق الشاشة كاملة، ما ترجع لبطاقة صغيرة بعدها — وتحتها
    أزرار التواصل الفعلية (اتصال/موقع/إنستقرام) وزر إعادة المحاولة والإغلاق */
 function openPickerReveal(item, { onRetry, onClose } = {}) {
+  // نحفظ العنصر اللي كان عليه التركيز (زر "اختار لي") عشان نرجّع له التركيز
+  // بعد الإغلاق — بدونه يضيع تركيز لوحة المفاتيح على body بعد كل إغلاق
+  const trigger = document.activeElement;
   const overlay = document.createElement("div");
   overlay.className = "picker-reveal-overlay";
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", itemTitle(item));
   document.body.appendChild(overlay);
   document.body.style.overflow = "hidden";
 
@@ -4824,6 +4850,9 @@ function openPickerReveal(item, { onRetry, onClose } = {}) {
     overlay.remove();
     document.body.style.overflow = "";
     document.removeEventListener("keydown", onKeydown);
+    if (trigger && document.contains(trigger) && typeof trigger.focus === "function") {
+      trigger.focus();
+    }
     onClose?.();
   }
   function onKeydown(e) {
@@ -4840,6 +4869,9 @@ function openPickerReveal(item, { onRetry, onClose } = {}) {
     close();
   });
   overlay.appendChild(closeBtn);
+  // تحويل التركيز لأول عنصر تفاعلي بالحوار وقت فتحه — بدونه يضل تركيز
+  // لوحة المفاتيح/قارئ الشاشة على الزر المخفي خلف الحاجز
+  closeBtn.focus();
 
   const burst = document.createElement("div");
   burst.className = "picker-burst";
@@ -4892,10 +4924,13 @@ function openPickerReveal(item, { onRetry, onClose } = {}) {
    يستخدمه (.picker-reveal-overlay)، بس ببطاقة بسيطة بدلاً من burstPieces.
    اسم وسعر بس بلا صور — قرار صريح من صاحب الموقع. ===== */
 function openMenuOverlay(item) {
+  // نفس منطق حفظ/إرجاع التركيز بـopenPickerReveal أعلاه
+  const trigger = document.activeElement;
   const overlay = document.createElement("div");
   overlay.className = "picker-reveal-overlay menu-overlay";
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", `${t("link_menu")} — ${itemTitle(item)}`);
   document.body.appendChild(overlay);
   document.body.style.overflow = "hidden";
 
@@ -4903,6 +4938,9 @@ function openMenuOverlay(item) {
     overlay.remove();
     document.body.style.overflow = "";
     document.removeEventListener("keydown", onKeydown);
+    if (trigger && document.contains(trigger) && typeof trigger.focus === "function") {
+      trigger.focus();
+    }
   }
   function onKeydown(e) {
     if (e.key === "Escape") close();
@@ -4921,6 +4959,7 @@ function openMenuOverlay(item) {
     close();
   });
   overlay.appendChild(closeBtn);
+  closeBtn.focus();
 
   const card = document.createElement("div");
   card.className = "menu-card";
