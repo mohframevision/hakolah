@@ -24,6 +24,21 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- بدون autoVerify عمداً: التحقق الرسمي (Digital Asset Links) يحتاج
+                 بصمة شهادة التوقيع الحقيقية بمتجر Play، وهذي شهادة debug مؤقتة
+                 لحد الآن. بدون autoVerify يفتح رابط هكوله نافذة اختيار ("افتح
+                 بـ...") بدل فتح تلقائي فوري — تحسين حقيقي بردّ حال ما زال
+                 يعمل صح. أضف autoVerify + assetlinks.json بالموقع بعد النشر
+                 الفعلي بمتجر Play وتوفّر بصمة التوقيع النهائية. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="mohframevision.github.io"
+                    android:pathPrefix="/hakolah/" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".PickerActivity"

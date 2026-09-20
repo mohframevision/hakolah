@@ -2,6 +2,9 @@ package bh.mohframevision.hakolah;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,14 +33,21 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
     // الخطأ، لا فحص instanceof وقت التشغيل)
     private final Activity context;
     private final String section;
+    private final String searchQuery;
     private final List<JSONObject> items = new ArrayList<>();
+
+    ItemAdapter(Activity context, String section, JSONArray itemsJson) {
+        this(context, section, itemsJson, "");
+    }
 
     // القسم الافتراضي لكل عناصر القائمة (شاشة قسم واحد عادية). شاشة المفضلة
     // (تجمع عناصر من كذا قسم) تمرّر حقل "_section" داخل كل عنصر يتجاوز هذا
-    // الافتراضي — انظر itemSection()
-    ItemAdapter(Activity context, String section, JSONArray itemsJson) {
+    // الافتراضي — انظر itemSection(). searchQuery: يُبرِز تطابق البحث
+    // بعنوان الكرت (SpannableString) — فاضي يعني بلا تبرير.
+    ItemAdapter(Activity context, String section, JSONArray itemsJson, String searchQuery) {
         this.context = context;
         this.section = section;
+        this.searchQuery = searchQuery == null ? "" : searchQuery;
         for (int i = 0; i < itemsJson.length(); i++) {
             // optJSONObject يرجع null لأي عنصر مش كائن JSON فعلي (ملف بيانات
             // تالف جزئياً مثلاً) — نتجاهله هنا بدل ما getView() يفشل بـNPE
@@ -101,7 +111,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         JSONObject item = items.get(position);
         String id = item.optString("id", "");
         holder.icon.setText(item.optString("icon", "⭐"));
-        holder.title.setText(item.optString("title", ""));
+        holder.title.setText(highlightMatch(item.optString("title", "")));
         String itemSection = itemSection(item);
         holder.shareBtn.setTag("share:" + position);
         holder.favBtn.setTag("fav:" + position);
@@ -170,6 +180,20 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         }
 
         return row;
+    }
+
+    // يبرز تطابق البحث الحرفي (substring) بلون الهوية — نطاق محدود عمداً:
+    // مطابقة Levenshtein الضبابية (تشابه لا تطابق حرفي) ما فيها نطاق واحد
+    // متصل يُبرَز، فنكتفي بعرض العنوان عادياً بهذي الحالة بدل تخمين خاطئ
+    private CharSequence highlightMatch(String title) {
+        String q = searchQuery.trim();
+        if (q.isEmpty()) return title;
+        int idx = title.toLowerCase().indexOf(q.toLowerCase());
+        if (idx < 0) return title;
+        SpannableString span = new SpannableString(title);
+        span.setSpan(new ForegroundColorSpan(context.getColor(R.color.brand_accent)),
+                idx, idx + q.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return span;
     }
 
     private String itemSection(JSONObject item) {

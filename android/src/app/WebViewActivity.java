@@ -2,8 +2,11 @@ package bh.mohframevision.hakolah;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -46,7 +49,10 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         if (url != null) webView.loadUrl(url);
     }
 
-    // كلاس علوي مسمّى (مو مجهول) — د8 يفشل على الكلاسات المجهولة بهذي البيئة
+    // كلاس علوي مسمّى (مو مجهول) — د8 يفشل على الكلاسات المجهولة بهذي البيئة.
+    // يمنع تسرّب التصفح خارج نطاق الموقع: أي رابط لنفس نطاق هكوله يُفتح داخل
+    // الـWebView نفسه بشكل طبيعي، وأي رابط خارجي (مثلاً لو الأداة فيها رابط
+    // توثيق خارجي) يُفتح بمتصفح/تطبيق خارجي حقيقي بدل التصفح داخل تطبيقنا
     private static class LoadingClient extends WebViewClient {
         private final ProgressBar progress;
 
@@ -57,6 +63,17 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         @Override
         public void onPageFinished(WebView view, String url) {
             progress.setVisibility(View.GONE);
+        }
+
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            Uri uri = request.getUrl();
+            if ("mohframevision.github.io".equals(uri.getHost())) return false;
+            try {
+                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, uri));
+            } catch (Exception ignored) {
+            }
+            return true;
         }
     }
 

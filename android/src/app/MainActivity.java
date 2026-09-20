@@ -2,9 +2,11 @@ package bh.mohframevision.hakolah;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -46,7 +48,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private boolean sortByDistance;
     private Double userLat;
     private Double userLng;
+    private long lastFetchTime;
+    private boolean deepLinkHandled;
     private static final int LOCATION_PERMISSION_REQUEST = 1;
+    // بعد هذي المدة بالخلفية (لا إغلاق كامل، مجرد استئناف)، نعيد الجلب —
+    // نفس هدف "المحتوى يتزامن فوراً" لكن لحالة استئناف التطبيق لا فتحه فقط
+    private static final long STALE_AFTER_MS = 30 * 60 * 1000;
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -77,6 +84,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         buildMainNav();
 
         loadData();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // يغطّي حالة "التطبيق كان بالخلفية طويلاً" — onCreate/loadData()
+        // الأصلية تغطّي فقط الفتح من الصفر
+        if (sections != null && System.currentTimeMillis() - lastFetchTime > STALE_AFTER_MS) {
+            loadData();
+        }
     }
 
     @Override
@@ -179,6 +196,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     // ---- HakolahApi.Callback ----
     @Override
     public void onSuccess(JSONObject data, boolean fromCache) {
+        lastFetchTime = System.currentTimeMillis();
         sections = data.optJSONObject("sections");
         sectionOrder = data.optJSONArray("sectionOrder");
         // مرجع ساكن يقرأه PickerActivity مباشرة (تطبيق مستخدم واحد بعملية
@@ -191,10 +209,73 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             return;
         }
         buildSectionTabs();
+        if (!deepLinkHandled) {
+            deepLinkHandled = true;
+            if (handleDeepLink()) return;
+        }
         selectSection(firstBrowsable);
         if (fromCache) {
             headerTitle.append(" (بيانات محفوظة، بلا اتصال)");
         }
+    }
+
+    // رابط هكوله (مثلاً شاركه صديق بالواتساب) يفتح التطبيق مباشرة بدل
+    // المتصفح ويوديك للقسم/العنصر الصحيح — بلا autoVerify لحد نشر فعلي
+    // بمتجر Play (انظر تعليق AndroidManifest.xml). يرجع true لو تعامل مع
+    // الرابط فعلياً (فيفتح مقال/أداة بدل القسم الافتراضي).
+    private boolean handleDeepLink() {
+        Uri data = getIntent().getData();
+        if (data == null) return false;
+        String path = data.getPath();
+        if (path == null) return false;
+        String rel = path.startsWith("/hakolah/") ? path.substring("/hakolah/".length()) : path.replaceFirst("^/", "");
+        if (rel.isEmpty() || !rel.endsWith(".html")) return false;
+
+        if (rel.contains("/")) {
+            String[] parts = rel.split("/", 2);
+            return openDeepLinkedItem(parts[0], parts[1].substring(0, parts[1].length() - 5));
+        }
+
+        String section = rel.substring(0, rel.length() - 5);
+        if (sections == null || !sections.has(section)) return false;
+        selectSection(section);
+        String q = data.getQueryParameter("q");
+        if (q != null && !q.isEmpty()) searchBox.setText(q);
+        return true;
+    }
+
+    private boolean openDeepLinkedItem(String section, String slug) {
+        JSONObject sec = sections == null ? null : sections.optJSONObject(section);
+        JSONArray items = sec == null ? null : sec.optJSONArray("items");
+        if (items == null) return false;
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject item = items.optJSONObject(i);
+            if (item == null || !slug.equals(item.optString("id", ""))) continue;
+            Intent intent = "ai-experiments".equals(section)
+                    ? webViewIntentFor(item)
+                    : articleIntentFor(item);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+            selectSection(section);
+            return true;
+        }
+        return false;
+    }
+
+    private Intent articleIntentFor(JSONObject item) {
+        Intent intent = new Intent(this, ArticleActivity.class);
+        intent.putExtra(ArticleActivity.EXTRA_TITLE, item.optString("title", ""));
+        intent.putExtra(ArticleActivity.EXTRA_ICON, item.optString("icon", "⭐"));
+        intent.putExtra(ArticleActivity.EXTRA_CONTENT, item.optString("contentHtml", ""));
+        intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, item.optString("detailUrl", ""));
+        return intent;
+    }
+
+    private Intent webViewIntentFor(JSONObject item) {
+        Intent intent = new Intent(this, WebViewActivity.class);
+        intent.putExtra(WebViewActivity.EXTRA_TITLE, item.optString("title", ""));
+        intent.putExtra(WebViewActivity.EXTRA_URL, HakolahApi.ORIGIN + item.optString("detailUrl", ""));
+        return intent;
     }
 
     @Override
@@ -357,7 +438,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             emptyResetButton.setVisibility(hasActiveFilter ? View.VISIBLE : View.GONE);
         } else {
             emptyView.setVisibility(View.GONE);
-            itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered));
+            itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered, searchQuery));
             itemList.setVisibility(View.VISIBLE);
         }
     }
