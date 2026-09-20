@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- زر "اختار لي" المرفوع بالشريط السفلي — نفس فكرة زر "+" بمنتصف شريط
+     Beli السفلي بالضبط: دائرة مصمتة بارزة تكسر رتابة الصف بدل أيقونة مسطّحة -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple_on_primary">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/brand_primary" />
+        </shape>
+    </item>
+</ripple>

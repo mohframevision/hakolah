@@ -36,7 +36,7 @@ class BottomNav implements View.OnClickListener {
     private void build(LinearLayout container) {
         container.removeAllViews();
         addTab(container, R.drawable.ic_home, "الرئيسية", HOME);
-        addTab(container, R.drawable.ic_casino, "اختار لي", PICKER);
+        addFab(container, PICKER);
         addTab(container, R.drawable.ic_favorite_fill, "المفضلة", FAVORITES);
         addTab(container, R.drawable.ic_settings, "الإعدادات", SETTINGS);
     }
@@ -50,6 +50,18 @@ class BottomNav implements View.OnClickListener {
         TextView labelView = tab.findViewById(R.id.tabLabel);
         labelView.setText(label);
         labelView.setTextColor(color);
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
+        lp.width = 0;
+        lp.weight = 1;
+        tab.setLayoutParams(lp);
+        tab.setTag(tag);
+        tab.setOnClickListener(this);
+        container.addView(tab);
+    }
+
+    // "اختار لي" مرفوعة كدائرة بارزة — نفس المعاملة بـMainActivity.addMainNavFab()
+    private void addFab(LinearLayout container, String tag) {
+        View tab = LayoutInflater.from(activity).inflate(R.layout.nav_tab_fab, container, false);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
         lp.width = 0;
         lp.weight = 1;

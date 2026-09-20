@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <ImageView
+        android:id="@+id/tabIcon"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="-18dp"
+        android:padding="13dp"
+        android:background="@drawable/circle_solid_bg"
+        android:elevation="6dp"
+        android:src="@drawable/ic_casino"
+        android:tint="@color/white" />
+</FrameLayout>

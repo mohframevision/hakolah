@@ -94,6 +94,9 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:orientation="horizontal"
+        android:gravity="bottom"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:background="@color/surface"
         android:elevation="4dp" />
 

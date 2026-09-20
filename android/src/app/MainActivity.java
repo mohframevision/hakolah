@@ -42,6 +42,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private EditText searchBox;
     private LinearLayout filterChips;
     private TextView nearMeButton;
+    private LinearLayout alphabetIndex;
 
     // نفس فكرة initHeaderScroll بالموقع (يخفي الهيدر أثناء النزول بالقائمة
     // ويرجّعه عند الصعود) — بلا CoordinatorLayout (يحتاج مكتبة)، بـ
@@ -91,6 +92,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         searchBox = findViewById(R.id.searchBox);
         filterChips = findViewById(R.id.filterChips);
         nearMeButton = findViewById(R.id.nearMeButton);
+        alphabetIndex = findViewById(R.id.alphabetIndex);
         findViewById(R.id.retryButton).setOnClickListener(this);
         nearMeButton.setOnClickListener(this);
         emptyResetButton.setOnClickListener(this);
@@ -216,6 +218,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             return;
         }
         Object tag = v.getTag();
+        if (tag instanceof Integer) {
+            // شريط التصفح الأبجدي — يقفز لأول عنصر يبدأ بالحرف المضغوط
+            itemList.setSelection((Integer) tag);
+            return;
+        }
         if (!(tag instanceof String)) return;
         String value = (String) tag;
         if (value.startsWith("chip:")) {
@@ -249,7 +256,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     // sectionTabs للأقسام الفعلية (بيانات القسم القابلة للتغيّر، تبقى إيموجي)
     private void buildMainNav() {
         addMainNavTab(R.drawable.ic_home, "الرئيسية", HOME_TAG);
-        addMainNavTab(R.drawable.ic_casino, "اختار لي", PICKER_TAG);
+        addMainNavFab(PICKER_TAG);
         addMainNavTab(R.drawable.ic_favorite_fill, "المفضلة", FAVORITES_TAG);
         addMainNavTab(R.drawable.ic_settings, "الإعدادات", SETTINGS_TAG);
     }
@@ -263,6 +270,19 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         TextView labelView = tab.findViewById(R.id.tabLabel);
         labelView.setText(label);
         if (active) labelView.setTextColor(getColor(R.color.brand_accent));
+        tab.setTag(tag);
+        tab.setOnClickListener(this);
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
+        lp.width = 0;
+        lp.weight = 1;
+        tab.setLayoutParams(lp);
+        bottomNav.addView(tab);
+    }
+
+    // "اختار لي" مرفوعة كدائرة بارزة فوق حافة الشريط — نفس فكرة زر "+" بمنتصف
+    // شريط Beli السفلي، بدل أيقونة مسطّحة زي بقية التبويبات
+    private void addMainNavFab(String tag) {
+        View tab = getLayoutInflater().inflate(R.layout.nav_tab_fab, bottomNav, false);
         tab.setTag(tag);
         tab.setOnClickListener(this);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
@@ -422,6 +442,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             ((TextView) tab.findViewById(R.id.tabLabel)).setText(section.optString("title", slug));
             tab.setTag(slug);
             tab.setOnClickListener(this);
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
+            lp.setMarginEnd(dp(4));
+            tab.setLayoutParams(lp);
             sectionTabs.addView(tab);
         }
     }
@@ -528,6 +551,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (sortByDistance && userLat != null) {
             for (JSONObject item : matched) annotateDistance(item);
             sortByDistanceAscending(matched);
+        } else {
+            // ترتيب أبجدي افتراضي — يخلي شريط التصفح الأبجدي (alphabetIndex)
+            // مفيداً فعلاً، بدل قفزة لموضع عشوائي بترتيب البيانات الخام
+            sortAlphabetically(matched);
         }
 
         JSONArray filtered = new JSONArray();
@@ -545,6 +572,60 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered, searchQuery));
             itemList.setVisibility(View.VISIBLE);
         }
+        buildAlphabetIndex(matched);
+    }
+
+    // ترتيب إدراج يدوي بـCollator عربي — بنفس سبب تفادي Comparator<T> بملفات
+    // ثانية بالمشروع (bridge method مصنَّع يكسر d8 بهذي البيئة)
+    private void sortAlphabetically(List<JSONObject> list) {
+        java.text.Collator collator = java.text.Collator.getInstance(new java.util.Locale("ar"));
+        for (int i = 1; i < list.size(); i++) {
+            JSONObject key = list.get(i);
+            String keyTitle = key.optString("title", "");
+            int j = i - 1;
+            while (j >= 0 && collator.compare(list.get(j).optString("title", ""), keyTitle) > 0) {
+                list.set(j + 1, list.get(j));
+                j--;
+            }
+            list.set(j + 1, key);
+        }
+    }
+
+    // شريط تصفح أبجدي جانبي (نفس فكرة مكتبة موسيقى سامسونج) — يبان بس لو
+    // القسم فيه عناصر كافية تستاهل قفزة سريعة، وحروفه مبنية من العناوين
+    // الفعلية الموجودة بس (لا أبجدية كاملة ثابتة فيها حروف ميتة بلا نتائج)
+    private static final int ALPHABET_INDEX_MIN_ITEMS = 12;
+
+    private void buildAlphabetIndex(List<JSONObject> items) {
+        alphabetIndex.removeAllViews();
+        if (items.size() < ALPHABET_INDEX_MIN_ITEMS) {
+            alphabetIndex.setVisibility(View.GONE);
+            return;
+        }
+        List<String> seenLetters = new ArrayList<>();
+        for (int i = 0; i < items.size(); i++) {
+            String title = SearchUtil.normalizeArabic(items.get(i).optString("title", "").trim());
+            if (title.isEmpty()) continue;
+            String letter = title.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
+            if (seenLetters.contains(letter)) continue;
+            seenLetters.add(letter);
+            addAlphabetIndexEntry(letter, i);
+        }
+        alphabetIndex.setVisibility(seenLetters.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    private void addAlphabetIndexEntry(String letter, int position) {
+        TextView entry = new TextView(this);
+        entry.setText(letter);
+        entry.setTextSize(11f);
+        entry.setTextColor(getColor(R.color.brand_primary));
+        entry.setGravity(android.view.Gravity.CENTER);
+        entry.setPadding(0, dp(2), 0, dp(2));
+        entry.setClickable(true);
+        entry.setFocusable(true);
+        entry.setTag(position);
+        entry.setOnClickListener(this);
+        alphabetIndex.addView(entry);
     }
 
     private boolean hasTag(JSONObject item, String tag) {
@@ -717,9 +798,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         for (int i = 0; i < sectionTabs.getChildCount(); i++) {
             View tab = sectionTabs.getChildAt(i);
             boolean active = currentSlug.equals(tab.getTag());
+            tab.setActivated(active);
             TextView label = tab.findViewById(R.id.tabLabel);
             label.setTextColor(active
-                    ? getColor(R.color.brand_accent)
+                    ? getColor(R.color.white)
                     : getColor(R.color.text_muted));
         }
     }

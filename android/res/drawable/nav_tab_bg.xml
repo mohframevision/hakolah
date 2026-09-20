@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- نفس فكرة الشارة الفعّالة البارزة بتطبيقات مثل Jahez/Beli: تبويب القسم
+     الحالي يصير حبة مصمتة تكسر الصف، لا مجرد تغيير لون نص خافت -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple_on_secondary">
+    <item>
+        <selector>
+            <item android:state_activated="true">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/brand_primary" />
+                    <corners android:radius="18dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="18dp" />
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>
