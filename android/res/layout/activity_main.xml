@@ -169,15 +169,44 @@
             android:paddingBottom="16dp"
             android:layoutAnimation="@anim/list_layout_controller" />
 
-        <TextView
+        <LinearLayout
             android:id="@+id/emptyView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="لا توجد عناصر بهذا القسم بعد"
-            android:textColor="@color/text_muted"
-            android:textSize="15sp"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/emptyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="لا توجد عناصر بهذا القسم بعد"
+                android:textColor="@color/text_muted"
+                android:textSize="15sp"
+                android:gravity="center" />
+
+            <!-- يظهر فقط لما السبب بحث/فلترة نشطة — يمسحهما بدل ما يترك
+                 المستخدم بطريق مسدود -->
+            <TextView
+                android:id="@+id/emptyResetButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="تصفّح الكل"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:background="@drawable/btn_pill_primary"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone" />
+        </LinearLayout>
     </FrameLayout>
 
     <!-- 4 وجهات ثابتة بس (لا تتمدد مع الأقسام) — نفس حد الـ5 عناصر الموصى به

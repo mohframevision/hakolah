@@ -1,8 +1,22 @@
 package bh.mohframevision.hakolah;
 
+import java.util.regex.Pattern;
+
 // منفذ بالضبط من levenshtein()/fuzzyIncludes() بـmain.js — نفس التسامح
-// بالأخطاء الإملائية (مسافة تحرير ≤1 لكلمة قصيرة، ≤2 لكلمة أطول)
+// بالأخطاء الإملائية (مسافة تحرير ≤1 لكلمة قصيرة، ≤2 لكلمة أطول) — مع
+// تطبيع عربي إضافي (تشكيل، همزات، تاء مربوطة) غير موجود بالموقع، عشان
+// "مطعم" يطابق "مطعـٌم" و"أحمد" يطابق "احمد" و"مكتبه" يطابق "مكتبة"
 class SearchUtil {
+    // U+064B-U+065F تشكيل، U+0670 ألف خنجرية، U+0640 تطويل
+    private static final Pattern DIACRITICS = Pattern.compile("[\\u064B-\\u065F\\u0670\\u0640]");
+
+    static String normalizeArabic(String s) {
+        if (s == null) return "";
+        String out = DIACRITICS.matcher(s).replaceAll("");
+        out = out.replace('أ', 'ا').replace('إ', 'ا').replace('آ', 'ا')
+                .replace('ة', 'ه').replace('ى', 'ي');
+        return out;
+    }
     static int levenshtein(String a, String b) {
         int m = a.length();
         int n = b.length();
@@ -28,8 +42,8 @@ class SearchUtil {
     }
 
     static boolean fuzzyIncludes(String haystack, String query) {
-        String hay = haystack == null ? "" : haystack.toLowerCase();
-        String q = query == null ? "" : query.trim().toLowerCase();
+        String hay = normalizeArabic(haystack == null ? "" : haystack.toLowerCase());
+        String q = normalizeArabic(query == null ? "" : query.trim().toLowerCase());
         if (q.isEmpty()) return true;
         if (hay.contains(q)) return true;
 

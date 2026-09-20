@@ -28,7 +28,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private View errorView;
     private TextView errorText;
     private ListView itemList;
-    private TextView emptyView;
+    private View emptyView;
+    private TextView emptyResetButton;
     private LinearLayout bottomNav;
     private LinearLayout sectionTabs;
     private TextView headerTitle;
@@ -62,6 +63,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         errorText = findViewById(R.id.errorText);
         itemList = findViewById(R.id.itemList);
         emptyView = findViewById(R.id.emptyView);
+        emptyResetButton = findViewById(R.id.emptyResetButton);
         bottomNav = findViewById(R.id.bottomNav);
         sectionTabs = findViewById(R.id.sectionTabs);
         headerTitle = findViewById(R.id.headerTitle);
@@ -70,6 +72,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         nearMeButton = findViewById(R.id.nearMeButton);
         findViewById(R.id.retryButton).setOnClickListener(this);
         nearMeButton.setOnClickListener(this);
+        emptyResetButton.setOnClickListener(this);
         searchBox.addTextChangedListener(this);
         buildMainNav();
 
@@ -86,6 +89,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (id == R.id.nearMeButton) {
             SoundPlayer.playClick(this);
             toggleNearMe();
+            return;
+        }
+        if (id == R.id.emptyResetButton) {
+            SoundPlayer.playClick(this);
+            clearSearchAndFilter();
             return;
         }
         Object tag = v.getTag();
@@ -303,6 +311,17 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         applyFilters();
     }
 
+    // زر "تصفّح الكل" بحالة البحث الفاضية — يمسح البحث والفلتر النشط معاً
+    private void clearSearchAndFilter() {
+        currentTag = null;
+        searchBox.removeTextChangedListener(this);
+        searchBox.setText("");
+        searchBox.addTextChangedListener(this);
+        searchQuery = "";
+        buildFilterChips();
+        applyFilters();
+    }
+
     private int dp(float value) {
         return (int) android.util.TypedValue.applyDimension(
                 android.util.TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics());
@@ -332,6 +351,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (filtered.length() == 0) {
             itemList.setVisibility(View.GONE);
             emptyView.setVisibility(View.VISIBLE);
+            // الزر يبان بس لو الفراغ سببه بحث/فلترة نشطة — قسم فاضي فعلياً
+            // بلا بحث ما فيه شي يرجع له المستخدم "يتصفّح كله"
+            boolean hasActiveFilter = currentTag != null || !searchQuery.isEmpty();
+            emptyResetButton.setVisibility(hasActiveFilter ? View.VISIBLE : View.GONE);
         } else {
             emptyView.setVisibility(View.GONE);
             itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered));
@@ -359,10 +382,37 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         }
         if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST);
+            showLocationRationale();
             return;
         }
         locateAndSort();
+    }
+
+    // نافذة توضيح قبل طلب صلاحية الموقع الرسمي من النظام — يفهم المستخدم
+    // السبب ("قريب مني" فقط) قبل ما يواجه نافذة النظام المقتضبة، فيقلّ رفض
+    // الصلاحية بلا سبب واضح
+    private void showLocationRationale() {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("الوصول للموقع")
+                .setMessage("عشان نرتّب النتائج حسب الأقرب لك، نحتاج إذنك للوصول لموقعك الجغرافي. يُستخدم محلياً بالجهاز فقط، ما يُرسَل لأي سيرفر.")
+                .setPositiveButton("متابعة", new RequestLocationPermission(this))
+                .setNegativeButton("إلغاء", null)
+                .show();
+    }
+
+    // كلاس علوي مسمّى (مو مجهول) — د8 يفشل على الكلاسات المجهولة بهذي البيئة.
+    // ثابت (static) لا داخلي — نفس نمط بقية الكلاسات المساعدة بالمشروع
+    private static class RequestLocationPermission implements android.content.DialogInterface.OnClickListener {
+        private final Activity activity;
+
+        RequestLocationPermission(Activity activity) {
+            this.activity = activity;
+        }
+
+        @Override
+        public void onClick(android.content.DialogInterface dialog, int which) {
+            activity.requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST);
+        }
     }
 
     @Override
