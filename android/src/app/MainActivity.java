@@ -572,7 +572,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered, searchQuery));
             itemList.setVisibility(View.VISIBLE);
         }
-        buildAlphabetIndex(matched);
+        // الشريط الأبجدي يفترض ترتيباً أبجدياً — لا معنى له وقت الترتيب
+        // بـ"الأقرب مني"، وقتها يوديك لموضع عشوائي بدل تجميع الحرف فعلياً
+        if (sortByDistance) {
+            alphabetIndex.setVisibility(View.GONE);
+        } else {
+            buildAlphabetIndex(matched);
+        }
     }
 
     // ترتيب إدراج يدوي بـCollator عربي — بنفس سبب تفادي Comparator<T> بملفات
