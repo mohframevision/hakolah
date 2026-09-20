@@ -62,7 +62,7 @@
             android:id="@+id/searchBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="ابحث…"
+            android:hint="🔍 ابحث…"
             android:inputType="text"
             android:maxLines="1"
             android:background="@drawable/search_box_bg"

@@ -5,7 +5,7 @@
     <color name="bg">#F7F7F5</color>
     <color name="surface">#FFFFFF</color>
     <color name="text">#1A1A1A</color>
-    <color name="text_muted">#6B6B6B</color>
+    <color name="text_muted">#555555</color>
     <color name="border">#E4E4E0</color>
     <color name="white">#FFFFFF</color>
     <color name="secondary_btn_bg">#0F1A1A1A</color>

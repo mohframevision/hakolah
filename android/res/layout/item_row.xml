@@ -35,7 +35,9 @@
             android:textSize="17sp"
             android:textStyle="bold"
             android:textColor="@color/text"
-            android:gravity="center_vertical" />
+            android:gravity="center_vertical"
+            android:maxLines="2"
+            android:ellipsize="end" />
 
         <TextView
             android:id="@+id/shareButton"
