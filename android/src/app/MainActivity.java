@@ -50,6 +50,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private int headerHeight = -1;
     private boolean headerVisible = true;
     private int lastFirstVisibleItem = 0;
+    private boolean isHeaderAnimating = false;
 
     private JSONObject sections;
     private JSONArray sectionOrder;
@@ -106,6 +107,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        // تجاهل أثناء الأنيميشن — طي/فتح الهيدر يغيّر ارتفاعه فيكبر/يصغر
+        // FrameLayout الموزون تحته (weight=1)، وهذا وحده يطلق onScroll زائفة
+        // (ListView تعيد حساب مقاييسها لما تتمدد) تبان كأنها "المستخدم رجع
+        // للأعلى" وتوقف الطي بمنتصفه — من هنا "يتحرك شوي بس ما ينطوي كامل"
+        if (isHeaderAnimating) return;
         if (firstVisibleItem == 0) {
             showHeader();
         } else if (firstVisibleItem > lastFirstVisibleItem) {
@@ -131,9 +137,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
     private void animateHeaderHeight(int from, int to) {
         if (headerHeight <= 0 && from > 0) headerHeight = from;
+        isHeaderAnimating = true;
         ValueAnimator animator = ValueAnimator.ofInt(from, to);
-        animator.setDuration(180);
+        animator.setDuration(220);
         animator.addUpdateListener(new HeaderHeightUpdater(headerBar));
+        animator.addListener(new HeaderAnimEndListener(this));
         animator.start();
     }
 
@@ -151,6 +159,32 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             lp.height = (int) animation.getAnimatedValue();
             header.setLayoutParams(lp);
         }
+    }
+
+    // يرفع علم isHeaderAnimating لحد نهاية الأنيميشن فعلياً — هذا بالضبط ما
+    // يمنع onScroll الزائفة (الناتجة عن تمدد ListView أثناء الطي) من مقاطعته
+    private static class HeaderAnimEndListener implements android.animation.Animator.AnimatorListener {
+        private final MainActivity activity;
+
+        HeaderAnimEndListener(MainActivity activity) {
+            this.activity = activity;
+        }
+
+        @Override
+        public void onAnimationStart(android.animation.Animator animation) {}
+
+        @Override
+        public void onAnimationEnd(android.animation.Animator animation) {
+            activity.isHeaderAnimating = false;
+        }
+
+        @Override
+        public void onAnimationCancel(android.animation.Animator animation) {
+            activity.isHeaderAnimating = false;
+        }
+
+        @Override
+        public void onAnimationRepeat(android.animation.Animator animation) {}
     }
     // ------------------------------------------------------------------
 
