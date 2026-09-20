@@ -19,7 +19,7 @@ class LinkButtons {
         container.removeAllViews();
         String detailUrl = item.optString("detailUrl", "");
         if (!detailUrl.isEmpty()) {
-            add(context, container, "📖 التفاصيل", "url:" + origin + detailUrl, true, listener);
+            add(context, container, R.drawable.ic_menu_book, "التفاصيل", "url:" + origin + detailUrl, true, listener);
             return;
         }
         JSONObject links = item.optJSONObject("links");
@@ -28,30 +28,32 @@ class LinkButtons {
         // أحياناً كسلسلة فاضية "" لا غائبة تماماً (مثال: ameen-kebab.md)
         boolean first = true;
         if (!links.optString("website", "").isEmpty()) {
-            add(context, container, "🌐 زيارة", "url:" + links.optString("website"), first, listener);
+            add(context, container, R.drawable.ic_language, "زيارة", "url:" + links.optString("website"), first, listener);
             first = false;
         }
         if (!links.optString("phone", "").isEmpty()) {
             String phone = links.optString("phone").split(",")[0].trim();
-            add(context, container, "📞 اتصال", "tel:" + phone, first, listener);
+            add(context, container, R.drawable.ic_call, "اتصال", "tel:" + phone, first, listener);
             first = false;
         }
         if (!links.optString("maps", "").isEmpty()) {
-            add(context, container, "📍 الخريطة", "url:" + links.optString("maps"), first, listener);
+            add(context, container, R.drawable.ic_location_on, "الخريطة", "url:" + links.optString("maps"), first, listener);
             first = false;
         }
         if (!links.optString("instagram", "").isEmpty()) {
-            add(context, container, "📷 إنستقرام", "url:" + links.optString("instagram"), first, listener);
+            add(context, container, R.drawable.ic_photo_camera, "إنستقرام", "url:" + links.optString("instagram"), first, listener);
         }
     }
 
-    // نفس .btn بالموقع بالضبط: padding 9px20px، radius حبة كاملة، أول زر
+    // نفس .btn بالموقع بالضبط: padding 24px8px، radius حبة كاملة، أول زر
     // بارز (primary)، الباقي خافت (secondary)
-    private static void add(Context context, LinearLayout container, String label, String tag, boolean primary, View.OnClickListener listener) {
+    private static void add(Context context, LinearLayout container, int iconRes, String label, String tag, boolean primary, View.OnClickListener listener) {
         TextView btn = new TextView(context);
         btn.setText(label);
         btn.setTextSize(14f);
         btn.setTypeface(null, Typeface.BOLD);
+        btn.setCompoundDrawablePadding(dp(context, 6));
+        int color = primary ? 0xFFFFFFFF : context.getColor(R.color.text_muted);
         if (primary) {
             btn.setTextColor(0xFFFFFFFF);
             btn.setBackgroundResource(R.drawable.btn_pill_primary);
@@ -59,8 +61,9 @@ class LinkButtons {
             btn.setTextColor(context.getColor(R.color.text_muted));
             btn.setBackgroundResource(R.drawable.btn_pill_secondary);
         }
-        int padH = dp(context, 20);
-        int padV = dp(context, 9);
+        setStartIcon(btn, iconRes, color);
+        int padH = dp(context, 24);
+        int padV = dp(context, 8);
         btn.setPadding(padH, padV, padH, padV);
         btn.setClickable(true);
         btn.setFocusable(true);
@@ -77,6 +80,17 @@ class LinkButtons {
     static int dp(Context context, float value) {
         return (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, value, context.getResources().getDisplayMetrics());
+    }
+
+    // أيقونة متجهة كأيقونة بداية بنص TextView — الأيقونات الأصلية 24dp (لأزرار
+    // ImageView المستقلة)، لكن ضمن نص لازم أصغر (18dp) وإلا تطغى على الخط.
+    // Drawable.setBounds() يدوياً بدل ملف أيقونة منفصل بحجم مختلف
+    static void setStartIcon(TextView view, int drawableRes, int color) {
+        android.graphics.drawable.Drawable icon = view.getContext().getDrawable(drawableRes).mutate();
+        int size = dp(view.getContext(), 18);
+        icon.setBounds(0, 0, size, size);
+        icon.setTint(color);
+        view.setCompoundDrawables(icon, null, null, null);
     }
 
     static void handleClick(Context context, String tag) {

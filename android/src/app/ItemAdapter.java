@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.net.URLEncoder;
@@ -77,8 +78,8 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
     private static class ViewHolder {
         TextView icon;
         TextView title;
-        TextView shareBtn;
-        TextView favBtn;
+        ImageView shareBtn;
+        ImageView favBtn;
         TextView desc;
         TextView hours;
         TextView tags;
@@ -120,7 +121,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
 
         String hours = item.optString("hours", "");
         if (!hours.isEmpty()) {
-            holder.hours.setText("🕐 " + hours);
+            holder.hours.setText(hours);
             holder.hours.setVisibility(View.VISIBLE);
         } else {
             holder.hours.setVisibility(View.GONE);
@@ -161,13 +162,15 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             boolean isExperiment = "ai-experiments".equals(itemSection);
             holder.actions.removeAllViews();
             TextView readBtn = new TextView(context);
-            readBtn.setText(isExperiment ? "🧪 افتح التجربة" : "📖 قراءة المقال");
+            readBtn.setText(isExperiment ? "افتح التجربة" : "قراءة المقال");
             readBtn.setTextSize(14f);
             readBtn.setTypeface(null, android.graphics.Typeface.BOLD);
             readBtn.setTextColor(0xFFFFFFFF);
             readBtn.setBackgroundResource(R.drawable.btn_pill_primary);
-            int padH = LinkButtons.dp(context, 20);
-            int padV = LinkButtons.dp(context, 9);
+            readBtn.setCompoundDrawablePadding(LinkButtons.dp(context, 6));
+            LinkButtons.setStartIcon(readBtn, isExperiment ? R.drawable.ic_science : R.drawable.ic_menu_book, 0xFFFFFFFF);
+            int padH = LinkButtons.dp(context, 24);
+            int padV = LinkButtons.dp(context, 8);
             readBtn.setPadding(padH, padV, padH, padV);
             readBtn.setClickable(true);
             readBtn.setFocusable(true);
@@ -201,9 +204,9 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         return override.isEmpty() ? section : override;
     }
 
-    private void applyFavStyle(TextView btn, boolean active) {
-        btn.setText(active ? "♥" : "♡");
-        btn.setTextColor(active ? 0xFFE0245E : context.getColor(R.color.text_muted));
+    private void applyFavStyle(ImageView btn, boolean active) {
+        btn.setImageResource(active ? R.drawable.ic_favorite_fill : R.drawable.ic_favorite_outline);
+        btn.setColorFilter(active ? 0xFFE0245E : context.getColor(R.color.text_muted));
     }
 
     @Override
@@ -221,7 +224,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
             Prefs.toggleFavorite(context, itemSection, id);
             SoundPlayer.playClick(context);
-            applyFavStyle((TextView) v, Prefs.isFavorite(context, itemSection, id));
+            applyFavStyle((ImageView) v, Prefs.isFavorite(context, itemSection, id));
         } else if (tag.startsWith("share:")) {
             int position = Integer.parseInt(tag.substring(6));
             SoundPlayer.playClick(context);

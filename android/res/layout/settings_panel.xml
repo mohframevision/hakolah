@@ -19,20 +19,21 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="⚙️ الإعدادات"
+            android:text="الإعدادات"
             android:textStyle="bold"
             android:textColor="@color/text"
-            android:textSize="17sp" />
+            android:textSize="17sp"
+            android:drawableStart="@drawable/ic_settings_small"
+            android:drawableTint="@color/text"
+            android:drawablePadding="8dp" />
 
-        <TextView
+        <ImageView
             android:id="@+id/settingsCloseButton"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:text="✕"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:textColor="@color/text"
+            android:padding="8dp"
+            android:src="@drawable/ic_close_small"
+            android:tint="@color/text"
             android:background="@drawable/circle_border_bg"
             android:clickable="true"
             android:focusable="true" />
@@ -66,7 +67,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:background="@drawable/settings_row_bg"
-            android:padding="6dp">
+            android:padding="8dp">
 
             <TextView
                 android:id="@+id/themeAuto"
@@ -77,8 +78,8 @@
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:gravity="center"
-                android:paddingTop="9dp"
-                android:paddingBottom="9dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
                 android:background="@drawable/filter_chip_bg"
                 android:clickable="true"
                 android:focusable="true" />
@@ -88,13 +89,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="8dp"
                 android:text="فاتح"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:gravity="center"
-                android:paddingTop="9dp"
-                android:paddingBottom="9dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
                 android:background="@drawable/filter_chip_bg"
                 android:clickable="true"
                 android:focusable="true" />
@@ -104,13 +105,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="8dp"
                 android:text="داكن"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:gravity="center"
-                android:paddingTop="9dp"
-                android:paddingBottom="9dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
                 android:background="@drawable/filter_chip_bg"
                 android:clickable="true"
                 android:focusable="true" />
@@ -126,7 +127,7 @@
             android:textStyle="bold"
             android:textColor="@color/text_muted"
             android:letterSpacing="0.04"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp" />
 
         <LinearLayout
@@ -135,10 +136,10 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/settings_row_bg"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
 
             <TextView
                 android:layout_width="0dp"

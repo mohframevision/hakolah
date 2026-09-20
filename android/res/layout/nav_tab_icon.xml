@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- نسخة أيقونات ثابتة (SVG/VectorDrawable) من nav_tab.xml — لشريط التنقّل
+     السفلي الثابت بس (الرئيسية/اختار لي/المفضلة/الإعدادات). صف الأقسام
+     الأفقي (بيانات ديناميكية من الموقع) يظل يستخدم nav_tab.xml بالإيموجي
+     نفسه — أيقوناته تجيء من حقل "icon" بلوحة التحكم، ما فيها قائمة ثابتة
+     نقدر نحوّلها لأيقونات متجهة بلا قاموس ربط هش. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -12,11 +17,10 @@
     android:focusable="true"
     android:background="?android:attr/selectableItemBackgroundBorderless">
 
-    <TextView
+    <ImageView
         android:id="@+id/tabIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="21sp" />
+        android:layout_width="24dp"
+        android:layout_height="24dp" />
 
     <TextView
         android:id="@+id/tabLabel"

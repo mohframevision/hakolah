@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -34,20 +35,21 @@ class BottomNav implements View.OnClickListener {
 
     private void build(LinearLayout container) {
         container.removeAllViews();
-        addTab(container, "🏠", "الرئيسية", HOME);
-        addTab(container, "🎲", "اختار لي", PICKER);
-        addTab(container, "♥", "المفضلة", FAVORITES);
-        addTab(container, "⚙️", "الإعدادات", SETTINGS);
+        addTab(container, R.drawable.ic_home, "الرئيسية", HOME);
+        addTab(container, R.drawable.ic_casino, "اختار لي", PICKER);
+        addTab(container, R.drawable.ic_favorite_fill, "المفضلة", FAVORITES);
+        addTab(container, R.drawable.ic_settings, "الإعدادات", SETTINGS);
     }
 
-    private void addTab(LinearLayout container, String icon, String label, String tag) {
-        View tab = LayoutInflater.from(activity).inflate(R.layout.nav_tab, container, false);
-        ((TextView) tab.findViewById(R.id.tabIcon)).setText(icon);
+    private void addTab(LinearLayout container, int iconRes, String label, String tag) {
+        View tab = LayoutInflater.from(activity).inflate(R.layout.nav_tab_icon, container, false);
+        int color = tag.equals(active) ? activity.getColor(R.color.brand_accent) : activity.getColor(R.color.text_muted);
+        ImageView iconView = tab.findViewById(R.id.tabIcon);
+        iconView.setImageResource(iconRes);
+        iconView.setColorFilter(color);
         TextView labelView = tab.findViewById(R.id.tabLabel);
         labelView.setText(label);
-        labelView.setTextColor(tag.equals(active)
-                ? activity.getColor(R.color.brand_accent)
-                : activity.getColor(R.color.text_muted));
+        labelView.setTextColor(color);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
         lp.width = 0;
         lp.weight = 1;

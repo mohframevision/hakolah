@@ -1,5 +1,6 @@
 package bh.mohframevision.hakolah;
 
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +12,8 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -25,7 +28,7 @@ import org.json.JSONObject;
 // كلاسات مجهولة (anonymous inner classes) تكسر d8 بهذي البيئة (نفس المشكلة
 // الموثّقة بمشروع StudyApp) — كل شي هنا كلاس علوي أو يطبّق الواجهة مباشرة
 // بدل new Interface() { ... }.
-public class MainActivity extends Activity implements View.OnClickListener, HakolahApi.Callback, TextWatcher {
+public class MainActivity extends Activity implements View.OnClickListener, HakolahApi.Callback, TextWatcher, AbsListView.OnScrollListener {
     private ProgressBar loadingView;
     private View errorView;
     private TextView errorText;
@@ -34,10 +37,19 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private TextView emptyResetButton;
     private LinearLayout bottomNav;
     private LinearLayout sectionTabs;
+    private View headerBar;
     private TextView headerTitle;
     private EditText searchBox;
     private LinearLayout filterChips;
     private TextView nearMeButton;
+
+    // نفس فكرة initHeaderScroll بالموقع (يخفي الهيدر أثناء النزول بالقائمة
+    // ويرجّعه عند الصعود) — بلا CoordinatorLayout (يحتاج مكتبة)، بـ
+    // ValueAnimator يعدّل ارتفاع الهيدر مباشرة فيرجع الـFrameLayout الموزون
+    // تحته يتمدد تلقائياً (سلوك weight عادي بـLinearLayout)
+    private int headerHeight = -1;
+    private boolean headerVisible = true;
+    private int lastFirstVisibleItem = 0;
 
     private JSONObject sections;
     private JSONArray sectionOrder;
@@ -73,6 +85,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         emptyResetButton = findViewById(R.id.emptyResetButton);
         bottomNav = findViewById(R.id.bottomNav);
         sectionTabs = findViewById(R.id.sectionTabs);
+        headerBar = findViewById(R.id.headerBar);
         headerTitle = findViewById(R.id.headerTitle);
         searchBox = findViewById(R.id.searchBox);
         filterChips = findViewById(R.id.filterChips);
@@ -81,10 +94,65 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         nearMeButton.setOnClickListener(this);
         emptyResetButton.setOnClickListener(this);
         searchBox.addTextChangedListener(this);
+        itemList.setOnScrollListener(this);
         buildMainNav();
 
         loadData();
     }
+
+    // ---- AbsListView.OnScrollListener (إخفاء/إظهار الهيدر حسب اتجاه النزول) ----
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {}
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        if (firstVisibleItem == 0) {
+            showHeader();
+        } else if (firstVisibleItem > lastFirstVisibleItem) {
+            hideHeader();
+        } else if (firstVisibleItem < lastFirstVisibleItem) {
+            showHeader();
+        }
+        lastFirstVisibleItem = firstVisibleItem;
+    }
+
+    private void hideHeader() {
+        if (!headerVisible) return;
+        headerVisible = false;
+        animateHeaderHeight(headerBar.getHeight(), 0);
+    }
+
+    private void showHeader() {
+        if (headerVisible) return;
+        headerVisible = true;
+        if (headerHeight <= 0) headerHeight = headerBar.getHeight();
+        animateHeaderHeight(headerBar.getHeight(), headerHeight);
+    }
+
+    private void animateHeaderHeight(int from, int to) {
+        if (headerHeight <= 0 && from > 0) headerHeight = from;
+        ValueAnimator animator = ValueAnimator.ofInt(from, to);
+        animator.setDuration(180);
+        animator.addUpdateListener(new HeaderHeightUpdater(headerBar));
+        animator.start();
+    }
+
+    // كلاس علوي مسمّى (مو مجهول) — د8 يفشل على الكلاسات المجهولة بهذي البيئة
+    private static class HeaderHeightUpdater implements ValueAnimator.AnimatorUpdateListener {
+        private final View header;
+
+        HeaderHeightUpdater(View header) {
+            this.header = header;
+        }
+
+        @Override
+        public void onAnimationUpdate(ValueAnimator animation) {
+            ViewGroup.LayoutParams lp = header.getLayoutParams();
+            lp.height = (int) animation.getAnimatedValue();
+            header.setLayoutParams(lp);
+        }
+    }
+    // ------------------------------------------------------------------
 
     @Override
     protected void onResume() {
@@ -144,18 +212,23 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private static final String SETTINGS_TAG = "__settings__";
 
     // 4 وجهات ثابتة بس — لا تتغيّر مع البيانات، تُبنى مرة وحدة. انظر
-    // sectionTabs للأقسام الفعلية (بيانات القسم القابلة للتغيّر)
+    // sectionTabs للأقسام الفعلية (بيانات القسم القابلة للتغيّر، تبقى إيموجي)
     private void buildMainNav() {
-        addMainNavTab("🏠", "الرئيسية", HOME_TAG);
-        addMainNavTab("🎲", "اختار لي", PICKER_TAG);
-        addMainNavTab("♥", "المفضلة", FAVORITES_TAG);
-        addMainNavTab("⚙️", "الإعدادات", SETTINGS_TAG);
+        addMainNavTab(R.drawable.ic_home, "الرئيسية", HOME_TAG);
+        addMainNavTab(R.drawable.ic_casino, "اختار لي", PICKER_TAG);
+        addMainNavTab(R.drawable.ic_favorite_fill, "المفضلة", FAVORITES_TAG);
+        addMainNavTab(R.drawable.ic_settings, "الإعدادات", SETTINGS_TAG);
     }
 
-    private void addMainNavTab(String icon, String label, String tag) {
-        View tab = getLayoutInflater().inflate(R.layout.nav_tab, bottomNav, false);
-        ((TextView) tab.findViewById(R.id.tabIcon)).setText(icon);
-        ((TextView) tab.findViewById(R.id.tabLabel)).setText(label);
+    private void addMainNavTab(int iconRes, String label, String tag) {
+        View tab = getLayoutInflater().inflate(R.layout.nav_tab_icon, bottomNav, false);
+        android.widget.ImageView iconView = tab.findViewById(R.id.tabIcon);
+        iconView.setImageResource(iconRes);
+        boolean active = HOME_TAG.equals(tag);
+        iconView.setColorFilter(getColor(active ? R.color.brand_accent : R.color.text_muted));
+        TextView labelView = tab.findViewById(R.id.tabLabel);
+        labelView.setText(label);
+        if (active) labelView.setTextColor(getColor(R.color.brand_accent));
         tab.setTag(tag);
         tab.setOnClickListener(this);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
@@ -163,9 +236,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         lp.weight = 1;
         tab.setLayoutParams(lp);
         bottomNav.addView(tab);
-        if (HOME_TAG.equals(tag)) {
-            ((TextView) tab.findViewById(R.id.tabLabel)).setTextColor(getColor(R.color.brand_accent));
-        }
     }
 
     // زر "الرئيسية" بالشريط السفلي — نرجّع القسم الحالي لحالته الافتراضية
@@ -373,7 +443,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         chip.setActivated(currentTag == null ? tagValue == null : currentTag.equals(tagValue));
         chip.setTextColor(chip.isActivated() ? getColor(R.color.white) : getColor(R.color.text));
         int padH = dp(16);
-        int padV = dp(7);
+        int padV = dp(8);
         chip.setPadding(padH, padV, padH, padV);
         LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -543,8 +613,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
     private void updateNearMeButton() {
         nearMeButton.setActivated(sortByDistance);
-        nearMeButton.setText(sortByDistance ? "📍 الأقرب مني ✕" : "📍 الأقرب مني");
-        nearMeButton.setTextColor(sortByDistance ? getColor(R.color.white) : getColor(R.color.text));
+        nearMeButton.setText(sortByDistance ? "الأقرب مني ✕" : "الأقرب مني");
+        int color = sortByDistance ? getColor(R.color.white) : getColor(R.color.text);
+        nearMeButton.setTextColor(color);
+        nearMeButton.setCompoundDrawableTintList(android.content.res.ColorStateList.valueOf(color));
     }
 
     private static double haversineKm(double lat1, double lng1, double lat2, double lng2) {

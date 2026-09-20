@@ -78,11 +78,11 @@ public class PickerActivity extends Activity implements View.OnClickListener {
             chip.setGravity(Gravity.CENTER);
             chip.setBackgroundResource(R.drawable.picker_category_bg);
             int padH = LinkButtons.dp(this, 16);
-            int padV = LinkButtons.dp(this, 12);
+            int padV = LinkButtons.dp(this, 16);
             chip.setPadding(padH, padV, padH, padV);
             LinearLayout.LayoutParams lp =
                     new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.setMarginEnd(LinkButtons.dp(this, 10));
+            lp.setMarginEnd(LinkButtons.dp(this, 8));
             chip.setLayoutParams(lp);
             chip.setClickable(true);
             chip.setFocusable(true);
@@ -261,8 +261,8 @@ public class PickerActivity extends Activity implements View.OnClickListener {
         LinearLayout.LayoutParams bottomLp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         bottomLp.topMargin = LinkButtons.dp(this, 16);
         bottomRow.setLayoutParams(bottomLp);
-        bottomRow.addView(makeTextButton("🔁 جرّب مرة ثانية", ACTION_RETRY, true));
-        bottomRow.addView(makeTextButton("✕ إغلاق", ACTION_CLOSE, false));
+        bottomRow.addView(makeTextButton(R.drawable.ic_refresh, "جرّب مرة ثانية", ACTION_RETRY, true));
+        bottomRow.addView(makeTextButton(R.drawable.ic_close, "إغلاق", ACTION_CLOSE, false));
         box.addView(bottomRow);
 
         stage.addView(box);
@@ -270,14 +270,17 @@ public class PickerActivity extends Activity implements View.OnClickListener {
         SoundPlayer.playSuccess(this);
     }
 
-    private TextView makeTextButton(String label, String tag, boolean primary) {
+    private TextView makeTextButton(int iconRes, String label, String tag, boolean primary) {
         TextView btn = new TextView(this);
         btn.setText(label);
         btn.setTextSize(14f);
-        btn.setTextColor(primary ? 0xFFFFFFFF : getColor(R.color.text_muted));
+        int color = primary ? 0xFFFFFFFF : getColor(R.color.text_muted);
+        btn.setTextColor(color);
         btn.setBackgroundResource(primary ? R.drawable.btn_pill_primary : R.drawable.btn_pill_secondary);
-        int padH = LinkButtons.dp(this, 20);
-        int padV = LinkButtons.dp(this, 9);
+        btn.setCompoundDrawablePadding(LinkButtons.dp(this, 6));
+        LinkButtons.setStartIcon(btn, iconRes, color);
+        int padH = LinkButtons.dp(this, 24);
+        int padV = LinkButtons.dp(this, 8);
         btn.setPadding(padH, padV, padH, padV);
         btn.setGravity(Gravity.CENTER);
         btn.setClickable(true);
