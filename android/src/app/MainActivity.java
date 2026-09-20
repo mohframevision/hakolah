@@ -626,7 +626,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         entry.setTextSize(11f);
         entry.setTextColor(getColor(R.color.brand_primary));
         entry.setGravity(android.view.Gravity.CENTER);
-        entry.setPadding(0, dp(2), 0, dp(2));
+        entry.setMinWidth(dp(28));
+        entry.setMinHeight(dp(28));
+        android.util.TypedValue outValue = new android.util.TypedValue();
+        getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
+        entry.setBackgroundResource(outValue.resourceId);
         entry.setClickable(true);
         entry.setFocusable(true);
         entry.setTag(position);
