@@ -101,6 +101,10 @@
   {# الخط صار مستضافاً عندنا (@font-face بـ style.css) — نُحمّله مسبقاً لأنه
      يُكتشف متأخراً داخل ملف CSS، فبلا preload يتأخر ظهور النص بخطه #}
   <link rel="preload" href="{{ ('/assets/fonts/cairo-latin.woff2' if lang == 'en' else '/assets/fonts/cairo-arabic.woff2') | url }}" as="font" type="font/woff2" crossorigin />
+  {# صورة العنصر الرئيسية (LCP بصفحات التفاصيل) — أولوية تحميل عالية لأنها
+     غالباً أكبر عنصر مرئي بالصفحة. لا أثر مرئي، ملف عادي مسبقاً في <img>
+     بجسم الصفحة (detail-item.njk)، هذا فقط يبدأ تحميله أبكر. #}
+  {% if image %}<link rel="preload" as="image" href="{{ image }}" fetchpriority="high" />{% endif %}
   <link rel="stylesheet" href="{{ '/css/style.css' | url }}?v={{ buildVersion }}" />
   {# لون الموقع من لوحة التحكم (مجموعة "شكل الموقع") — ملف خارجي منفصل عمداً،
      لأن سياسة CSP (style-src) ما تسمح بوسم <style> مضمّن، بس تسمح بملف من
