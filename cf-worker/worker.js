@@ -108,6 +108,33 @@ function isValidLikeTarget(section, id) {
   return true;
 }
 
+// تحقّق شكلي على جسم /subscribe قبل تخزينه بـKV: بدون هذا، أي طلب POST من
+// نفس نطاق الموقع (فحص Origin أعلاه لا يمنع هذا — هو فحص "من أين جاء
+// الطلب" لا "شنو محتواه") يقدر يخزّن endpoint وهمي (مثلاً رابط موقع طرف
+// ثالث عشوائي بدل رابط خدمة Push حقيقي). المهمة المجدولة اليومية
+// (sendDailyPick) بعدها ترسل POST فعلي لكل endpoint مخزَّن — فيتحول الـ
+// Worker لأداة SSRF/تكرار طلبات يومية لأي رابط يختاره المهاجم، مموَّهة
+// خلف سمعة نطاق Cloudflare. نطلب هنا endpoint بروتوكول https فعلي و
+// مفاتيح التشفير (keys.p256dh/keys.auth) الموجودة إلزامياً بأي اشتراك
+// Push حقيقي من أي متصفح — لا نحصر النطاق المسموح به (يتغيّر بين
+// المتصفحات/الإصدارات) تفادياً لرفض اشتراكات شرعية مستقبلية.
+function isValidSubscription(sub) {
+  if (!sub || typeof sub !== "object") return false;
+  if (typeof sub.endpoint !== "string") return false;
+  let endpointUrl;
+  try {
+    endpointUrl = new URL(sub.endpoint);
+  } catch {
+    return false;
+  }
+  if (endpointUrl.protocol !== "https:") return false;
+  const keys = sub.keys;
+  if (!keys || typeof keys !== "object") return false;
+  if (typeof keys.p256dh !== "string" || !keys.p256dh) return false;
+  if (typeof keys.auth !== "string" || !keys.auth) return false;
+  return true;
+}
+
 function likeKey(section, id) {
   return `likes:${section}:${id}`;
 }
@@ -121,7 +148,10 @@ function weekPrefix() {
   target.setUTCDate(target.getUTCDate() - dayNum + 3);
   const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
   const week =
-    1 + Math.round(((target - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+    1 +
+    Math.round(
+      ((target - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7
+    );
   return `likes:week:${target.getUTCFullYear()}-W${String(week).padStart(2, "0")}:`;
 }
 
@@ -148,7 +178,7 @@ export default {
 
     if (request.method === "POST" && url.pathname === "/subscribe") {
       const sub = await readJson(request);
-      if (!sub || !sub.endpoint) {
+      if (!isValidSubscription(sub)) {
         return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       }
       if (await isRateLimited(request, env)) return tooManyRequests();
@@ -180,7 +210,8 @@ export default {
       // فالطلبات الناقصة/العبثية ما تستهلك حصة الكتابة إطلاقاً
       const likeBody = await readJson(request);
       const { section, id } = likeBody || {};
-      if (!isValidLikeTarget(section, id)) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
+      if (!isValidLikeTarget(section, id))
+        return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       if (await isRateLimited(request, env)) return tooManyRequests();
       const key = likeKey(section, id);
       const wKey = weekKey(section, id);
@@ -200,7 +231,8 @@ export default {
     if (request.method === "POST" && url.pathname === "/unlike") {
       const unlikeBody = await readJson(request);
       const { section, id } = unlikeBody || {};
-      if (!isValidLikeTarget(section, id)) return new Response("Bad Request", { status: 400, headers: corsHeaders() });
+      if (!isValidLikeTarget(section, id))
+        return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       if (await isRateLimited(request, env)) return tooManyRequests();
       const key = likeKey(section, id);
       const wKey = weekKey(section, id);
@@ -222,12 +254,17 @@ export default {
       const counts = {};
       for (const key of list.keys) {
         if (key.name.startsWith("likes:week:")) continue;
-        counts[key.name.slice("likes:".length)] = Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
+        counts[key.name.slice("likes:".length)] =
+          Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
       }
       // Cache-Control قصير (60 ثانية) — يقلل استدعاءات KV.list() المتكررة
       // على كل تحميل صفحة عنصر بلا أي فرق محسوس للزائر (عداد إعجابات).
       return new Response(JSON.stringify(counts), {
-        headers: { ...corsHeaders(), "Content-Type": "application/json", "Cache-Control": "public, max-age=60" },
+        headers: {
+          ...corsHeaders(),
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=60",
+        },
       });
     }
 
@@ -239,7 +276,11 @@ export default {
         counts[key.name.slice(prefix.length)] = Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
       }
       return new Response(JSON.stringify(counts), {
-        headers: { ...corsHeaders(), "Content-Type": "application/json", "Cache-Control": "public, max-age=60" },
+        headers: {
+          ...corsHeaders(),
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=60",
+        },
       });
     }
 

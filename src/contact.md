@@ -14,7 +14,7 @@ langSwitchUrl: "/en/contact.html"
 
 </article>
 
-<div id="formMessage" class="form-message hidden"></div>
+<div id="formMessage" class="form-message hidden" role="status" aria-live="polite"></div>
 
 <form id="contactForm" class="contact-form" action="https://api.web3forms.com/submit" method="POST">
   <input type="hidden" name="access_key" value="a2dc8bb2-0fb8-47a9-8b58-ad3245d3f5a3">

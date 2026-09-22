@@ -9,7 +9,13 @@ layout: base.njk
 {% if image %}<img class="detail-hero-photo" src="{{ image }}" alt="{{ title }}" />{% endif %}
 <section class="page-header">
   <h1>{{ icon }} {{ title }}</h1>
-  <button type="button" class="btn secondary article-share-btn">📤 {{ t.article_share }}</button>
+  <div class="page-header-actions">
+    {% if audio %}
+    <button type="button" class="btn secondary article-listen-btn" data-audio-src="{{ audio | url }}">🔊 {{ t.article_listen }}</button>
+    <audio class="article-audio-player hidden" controls preload="none"></audio>
+    {% endif %}
+    <button type="button" class="btn secondary article-share-btn">📤 {{ t.article_share }}</button>
+  </div>
 </section>
 {% if aiDisclosure %}
 {# قسم "تجارب الذكاء الاصطناعي" ألعاب/تجارب استكشافية، مو مقالات معلوماتية —

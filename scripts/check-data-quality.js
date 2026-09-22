@@ -14,7 +14,17 @@ const MIN_DESC = 25;
 const EDITORIAL = new Set(["guides", "links-tools", "ai-experiments"]);
 /* الإحداثيات وسيلة تحديد موقع صحيحة بذاتها — المعالم (قلعة، شاطئ، ممشى)
    ما لها هاتف ولا حساب، لكن lat/lng يحدّدها تماماً */
-const CONTACT_FIELDS = ["maps", "phone", "instagram", "website", "linktree", "whatsapp", "url", "lat", "coords"];
+const CONTACT_FIELDS = [
+  "maps",
+  "phone",
+  "instagram",
+  "website",
+  "linktree",
+  "whatsapp",
+  "url",
+  "lat",
+  "coords",
+];
 
 function frontMatter(raw) {
   const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -25,6 +35,27 @@ function frontMatter(raw) {
 function fieldValue(fm, name) {
   const m = fm.match(new RegExp(`(^|\\n)[ \\t]*${name}:[ \\t]*(.*)`));
   return m ? m[2].trim().replace(/^["']|["']$/g, "") : "";
+}
+
+/* desc: بصيغة YAML block scalar (|، |-، >، >-...) يرجّع fieldValue قيمة
+   السطر نفسه بس ("|-" مثلاً، حرفان) بدل النص الفعلي بالأسطر التالية —
+   يُنتج بلاغ "وصف قصير" كاذباً لأي وصف طويل مكتوب بهالصيغة. نحسب طول
+   النص الحقيقي بجمع كل الأسطر الأعمق مسافة بادئة من سطر desc: نفسه. */
+function descText(fm) {
+  const lines = fm.split(/\r?\n/);
+  const idx = lines.findIndex((l) => /^[ \t]*desc:[ \t]*(\||>)/.test(l));
+  if (idx === -1) return fieldValue(fm, "desc");
+
+  const descIndent = lines[idx].match(/^[ \t]*/)[0].length;
+  const parts = [];
+  for (let i = idx + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim() === "") continue;
+    const indent = line.match(/^[ \t]*/)[0].length;
+    if (indent <= descIndent) break;
+    parts.push(line.trim());
+  }
+  return parts.join(" ");
 }
 
 function auditSection(slug) {
@@ -38,11 +69,12 @@ function auditSection(slug) {
     const problems = [];
 
     if (!fieldValue(fm, "title")) problems.push("بلا عنوان");
-    const desc = fieldValue(fm, "desc");
+    const desc = descText(fm);
     if (!desc) problems.push("بلا وصف");
     else if (desc.length < MIN_DESC) problems.push(`وصف قصير (${desc.length} حرفاً)`);
 
-    if (!/(^|\n)categories:/.test(fm) && !/(^|\n)categoriesCustom:/.test(fm)) problems.push("بلا تصنيف");
+    if (!/(^|\n)categories:/.test(fm) && !/(^|\n)categoriesCustom:/.test(fm))
+      problems.push("بلا تصنيف");
 
     if (!editorial) {
       const hasContact = CONTACT_FIELDS.some((f) => fieldValue(fm, f));
@@ -69,7 +101,9 @@ function checkTypingSentences() {
   for (const level of ["beginner", "easy", "medium", "hard"]) {
     const start = src.indexOf(`    ${level}: [`);
     if (start === -1) continue;
-    const sentences = [...src.slice(start, src.indexOf("],", start)).matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    const sentences = [...src.slice(start, src.indexOf("],", start)).matchAll(/"([^"]+)"/g)].map(
+      (m) => m[1]
+    );
     sentences.forEach((s) => {
       if (diacritics.test(s)) flagged.push(s);
     });
@@ -78,7 +112,9 @@ function checkTypingSentences() {
       عدد: sentences.length,
       "متوسط الطول": Math.round(sentences.reduce((a, s) => a + s.length, 0) / sentences.length),
       // كثافة الحروف التي تحتاج Shift هي مقياس الصعوبة الفعلي بالعربية
-      "حروف Shift": +(sentences.reduce((a, s) => a + (s.match(shiftLetters) || []).length, 0) / sentences.length).toFixed(1),
+      "حروف Shift": +(
+        sentences.reduce((a, s) => a + (s.match(shiftLetters) || []).length, 0) / sentences.length
+      ).toFixed(1),
     });
   }
 
@@ -129,7 +165,8 @@ function main() {
   }
   const clean = totalItems - totalFlagged;
   console.log(`\nالمجموع: ${totalItems} عنصراً — ${clean} مكتمل، ${totalFlagged} يحتاج عملاً.`);
-  if (!only && totalFlagged) console.log("للتفاصيل: node scripts/check-data-quality.js <اسم القسم>");
+  if (!only && totalFlagged)
+    console.log("للتفاصيل: node scripts/check-data-quality.js <اسم القسم>");
 }
 
 main();
