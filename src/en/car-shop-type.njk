@@ -36,7 +36,7 @@ eleventyComputed:
 <div class="card-grid">
 {%- for entry in (collections['car-shops'] or []) %}
 {%- if shopType.label in (entry.data.categories or []).concat(entry.data.categoriesCustom or []) %}
-{{ cards.card(entry, "car-shops", "en", false, tags_en, i18n, tag_icons) }}
+{{ cards.card(entry, "car-shops", "en", false, tags_en, i18n, tag_icons, loop.index0) }}
 {%- endif %}
 {%- endfor %}
 </div>

@@ -4256,7 +4256,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
   const isLongDesc = desc.length > 100;
 
   card.innerHTML = `
-    ${item.image ? `<img class="item-photo" src="${item.image}" alt="${title}" loading="lazy" decoding="async" />` : ""}
+    ${item.image ? `<img class="item-photo" src="${item.image}" alt="${title}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async" />` : ""}
     ${item.sponsored ? `<span class="sponsored-badge">${t("sponsored_badge")}</span>` : item.featured ? `<span class="featured-badge">${t("featured_badge")}</span>` : ""}
     <div class="item-body">
       ${sectionBadge(section)}

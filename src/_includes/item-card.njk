@@ -11,14 +11,19 @@
   والروابط. والكلاسات نفسها عشان الشكل يكون مطابقاً قبل تدخّل جافاسكربت.
 #}
 {% from "icon.njk" import icon %}
-{% macro card(entry, sectionSlug, lang, hasDetailPages, tagsEn, i18n, tagIcons) %}
+{# index (اختياري): ترتيب البطاقة بالشبكة (loop.index0) — أول 4 بطاقات
+   (غالباً بأول شاشة ظاهرة) تُحمَّل صورتها eager بدل lazy، لأن lazy على
+   عنصر ظاهر بأول تحميل يؤخر اكتشاف الصورة ويضر مقياس LCP لو كانت هي
+   أكبر عنصر مرئي بالصفحة. بلا index (افتراضي 999) تبقى كل الصور lazy
+   كالسابق — بلا أي تغيير سلوك لصفحات لا تمرر ترتيباً. #}
+{% macro card(entry, sectionSlug, lang, hasDetailPages, tagsEn, i18n, tagIcons, index) %}
 {% set d = entry.data %}
 {% set isEn = (lang == "en") %}
 {% set title = (d.title_en or d.title) if isEn else d.title %}
 {% set desc = (d.desc_en or d.desc) if isEn else d.desc %}
 {% set t = i18n[lang or "ar"] %}
 <div class="item-card{% if d.sponsored %} sponsored{% elif d.featured %} featured{% endif %}{% if d.verified %} verified{% endif %}">
-  {% if d.image %}<img class="item-photo" src="{{ d.image }}" alt="{{ title }}" loading="lazy" decoding="async" />{% endif %}
+  {% set cardIndex = index if (index is defined and index is not none) else 999 %}{% if d.image %}<img class="item-photo" src="{{ d.image }}" alt="{{ title }}"{% if cardIndex < 4 %} loading="eager"{% else %} loading="lazy"{% endif %} decoding="async" />{% endif %}
   {# شارة واحدة بس — الشارتان بنفس الموضع المطلق فتتراكبان. "ممول" لها
      الأولوية: الإفصاح عن الإعلان المدفوع أهم من وسم "مميز" #}
   {% if d.sponsored %}<span class="sponsored-badge">{{ t.sponsored_badge }}</span>

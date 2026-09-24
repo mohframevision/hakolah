@@ -29,7 +29,7 @@ noindex: true
   {%- for entry in collections[pick.slug] %}
   {%- if entry.fileSlug == pick.fileSlug %}
   <div class="featured-pick-frame welcome-pick{% if pickIsFirst %} active{% endif %}">
-    {{ cards.card(entry, pick.slug, lang, pick.hasDetailPages, tags_en, i18n, tag_icons) }}
+    {{ cards.card(entry, pick.slug, lang, pick.hasDetailPages, tags_en, i18n, tag_icons, 0 if pickIsFirst else 999) }}
   </div>
   {%- endif %}
   {%- endfor %}
