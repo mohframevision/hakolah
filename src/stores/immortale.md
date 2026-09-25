@@ -8,6 +8,7 @@ categories:
   - بصريات
   - المحرق
 dateAdded: 2026-08-30
+coords: 26.30493233863542, 50.63707062801516
 links:
   website: https://www.immortaleofficial.com/
   phone: '36454555'

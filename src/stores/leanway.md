@@ -8,6 +8,7 @@ categories:
   - مكملات غذائية
   - عالي
 dateAdded: 2026-08-28
+coords: 26.15412168990462, 50.509359190607185
 links:
   website: https://leanwayfit.com/
   phone: '33701278'

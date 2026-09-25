@@ -10,6 +10,7 @@ categories:
   - ألعاب
   - أبو صيبع
 dateAdded: 2026-08-26
+coords: 26.220180555496103, 50.50036853916588
 links:
   website: https://theloft-shop.com/
   phone: '66720202'

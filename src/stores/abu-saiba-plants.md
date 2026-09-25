@@ -8,6 +8,7 @@ categories:
   - مشتل
   - أبو صيبع
 dateAdded: 2026-08-29
+coords: 26.21549538523507, 50.506052175158146
 links:
   website: ''
   phone: '33632333'
