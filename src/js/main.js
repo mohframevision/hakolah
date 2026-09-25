@@ -5162,6 +5162,111 @@ function renderDayPlan() {
   draw();
 }
 
+/* حلزون بطاقات ثلاثي الأبعاد لـ"اختار لي" (مستوحى من pacomepertant.com) —
+   CSS 3D بس بلا WebGL/مكتبات. البطاقة k على زاوية k·STEP وارتفاع k·PITCH؛
+   "pos" (رقم عشري) هو البطاقة اللي بالواجهة، والدوران = تحريك pos على الحلزون.
+   النتيجة عشوائية بالأصل: العيّنة نفسها عشوائية، ونوقف على بطاقة عشوائية منها. */
+function createPickerHelix(stage) {
+  const COUNT = 30;
+  const STEP = 36;
+  const PITCH = 26;
+  const MIN_TRAVEL = 12;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let cards = [];
+  let rotor = null;
+  let pos = 0;
+  let idleFrame = null;
+  let idleStart = 0;
+
+  function render() {
+    rotor.style.transform = `translateZ(calc(var(--helix-r) * -1)) translateY(${-pos * PITCH}px) rotateY(${-pos * STEP}deg)`;
+    cards.forEach(({ el }, k) => {
+      const facing = (Math.cos(((k - pos) * STEP * Math.PI) / 180) + 1) / 2;
+      el.style.opacity = (0.15 + 0.85 * facing * facing).toFixed(3);
+    });
+  }
+
+  function stopIdle() {
+    cancelAnimationFrame(idleFrame);
+    idleFrame = null;
+  }
+
+  // تمايل هادئ ذهاباً وإياباً بين البطاقة 2 و8 — يبقى المجال للأمام فاضي للدوران
+  function idle(now) {
+    pos = 5 - 3 * Math.cos((now - idleStart) / 4000);
+    render();
+    idleFrame = requestAnimationFrame(idle);
+  }
+
+  function build(items) {
+    stopIdle();
+    stage.innerHTML = `<div class="picker-helix" aria-hidden="true"><div class="picker-helix-rotor"></div></div>`;
+    rotor = stage.querySelector(".picker-helix-rotor");
+    cards = Array.from({ length: COUNT }, (_, k) => {
+      const item = items[Math.floor(Math.random() * items.length)];
+      const el = document.createElement("div");
+      el.className = "picker-helix-card";
+      el.style.setProperty("--hue", (k * 47) % 360);
+      el.style.transform = `rotateY(${k * STEP}deg) translateZ(var(--helix-r)) translateY(${k * PITCH}px)`;
+      el.innerHTML = `<span class="picker-helix-icon">${item.icon || "⭐"}</span><span class="picker-helix-title">${itemTitle(item)}</span>`;
+      rotor.appendChild(el);
+      return { el, item };
+    });
+    pos = 2;
+    render();
+    if (!reduceMotion) {
+      idleStart = performance.now();
+      idleFrame = requestAnimationFrame(idle);
+    }
+  }
+
+  function spin(items, onDone) {
+    if (!rotor || pos > COUNT - 3 - MIN_TRAVEL) build(items);
+    stopIdle();
+    cards.forEach(({ el }) => el.classList.remove("chosen"));
+
+    const from = pos;
+    const minTarget = Math.ceil(from) + MIN_TRAVEL;
+    const target = minTarget + Math.floor(Math.random() * (COUNT - 3 - minTarget + 1));
+    const { el: chosenEl, item } = cards[target];
+
+    const finish = () => {
+      chosenEl.classList.add("chosen");
+      playSuccessSound();
+      setTimeout(() => onDone(item), reduceMotion ? 0 : 650);
+    };
+
+    if (reduceMotion) {
+      pos = target;
+      render();
+      finish();
+      return;
+    }
+
+    const duration = 2800;
+    const start = performance.now();
+    let lastTick = Math.floor(from);
+    let lastTickTime = 0;
+    function frame(now) {
+      const t = Math.min((now - start) / duration, 1);
+      pos = from + (target - from) * (1 - Math.pow(1 - t, 4));
+      render();
+      // صوت "تكّة" مع كل بطاقة تمر بالواجهة — بحد أدنى 60ms بينها عشان
+      // البداية السريعة ما تصير ضجيج متواصل
+      if (Math.floor(pos) !== lastTick && now - lastTickTime > 60) {
+        lastTick = Math.floor(pos);
+        lastTickTime = now;
+        playTone(900, 0.03);
+      }
+      if (t < 1) requestAnimationFrame(frame);
+      else finish();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  return { build, spin };
+}
+
 function initRandomPicker() {
   const categoriesWrap = document.getElementById("pickerCategories");
   const spinBtn = document.getElementById("pickerSpinBtn");
@@ -5172,6 +5277,7 @@ function initRandomPicker() {
     (key) => (SITE_DATA[key].items || []).length > 0
   );
   let selectedSection = null;
+  const helix = createPickerHelix(stage);
 
   categoriesWrap.innerHTML = sectionKeys
     .map(
@@ -5193,13 +5299,12 @@ function initRandomPicker() {
       btn.setAttribute("aria-pressed", "true");
       selectedSection = btn.dataset.section;
       spinBtn.disabled = false;
-      stage.innerHTML = "";
+      helix.build(SITE_DATA[selectedSection].items);
       playClickSound();
     });
   });
 
   function reveal(item) {
-    stage.innerHTML = "";
     openPickerReveal(item, {
       onRetry: spin,
       onClose: () => {
@@ -5212,33 +5317,9 @@ function initRandomPicker() {
     if (!selectedSection) return;
     const items = SITE_DATA[selectedSection].items;
     if (!items || items.length === 0) return;
-
     spinBtn.disabled = true;
-    stage.innerHTML = `<div class="picker-slot" id="pickerSlot"></div>`;
-    const slot = document.getElementById("pickerSlot");
-
-    const finalItem = items[Math.floor(Math.random() * items.length)];
-    const startTime = Date.now();
-    const duration = 1800;
-    let delay = 60;
-
-    function tick() {
-      const randomItem = items[Math.floor(Math.random() * items.length)];
-      slot.innerHTML = `<span class="picker-slot-icon">${randomItem.icon || "⭐"}</span><span class="picker-slot-title">${itemTitle(randomItem)}</span>`;
-      slot.classList.remove("pulse");
-      void slot.offsetWidth;
-      slot.classList.add("pulse");
-
-      const elapsed = Date.now() - startTime;
-      if (elapsed >= duration) {
-        reveal(finalItem);
-        return;
-      }
-      delay = Math.min(delay * 1.15, 350);
-      setTimeout(tick, delay);
-    }
-
-    tick();
+    stage.scrollIntoView({ block: "center", behavior: "smooth" });
+    helix.spin(items, reveal);
   }
 
   spinBtn.addEventListener("click", () => {
