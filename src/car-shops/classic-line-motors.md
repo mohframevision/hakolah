@@ -8,6 +8,7 @@ categories:
   - معرض سيارات
   - تنجيد
   - السهلة
+coords: 26.198783195912345, 50.53262876834475
 links:
   website: ''
   maps: https://maps.app.goo.gl/ek3qDkwsVwAW67f9A

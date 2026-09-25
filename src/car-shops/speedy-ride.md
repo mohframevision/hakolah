@@ -7,6 +7,7 @@ desc_en: A car accessories and decoration shop in Jidhafs (opposite Yaseen Car W
 categories:
   - إكسسوارات السيارات
   - جدحفص
+coords: 26.21769562492837, 50.53682642613782
 links:
   website: ''
   phone: '36174368'

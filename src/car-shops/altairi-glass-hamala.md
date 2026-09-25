@@ -8,6 +8,7 @@ categories:
   - زجاج سيارات
   - الهملة
 dateAdded: 2026-08-29
+coords: 26.144587529031142, 50.487624073209474
 links:
   website: ''
   phone: '39294467'

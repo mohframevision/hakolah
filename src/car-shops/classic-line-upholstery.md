@@ -7,6 +7,7 @@ desc_en: Car seat upholstery, leather refinishing, and dashboard repair, plus ya
 categories:
   - تنجيد
   - سلماباد
+coords: 26.176142694352098, 50.533560959771535
 links:
   website: ''
   maps: https://maps.app.goo.gl/TnyJUrkZXqY3mjux9

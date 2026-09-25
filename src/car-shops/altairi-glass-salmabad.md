@@ -8,6 +8,7 @@ categories:
   - زجاج سيارات
   - سلماباد
 dateAdded: 2026-08-29
+coords: 26.181728857093137, 50.53353615644389
 links:
   website: ''
   phone: '39294467'
