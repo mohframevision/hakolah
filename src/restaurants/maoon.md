@@ -10,6 +10,7 @@ categories:
   - بحريني
   - مندي
   - الزنج
+coords: 26.212497791300994, 50.56123170017871
 links:
   website: https://order.maoon.bh/
   phone: "13333103"

@@ -9,6 +9,7 @@ hours_en: "5:30pm - 11:30pm"
 categories:
   - عربات طعام
   - سار
+coords: 26.193597359604198, 50.47981496576284
 links:
   phone: "34358588"
   maps: https://maps.app.goo.gl/H9dNE3DjifdiZfwXA?g_st=ac
