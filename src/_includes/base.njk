@@ -167,20 +167,20 @@
       <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}" class="logo"><span class="dot">●</span>{% if lang == "en" %}<span class="logo-word">Hako<span class="logo-tail">lah</span></span>{% else %}<span class="logo-word">هكو<span class="logo-tail">له</span></span>{% endif %}</a>
       <nav class="main-nav" id="main-nav">
         {% set homeUrl = '/en/index.html' if lang == 'en' else '/index.html' %}
-        <a href="{{ homeUrl | url }}"{% if navActive == "home" %} class="active"{% endif %}>{{ t.nav_home }}</a>
+        <a href="{{ homeUrl | url }}"{% if navActive == "home" %} class="active" aria-current="page"{% endif %}>{{ t.nav_home }}</a>
         {% for entry in sections %}
-        <a href="{{ (('/en/' if lang == 'en' else '/') + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active"{% endif %}>{{ entry.navLabel_en if lang == 'en' else entry.navLabel }}</a>
+        <a href="{{ (('/en/' if lang == 'en' else '/') + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active" aria-current="page"{% endif %}>{{ entry.navLabel_en if lang == 'en' else entry.navLabel }}</a>
         {% endfor %}
         {# على الجوال تختفي أيقونة المفضلة من الهيدر (ضيق) وتظهر هنا داخل
            القائمة المنسدلة بدل ما تزدحم مع الشعار. "اختار لي" ما تحتاج نسخة
            هنا لأنها تبقى ظاهرة بالهيدر حتى على أضيق الشاشات (انظر icon-btn-picker) #}
-        <a class="nav-only-mobile{% if navActive == "favorites" %} active{% endif %}" href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}">{{ icon("heart-fill", 16) }} {{ t.nav_favorites }}</a>
+        <a class="nav-only-mobile{% if navActive == "favorites" %} active{% endif %}"{% if navActive == "favorites" %} aria-current="page"{% endif %} href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}">{{ icon("heart-fill", 16) }} {{ t.nav_favorites }}</a>
       </nav>
       <div class="header-actions">
         {# المفضلة و"اختار لي" أدوات مو أقسام محتوى — نقلناها من القائمة لهنا
            كأيقونات، عشان القائمة تضل بسطر واحد حتى لما تُضاف أقسام جديدة #}
-        <a class="icon-btn{% if navActive == "favorites" %} active{% endif %}" href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}" title="{{ t.nav_favorites }}" aria-label="{{ t.nav_favorites }}">{{ icon("heart-fill") }}</a>
-        <a class="icon-btn icon-btn-picker{% if navActive == "picker" %} active{% endif %}" href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}" title="{{ t.nav_picker }}" aria-label="{{ t.nav_picker }}">{{ icon("dice") }}</a>
+        <a class="icon-btn{% if navActive == "favorites" %} active{% endif %}"{% if navActive == "favorites" %} aria-current="page"{% endif %} href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}" title="{{ t.nav_favorites }}" aria-label="{{ t.nav_favorites }}">{{ icon("heart-fill") }}</a>
+        <a class="icon-btn icon-btn-picker{% if navActive == "picker" %} active{% endif %}"{% if navActive == "picker" %} aria-current="page"{% endif %} href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}" title="{{ t.nav_picker }}" aria-label="{{ t.nav_picker }}">{{ icon("dice") }}</a>
         <span class="header-divider" aria-hidden="true"></span>
         {# على الشاشات الضيقة نعرض الاختصار بدل الاسم الكامل عشان يضل الهيدر بصف واحد #}
         <a class="lang-switch" href="{{ (langSwitchUrl or ('/index.html' if lang == 'en' else '/en/index.html')) | url }}" title="{{ t.lang_switch }}" aria-label="{{ t.lang_switch }}"><span class="lang-full">{{ t.lang_switch }}</span><span class="lang-short" aria-hidden="true">{{ t.lang_switch_short }}</span></a>
@@ -216,13 +216,13 @@
   {# شريط سفلي بستايل التطبيقات — يظهر بنفس نقطة الكسر اللي يتحول فيها الهيدر
      لقائمة همبرغر (1200px)، ويكرر نفس وجهات أيقونات الهيدر (لا صفحات جديدة) #}
   <nav class="bottom-nav" aria-label="{{ t.nav_home }}">
-    <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}"{% if navActive == "home" %} class="active"{% endif %}>
+    <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}"{% if navActive == "home" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("home", 22) }}</span><span>{{ t.nav_home }}</span>
     </a>
-    <a href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}"{% if navActive == "favorites" %} class="active"{% endif %}>
+    <a href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}"{% if navActive == "favorites" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("heart-fill", 22) }}</span><span>{{ t.nav_favorites }}</span>
     </a>
-    <a href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}"{% if navActive == "picker" %} class="active"{% endif %}>
+    <a href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}"{% if navActive == "picker" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("dice", 22) }}</span><span>{{ t.nav_picker | replace("🎲 ", "") }}</span>
     </a>
     <button type="button" class="nav-toggle bottom-nav-menu" aria-label="{{ t.nav_toggle_open }}" aria-expanded="false" aria-controls="main-nav">

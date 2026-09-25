@@ -62,11 +62,15 @@ async function readJson(request) {
 */
 const LIKE_RATE_LIMIT = 15;
 
-async function isRateLimited(request, env) {
+async function isRateLimited(request, env, action) {
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
   const minute = Math.floor(Date.now() / 60000);
   const bucket = await keyFor(`${ip}:${minute}`);
-  const key = `rl:like:${bucket}`;
+  // مفتاح منفصل لكل مسار (action) بدل حصة واحدة مشتركة بين like/unlike/
+  // subscribe/unsubscribe — كانت الحصة سابقاً مشتركة بالخطأ (نفس المفتاح
+  // "rl:like:" لكل المسارات)، فزائر يضغط إعجاب 15 مرة بالدقيقة كان يُحظر
+  // تلقائياً من الاشتراك بالإشعارات بنفس الدقيقة رغم إنه فعل مختلف تماماً.
+  const key = `rl:${action}:${bucket}`;
 
   const current = Number(await env.SUBSCRIPTIONS.get(key)) || 0;
   if (current >= LIKE_RATE_LIMIT) return true;
@@ -181,7 +185,7 @@ export default {
       if (!isValidSubscription(sub)) {
         return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       }
-      if (await isRateLimited(request, env)) return tooManyRequests();
+      if (await isRateLimited(request, env, "subscribe")) return tooManyRequests();
       await env.SUBSCRIPTIONS.put(await keyFor(sub.endpoint), JSON.stringify(sub));
       return new Response("OK", { headers: corsHeaders() });
     }
@@ -191,7 +195,7 @@ export default {
       if (!body || !body.endpoint) {
         return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       }
-      if (await isRateLimited(request, env)) return tooManyRequests();
+      if (await isRateLimited(request, env, "unsubscribe")) return tooManyRequests();
       await env.SUBSCRIPTIONS.delete(await keyFor(body.endpoint));
       return new Response("OK", { headers: corsHeaders() });
     }
@@ -212,7 +216,7 @@ export default {
       const { section, id } = likeBody || {};
       if (!isValidLikeTarget(section, id))
         return new Response("Bad Request", { status: 400, headers: corsHeaders() });
-      if (await isRateLimited(request, env)) return tooManyRequests();
+      if (await isRateLimited(request, env, "like")) return tooManyRequests();
       const key = likeKey(section, id);
       const wKey = weekKey(section, id);
       const [count, weekCount] = await Promise.all([
@@ -233,7 +237,7 @@ export default {
       const { section, id } = unlikeBody || {};
       if (!isValidLikeTarget(section, id))
         return new Response("Bad Request", { status: 400, headers: corsHeaders() });
-      if (await isRateLimited(request, env)) return tooManyRequests();
+      if (await isRateLimited(request, env, "unlike")) return tooManyRequests();
       const key = likeKey(section, id);
       const wKey = weekKey(section, id);
       const [count, weekCount] = await Promise.all([
