@@ -5168,8 +5168,10 @@ function renderDayPlan() {
    النتيجة عشوائية بالأصل: العيّنة نفسها عشوائية، ونوقف على بطاقة عشوائية منها. */
 function createPickerHelix(stage) {
   const COUNT = 30;
-  const STEP = 36;
-  const PITCH = 26;
+  // بطاقتان متجاورتان على الحلزون ما تتلامسان ما دام عرض البطاقة أقل من
+  // 2·R·tan(STEP/2) — المقاسات بـstyle.css (--helix-r و--card-w) محسوبة عليها
+  const STEP = 40;
+  const PITCH = 30;
   const MIN_TRAVEL = 12;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let cards = [];

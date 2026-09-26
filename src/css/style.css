@@ -2097,7 +2097,7 @@ img {
 /* حلزون "اختار لي" — شاشة داكنة دائماً (بالوضعين) كأنها شاشة عرض، بشبكة
    خفيفة بالخلفية، نفس روح pacomepertant.com */
 .picker-helix {
-  --helix-r: 230px;
+  --helix-r: 240px;
   position: relative;
   width: 100%;
   max-width: 760px;
@@ -2121,8 +2121,8 @@ img {
 }
 
 .picker-helix-card {
-  --card-w: 150px;
-  --card-h: 92px;
+  --card-w: 140px;
+  --card-h: 88px;
   position: absolute;
   top: 0;
   left: 0;
@@ -2171,12 +2171,12 @@ img {
 
 @media (max-width: 600px) {
   .picker-helix {
-    --helix-r: 165px;
+    --helix-r: 175px;
     height: 340px;
   }
   .picker-helix-card {
-    --card-w: 118px;
-    --card-h: 78px;
+    --card-w: 100px;
+    --card-h: 72px;
   }
   .picker-helix-icon {
     font-size: 1.4rem;
