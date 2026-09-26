@@ -155,5 +155,36 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <!-- مجموعة "عن التطبيق" — قصة هكوله -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="عن التطبيق"
+            android:textAllCaps="true"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_muted"
+            android:letterSpacing="0.04"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/storyRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="قصة هكوله"
+            android:textColor="@color/text"
+            android:textSize="14sp"
+            android:background="@drawable/settings_row_bg"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp"
+            android:drawableStart="@drawable/ic_menu_book"
+            android:drawableTint="@color/brand_accent"
+            android:drawablePadding="10dp"
+            android:clickable="true"
+            android:focusable="true" />
+
     </LinearLayout>
 </LinearLayout>

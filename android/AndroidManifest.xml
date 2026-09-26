@@ -53,6 +53,10 @@
             android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden" />
         <activity
+            android:name=".StoryActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity
             android:name=".FavoritesActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden" />

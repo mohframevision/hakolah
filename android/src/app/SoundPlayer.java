@@ -19,7 +19,14 @@ class SoundPlayer {
     static final int CLOSE = 5;
     static final int SUCCESS = 6;
     static final int SHIMMER = 7;
-    private static final int COUNT = 8;
+    // نغمات سلّم ري الكبير الصاعد (8 درجات) — لصفحة القصة: كل قسم يطلع بنغمة أعلى
+    private static final int NOTE_BASE = 8;
+    private static final int COUNT = 16;
+    private static final double[] SCALE = {587.33, 659.25, 739.99, 880, 987.77, 1174.66, 1318.51, 1479.98};
+
+    static int note(int i) {
+        return NOTE_BASE + (i % SCALE.length);
+    }
 
     private static final int SR = 44100;
     // سماعة الجوال أضعف من سماعات الكمبيوتر — رفع بسيط فوق مستويات الموقع
@@ -209,6 +216,11 @@ class SoundPlayer {
                 break;
             }
             default:
+                if (sound >= NOTE_BASE) {
+                    int i = sound - NOTE_BASE;
+                    voice(b, SCALE[i], 0, 0.008, 0.4, 0.03, 1, ((i % 5) - 2) * 0.12);
+                    voice(b, SCALE[i] * 2, 0, 0.004, 0.15, 0.008);
+                }
                 break;
         }
         return master(b);

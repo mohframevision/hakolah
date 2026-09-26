@@ -387,7 +387,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         }
         selectSection(firstBrowsable);
         if (fromCache) {
-            headerTitle.append(" (بيانات محفوظة، بلا اتصال)");
+            headerTitle.append(" (بلا اتصال)");
         }
     }
 

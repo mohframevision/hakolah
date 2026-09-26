@@ -37,6 +37,9 @@ class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedCha
         themeLight.setOnClickListener(this);
         themeDark.setOnClickListener(this);
         panel.findViewById(R.id.settingsCloseButton).setOnClickListener(this);
+        View storyRow = panel.findViewById(R.id.storyRow);
+        storyRow.setOnClickListener(this);
+        Touch.springy(storyRow, 0.97f);
         updateThemeButtons();
 
         Switch soundSwitch = panel.findViewById(R.id.soundSwitch);
@@ -79,6 +82,14 @@ class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedCha
         if (id == R.id.settingsCloseButton) {
             Touch.haptic(v, Touch.TAP);
             dialog.dismiss();
+            return;
+        }
+        if (id == R.id.storyRow) {
+            Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
+            recreating = true; // صوت الفتح يكفي — بلا صوت إغلاق فوقه
+            dialog.dismiss();
+            activity.startActivity(new android.content.Intent(activity, StoryActivity.class));
+            activity.overridePendingTransition(0, 0);
             return;
         }
         String mode = id == R.id.themeLight ? Prefs.THEME_LIGHT
