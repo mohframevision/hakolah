@@ -2111,6 +2111,26 @@ img {
     linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
   box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.9);
+  /* السحب الأفقي للحلزون، والعمودي يبقى تمرير عادي للصفحة بالجوال */
+  touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+}
+
+.picker-helix-card {
+  cursor: pointer;
+}
+
+.picker-helix.dragging,
+.picker-helix.dragging .picker-helix-card {
+  cursor: grabbing;
+}
+
+.picker-helix-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
 }
 
 .picker-helix-rotor {

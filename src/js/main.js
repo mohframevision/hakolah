@@ -5165,8 +5165,9 @@ function renderDayPlan() {
 /* حلزون بطاقات ثلاثي الأبعاد لـ"اختار لي" (مستوحى من pacomepertant.com) —
    CSS 3D بس بلا WebGL/مكتبات. البطاقة k على زاوية k·STEP وارتفاع k·PITCH؛
    "pos" (رقم عشري) هو البطاقة اللي بالواجهة، والدوران = تحريك pos على الحلزون.
-   النتيجة عشوائية بالأصل: العيّنة نفسها عشوائية، ونوقف على بطاقة عشوائية منها. */
-function createPickerHelix(stage) {
+   النتيجة عشوائية بالأصل: العيّنة نفسها عشوائية، ونوقف على بطاقة عشوائية منها.
+   والزائر يقدر يسحب الحلزون بنفسه ويضغط أي بطاقة يختارها (onPick). */
+function createPickerHelix(stage, onPick) {
   const COUNT = 30;
   // بطاقتان متجاورتان على الحلزون ما تتلامسان ما دام عرض البطاقة أقل من
   // 2·R·tan(STEP/2) — المقاسات بـstyle.css (--helix-r و--card-w) محسوبة عليها
@@ -5179,6 +5180,11 @@ function createPickerHelix(stage) {
   let pos = 0;
   let idleFrame = null;
   let idleStart = 0;
+  let moveFrame = null;
+  let busy = false;
+  let drag = null;
+  let lastTick = 0;
+  let lastTickTime = 0;
 
   function render() {
     rotor.style.transform = `translateZ(calc(var(--helix-r) * -1)) translateY(${-pos * PITCH}px) rotateY(${-pos * STEP}deg)`;
@@ -5193,6 +5199,101 @@ function createPickerHelix(stage) {
     idleFrame = null;
   }
 
+  // صوت "تكّة" مع كل بطاقة تمر بالواجهة (دوران أو سحب) — بحد أدنى 60ms
+  // بينها عشان الحركة السريعة ما تصير ضجيج متواصل
+  function moveTo(p) {
+    pos = Math.max(0, Math.min(COUNT - 1, p));
+    render();
+    const now = performance.now();
+    if (Math.round(pos) !== lastTick && now - lastTickTime > 60) {
+      lastTick = Math.round(pos);
+      lastTickTime = now;
+      playTone(900, 0.03);
+    }
+  }
+
+  function animateTo(target, duration, power, done) {
+    cancelAnimationFrame(moveFrame);
+    if (reduceMotion) {
+      moveTo(target);
+      done?.();
+      return;
+    }
+    const from = pos;
+    const start = performance.now();
+    function frame(now) {
+      const t = Math.min((now - start) / duration, 1);
+      moveTo(from + (target - from) * (1 - Math.pow(1 - t, power)));
+      if (t < 1) moveFrame = requestAnimationFrame(frame);
+      else done?.();
+    }
+    moveFrame = requestAnimationFrame(frame);
+  }
+
+  function land(k, onDone) {
+    cards[k].el.classList.add("chosen");
+    playSuccessSound();
+    setTimeout(
+      () => {
+        busy = false;
+        onDone(cards[k].item);
+      },
+      reduceMotion ? 0 : 650
+    );
+  }
+
+  // تقريباً المسافة على الشاشة بين مركزَي بطاقتين متجاورتين (وتر الدائرة)
+  function cardPx() {
+    const r = parseFloat(getComputedStyle(stage.querySelector(".picker-helix")).getPropertyValue("--helix-r"));
+    return 2 * r * Math.sin((STEP * Math.PI) / 360);
+  }
+
+  function endDrag(e, cancelled) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag;
+    drag = null;
+    stage.querySelector(".picker-helix")?.classList.remove("dragging");
+    if (!d.moved) {
+      // ضغطة بلا سحب = اختيار البطاقة: تدور للواجهة ثم تفتح النتيجة
+      const cardEl = !cancelled && e.target.closest(".picker-helix-card");
+      const k = cardEl ? cards.findIndex((c) => c.el === cardEl) : -1;
+      if (k === -1) return;
+      busy = true;
+      cards.forEach(({ el }) => el.classList.remove("chosen"));
+      animateTo(k, 450, 3, () => land(k, onPick));
+      return;
+    }
+    // زخم خفيف: نكمل باتجاه السحب حسب سرعته ثم نثبت على أقرب بطاقة
+    const target = Math.max(0, Math.min(COUNT - 1, Math.round(pos + d.v * 300)));
+    animateTo(target, 500, 3);
+  }
+
+  stage.addEventListener("pointerdown", (e) => {
+    if (!rotor || busy || !e.target.closest(".picker-helix")) return;
+    stopIdle();
+    cancelAnimationFrame(moveFrame);
+    drag = { id: e.pointerId, x: e.clientX, start: pos, lastX: e.clientX, lastT: e.timeStamp, v: 0, moved: false };
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved) {
+      if (Math.abs(dx) < 6) return;
+      drag.moved = true;
+      stage.setPointerCapture(e.pointerId);
+      stage.querySelector(".picker-helix").classList.add("dragging");
+      cards.forEach(({ el }) => el.classList.remove("chosen"));
+    }
+    const dt = e.timeStamp - drag.lastT;
+    if (dt > 0) drag.v = -(e.clientX - drag.lastX) / cardPx() / dt;
+    drag.lastX = e.clientX;
+    drag.lastT = e.timeStamp;
+    // سحب لليسار يجيب البطاقة اللي على اليمين للواجهة (البطاقة k+1 يمين)
+    moveTo(drag.start - dx / cardPx());
+  });
+  stage.addEventListener("pointerup", (e) => endDrag(e, false));
+  stage.addEventListener("pointercancel", (e) => endDrag(e, true));
+
   // تمايل هادئ ذهاباً وإياباً بين البطاقة 2 و8 — يبقى المجال للأمام فاضي للدوران
   function idle(now) {
     pos = 5 - 3 * Math.cos((now - idleStart) / 4000);
@@ -5202,7 +5303,9 @@ function createPickerHelix(stage) {
 
   function build(items) {
     stopIdle();
-    stage.innerHTML = `<div class="picker-helix" aria-hidden="true"><div class="picker-helix-rotor"></div></div>`;
+    cancelAnimationFrame(moveFrame);
+    busy = false;
+    stage.innerHTML = `<div class="picker-helix" aria-hidden="true"><div class="picker-helix-rotor"></div></div><p class="picker-helix-hint">${t("picker_drag_hint")}</p>`;
     rotor = stage.querySelector(".picker-helix-rotor");
     cards = Array.from({ length: COUNT }, (_, k) => {
       const item = items[Math.floor(Math.random() * items.length)];
@@ -5215,6 +5318,7 @@ function createPickerHelix(stage) {
       return { el, item };
     });
     pos = 2;
+    lastTick = 2;
     render();
     if (!reduceMotion) {
       idleStart = performance.now();
@@ -5223,47 +5327,16 @@ function createPickerHelix(stage) {
   }
 
   function spin(items, onDone) {
+    if (busy) return;
     if (!rotor || pos > COUNT - 3 - MIN_TRAVEL) build(items);
     stopIdle();
+    drag = null;
+    busy = true;
     cards.forEach(({ el }) => el.classList.remove("chosen"));
 
-    const from = pos;
-    const minTarget = Math.ceil(from) + MIN_TRAVEL;
+    const minTarget = Math.ceil(pos) + MIN_TRAVEL;
     const target = minTarget + Math.floor(Math.random() * (COUNT - 3 - minTarget + 1));
-    const { el: chosenEl, item } = cards[target];
-
-    const finish = () => {
-      chosenEl.classList.add("chosen");
-      playSuccessSound();
-      setTimeout(() => onDone(item), reduceMotion ? 0 : 650);
-    };
-
-    if (reduceMotion) {
-      pos = target;
-      render();
-      finish();
-      return;
-    }
-
-    const duration = 2800;
-    const start = performance.now();
-    let lastTick = Math.floor(from);
-    let lastTickTime = 0;
-    function frame(now) {
-      const t = Math.min((now - start) / duration, 1);
-      pos = from + (target - from) * (1 - Math.pow(1 - t, 4));
-      render();
-      // صوت "تكّة" مع كل بطاقة تمر بالواجهة — بحد أدنى 60ms بينها عشان
-      // البداية السريعة ما تصير ضجيج متواصل
-      if (Math.floor(pos) !== lastTick && now - lastTickTime > 60) {
-        lastTick = Math.floor(pos);
-        lastTickTime = now;
-        playTone(900, 0.03);
-      }
-      if (t < 1) requestAnimationFrame(frame);
-      else finish();
-    }
-    requestAnimationFrame(frame);
+    animateTo(target, 2800, 4, () => land(target, onDone));
   }
 
   return { build, spin };
@@ -5279,7 +5352,10 @@ function initRandomPicker() {
     (key) => (SITE_DATA[key].items || []).length > 0
   );
   let selectedSection = null;
-  const helix = createPickerHelix(stage);
+  const helix = createPickerHelix(stage, (item) => {
+    spinBtn.disabled = true;
+    reveal(item);
+  });
 
   categoriesWrap.innerHTML = sectionKeys
     .map(

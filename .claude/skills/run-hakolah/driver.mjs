@@ -67,6 +67,17 @@ const COMMANDS = {
     console.log("fill OK:", selector);
   },
 
+  // drag x1,y1 x2,y2 — سحب حقيقي بالماوس (عدة خطوات حركة، مو قفزة وحدة)
+  async drag(args) {
+    if (!page) return console.log("ERROR: launch first");
+    const [[x1, y1], [x2, y2]] = args.split(" ").map((p) => p.split(",").map(Number));
+    await page.mouse.move(x1, y1);
+    await page.mouse.down();
+    await page.mouse.move(x2, y2, { steps: 15 });
+    await page.mouse.up();
+    console.log("drag OK:", args);
+  },
+
   async press(key) {
     if (!page) return console.log("ERROR: launch first");
     await page.keyboard.press(key);
