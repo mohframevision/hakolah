@@ -1,107 +1,139 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- "اختار لي" بروح Recollect بهوية هكوله: شاشة غامرة داكنة دائماً (مهما كان
+     مظهر التطبيق)، كرة أيقونات ثلاثية الأبعاد بالمنتصف فوقها شريط زجاجي،
+     وتحتها عنوان قصير + أقسام + زر كبير. الكشف يطلع فوق الكرة نفسها. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:layoutDirection="rtl"
-    android:background="@color/bg">
+    android:background="@drawable/picker_bg">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@color/brand_primary"
-        android:elevation="4dp"
-        android:paddingStart="16dp"
+        android:paddingStart="20dp"
         android:paddingEnd="16dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp">
+        android:paddingTop="14dp">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="اختار لي"
-            android:textColor="@color/white"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:drawableStart="@drawable/ic_casino_small"
-            android:drawableTint="@color/white"
-            android:drawablePadding="8dp" />
+            android:textColor="#CCFFFFFF"
+            android:textSize="15sp" />
 
         <ImageView
             android:id="@+id/pickerCloseButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:padding="12dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:padding="11dp"
             android:src="@drawable/ic_close"
-            android:tint="@color/white"
+            android:tint="#FFFFFFFF"
+            android:contentDescription="إغلاق"
             android:clickable="true"
             android:focusable="true"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:background="@drawable/glass_circle" />
     </LinearLayout>
 
-    <ScrollView
+    <FrameLayout
+        android:id="@+id/pickerStage"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:clipChildren="false">
 
-        <LinearLayout
+        <bh.mohframevision.hakolah.OrbView
+            android:id="@+id/pickerOrb"
             android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/pickerPill"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_gravity="center"
+            android:minWidth="220dp"
+            android:maxWidth="300dp"
+            android:gravity="center"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:background="@drawable/glass_pill"
+            android:textColor="#FFFFFFFF"
+            android:textSize="16sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="إلى أين اليوم؟" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="اختر قسماً ثم اضغط زر الاختيار"
-                android:textColor="@color/text_muted"
-                android:textSize="13sp"
-                android:layout_marginBottom="8dp" />
+        <FrameLayout
+            android:id="@+id/pickerReveal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:visibility="gone" />
+    </FrameLayout>
 
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none">
+    <TextView
+        android:id="@+id/pickerHeadline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="دع هكوله يختار لك"
+        android:textColor="#FFFFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold" />
 
-                <LinearLayout
-                    android:id="@+id/pickerCategories"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal" />
-            </HorizontalScrollView>
+    <TextView
+        android:id="@+id/pickerSub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:gravity="center"
+        android:text="اختر قسماً، أو اترك الاختيار على الكل"
+        android:textColor="#B3FFFFFF"
+        android:textSize="14sp" />
 
-            <TextView
-                android:id="@+id/pickerSpinBtn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="اختار!"
-                android:textColor="@color/white"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:gravity="center"
-                android:background="@drawable/btn_pill_primary"
-                android:padding="16dp"
-                android:drawableStart="@drawable/ic_casino_small"
-                android:drawableTint="@color/white"
-                android:drawablePadding="8dp"
-                android:enabled="false"
-                android:alpha="0.5"
-                android:clickable="true"
-                android:focusable="true" />
+    <HorizontalScrollView
+        android:id="@+id/pickerCategoriesScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:scrollbars="none">
 
-            <FrameLayout
-                android:id="@+id/pickerStage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:minHeight="200dp" />
+        <!-- الهامش داخل القائمة لا على HorizontalScrollView: التمرير لبداية
+             RTL (Ui.scrollToStart) يتجاهل padding الحاوية فيلصق أول رقاقة بالحافة -->
+        <LinearLayout
+            android:id="@+id/pickerCategories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="20dp"
+            android:paddingEnd="12dp"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
 
-        </LinearLayout>
-    </ScrollView>
+    <TextView
+        android:id="@+id/pickerSpinBtn"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="18dp"
+        android:gravity="center"
+        android:text="اختار لي"
+        android:textColor="#FFFFFFFF"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:background="@drawable/picker_go_bg"
+        android:clickable="true"
+        android:focusable="true" />
 
     <LinearLayout
         android:id="@+id/bottomNav"

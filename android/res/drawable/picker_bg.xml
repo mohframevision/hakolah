@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- خلفية "اختار لي": تدرّج أخضر هكوله من شبه أسود فوق لأخضر عميق تحت، مع
+     توهّج أخضر ناعم من أسفل الوسط (نفس تكوين Recollect بهويتنا بدل البنفسجي) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="270" android:startColor="#FF06120E" android:centerColor="#FF0D2B22" android:endColor="#FF17513F" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="radial" android:centerX="0.5" android:centerY="0.92" android:gradientRadius="420dp"
+                android:startColor="#663FA480" android:endColor="#003FA480" />
+        </shape>
+    </item>
+</layer-list>
