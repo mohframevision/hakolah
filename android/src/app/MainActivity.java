@@ -38,11 +38,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private LinearLayout bottomNav;
     private LinearLayout sectionTabs;
     private View headerBar;
+    private View searchArea;
+    private int searchAreaHeight = -1;
     private TextView headerTitle;
     private EditText searchBox;
     private LinearLayout filterChips;
     private TextView nearMeButton;
-    private LinearLayout alphabetIndex;
     private android.widget.HorizontalScrollView sectionTabsScroll;
     private android.widget.HorizontalScrollView filterChipsScroll;
     private View dailyWrap;
@@ -95,11 +96,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         bottomNav = findViewById(R.id.bottomNav);
         sectionTabs = findViewById(R.id.sectionTabs);
         headerBar = findViewById(R.id.headerBar);
+        searchArea = findViewById(R.id.searchArea);
         headerTitle = findViewById(R.id.headerTitle);
         searchBox = findViewById(R.id.searchBox);
         filterChips = findViewById(R.id.filterChips);
         nearMeButton = findViewById(R.id.nearMeButton);
-        alphabetIndex = findViewById(R.id.alphabetIndex);
         sectionTabsScroll = findViewById(R.id.sectionTabsScroll);
         filterChipsScroll = findViewById(R.id.filterChipsScroll);
         // "اختيار اليوم" رأس للقائمة نفسها — يتمرّر معها بدل ما يثبت ويأكل الشاشة.
@@ -135,7 +136,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         // FrameLayout الموزون تحته (weight=1)، وهذا وحده يطلق onScroll زائفة
         // (ListView تعيد حساب مقاييسها لما تتمدد) تبان كأنها "المستخدم رجع
         // للأعلى" وتوقف الطي بمنتصفه — من هنا "يتحرك شوي بس ما ينطوي كامل"
-        updateAlphabetVisibility(firstVisibleItem);
         if (isHeaderAnimating) return;
         if (firstVisibleItem == 0) {
             showHeader();
@@ -147,20 +147,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         lastFirstVisibleItem = firstVisibleItem;
     }
 
-    // الشريط الأبجدي كان يغطي رصّة "اختيار اليوم" — يظهر بس لما الرأس يطلع
-    // من الشاشة (أول عنصر ظاهر = كرت، مو الرأس) أو لما الرأس مخفي أصلاً
-    private boolean alphabetAvailable;
-
-    private void updateAlphabetVisibility(int firstVisibleItem) {
-        boolean headerOnScreen = dailyWrap.getVisibility() == View.VISIBLE && firstVisibleItem == 0;
-        int want = alphabetAvailable && !headerOnScreen ? View.VISIBLE : View.GONE;
-        if (alphabetIndex.getVisibility() != want) alphabetIndex.setVisibility(want);
-    }
-
     private void hideHeader() {
         if (!headerVisible) return;
         headerVisible = false;
         animateHeaderHeight(headerBar.getHeight(), 0);
+        // البحث ينطوي معه — إلا وأنت تكتب فيه (إخفاء حقل فيه المؤشر يربك)
+        if (!searchBox.hasFocus()) {
+            if (searchAreaHeight <= 0) searchAreaHeight = searchArea.getHeight();
+            animateHeight(searchArea, searchArea.getHeight(), 0);
+        }
     }
 
     private void showHeader() {
@@ -168,6 +163,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         headerVisible = true;
         if (headerHeight <= 0) headerHeight = headerBar.getHeight();
         animateHeaderHeight(headerBar.getHeight(), headerHeight);
+        if (searchAreaHeight > 0 && searchArea.getHeight() < searchAreaHeight) {
+            animateHeight(searchArea, searchArea.getHeight(), searchAreaHeight);
+        }
+    }
+
+    private static void animateHeight(View view, int from, int to) {
+        ValueAnimator animator = ValueAnimator.ofInt(from, to);
+        animator.setDuration(220);
+        animator.addUpdateListener(new HeaderHeightUpdater(view));
+        animator.start();
     }
 
     private void animateHeaderHeight(int from, int to) {
@@ -251,13 +256,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             return;
         }
         Object tag = v.getTag();
-        if (tag instanceof Integer) {
-            // شريط التصفح الأبجدي — يقفز لأول عنصر يبدأ بالحرف المضغوط
-            Touch.feedback(v, Touch.TICK, SoundPlayer.TICK);
-            // + رأس "اختيار اليوم" — مواضع ListView تشمل الرؤوس
-            itemList.setSelection((Integer) tag + itemList.getHeaderViewsCount());
-            return;
-        }
         if (!(tag instanceof String)) return;
         String value = (String) tag;
         if (value.startsWith("chip:")) {
@@ -549,12 +547,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private void addChip(String label, String tagValue) {
         TextView chip = new TextView(this);
         chip.setText(label);
-        chip.setTextSize(14f);
+        chip.setTextSize(13f);
         chip.setBackgroundResource(R.drawable.filter_chip_bg);
         chip.setActivated(currentTag == null ? tagValue == null : currentTag.equals(tagValue));
         chip.setTextColor(chip.isActivated() ? getColor(R.color.white) : getColor(R.color.text));
-        int padH = dp(16);
-        int padV = dp(8);
+        int padH = dp(14);
+        int padV = dp(6);
         chip.setPadding(padH, padV, padH, padV);
         LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -607,7 +605,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             for (JSONObject item : matched) annotateDistance(item);
             sortByDistanceAscending(matched);
         } else {
-            // ترتيب أبجدي افتراضي — يخلي شريط التصفح الأبجدي (alphabetIndex)
+            // ترتيب أبجدي افتراضي
             // مفيداً فعلاً، بدل قفزة لموضع عشوائي بترتيب البيانات الخام
             sortAlphabetically(matched);
         }
@@ -629,14 +627,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         }
         boolean browsing = currentTag == null && searchQuery.isEmpty() && !sortByDistance;
         dailyWrap.setVisibility(browsing && dailyCards > 0 ? View.VISIBLE : View.GONE);
-        // الشريط الأبجدي يفترض ترتيباً أبجدياً — لا معنى له وقت الترتيب
-        // بـ"الأقرب مني"، وقتها يوديك لموضع عشوائي بدل تجميع الحرف فعلياً
-        if (sortByDistance) {
-            alphabetAvailable = false;
-            alphabetIndex.setVisibility(View.GONE);
-        } else {
-            buildAlphabetIndex(matched);
-        }
     }
 
     // ترتيب إدراج يدوي بـCollator عربي — بنفس سبب تفادي Comparator<T> بملفات
@@ -653,49 +643,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             }
             list.set(j + 1, key);
         }
-    }
-
-    // شريط تصفح أبجدي جانبي (نفس فكرة مكتبة موسيقى سامسونج) — يبان بس لو
-    // القسم فيه عناصر كافية تستاهل قفزة سريعة، وحروفه مبنية من العناوين
-    // الفعلية الموجودة بس (لا أبجدية كاملة ثابتة فيها حروف ميتة بلا نتائج)
-    private static final int ALPHABET_INDEX_MIN_ITEMS = 12;
-
-    private void buildAlphabetIndex(List<JSONObject> items) {
-        alphabetIndex.removeAllViews();
-        alphabetAvailable = false;
-        if (items.size() < ALPHABET_INDEX_MIN_ITEMS) {
-            alphabetIndex.setVisibility(View.GONE);
-            return;
-        }
-        List<String> seenLetters = new ArrayList<>();
-        for (int i = 0; i < items.size(); i++) {
-            String title = SearchUtil.normalizeArabic(items.get(i).optString("title", "").trim());
-            if (title.isEmpty()) continue;
-            String letter = title.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
-            if (seenLetters.contains(letter)) continue;
-            seenLetters.add(letter);
-            addAlphabetIndexEntry(letter, i);
-        }
-        alphabetAvailable = !seenLetters.isEmpty();
-        updateAlphabetVisibility(itemList.getFirstVisiblePosition());
-    }
-
-    private void addAlphabetIndexEntry(String letter, int position) {
-        TextView entry = new TextView(this);
-        entry.setText(letter);
-        entry.setTextSize(11f);
-        entry.setTextColor(getColor(R.color.brand_accent));
-        entry.setGravity(android.view.Gravity.CENTER);
-        entry.setMinWidth(dp(28));
-        entry.setMinHeight(dp(28));
-        android.util.TypedValue outValue = new android.util.TypedValue();
-        getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
-        entry.setBackgroundResource(outValue.resourceId);
-        entry.setClickable(true);
-        entry.setFocusable(true);
-        entry.setTag(position);
-        entry.setOnClickListener(this);
-        alphabetIndex.addView(entry);
     }
 
     private boolean hasTag(JSONObject item, String tag) {
@@ -798,7 +745,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
     private void updateNearMeButton() {
         nearMeButton.setActivated(sortByDistance);
-        nearMeButton.setText(sortByDistance ? "الأقرب مني ✕" : "الأقرب مني");
+        nearMeButton.setText(sortByDistance ? "الأقرب ✕" : "الأقرب");
         int color = sortByDistance ? getColor(R.color.white) : getColor(R.color.text);
         nearMeButton.setTextColor(color);
         nearMeButton.setCompoundDrawableTintList(android.content.res.ColorStateList.valueOf(color));
@@ -891,6 +838,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
                 views.add(buildDailyCard(all.get(i), section, i));
             }
         }
+        // ارتفاع موحّد = أطول بطاقة فعلياً (لا رقم ثابت): بخط كبير بإعدادات
+        // الجوال كان الارتفاع الثابت يقص زر البطاقة من تحت
+        int width = getResources().getDisplayMetrics().widthPixels - dp(32);
+        int tallest = 0;
+        for (View v : views) {
+            v.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            tallest = Math.max(tallest, v.getMeasuredHeight());
+        }
+        for (View v : views) v.getLayoutParams().height = tallest;
         dailyCards = views.size();
         dailyStack.setCards(views);
     }
@@ -902,7 +859,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         card.setElevation(dp(6));
         int pad = dp(22);
         card.setPadding(pad, pad, pad, dp(18));
-        card.setLayoutParams(new android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(304)));
+        card.setLayoutParams(new android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         TextView badge = new TextView(this);
         badge.setText(section.optString("icon", "⭐") + "  " + section.optString("title", ""));

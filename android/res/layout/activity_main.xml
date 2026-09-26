@@ -53,52 +53,65 @@
             android:gravity="center_vertical" />
     </HorizontalScrollView>
 
+    <!-- منطقة البحث مضغوطة: البحث و"الأقرب" بسطر واحد بدل سطرين، ورقاقات
+         أصغر — كانت تاخذ قرابة نص الشاشة قبل أول كرت. وتنطوي مع العنوان
+         وقت النزول بالقائمة (searchArea بـMainActivity) -->
     <LinearLayout
+        android:id="@+id/searchArea"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@color/bg"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingTop="8dp">
+        android:paddingTop="10dp"
+        android:paddingBottom="2dp">
 
-        <EditText
-            android:id="@+id/searchBox"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="ابحث…"
-            android:inputType="text"
-            android:maxLines="1"
-            android:background="@drawable/search_box_bg"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="16dp"
-            android:textSize="15sp"
-            android:textColor="@color/text"
-            android:textColorHint="@color/text_muted"
-            android:drawableStart="@drawable/ic_search_small"
-            android:drawableTint="@color/text_muted"
-            android:drawablePadding="8dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/nearMeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="الأقرب مني"
-            android:textSize="13sp"
-            android:textColor="@color/text"
-            android:background="@drawable/filter_chip_bg"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:drawableStart="@drawable/ic_location_on_small"
-            android:drawableTint="@color/text"
-            android:drawablePadding="6dp"
-            android:clickable="true"
-            android:focusable="true" />
+            <EditText
+                android:id="@+id/searchBox"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:hint="ابحث…"
+                android:inputType="text"
+                android:maxLines="1"
+                android:background="@drawable/search_box_bg"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:textSize="14sp"
+                android:textColor="@color/text"
+                android:textColorHint="@color/text_muted"
+                android:drawableStart="@drawable/ic_search_small"
+                android:drawableTint="@color/text_muted"
+                android:drawablePadding="8dp" />
+
+            <TextView
+                android:id="@+id/nearMeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:text="الأقرب"
+                android:textSize="13sp"
+                android:textColor="@color/text"
+                android:background="@drawable/filter_chip_bg"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:drawableStart="@drawable/ic_location_on_small"
+                android:drawableTint="@color/text"
+                android:drawablePadding="4dp"
+                android:contentDescription="رتّب حسب الأقرب مني"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
 
         <HorizontalScrollView
             android:id="@+id/filterChipsScroll"
@@ -179,23 +192,6 @@
             android:paddingEnd="16dp"
             android:paddingTop="16dp"
             android:paddingBottom="16dp" />
-
-        <!-- شريط تصفح أبجدي جانبي (نفس فكرة مكتبة موسيقى سامسونج) — يبان بس
-             بالأقسام الكبيرة، مبني من الحروف الموجودة فعلياً بالعناوين -->
-        <LinearLayout
-            android:id="@+id/alphabetIndex"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end|center_vertical"
-            android:layout_marginEnd="4dp"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:background="@drawable/settings_row_bg"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
-            android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/emptyView"
