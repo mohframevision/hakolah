@@ -159,6 +159,13 @@ body {
   line-height: 1.7;
 }
 
+/* البطاقات الداخلة من خارج الشاشة (flyInCards) تتجاوز العرض مؤقتاً. القص
+   هنا لا على body: قيمة body تنتقل للنافذة نفسها، وسفاري الجوال يتجاهلها
+   ويسمح بسحب الصفحة جانبياً. وclip (عكس hidden) ما يكسر شريط البحث الـsticky */
+#main-content {
+  overflow-x: clip;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -1193,6 +1200,27 @@ img {
 .item-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-card-hover);
+}
+
+/* دخول "طائر" عند التمرير (flyInCards بـmain.js، نفس منحنى shopify.design) */
+.item-card.fly-pending,
+.item-card.flown {
+  animation: none;
+}
+
+.item-card.fly-pending {
+  opacity: 0;
+  transform: translate(var(--fx, 0px), 300px) scale(1.5);
+}
+
+/* تحديد أعلى من .item-card.scroll-reveal (توهّج الدخول أسفل الملف، اللي يعرّف
+   transition خاص به فكان يلغي هذا ويخلي البطاقة تقفز لمكانها بلا حركة) —
+   ونعيد توهّجه هنا ضمن نفس القائمة عشان يشتغلان مع بعض */
+.card-grid .item-card.card-in {
+  transition:
+    transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease,
+    box-shadow 1.1s ease 0.05s;
 }
 
 /* عنصر مميز (featured) — يبرز بإطار ملوّن ويترتّب أول القائمة، مو نفس ميزة

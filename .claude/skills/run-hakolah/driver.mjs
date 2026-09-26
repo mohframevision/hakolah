@@ -78,6 +78,15 @@ const COMMANDS = {
     console.log("drag OK:", args);
   },
 
+  // wheel <deltaY> — تمرير حقيقي بعجلة الماوس (يشغّل مكتبات التمرير الناعم
+  // وأنيميشن التمرير اللي ما تتجاوب مع window.scrollTo)
+  async wheel(delta) {
+    if (!page) return console.log("ERROR: launch first");
+    await page.mouse.move(640, 400);
+    await page.mouse.wheel(0, Number(delta));
+    console.log("wheel OK:", delta);
+  },
+
   async press(key) {
     if (!page) return console.log("ERROR: launch first");
     await page.keyboard.press(key);

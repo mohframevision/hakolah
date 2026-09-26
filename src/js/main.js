@@ -4385,6 +4385,49 @@ function markSectionExplored(section) {
    typeFilter (اختياري): يقصر القسم على عناصر تاجها يحتوي هالقيمة — تستخدمه
    صفحة نوع محل السيارات (car-shop-type.njk) عشان تعرض غسيل بس مثلاً، بدل
    كل محلات السيارات. التاج نفسه يُستبعد من رقاقات الفلتر لأنه بديهي بالفعل. */
+/* دخول البطاقات "طائرة" من خارج الشاشة عند التمرير (مستوحى من shopify.design):
+   كل بطاقة تبدأ مخفية، أكبر ×1.5 ومزاحة للخارج حسب عمودها (يسار/يمين/تحت)،
+   وأول ما يوصلها التمرير تنزلق لمكانها. للعرض الأول للصفحة بس — إعادة
+   الرسم بالبحث/الفلترة تظهر عادي، وإلا كل حرف تكتبه يعيد العرض كله. */
+function flyInCards(grid) {
+  if (!("IntersectionObserver" in window)) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cards = [...grid.querySelectorAll(".item-card")];
+  if (!cards.length) return;
+
+  const gridBox = grid.getBoundingClientRect();
+  const gridCx = gridBox.left + gridBox.width / 2;
+  cards.forEach((card) => {
+    const r = card.getBoundingClientRect();
+    const dx = r.left + r.width / 2 - gridCx;
+    card.style.setProperty("--fx", `${Math.max(-350, Math.min(350, dx))}px`);
+    card.classList.add("fly-pending");
+  });
+
+  // المراقبة على البطاقة وهي مزاحة لتحت ومكبّرة، فالهامش السفلي يعوّض
+  // الإزاحة — وإلا بطاقات أسفل الشاشة تبقى مخفية وقت فتح الصفحة
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(({ target, isIntersecting }) => {
+        if (!isIntersecting) return;
+        observer.unobserve(target);
+        target.classList.remove("fly-pending");
+        target.classList.add("card-in", "flown");
+      });
+    },
+    { rootMargin: "0px 0px 250px 0px" }
+  );
+  cards.forEach((card) => {
+    observer.observe(card);
+    // بعد ما تستقر نشيل انتقال الـ1.2 ثانية، عشان حركة المرور (hover) ترجع سريعة
+    card.addEventListener("transitionend", function done(e) {
+      if (e.target !== card || e.propertyName !== "transform") return;
+      card.classList.remove("card-in");
+      card.removeEventListener("transitionend", done);
+    });
+  });
+}
+
 function renderSection(section, typeFilter) {
   const data = SITE_DATA[section];
   if (!data) return;
@@ -4570,6 +4613,7 @@ function renderSection(section, typeFilter) {
 
   renderFilters();
   renderGrid();
+  flyInCards(grid);
 
   if (searchInput) {
     searchInput.addEventListener("input", renderGrid);
