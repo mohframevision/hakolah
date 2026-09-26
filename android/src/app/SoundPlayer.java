@@ -78,7 +78,10 @@ class SoundPlayer {
             try {
                 track = new AudioTrack.Builder()
                         .setAudioAttributes(new AudioAttributes.Builder()
-                                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                                // على صوت الوسائط (زي الألعاب) لا صوت الإشعارات:
+                                // الجوال على الصامت/الاهتزاز كان يكتم أصوات
+                                // "التنبيه" كلها فما يطلع أي صوت بالتطبيق
+                                .setUsage(AudioAttributes.USAGE_GAME)
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                                 .build())
                         .setAudioFormat(new AudioFormat.Builder()

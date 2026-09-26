@@ -16,7 +16,9 @@ class Prefs {
     private static final String KEY_FAVORITES = "favorites";
 
     // نفس افتراض الموقع بالضبط: الصوت مطفي افتراضياً (اختياري، المستخدم يفعّله)
-    static final boolean SOUND_DEFAULT = false;
+    // مفعّل افتراضياً: أصوات التطبيق جزء من تجربته (المالك: "ما في صوت" وهو
+    // ما فعّلها). الإطفاء متاح من الإعدادات
+    static final boolean SOUND_DEFAULT = true;
     static final String THEME_AUTO = "auto";
     static final String THEME_LIGHT = "light";
     static final String THEME_DARK = "dark";
