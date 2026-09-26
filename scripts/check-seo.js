@@ -102,3 +102,36 @@ console.log(`\n== روابط داخلية مكسورة: ${brokenLinksByFile.size
 for (const [rel, links] of [...brokenLinksByFile.entries()].slice(0, 30)) {
   console.log(`  ${rel} -> ${[...links].join(", ")}`);
 }
+
+// فحص صلاحية JSON-LD (Schema.org)، og:image مطلق، ومeta viewport — يُضاف 2026-09-26 (زاوية SEO)
+const ldJsonIssues = [];
+const ogImageIssues = [];
+const viewportIssues = [];
+for (const f of files) {
+  const html = fs.readFileSync(f, "utf8");
+  const rel = path.relative(SITE, f);
+  const ldBlocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+  for (const m of ldBlocks) {
+    try {
+      JSON.parse(m[1]);
+    } catch (e) {
+      ldJsonIssues.push(`${rel}: JSON-LD غير صالح — ${e.message}`);
+    }
+  }
+  const ogImageMatch = html.match(/<meta property="og:image" content="([^"]*)"/);
+  if (ogImageMatch && !/^https?:\/\//.test(ogImageMatch[1])) {
+    ogImageIssues.push(`${rel}: og:image غير مطلق ("${ogImageMatch[1]}")`);
+  }
+  if (!/<meta name="viewport"/.test(html)) {
+    viewportIssues.push(`${rel}: بلا meta viewport`);
+  }
+}
+
+console.log(`\n== صلاحية JSON-LD (Schema.org): ${ldJsonIssues.length} خطأ ==`);
+for (const i of ldJsonIssues.slice(0, 30)) console.log(`  ${i}`);
+
+console.log(`\n== og:image غير مطلق (لن يظهر صحيحاً بمشاركات السوشال): ${ogImageIssues.length} ==`);
+for (const i of ogImageIssues.slice(0, 30)) console.log(`  ${i}`);
+
+console.log(`\n== صفحات بلا meta viewport: ${viewportIssues.length} ==`);
+for (const i of viewportIssues.slice(0, 30)) console.log(`  ${i}`);
