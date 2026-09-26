@@ -28,7 +28,7 @@ import org.json.JSONObject;
 // كلاسات مجهولة (anonymous inner classes) تكسر d8 بهذي البيئة (نفس المشكلة
 // الموثّقة بمشروع StudyApp) — كل شي هنا كلاس علوي أو يطبّق الواجهة مباشرة
 // بدل new Interface() { ... }.
-public class MainActivity extends Activity implements View.OnClickListener, HakolahApi.Callback, TextWatcher, AbsListView.OnScrollListener {
+public class MainActivity extends Activity implements View.OnClickListener, HakolahApi.Callback, TextWatcher, AbsListView.OnScrollListener, CardStackView.Listener {
     private ProgressBar loadingView;
     private View errorView;
     private TextView errorText;
@@ -43,6 +43,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private LinearLayout filterChips;
     private TextView nearMeButton;
     private LinearLayout alphabetIndex;
+    private android.widget.HorizontalScrollView sectionTabsScroll;
+    private android.widget.HorizontalScrollView filterChipsScroll;
+    private View dailyWrap;
+    private CardStackView dailyStack;
+    private TextView dailyCount;
+    private int dailyCards;
 
     // نفس فكرة initHeaderScroll بالموقع (يخفي الهيدر أثناء النزول بالقائمة
     // ويرجّعه عند الصعود) — بلا CoordinatorLayout (يحتاج مكتبة)، بـ
@@ -93,6 +99,18 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         filterChips = findViewById(R.id.filterChips);
         nearMeButton = findViewById(R.id.nearMeButton);
         alphabetIndex = findViewById(R.id.alphabetIndex);
+        sectionTabsScroll = findViewById(R.id.sectionTabsScroll);
+        filterChipsScroll = findViewById(R.id.filterChipsScroll);
+        // "اختيار اليوم" رأس للقائمة نفسها — يتمرّر معها بدل ما يثبت ويأكل الشاشة.
+        // داخل حاوية لأن رأس ListView نفسه ما ينخفي نظيفاً، محتواه ينخفي
+        android.widget.FrameLayout headerHolder = new android.widget.FrameLayout(this);
+        headerHolder.setClipChildren(false);
+        dailyWrap = getLayoutInflater().inflate(R.layout.daily_header, headerHolder, false);
+        headerHolder.addView(dailyWrap);
+        itemList.addHeaderView(headerHolder, null, false);
+        dailyStack = dailyWrap.findViewById(R.id.dailyStack);
+        dailyCount = dailyWrap.findViewById(R.id.dailyCount);
+        dailyStack.setListener(this);
         findViewById(R.id.retryButton).setOnClickListener(this);
         nearMeButton.setOnClickListener(this);
         emptyResetButton.setOnClickListener(this);
@@ -116,6 +134,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         // FrameLayout الموزون تحته (weight=1)، وهذا وحده يطلق onScroll زائفة
         // (ListView تعيد حساب مقاييسها لما تتمدد) تبان كأنها "المستخدم رجع
         // للأعلى" وتوقف الطي بمنتصفه — من هنا "يتحرك شوي بس ما ينطوي كامل"
+        updateAlphabetVisibility(firstVisibleItem);
         if (isHeaderAnimating) return;
         if (firstVisibleItem == 0) {
             showHeader();
@@ -125,6 +144,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             showHeader();
         }
         lastFirstVisibleItem = firstVisibleItem;
+    }
+
+    // الشريط الأبجدي كان يغطي رصّة "اختيار اليوم" — يظهر بس لما الرأس يطلع
+    // من الشاشة (أول عنصر ظاهر = كرت، مو الرأس) أو لما الرأس مخفي أصلاً
+    private boolean alphabetAvailable;
+
+    private void updateAlphabetVisibility(int firstVisibleItem) {
+        boolean headerOnScreen = dailyWrap.getVisibility() == View.VISIBLE && firstVisibleItem == 0;
+        int want = alphabetAvailable && !headerOnScreen ? View.VISIBLE : View.GONE;
+        if (alphabetIndex.getVisibility() != want) alphabetIndex.setVisibility(want);
     }
 
     private void hideHeader() {
@@ -224,7 +253,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (tag instanceof Integer) {
             // شريط التصفح الأبجدي — يقفز لأول عنصر يبدأ بالحرف المضغوط
             Touch.feedback(v, Touch.TICK, SoundPlayer.TICK);
-            itemList.setSelection((Integer) tag);
+            // + رأس "اختيار اليوم" — مواضع ListView تشمل الرؤوس
+            itemList.setSelection((Integer) tag + itemList.getHeaderViewsCount());
             return;
         }
         if (!(tag instanceof String)) return;
@@ -243,6 +273,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             startActivity(new android.content.Intent(this, FavoritesActivity.class));
             overridePendingTransition(0, 0);
+        } else if (value.startsWith("url:") || value.startsWith("tel:")) {
+            // أزرار بطاقات "اختيار اليوم"
+            Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
+            LinkButtons.handleClick(this, value);
         } else if (SETTINGS_TAG.equals(value)) {
             Touch.haptic(v, Touch.TAP);
             SettingsPanel.show(this);
@@ -455,6 +489,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             tab.setLayoutParams(lp);
             sectionTabs.addView(tab);
         }
+        Ui.scrollToStart(sectionTabsScroll);
     }
 
     private void selectSection(String slug) {
@@ -475,6 +510,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         headerTitle.setText("هكوله — " + section.optString("title", ""));
 
         buildFilterChips();
+        Ui.scrollToStart(filterChipsScroll);
+        buildDaily(section);
         applyFilters();
         showList();
         highlightActiveTab();
@@ -581,9 +618,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             itemList.setAdapter(new ItemAdapter(this, currentSlug, filtered, searchQuery));
             itemList.setVisibility(View.VISIBLE);
         }
+        boolean browsing = currentTag == null && searchQuery.isEmpty() && !sortByDistance;
+        dailyWrap.setVisibility(browsing && dailyCards > 0 ? View.VISIBLE : View.GONE);
         // الشريط الأبجدي يفترض ترتيباً أبجدياً — لا معنى له وقت الترتيب
         // بـ"الأقرب مني"، وقتها يوديك لموضع عشوائي بدل تجميع الحرف فعلياً
         if (sortByDistance) {
+            alphabetAvailable = false;
             alphabetIndex.setVisibility(View.GONE);
         } else {
             buildAlphabetIndex(matched);
@@ -613,6 +653,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
     private void buildAlphabetIndex(List<JSONObject> items) {
         alphabetIndex.removeAllViews();
+        alphabetAvailable = false;
         if (items.size() < ALPHABET_INDEX_MIN_ITEMS) {
             alphabetIndex.setVisibility(View.GONE);
             return;
@@ -626,14 +667,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             seenLetters.add(letter);
             addAlphabetIndexEntry(letter, i);
         }
-        alphabetIndex.setVisibility(seenLetters.isEmpty() ? View.GONE : View.VISIBLE);
+        alphabetAvailable = !seenLetters.isEmpty();
+        updateAlphabetVisibility(itemList.getFirstVisiblePosition());
     }
 
     private void addAlphabetIndexEntry(String letter, int position) {
         TextView entry = new TextView(this);
         entry.setText(letter);
         entry.setTextSize(11f);
-        entry.setTextColor(getColor(R.color.brand_primary));
+        entry.setTextColor(getColor(R.color.brand_accent));
         entry.setGravity(android.view.Gravity.CENTER);
         entry.setMinWidth(dp(28));
         entry.setMinHeight(dp(28));
@@ -811,6 +853,111 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             }
             list.set(j + 1, key);
         }
+    }
+
+    // ---- "اختيار اليوم" ----
+    // اختيار ثابت لليوم: نفس البذرة (التاريخ + القسم) = نفس البطاقات ونفس
+    // ترتيبها طول اليوم، وتتغيّر بكرة — زي "اختيار اليوم" بالموقع
+    private void buildDaily(JSONObject section) {
+        List<JSONObject> all = new ArrayList<>();
+        for (int i = 0; i < currentItems.length(); i++) {
+            JSONObject item = currentItems.optJSONObject(i);
+            if (item != null) all.add(item);
+        }
+        List<View> views = new ArrayList<>();
+        if (all.size() >= 4) {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            long seed = cal.get(java.util.Calendar.YEAR) * 10000L + (cal.get(java.util.Calendar.MONTH) + 1) * 100L
+                    + cal.get(java.util.Calendar.DAY_OF_MONTH) + currentSlug.hashCode();
+            java.util.Random rnd = new java.util.Random(seed);
+            for (int i = all.size() - 1; i > 0; i--) {
+                int j = rnd.nextInt(i + 1);
+                JSONObject t = all.get(i);
+                all.set(i, all.get(j));
+                all.set(j, t);
+            }
+            for (int i = 0; i < Math.min(6, all.size()); i++) views.add(buildDailyCard(all.get(i), section));
+        }
+        dailyCards = views.size();
+        dailyStack.setCards(views);
+    }
+
+    private View buildDailyCard(JSONObject item, JSONObject section) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setBackgroundResource(R.drawable.daily_card_bg);
+        card.setElevation(dp(6));
+        int pad = dp(22);
+        card.setPadding(pad, pad, pad, dp(18));
+        card.setLayoutParams(new android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(304)));
+
+        TextView badge = new TextView(this);
+        badge.setText(section.optString("icon", "⭐") + "  " + section.optString("title", ""));
+        badge.setTextSize(12f);
+        badge.setTextColor(0xFFFFFFFF);
+        badge.setBackgroundResource(R.drawable.glass_pill);
+        badge.setPadding(dp(12), dp(5), dp(12), dp(5));
+        badge.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        card.addView(badge);
+
+        TextView icon = new TextView(this);
+        icon.setText(item.optString("icon", "⭐"));
+        icon.setTextSize(38f);
+        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        ilp.topMargin = dp(10);
+        icon.setLayoutParams(ilp);
+        card.addView(icon);
+
+        TextView title = new TextView(this);
+        title.setText(item.optString("title", ""));
+        title.setTextSize(20f);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setTextColor(0xFFFFFFFF);
+        title.setMaxLines(1);
+        title.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        // اسم لاتيني (Milanote) كان يلتصق باليسار — المحاذاة لبداية الواجهة
+        // (اليمين) مهما كانت لغة النص
+        title.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        card.addView(title);
+
+        TextView desc = new TextView(this);
+        desc.setText(item.optString("desc", ""));
+        desc.setTextSize(14f);
+        desc.setTextColor(0xD9FFFFFF);
+        desc.setMaxLines(2);
+        desc.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        desc.setLineSpacing(0, 1.2f);
+        desc.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dlp.topMargin = dp(4);
+        desc.setLayoutParams(dlp);
+        card.addView(desc);
+
+        View spacer = new View(this);
+        card.addView(spacer, new LinearLayout.LayoutParams(1, 0, 1f));
+
+        android.widget.HorizontalScrollView scroll = new android.widget.HorizontalScrollView(this);
+        scroll.setHorizontalScrollBarEnabled(false);
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        LinkButtons.build(this, actions, item, HakolahApi.ORIGIN, this);
+        // على الأخضر: الزر الأول أبيض بنص أخضر، والباقي زجاج شفاف بنص أبيض
+        for (int i = 0; i < actions.getChildCount(); i++) {
+            TextView b = (TextView) actions.getChildAt(i);
+            int color = i == 0 ? 0xFF1B4D3E : 0xFFFFFFFF;
+            b.setBackgroundResource(i == 0 ? R.drawable.btn_pill_white : R.drawable.glass_pill);
+            b.setTextColor(color);
+            android.graphics.drawable.Drawable d = b.getCompoundDrawables()[0];
+            if (d != null) d.setTint(color);
+        }
+        scroll.addView(actions);
+        card.addView(scroll);
+        return card;
+    }
+
+    @Override
+    public void onTopChanged(int index, int count) {
+        dailyCount.setText((index + 1) + " / " + count);
     }
 
     private void highlightActiveTab() {

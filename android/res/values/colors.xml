@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="brand_primary">#1B4D3E</color>
-    <color name="brand_accent">#3FA480</color>
+    <!-- لون النص/الأيقونة الأخضر: #3FA480 على الأبيض كان 3.07:1 (أقل من 4.5 للنص الصغير) -->
+    <color name="brand_accent">#2A7F60</color>
     <color name="bg">#F7F7F5</color>
     <color name="surface">#FFFFFF</color>
     <color name="text">#1A1A1A</color>

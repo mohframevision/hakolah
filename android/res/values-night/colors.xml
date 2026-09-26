@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="brand_primary">#3FA480</color>
+    <!-- خلفية لنص أبيض (أزرار، رقاقات، الهيدر): #3FA480 كان 3.07:1 مع الأبيض -->
+    <color name="brand_primary">#2A7F60</color>
     <color name="brand_accent">#3FA480</color>
     <color name="bg">#121212</color>
     <color name="surface">#1C1C1C</color>

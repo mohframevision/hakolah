@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- رأس القائمة: "اختيار اليوم" — رصّة بطاقات تتسحب (CardStackView). تُبنى
+     عناصرها كل يوم باختيار ثابت لليوم نفسه (نفس الترتيب لو فتحت التطبيق
+     مرتين بنفس اليوم)، وتختفي وقت البحث/الفلترة/"الأقرب مني". -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dailyWrap"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:paddingTop="4dp"
+    android:paddingBottom="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/dailyTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="اختيار اليوم"
+            android:textColor="@color/text"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/dailyCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_muted"
+            android:textSize="13sp"
+            android:textDirection="ltr" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="اسحب البطاقة يميناً أو يساراً لترى غيرها"
+        android:textColor="@color/text_muted"
+        android:textSize="12sp" />
+
+    <bh.mohframevision.hakolah.CardStackView
+        android:id="@+id/dailyStack"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:paddingTop="44dp" />
+
+</LinearLayout>

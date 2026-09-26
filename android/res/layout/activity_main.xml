@@ -34,6 +34,7 @@
          الآن لـ4 وجهات ثابتة بس (الرئيسية/اختار لي/المفضلة/الإعدادات) بدل
          ما يتمدد مع كل قسم جديد يُضاف بالموقع -->
     <HorizontalScrollView
+        android:id="@+id/sectionTabsScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/surface"
@@ -46,6 +47,8 @@
             android:id="@+id/sectionTabs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:orientation="horizontal"
             android:gravity="center_vertical" />
     </HorizontalScrollView>
@@ -98,6 +101,7 @@
             android:focusable="true" />
 
         <HorizontalScrollView
+            android:id="@+id/filterChipsScroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -173,8 +177,7 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="16dp"
-            android:paddingBottom="16dp"
-            android:layoutAnimation="@anim/list_layout_controller" />
+            android:paddingBottom="16dp" />
 
         <!-- شريط تصفح أبجدي جانبي (نفس فكرة مكتبة موسيقى سامسونج) — يبان بس
              بالأقسام الكبيرة، مبني من الحروف الموجودة فعلياً بالعناوين -->

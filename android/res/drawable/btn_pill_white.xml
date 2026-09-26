@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- زر أبيض على بطاقة خضراء — الزر الأخضر المعتاد يختفي فوق الأخضر -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#331B4D3E">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="999dp" />
+            <solid android:color="#FFFFFFFF" />
+        </shape>
+    </item>
+</ripple>

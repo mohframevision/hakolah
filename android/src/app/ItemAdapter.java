@@ -36,6 +36,11 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
     private final String section;
     private final String searchQuery;
     private final List<JSONObject> items = new ArrayList<>();
+    // "يطير لمكانه" (نفس بطاقات shopify.design): كل كرت يظهر لأول مرة يطلع من
+    // تحت بنعومة. أول دفعة (فتح القسم) تتتابع بفاصل صغير بدل ما تطلع دفعة وحدة
+    private int maxAnimated = -1;
+    private final long createdAt = System.currentTimeMillis();
+    private static final android.view.animation.DecelerateInterpolator FLY = new android.view.animation.DecelerateInterpolator(2.2f);
 
     ItemAdapter(Activity context, String section, JSONArray itemsJson) {
         this(context, section, itemsJson, "");
@@ -111,6 +116,16 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         } else {
             row = convertView;
             holder = (ViewHolder) row.getTag();
+            // صف معاد تدويره ممكن يكون بنص حركة ظهور سابقة — نرجّعه لحالته
+            row.animate().cancel();
+            row.setAlpha(1f);
+            row.setTranslationY(0f);
+            row.setScaleX(1f);
+            row.setScaleY(1f);
+        }
+        if (position > maxAnimated) {
+            maxAnimated = position;
+            flyIn(row, position);
         }
 
         JSONObject item = items.get(position);
@@ -188,6 +203,18 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         }
 
         return row;
+    }
+
+    private void flyIn(View row, int position) {
+        boolean firstBatch = System.currentTimeMillis() - createdAt < 400;
+        float density = context.getResources().getDisplayMetrics().density;
+        row.setAlpha(0f);
+        row.setTranslationY(56 * density);
+        row.setScaleX(0.96f);
+        row.setScaleY(0.96f);
+        row.animate().alpha(1f).translationY(0f).scaleX(1f).scaleY(1f)
+                .setStartDelay(firstBatch ? Math.min(position, 6) * 70L : 0)
+                .setDuration(560).setInterpolator(FLY).start();
     }
 
     // يبرز تطابق البحث الحرفي (substring) بلون الهوية — نطاق محدود عمداً:
