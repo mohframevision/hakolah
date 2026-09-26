@@ -14,8 +14,8 @@ class Prefs {
     private static final String KEY_SOUND = "sound_enabled";
     private static final String KEY_THEME = "theme_mode";
     private static final String KEY_FAVORITES = "favorites";
+    private static final String KEY_MUSIC = "music_enabled";
 
-    // نفس افتراض الموقع بالضبط: الصوت مطفي افتراضياً (اختياري، المستخدم يفعّله)
     // مفعّل افتراضياً: أصوات التطبيق جزء من تجربته (المالك: "ما في صوت" وهو
     // ما فعّلها). الإطفاء متاح من الإعدادات
     static final boolean SOUND_DEFAULT = true;
@@ -33,6 +33,15 @@ class Prefs {
 
     static void setSoundEnabled(Context context, boolean enabled) {
         sp(context).edit().putBoolean(KEY_SOUND, enabled).apply();
+    }
+
+    // موسيقى صفحة القصة: تتبع إعداد الأصوات ما لم يختار المستخدم صراحة
+    static boolean isMusicEnabled(Context context) {
+        return sp(context).getBoolean(KEY_MUSIC, isSoundEnabled(context));
+    }
+
+    static void setMusicEnabled(Context context, boolean enabled) {
+        sp(context).edit().putBoolean(KEY_MUSIC, enabled).apply();
     }
 
     static String getThemeMode(Context context) {

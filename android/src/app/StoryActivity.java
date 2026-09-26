@@ -45,6 +45,8 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
     private final List<Integer> statValues = new ArrayList<>();
     private View statsBlock;
     private LinearLayout timeline;
+    private android.widget.ImageView musicBtn;
+    private android.animation.ObjectAnimator musicPulse;
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -65,6 +67,9 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
         View close = findViewById(R.id.storyClose);
         close.setOnClickListener(this);
         Touch.springy(close, 0.85f);
+        musicBtn = findViewById(R.id.storyMusic);
+        musicBtn.setOnClickListener(this);
+        Touch.springy(musicBtn, 0.85f);
         scroll.setOnScrollChangeListener(this);
 
         build();
@@ -328,8 +333,50 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
     }
 
     // ================= التفاعل =================
+    // الموسيقى تشتغل بس والشاشة ظاهرة — تطلع منها أو تقفل الجوال فتوقف
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (Prefs.isMusicEnabled(this)) MusicPlayer.start();
+        updateMusicButton();
+    }
+
+    @Override
+    protected void onPause() {
+        MusicPlayer.stop();
+        super.onPause();
+    }
+
+    // شغّالة: أخضر فاتح يتنفّس ببطء؛ طافية: أبيض باهت
+    private void updateMusicButton() {
+        boolean on = Prefs.isMusicEnabled(this);
+        musicBtn.setColorFilter(on ? 0xFF8FD9BA : 0x99FFFFFF);
+        musicBtn.setContentDescription(on ? "إيقاف موسيقى الخلفية" : "تشغيل موسيقى الخلفية");
+        if (on && animations) {
+            if (musicPulse == null) {
+                musicPulse = android.animation.ObjectAnimator.ofFloat(musicBtn, "alpha", 1f, 0.55f);
+                musicPulse.setDuration(2500);
+                musicPulse.setRepeatCount(ValueAnimator.INFINITE);
+                musicPulse.setRepeatMode(ValueAnimator.REVERSE);
+            }
+            if (!musicPulse.isStarted()) musicPulse.start();
+        } else {
+            if (musicPulse != null) musicPulse.cancel();
+            musicBtn.setAlpha(1f);
+        }
+    }
+
     @Override
     public void onClick(View v) {
+        if (v.getId() == R.id.storyMusic) {
+            boolean on = !Prefs.isMusicEnabled(this);
+            Prefs.setMusicEnabled(this, on);
+            Touch.haptic(v, on ? Touch.TOGGLE_ON : Touch.TOGGLE_OFF);
+            if (on) MusicPlayer.start();
+            else MusicPlayer.stop();
+            updateMusicButton();
+            return;
+        }
         if (v.getId() == R.id.storyClose) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.CLOSE);
             finish();
@@ -478,6 +525,7 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
     @Override
     protected void onDestroy() {
         handler.removeCallbacksAndMessages(null);
+        if (musicPulse != null) musicPulse.cancel();
         super.onDestroy();
     }
 }
