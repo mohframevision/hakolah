@@ -15,7 +15,7 @@ import android.widget.TextView;
 // لا AlertDialog.Builder — عشان نتحكم كلياً برأس اللوحة وما نعتمد شريط عنوان
 // النظام الافتراضي)، بمجموعات معنونة وصفوف رقاقة مقسّمة (تلقائي/فاتح/داكن)
 // بدل قائمة نصوص بعلامة صح.
-class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, android.content.DialogInterface.OnDismissListener {
     private final Activity activity;
     private final Dialog dialog;
     private final TextView themeAuto;
@@ -47,7 +47,12 @@ class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedCha
         Window window = dialog.getWindow();
         if (window != null) window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
         dialog.setContentView(panel);
+        dialog.setOnDismissListener(this);
         dialog.show();
+        SoundPlayer.play(activity, SoundPlayer.OPEN);
+        Touch.springy(themeAuto, 0.93f);
+        Touch.springy(themeLight, 0.93f);
+        Touch.springy(themeDark, 0.93f);
         // نفس عرض اللوحة بالموقع (94vw بحد أقصى 480px) — بلا هذا، عرض
         // الحوار الافتراضي يلتف على محتواه فقط بدل الامتداد المريح بالعرض
         if (window != null) {
@@ -72,6 +77,7 @@ class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedCha
     public void onClick(View v) {
         int id = v.getId();
         if (id == R.id.settingsCloseButton) {
+            Touch.haptic(v, Touch.TAP);
             dialog.dismiss();
             return;
         }
@@ -80,14 +86,26 @@ class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedCha
                 : Prefs.THEME_AUTO;
         if (mode.equals(Prefs.getThemeMode(activity))) return;
         Prefs.setThemeMode(activity, mode);
-        SoundPlayer.playClick(activity);
+        Touch.feedback(v, Touch.CONFIRM, SoundPlayer.TAP);
+        recreating = true;
         dialog.dismiss();
         activity.recreate();
     }
 
     @Override
     public void onCheckedChanged(CompoundButton button, boolean checked) {
+        // صوت الإيقاف قبل ما ينطفي، وصوت التشغيل بعد ما يشتغل — كل واحد يُسمع
+        if (!checked) Touch.feedback(button, Touch.TOGGLE_OFF, SoundPlayer.OFF);
         Prefs.setSoundEnabled(activity, checked);
-        if (checked) SoundPlayer.playClick(activity);
+        if (checked) Touch.feedback(button, Touch.TOGGLE_ON, SoundPlayer.ON);
+    }
+
+    // تغيير المظهر يعيد بناء الشاشة فوراً — صوت الإغلاق هنا بيطلع فوق صوت
+    // التأكيد بلا معنى، فنتجاوزه بهالحالة بس
+    private boolean recreating;
+
+    @Override
+    public void onDismiss(android.content.DialogInterface d) {
+        if (!recreating) SoundPlayer.play(activity, SoundPlayer.CLOSE);
     }
 }

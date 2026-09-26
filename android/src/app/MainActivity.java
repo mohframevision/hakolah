@@ -99,6 +99,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         searchBox.addTextChangedListener(this);
         itemList.setOnScrollListener(this);
         buildMainNav();
+        SoundPlayer.warmUp();
+        Touch.springy(nearMeButton);
+        Touch.springy(emptyResetButton);
 
         loadData();
     }
@@ -208,41 +211,43 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             return;
         }
         if (id == R.id.nearMeButton) {
-            SoundPlayer.playClick(this);
+            Touch.feedback(v, sortByDistance ? Touch.TOGGLE_OFF : Touch.TOGGLE_ON, sortByDistance ? SoundPlayer.OFF : SoundPlayer.ON);
             toggleNearMe();
             return;
         }
         if (id == R.id.emptyResetButton) {
-            SoundPlayer.playClick(this);
+            Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             clearSearchAndFilter();
             return;
         }
         Object tag = v.getTag();
         if (tag instanceof Integer) {
             // شريط التصفح الأبجدي — يقفز لأول عنصر يبدأ بالحرف المضغوط
+            Touch.feedback(v, Touch.TICK, SoundPlayer.TICK);
             itemList.setSelection((Integer) tag);
             return;
         }
         if (!(tag instanceof String)) return;
         String value = (String) tag;
         if (value.startsWith("chip:")) {
-            SoundPlayer.playClick(this);
+            Touch.feedback(v, Touch.TICK, SoundPlayer.TAP);
             selectTag(value.substring(5));
         } else if (HOME_TAG.equals(value)) {
-            SoundPlayer.playClick(this);
+            Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             resetToHome();
         } else if (PICKER_TAG.equals(value)) {
-            SoundPlayer.playClick(this);
+            Touch.feedback(v, Touch.CONFIRM, SoundPlayer.OPEN);
             startActivity(new android.content.Intent(this, PickerActivity.class));
             overridePendingTransition(0, 0);
         } else if (FAVORITES_TAG.equals(value)) {
-            SoundPlayer.playClick(this);
+            Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             startActivity(new android.content.Intent(this, FavoritesActivity.class));
             overridePendingTransition(0, 0);
         } else if (SETTINGS_TAG.equals(value)) {
-            SoundPlayer.playClick(this);
+            Touch.haptic(v, Touch.TAP);
             SettingsPanel.show(this);
         } else {
+            if (!value.equals(currentSlug)) Touch.feedback(v, Touch.TICK, SoundPlayer.TAP);
             selectSection(value);
         }
     }
@@ -272,6 +277,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (active) labelView.setTextColor(getColor(R.color.brand_accent));
         tab.setTag(tag);
         tab.setOnClickListener(this);
+        Touch.springy(tab, 0.9f);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
         lp.width = 0;
         lp.weight = 1;
@@ -285,6 +291,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         View tab = getLayoutInflater().inflate(R.layout.nav_tab_fab, bottomNav, false);
         tab.setTag(tag);
         tab.setOnClickListener(this);
+        Touch.springy(tab, 0.9f);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
         lp.width = 0;
         lp.weight = 1;
@@ -442,6 +449,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             ((TextView) tab.findViewById(R.id.tabLabel)).setText(section.optString("title", slug));
             tab.setTag(slug);
             tab.setOnClickListener(this);
+            Touch.springy(tab, 0.92f);
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
             lp.setMarginEnd(dp(4));
             tab.setLayoutParams(lp);
@@ -510,6 +518,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         chip.setFocusable(true);
         chip.setTag(tagValue == null ? "chip:" : "chip:" + tagValue);
         chip.setOnClickListener(this);
+        Touch.springy(chip, 0.92f);
         filterChips.addView(chip);
     }
 

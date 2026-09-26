@@ -103,6 +103,10 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             holder.actions = row.findViewById(R.id.itemActions);
             holder.shareBtn.setOnClickListener(this);
             holder.favBtn.setOnClickListener(this);
+            // البطاقة كلها تنضغط بخفة تحت الإصبع، والقلب ينبض أقوى
+            Touch.springy(row, 0.98f);
+            Touch.springy(holder.favBtn, 0.8f);
+            Touch.springy(holder.shareBtn, 0.85f);
             row.setTag(holder);
         } else {
             row = convertView;
@@ -177,6 +181,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             readBtn.setGravity(android.view.Gravity.CENTER);
             readBtn.setTag((isExperiment ? "webview:" : "article:") + position);
             readBtn.setOnClickListener(this);
+            Touch.springy(readBtn);
             holder.actions.addView(readBtn);
         } else {
             LinkButtons.build(context, holder.actions, item, HakolahApi.ORIGIN, this);
@@ -215,29 +220,39 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         if (!(tagObj instanceof String)) return;
         String tag = (String) tagObj;
         if (tag.startsWith("url:") || tag.startsWith("tel:")) {
-            SoundPlayer.playClick(context);
+            Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             LinkButtons.handleClick(context, tag);
         } else if (tag.startsWith("fav:")) {
             JSONObject item = items.get(Integer.parseInt(tag.substring(4)));
             String itemSection = itemSection(item);
             String id = item.optString("id", "");
-            v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
             Prefs.toggleFavorite(context, itemSection, id);
-            SoundPlayer.playClick(context);
-            applyFavStyle((ImageView) v, Prefs.isFavorite(context, itemSection, id));
+            boolean nowFav = Prefs.isFavorite(context, itemSection, id);
+            Touch.feedback(v, nowFav ? Touch.TOGGLE_ON : Touch.TOGGLE_OFF, nowFav ? SoundPlayer.ON : SoundPlayer.OFF);
+            applyFavStyle((ImageView) v, nowFav);
+            if (nowFav) popHeart(v);
         } else if (tag.startsWith("share:")) {
             int position = Integer.parseInt(tag.substring(6));
-            SoundPlayer.playClick(context);
+            Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             shareItem(items.get(position));
         } else if (tag.startsWith("article:")) {
             int position = Integer.parseInt(tag.substring(8));
-            SoundPlayer.playClick(context);
+            Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
             openArticle(items.get(position));
         } else if (tag.startsWith("webview:")) {
             int position = Integer.parseInt(tag.substring(8));
-            SoundPlayer.playClick(context);
+            Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
             openWebView(items.get(position));
         }
+    }
+
+    // القلب لما يتفعّل: يكبر فجأة ويرجع بنابض — نفس لحظة "أعجبني" بالتطبيقات
+    private static void popHeart(View v) {
+        v.animate().cancel();
+        v.setScaleX(0.6f);
+        v.setScaleY(0.6f);
+        v.animate().scaleX(1f).scaleY(1f).setDuration(520)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(5f)).start();
     }
 
     private void openArticle(JSONObject item) {

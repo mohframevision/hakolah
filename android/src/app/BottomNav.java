@@ -56,6 +56,7 @@ class BottomNav implements View.OnClickListener {
         tab.setLayoutParams(lp);
         tab.setTag(tag);
         tab.setOnClickListener(this);
+        Touch.springy(tab, 0.9f);
         container.addView(tab);
     }
 
@@ -68,6 +69,7 @@ class BottomNav implements View.OnClickListener {
         tab.setLayoutParams(lp);
         tab.setTag(tag);
         tab.setOnClickListener(this);
+        Touch.springy(tab, 0.9f);
         container.addView(tab);
     }
 
@@ -75,7 +77,8 @@ class BottomNav implements View.OnClickListener {
     public void onClick(View v) {
         String tag = (String) v.getTag();
         if (tag.equals(active)) return;
-        SoundPlayer.playClick(activity);
+        if (SETTINGS.equals(tag)) Touch.haptic(v, Touch.TAP);
+        else Touch.feedback(v, PICKER.equals(tag) ? Touch.CONFIRM : Touch.TAP, PICKER.equals(tag) ? SoundPlayer.OPEN : SoundPlayer.TAP);
         if (HOME.equals(tag)) {
             activity.finish();
             activity.overridePendingTransition(0, 0);

@@ -74,6 +74,7 @@ class LinkButtons {
         btn.setLayoutParams(lp);
         btn.setTag(tag);
         btn.setOnClickListener(listener);
+        Touch.springy(btn);
         container.addView(btn);
     }
 
