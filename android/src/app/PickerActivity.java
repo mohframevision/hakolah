@@ -455,6 +455,8 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
     @Override
     protected void onDestroy() {
         handler.removeCallbacksAndMessages(null);
+        for (ObjectAnimator b : bobs) b.cancel();
+        bobs.clear();
         super.onDestroy();
     }
 }

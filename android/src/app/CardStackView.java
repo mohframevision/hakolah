@@ -188,6 +188,9 @@ public class CardStackView extends FrameLayout {
 
         @Override
         public void run() {
+            // القسم تغيّر أثناء الطيران (setCards بنى رصّة جديدة) — البطاقة
+            // القديمة ما تنتمي لها، ولو رجّعناها تنحشر بين بطاقات القسم الجديد
+            if (!stack.cards.contains(card)) return;
             // يرجع لأسفل ترتيب الرسم (أول ابن = يترسم أول = بالخلف)
             stack.removeView(card);
             stack.addView(card, 0);

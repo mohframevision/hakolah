@@ -123,7 +123,9 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             row.setScaleX(1f);
             row.setScaleY(1f);
         }
-        if (position > maxAnimated) {
+        // وقت البحث كل حرف يبني محوّلاً جديداً — لو طارت الكروت مع كل حرف
+        // ترفرف القائمة كلها وأنت تكتب، فالظهور للتصفح بس
+        if (position > maxAnimated && searchQuery.isEmpty()) {
             maxAnimated = position;
             flyIn(row, position);
         }

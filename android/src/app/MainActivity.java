@@ -49,6 +49,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private CardStackView dailyStack;
     private TextView dailyCount;
     private int dailyCards;
+    private final List<JSONObject> dailyItems = new ArrayList<>();
 
     // نفس فكرة initHeaderScroll بالموقع (يخفي الهيدر أثناء النزول بالقائمة
     // ويرجّعه عند الصعود) — بلا CoordinatorLayout (يحتاج مكتبة)، بـ
@@ -273,6 +274,14 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             startActivity(new android.content.Intent(this, FavoritesActivity.class));
             overridePendingTransition(0, 0);
+        } else if (value.startsWith("daily:")) {
+            int i = Integer.parseInt(value.substring(6));
+            if (i < dailyItems.size()) {
+                JSONObject item = dailyItems.get(i);
+                Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
+                startActivity("ai-experiments".equals(currentSlug) ? webViewIntentFor(item) : articleIntentFor(item));
+                overridePendingTransition(0, 0);
+            }
         } else if (value.startsWith("url:") || value.startsWith("tel:")) {
             // أزرار بطاقات "اختيار اليوم"
             Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
@@ -876,13 +885,17 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
                 all.set(i, all.get(j));
                 all.set(j, t);
             }
-            for (int i = 0; i < Math.min(6, all.size()); i++) views.add(buildDailyCard(all.get(i), section));
+            dailyItems.clear();
+            for (int i = 0; i < Math.min(6, all.size()); i++) {
+                dailyItems.add(all.get(i));
+                views.add(buildDailyCard(all.get(i), section, i));
+            }
         }
         dailyCards = views.size();
         dailyStack.setCards(views);
     }
 
-    private View buildDailyCard(JSONObject item, JSONObject section) {
+    private View buildDailyCard(JSONObject item, JSONObject section, int index) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setBackgroundResource(R.drawable.daily_card_bg);
@@ -941,6 +954,14 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
         LinkButtons.build(this, actions, item, HakolahApi.ORIGIN, this);
+        // عنصر له صفحة (مقال/تجربة): نفس سلوك القائمة — يفتح داخل التطبيق
+        // (قارئ المقال أو WebView) لا بالمتصفح الخارجي
+        if (!item.optString("detailUrl", "").isEmpty() && actions.getChildCount() > 0) {
+            TextView open = (TextView) actions.getChildAt(0);
+            boolean experiment = "ai-experiments".equals(currentSlug);
+            open.setText(experiment ? "افتح التجربة" : "قراءة المقال");
+            open.setTag("daily:" + index);
+        }
         // على الأخضر: الزر الأول أبيض بنص أخضر، والباقي زجاج شفاف بنص أبيض
         for (int i = 0; i < actions.getChildCount(); i++) {
             TextView b = (TextView) actions.getChildAt(i);

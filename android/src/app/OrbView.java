@@ -237,7 +237,7 @@ public class OrbView extends View {
     private Bitmap glyph(String emoji) {
         Bitmap b = glyphs.get(emoji);
         if (b != null) return b;
-        int size = (int) dp(72);
+        int size = (int) dp(40);
         b = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(b);
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
