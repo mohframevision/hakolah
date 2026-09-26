@@ -234,11 +234,19 @@ function initContactForm() {
   });
 }
 
-/* ===== مؤثرات صوتية خفيفة عند التفاعل (اختيارية، معطّلة افتراضياً) =====
-   تُولَّد بـ Web Audio API مباشرة (بدون ملفات صوت خارجية) — نغمة قصيرة وخافتة
-   لأزرار التفاعل العادية، ونغمتين متتاليتين لحظة "اختار لي" احتفالاً بالنتيجة. */
+/* ===== مؤثرات صوتية (اختيارية، معطّلة افتراضياً) =====
+   مجموعة أصوات مولَّدة بالكود بالكامل (Web Audio، بلا ملفات)، مبنية على
+   تحليل أصوات pacomepertant.com: نغمات منخفضة (~440Hz لا 650-900)، بداية
+   ناعمة بدل قفزة فورية (القفزة تسبب "طقّة")، نغمة تحتية أخفض بأوكتاف أو
+   اثنين تعطي دفء، انحدار بسيط بالنبرة، كل النغمات من سلّم ري الكبير (D)،
+   صدى غرفة خفيف على الكل، وصوت مختلف لكل نوع فعل. */
 const SOUND_KEY = "site_sound_pref";
 let audioCtx = null;
+let sfxBus = null;
+let noiseBuffer = null;
+
+// نوتات سلّم ري الكبير الخماسي (Hz)
+const NOTE = { D3: 146.83, D4: 293.66, A4: 440, D5: 587.33, "F#5": 739.99, A5: 880, D6: 1174.66 };
 
 function isSoundEnabled() {
   return localStorage.getItem(SOUND_KEY) === "on";
@@ -253,29 +261,147 @@ function getAudioContext() {
   return audioCtx;
 }
 
-function playTone(freq, duration, delay = 0) {
+// صدى غرفة: نبضة ضجيج تخفت أُسّياً بدل ملف impulse — يعطي إحساس "مساحة"
+function makeRoomImpulse(ctx, seconds) {
+  const len = Math.floor(ctx.sampleRate * seconds);
+  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = buf.getChannelData(c);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.5);
+  }
+  return buf;
+}
+
+// مسار مشترك لكل الأصوات: تنعيم الحدّة (lowpass) + خليط جاف/صدى
+function getSfxBus(ctx) {
+  if (sfxBus) return sfxBus;
+  sfxBus = ctx.createGain();
+  const soften = ctx.createBiquadFilter();
+  soften.type = "lowpass";
+  soften.frequency.value = 4500;
+  const dry = ctx.createGain();
+  dry.gain.value = 0.85;
+  const verb = ctx.createConvolver();
+  verb.buffer = makeRoomImpulse(ctx, 1.4);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.22;
+  sfxBus.connect(soften);
+  soften.connect(dry).connect(ctx.destination);
+  soften.connect(verb).connect(wet).connect(ctx.destination);
+  return sfxBus;
+}
+
+// نغمة واحدة: بداية ناعمة (attack) ثم خفوت أُسّي، مع انحدار نبرة (glide) اختياري
+function voice(ctx, bus, { freq, at = 0, attack = 0.004, decay = 0.08, gain = 0.06, glide = 1, pan = 0 }) {
+  const t0 = ctx.currentTime + at;
+  const end = t0 + attack + decay;
+  const osc = ctx.createOscillator();
+  osc.frequency.setValueAtTime(freq, t0);
+  if (glide !== 1) osc.frequency.exponentialRampToValueAtTime(freq * glide, end);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0 + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, end);
+  osc.connect(g);
+  if (pan && ctx.createStereoPanner) {
+    const p = ctx.createStereoPanner();
+    p.pan.value = pan;
+    g.connect(p).connect(bus);
+  } else {
+    g.connect(bus);
+  }
+  osc.start(t0);
+  osc.stop(end + 0.02);
+}
+
+// ضجيج مفلتر: "تكّة" قصيرة جداً، أو "وووش" لو تحرّك تردده (sweepTo)
+function noise(ctx, bus, { at = 0, dur = 0.01, freq = 3000, q = 0.8, gain = 0.05, sweepTo = 0 }) {
+  if (!noiseBuffer) {
+    noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const d = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const t0 = ctx.currentTime + at;
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer;
+  const f = ctx.createBiquadFilter();
+  f.type = "bandpass";
+  f.Q.value = q;
+  f.frequency.setValueAtTime(freq, t0);
+  if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t0 + dur);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0 + Math.min(0.002, dur / 3));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(f).connect(g).connect(bus);
+  src.start(t0);
+  src.stop(t0 + dur + 0.02);
+}
+
+const SOUNDS = {
+  // ضغطة عامة: قصيرة ومنخفضة، بنبرة تتغيّر ±3% كل مرة عشان ما تحس بالتكرار
+  tap(ctx, bus) {
+    const f = NOTE.A4 * (1 + (Math.random() - 0.5) * 0.06);
+    voice(ctx, bus, { freq: f, decay: 0.07, gain: 0.07, glide: 0.88 });
+    voice(ctx, bus, { freq: f * 1.7, decay: 0.04, gain: 0.018 });
+    voice(ctx, bus, { freq: f / 2, decay: 0.09, gain: 0.03 });
+  },
+  tick(ctx, bus) {
+    noise(ctx, bus, { dur: 0.006, freq: 3000, gain: 0.07 });
+  },
+  // تفعيل (مفضلة، "الأقرب مني"، إشعارات): نغمتان صاعدتان فوق نغمة دافئة عميقة
+  on(ctx, bus) {
+    voice(ctx, bus, { freq: NOTE.D5, decay: 0.35, gain: 0.06 });
+    voice(ctx, bus, { freq: NOTE.D3, decay: 0.5, gain: 0.05 });
+    voice(ctx, bus, { freq: NOTE.A5, at: 0.07, decay: 0.3, gain: 0.035, pan: 0.15 });
+  },
+  off(ctx, bus) {
+    voice(ctx, bus, { freq: NOTE.A4, decay: 0.25, gain: 0.05, glide: 0.94 });
+    voice(ctx, bus, { freq: NOTE.A4 / 4, decay: 0.3, gain: 0.04 });
+    voice(ctx, bus, { freq: NOTE.D4, at: 0.06, decay: 0.22, gain: 0.03, pan: -0.15 });
+  },
+  // فتح نافذة/قائمة: وتر ري الكبير يتفتّح نوتة نوتة
+  open(ctx, bus) {
+    [NOTE.D5, NOTE["F#5"], NOTE.A5].forEach((freq, i) =>
+      voice(ctx, bus, { freq, at: i * 0.045, attack: 0.01, decay: 0.6, gain: 0.03, pan: (i - 1) * 0.2 })
+    );
+    voice(ctx, bus, { freq: NOTE.D3, decay: 0.5, gain: 0.03 });
+  },
+  // إغلاق: "وووش" نازل + ارتطام عميق ناعم
+  close(ctx, bus) {
+    noise(ctx, bus, { dur: 0.12, freq: 1800, sweepTo: 400, q: 0.7, gain: 0.035 });
+    voice(ctx, bus, { freq: 130, decay: 0.3, gain: 0.07, glide: 0.8 });
+  },
+  copy(ctx, bus) {
+    voice(ctx, bus, { freq: NOTE.D5, decay: 0.12, gain: 0.045 });
+    voice(ctx, bus, { freq: NOTE.A5, at: 0.06, decay: 0.14, gain: 0.04 });
+  },
+  // مشاركة: "وووش" صاعد ثم نغمة خفيفة
+  share(ctx, bus) {
+    noise(ctx, bus, { dur: 0.18, freq: 500, sweepTo: 3000, q: 1, gain: 0.03 });
+    voice(ctx, bus, { freq: NOTE.A5, at: 0.1, decay: 0.25, gain: 0.035 });
+  },
+  // نتيجة (اختار لي/خطة اليوم): وتر كامل يرن ويتوزع يمين/يسار
+  success(ctx, bus) {
+    [NOTE.D5, NOTE["F#5"], NOTE.A5, NOTE.D6].forEach((freq, i) =>
+      voice(ctx, bus, { freq, at: i * 0.06, attack: 0.02, decay: 1.0, gain: 0.03, pan: -0.3 + i * 0.2 })
+    );
+    voice(ctx, bus, { freq: NOTE.D3, decay: 0.8, gain: 0.04 });
+  },
+};
+
+function playSound(name) {
   if (!isSoundEnabled()) return;
   const ctx = getAudioContext();
-  const startTime = ctx.currentTime + delay;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "sine";
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0.05, startTime);
-  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(startTime);
-  osc.stop(startTime + duration);
+  SOUNDS[name](ctx, getSfxBus(ctx));
 }
 
 function playClickSound() {
-  playTone(650, 0.07);
+  playSound("tap");
 }
 
 function playSuccessSound() {
-  playTone(660, 0.1);
-  playTone(880, 0.12, 0.08);
+  playSound("success");
 }
 
 function initSoundToggle() {
@@ -296,7 +422,7 @@ function initSoundToggle() {
     const next = !isSoundEnabled();
     localStorage.setItem(SOUND_KEY, next ? "on" : "off");
     apply(next);
-    if (next) playClickSound();
+    if (next) playSound("on");
   });
 }
 
@@ -435,7 +561,7 @@ function initNavToggle() {
         btn.setAttribute("aria-expanded", String(isOpen));
         btn.setAttribute("aria-label", isOpen ? t("nav_toggle_close") : t("nav_toggle_open"));
       });
-      playClickSound();
+      playSound(isOpen ? "open" : "close");
     });
   });
 }
@@ -622,7 +748,7 @@ async function toggleLike(section, id, btn) {
   if (alreadyLiked) delete liked[key];
   else liked[key] = true;
   saveLikedItems(liked);
-  playClickSound();
+  playSound(alreadyLiked ? "off" : "on");
 
   const config = window.PUSH_CONFIG;
   if (!config || !config.workerUrl) return;
@@ -765,7 +891,7 @@ function initArticleShare() {
     const icon = match ? match[1] : "🧭";
     const title = match ? heading.slice(match[0].length).trim() : heading;
     shareText(text, { section: (window.PAGE || {}).section || "" }, { icon, title });
-    playClickSound();
+    playSound("share");
   });
 }
 
@@ -1515,7 +1641,7 @@ function initBeepMelodyExperiment() {
       } catch {
         showToast(url.toString());
       }
-      playClickSound();
+      playSound("copy");
     });
   }
 
@@ -4306,7 +4432,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     favBtn.classList.remove("pop");
     void favBtn.offsetWidth;
     favBtn.classList.add("pop");
-    playClickSound();
+    playSound(nowFav ? "on" : "off");
   });
 
   const shareBtn = card.querySelector(".share-btn");
@@ -4319,7 +4445,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       subtitle,
       photo: item.image,
     });
-    playClickSound();
+    playSound("share");
   });
 
   card.querySelectorAll(".phone-copy-btn").forEach((phoneBtn) => {
@@ -4332,7 +4458,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
         return;
       }
       showToast(t("phone_copied"));
-      playClickSound();
+      playSound("copy");
     });
   });
 
@@ -4347,14 +4473,14 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
         card.classList.add("just-expanded");
         setTimeout(() => card.classList.remove("just-expanded"), 900);
       }
-      playClickSound();
+      playSound(expanded ? "open" : "tap");
     });
   }
 
   const menuBtn = card.querySelector(".menu-open-btn");
   if (menuBtn) {
     menuBtn.addEventListener("click", () => {
-      playClickSound();
+      playSound("open");
       openMenuOverlay(item);
     });
   }
@@ -4584,7 +4710,7 @@ function renderSection(section, typeFilter) {
         nearMeBtn.setAttribute("aria-pressed", "false");
         nearMeBtn.textContent = t("near_me");
         renderGrid();
-        playClickSound();
+        playSound("off");
         return;
       }
       if (!navigator.geolocation) {
@@ -4600,7 +4726,7 @@ function renderSection(section, typeFilter) {
           nearMeBtn.setAttribute("aria-pressed", "true");
           nearMeBtn.textContent = t("near_me_active");
           renderGrid();
-          playClickSound();
+          playSound("on");
         },
         () => {
           showToast(t("geolocation_denied"));
@@ -4859,7 +4985,7 @@ async function initPushNotifications() {
         subscription = null;
         apply(false);
         showToast(t("push_disabled"));
-        playClickSound();
+        playSound("off");
         return;
       }
 
@@ -4882,7 +5008,7 @@ async function initPushNotifications() {
 
       apply(true);
       showToast(t("push_enabled"));
-      playClickSound();
+      playSound("on");
     } catch (err) {
       // بدون هذا الـ catch، أي فشل هنا (زي رفض الاشتراك من المتصفح نفسه)
       // كان يوقف التنفيذ بصمت والزر يضل بحالته القديمة بدون أي تفسير للزائر
@@ -4928,7 +5054,7 @@ function openPickerReveal(item, { onRetry, onClose } = {}) {
   closeBtn.textContent = "✕";
   closeBtn.setAttribute("aria-label", t("daily_pick_close"));
   closeBtn.addEventListener("click", () => {
-    playClickSound();
+    playSound("close");
     close();
   });
   overlay.appendChild(closeBtn);
@@ -4956,14 +5082,14 @@ function openPickerReveal(item, { onRetry, onClose } = {}) {
           return;
         }
         showToast(t("phone_copied"));
-        playClickSound();
+        playSound("copy");
       });
     });
 
     const menuBtn = actions.querySelector(".menu-open-btn");
     if (menuBtn) {
       menuBtn.addEventListener("click", () => {
-        playClickSound();
+        playSound("open");
         openMenuOverlay(item);
       });
     }
@@ -5018,7 +5144,7 @@ function openMenuOverlay(item) {
   closeBtn.textContent = "✕";
   closeBtn.setAttribute("aria-label", t("daily_pick_close"));
   closeBtn.addEventListener("click", () => {
-    playClickSound();
+    playSound("close");
     close();
   });
   overlay.appendChild(closeBtn);
@@ -5199,7 +5325,7 @@ function renderDayPlan() {
         title: t("plan_title"),
         subtitle: current.map((s) => itemTitle(s.item)).join(" · "),
       });
-      playClickSound();
+      playSound("share");
     });
   }
 
@@ -5252,7 +5378,7 @@ function createPickerHelix(stage, onPick) {
     if (Math.round(pos) !== lastTick && now - lastTickTime > 60) {
       lastTick = Math.round(pos);
       lastTickTime = now;
-      playTone(900, 0.03);
+      playSound("tick");
     }
   }
 
