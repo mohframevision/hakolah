@@ -5286,10 +5286,14 @@ function createPickerHelix(stage, onPick) {
     );
   }
 
-  // تقريباً المسافة على الشاشة بين مركزَي بطاقتين متجاورتين (وتر الدائرة)
+  // تقريباً المسافة على الشاشة بين مركزَي بطاقتين متجاورتين (وتر الدائرة).
+  // مضروبة بنسبة العرض المرسوم للعرض الداخلي: مع تكبير الصفحة (zoom بـ
+  // theme-init.js) إحداثيات المؤشر بكسل شاشة، و--helix-r بكسل غير مكبَّر
   function cardPx() {
-    const r = parseFloat(getComputedStyle(stage.querySelector(".picker-helix")).getPropertyValue("--helix-r"));
-    return 2 * r * Math.sin((STEP * Math.PI) / 360);
+    const helixEl = stage.querySelector(".picker-helix");
+    const r = parseFloat(getComputedStyle(helixEl).getPropertyValue("--helix-r"));
+    const scale = helixEl.getBoundingClientRect().width / helixEl.offsetWidth || 1;
+    return 2 * r * Math.sin((STEP * Math.PI) / 360) * scale;
   }
 
   function endDrag(e, cancelled) {
