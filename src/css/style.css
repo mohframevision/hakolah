@@ -59,6 +59,9 @@
   --color-accent: color-mix(in oklch, var(--color-primary) 65%, white);
   --color-border: #e0e0e0;
   --color-danger: #ef4444;
+  /* خلفية ممتلئة عليها نص/أيقونة بيضاء (أزرار، شارات، الرابط النشط) — انظر
+     @supports تحت: نفس اللون الأساسي بإضاءة لا تتجاوز 0.5 */
+  --color-primary-fill: var(--color-primary);
   /* ظل ناعم ومنتشر بدل ظل قريب حاد — لوك أبل يعتمد على عمق خفيف بالكاد
      يُلاحظ بدل حدود/ظلال واضحة، فالبطاقة تبان "طايفة" لا "محاطة بخط" */
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 6px 20px rgba(0, 0, 0, 0.05);
@@ -95,7 +98,7 @@
     --color-bg: #121212;
     --color-surface: #1c1c1c;
     --color-text: #f0f0f0;
-    --color-text-muted: #9a9a9a;
+    --color-text-muted: oklch(0.78 0 0); /* APCA Lc ≥60 على خلفيتي الوضع الداكن (كان #9a9a9a: Lc 46) */
     --color-primary: #3fa480;
     --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
     --color-accent: color-mix(in oklch, var(--color-primary) 80%, white);
@@ -110,7 +113,7 @@
   --color-bg: #121212;
   --color-surface: #1c1c1c;
   --color-text: #f0f0f0;
-  --color-text-muted: #9a9a9a;
+  --color-text-muted: oklch(0.78 0 0); /* APCA Lc ≥60 على خلفيتي الوضع الداكن (كان #9a9a9a: Lc 46) */
   --color-primary: #3fa480;
   --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
   --color-accent: color-mix(in oklch, var(--color-primary) 80%, white);
@@ -130,6 +133,16 @@
   --color-border: #e0e0e0;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 6px 20px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* الأخضر الفاتح بالوضع الداكن (#3fa480) كان يعطي نص أبيض بتباين 3.07:1 فقط
+   (المطلوب 4.5). نفس اللون (hue/chroma) مع سقف إضاءة OKLCH عند 0.5 — بالوضع
+   الفاتح اللون أصلاً أغمق من 0.5 فما يتغيّر شي. ويشتغل مع أي لون أساسي يُختار
+   من لوحة التحكم. المتصفحات القديمة تبقى على اللون الأساسي كما هو. */
+@supports (color: oklch(from red min(l, 0.5) c h)) {
+  :root {
+    --color-primary-fill: oklch(from var(--color-primary) min(l, 0.5) c h);
+  }
 }
 
 * {
@@ -199,7 +212,7 @@ img {
   top: -100px;
   right: 12px;
   z-index: 100;
-  background: var(--color-primary);
+  background: var(--color-primary-fill);
   color: #fff;
   padding: 10px 18px;
   border-radius: 8px;
@@ -343,7 +356,7 @@ img {
 
 .main-nav a:hover,
 .main-nav a.active {
-  background: var(--color-primary);
+  background: var(--color-primary-fill);
   color: #fff;
 }
 
@@ -424,8 +437,8 @@ img {
 
 /* الأيقونة الفعّالة (الصفحة الحالية) تاخذ نفس تمييز رابط القائمة النشط */
 .icon-btn.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--color-primary-fill);
+  border-color: var(--color-primary-fill);
 }
 
 /* فاصل بصري خفيف يفصل أيقونات التنقّل عن أدوات الموقع (لغة/مظهر/صوت) */
@@ -882,7 +895,7 @@ img {
   font-size: 0.8rem;
   font-weight: 800;
   color: #fff;
-  background: var(--color-primary);
+  background: var(--color-primary-fill);
   border-radius: 999px;
 }
 
@@ -1058,9 +1071,9 @@ img {
 }
 
 .near-me-btn.active {
-  background: var(--color-primary);
+  background: var(--color-primary-fill);
   color: #fff;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-fill);
 }
 
 .tag.distance-tag {
@@ -1099,9 +1112,9 @@ img {
 
 .filter-chip.active,
 .filter-chip:hover {
-  background: var(--color-primary);
+  background: var(--color-primary-fill);
   color: #fff;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-fill);
 }
 
 .filter-chip.filter-toggle {
@@ -1282,7 +1295,7 @@ img {
 }
 
 .tag.new-tag {
-  background: var(--color-primary);
+  background: var(--color-primary-fill);
   color: #fff;
   font-weight: 800;
 }
@@ -1458,7 +1471,7 @@ img {
   gap: 6px;
   padding: 9px 20px;
   border-radius: 999px;
-  background: var(--color-primary);
+  background: var(--color-primary-fill);
   color: #fff;
   font-weight: 700;
   font-size: 0.88rem;
@@ -2193,6 +2206,20 @@ img {
   text-align: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   transition: box-shadow 0.3s ease;
+}
+
+/* HSL أعلاه يعطي أصفر/أخضر فاتح جداً تحت النص الأبيض (تباين 1.4:1 بأسوأ
+   بطاقة). بـOKLCH الإضاءة متساوية فعلياً لكل الألوان: 0.54 = أعلى إضاءة
+   يبقى فيها النص الأبيض ≥4.5:1 على كل البطاقات الـ30. --c1/--c2 = 85% من
+   أقصى تشبّع يعرضه sRGB لكل لون، محسوبة بـmain.js (oklchMaxChroma) */
+@supports (color: oklch(0 0 0)) {
+  .picker-helix-card {
+    background: linear-gradient(
+      135deg,
+      oklch(0.54 var(--c1) var(--hue)),
+      oklch(0.44 var(--c2) calc(var(--hue) + 40))
+    );
+  }
 }
 
 .picker-helix-icon {

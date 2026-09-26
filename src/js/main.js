@@ -5337,6 +5337,32 @@ function renderDayPlan() {
    "pos" (رقم عشري) هو البطاقة اللي بالواجهة، والدوران = تحريك pos على الحلزون.
    النتيجة عشوائية بالأصل: العيّنة نفسها عشوائية، ونوقف على بطاقة عشوائية منها.
    والزائر يقدر يسحب الحلزون بنفسه ويضغط أي بطاقة يختارها (onPick). */
+// أقصى تشبّع (chroma) يقدر sRGB يعرضه لإضاءة L ودرجة لون h بـOKLCH — بحث
+// ثنائي على تحويل Oklab القياسي. يُستخدم لإعطاء كل لون نفس "النسبة" من
+// أقصاه، فتتساوى الحيوية بين الأزرق والأصفر بدل ما يُقصّ لون خارج النطاق
+function oklchMaxChroma(L, h) {
+  const inGamut = (C) => {
+    const a = C * Math.cos((h * Math.PI) / 180);
+    const b = C * Math.sin((h * Math.PI) / 180);
+    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+    const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+    const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+    return [
+      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+    ].every((v) => v >= 0 && v <= 1);
+  };
+  let lo = 0;
+  let hi = 0.4;
+  for (let i = 0; i < 20; i++) {
+    const mid = (lo + hi) / 2;
+    if (inGamut(mid)) lo = mid;
+    else hi = mid;
+  }
+  return lo;
+}
+
 function createPickerHelix(stage, onPick) {
   const COUNT = 30;
   // بطاقتان متجاورتان على الحلزون ما تتلامسان ما دام عرض البطاقة أقل من
@@ -5485,7 +5511,11 @@ function createPickerHelix(stage, onPick) {
       const item = items[Math.floor(Math.random() * items.length)];
       const el = document.createElement("div");
       el.className = "picker-helix-card";
-      el.style.setProperty("--hue", (k * 47) % 360);
+      const hue = (k * 47) % 360;
+      el.style.setProperty("--hue", hue);
+      // الإضاءات (0.54 أعلى، 0.44 أسفل التدرج) مطابقة لـ.picker-helix-card بـstyle.css
+      el.style.setProperty("--c1", (oklchMaxChroma(0.54, hue) * 0.85).toFixed(3));
+      el.style.setProperty("--c2", (oklchMaxChroma(0.44, (hue + 40) % 360) * 0.85).toFixed(3));
       el.style.transform = `rotateY(${k * STEP}deg) translateZ(var(--helix-r)) translateY(${k * PITCH}px)`;
       el.innerHTML = `<span class="picker-helix-icon">${item.icon || "⭐"}</span><span class="picker-helix-title">${itemTitle(item)}</span>`;
       rotor.appendChild(el);
