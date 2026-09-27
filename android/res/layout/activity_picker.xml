@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layoutDirection="rtl"
+    android:layoutDirection="locale"
     android:background="@drawable/picker_bg">
 
     <LinearLayout
@@ -22,7 +22,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="اختار لي"
+            android:text="@string/picker_title"
             android:textColor="#CCFFFFFF"
             android:textSize="15sp" />
 
@@ -33,7 +33,7 @@
             android:padding="11dp"
             android:src="@drawable/ic_close"
             android:tint="#FFFFFFFF"
-            android:contentDescription="إغلاق"
+            android:contentDescription="@string/close"
             android:clickable="true"
             android:focusable="true"
             android:background="@drawable/glass_circle" />
@@ -69,7 +69,7 @@
             android:textSize="16sp"
             android:maxLines="1"
             android:ellipsize="end"
-            android:text="إلى أين اليوم؟" />
+            android:text="@string/picker_idle" />
 
         <FrameLayout
             android:id="@+id/pickerReveal"
@@ -84,7 +84,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="دع هكوله يختار لك"
+        android:text="@string/picker_headline"
         android:textColor="#FFFFFFFF"
         android:textSize="22sp"
         android:textStyle="bold" />
@@ -97,7 +97,7 @@
         android:paddingStart="32dp"
         android:paddingEnd="32dp"
         android:gravity="center"
-        android:text="اختر قسماً، أو اترك الاختيار على الكل"
+        android:text="@string/picker_sub"
         android:textColor="#B3FFFFFF"
         android:textSize="14sp" />
 
@@ -128,7 +128,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="18dp"
         android:gravity="center"
-        android:text="اختار لي"
+        android:text="@string/picker_title"
         android:textColor="#FFFFFFFF"
         android:textSize="17sp"
         android:textStyle="bold"

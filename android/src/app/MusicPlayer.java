@@ -10,6 +10,12 @@ final class MusicPlayer {
     // سماعة الجوال: رفع فوق مستوى الموقع (قمة ~0.25، بلا تشويه)
     private static final float VOLUME = 2.0f;
     private static Player current;
+    // مستوى المستخدم من المنزلق (0..1) — تربيعي لأن الأذن تسمع لوغاريتمياً
+    private static volatile float level = 0.7f;
+
+    static void setLevel(float l) {
+        level = Math.max(0f, Math.min(1f, l));
+    }
 
     private MusicPlayer() {}
 
@@ -66,7 +72,7 @@ final class MusicPlayer {
                 for (int i = 0; i < block; i++) {
                     if (gain < target) gain = Math.min(target, gain + stepIn);
                     else if (gain > target) gain = Math.max(target, gain - stepOut);
-                    float g = gain * VOLUME;
+                    float g = gain * VOLUME * level * level;
                     pcm[i * 2] = clip(l[i] * g);
                     pcm[i * 2 + 1] = clip(r[i] * g);
                 }

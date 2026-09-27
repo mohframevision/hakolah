@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layoutDirection="rtl"
+    android:layoutDirection="locale"
     android:background="@color/bg">
 
     <LinearLayout
@@ -23,7 +23,7 @@
             android:id="@+id/headerTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="هكوله"
+            android:text="@string/brand"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -78,7 +78,7 @@
                 android:layout_width="0dp"
                 android:layout_height="46dp"
                 android:layout_weight="1"
-                android:hint="ابحث…"
+                android:hint="@string/search_hint"
                 android:inputType="text"
                 android:maxLines="1"
                 android:background="@drawable/search_box_bg"
@@ -99,7 +99,7 @@
                 android:layout_height="46dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
-                android:text="الأقرب"
+                android:text="@string/near"
                 android:textSize="13sp"
                 android:textColor="@color/text"
                 android:background="@drawable/filter_chip_bg"
@@ -108,7 +108,7 @@
                 android:drawableStart="@drawable/ic_location_on_small"
                 android:drawableTint="@color/text"
                 android:drawablePadding="4dp"
-                android:contentDescription="رتّب حسب الأقرب مني"
+                android:contentDescription="@string/near_desc"
                 android:clickable="true"
                 android:focusable="true" />
         </LinearLayout>
@@ -155,7 +155,7 @@
                 android:id="@+id/errorText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="تعذّر تحميل البيانات — تأكد من الاتصال بالإنترنت"
+                android:text="@string/load_error"
                 android:textColor="@color/text_muted"
                 android:textSize="15sp"
                 android:gravity="center"
@@ -165,7 +165,7 @@
                 android:id="@+id/retryButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="إعادة المحاولة"
+                android:text="@string/retry"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -206,7 +206,7 @@
                 android:id="@+id/emptyText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="لا توجد عناصر بهذا القسم بعد"
+                android:text="@string/empty_section"
                 android:textColor="@color/text_muted"
                 android:textSize="15sp"
                 android:gravity="center" />
@@ -218,7 +218,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="تصفّح الكل"
+                android:text="@string/browse_all"
                 android:textColor="@color/white"
                 android:textStyle="bold"
                 android:textSize="14sp"

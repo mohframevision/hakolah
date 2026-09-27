@@ -35,10 +35,10 @@ class BottomNav implements View.OnClickListener {
 
     private void build(LinearLayout container) {
         container.removeAllViews();
-        addTab(container, R.drawable.ic_home, "الرئيسية", HOME);
+        addTab(container, R.drawable.ic_home, activity.getString(R.string.nav_home), HOME);
         addFab(container, PICKER);
-        addTab(container, R.drawable.ic_favorite_fill, "المفضلة", FAVORITES);
-        addTab(container, R.drawable.ic_settings, "الإعدادات", SETTINGS);
+        addTab(container, R.drawable.ic_favorite_fill, activity.getString(R.string.nav_favorites), FAVORITES);
+        addTab(container, R.drawable.ic_settings, activity.getString(R.string.nav_settings), SETTINGS);
     }
 
     private void addTab(LinearLayout container, int iconRes, String label, String tag) {

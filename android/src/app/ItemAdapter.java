@@ -133,14 +133,14 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         JSONObject item = items.get(position);
         String id = item.optString("id", "");
         holder.icon.setText(item.optString("icon", "⭐"));
-        holder.title.setText(highlightMatch(item.optString("title", "")));
+        holder.title.setText(highlightMatch(Lang.title(context, item)));
         String itemSection = itemSection(item);
         holder.shareBtn.setTag("share:" + position);
         holder.favBtn.setTag("fav:" + position);
         applyFavStyle(holder.favBtn, Prefs.isFavorite(context, itemSection, id));
-        holder.desc.setText(item.optString("desc", ""));
+        holder.desc.setText(Lang.desc(context, item));
 
-        String hours = item.optString("hours", "");
+        String hours = Lang.hours(context, item);
         if (!hours.isEmpty()) {
             holder.hours.setText(hours);
             holder.hours.setVisibility(View.VISIBLE);
@@ -153,15 +153,17 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         // مني" مفعّلاً وله إحداثيات (annotateDistance بـMainActivity حاطّته)
         if (item.has("_distanceKm")) {
             double km = item.optDouble("_distanceKm");
-            sb.append("📍 ").append(km < 1 ? Math.round(km * 1000) + " م" : String.format(java.util.Locale.US, "%.1f كم", km));
+            sb.append("📍 ").append(km < 1
+                    ? context.getString(R.string.dist_m, (int) Math.round(km * 1000))
+                    : String.format(java.util.Locale.US, context.getString(R.string.dist_km), km));
             String branchLabel = item.optString("_branchLabel", "");
-            if (!branchLabel.isEmpty()) sb.append(" — أقرب فرع: ").append(branchLabel);
+            if (!branchLabel.isEmpty()) sb.append(context.getString(R.string.nearest_branch)).append(branchLabel);
         }
         JSONArray tags = item.optJSONArray("tags");
         if (tags != null && tags.length() > 0) {
             for (int i = 0; i < tags.length(); i++) {
                 if (sb.length() > 0) sb.append(" · ");
-                sb.append(tags.optString(i));
+                sb.append(Lang.tag(context, tags.optString(i)));
             }
         }
         if (sb.length() > 0) {
@@ -183,7 +185,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             boolean isExperiment = "ai-experiments".equals(itemSection);
             holder.actions.removeAllViews();
             TextView readBtn = new TextView(context);
-            readBtn.setText(isExperiment ? "افتح التجربة" : "قراءة المقال");
+            readBtn.setText(context.getString(isExperiment ? R.string.open_experiment : R.string.read_article));
             readBtn.setTextSize(14f);
             readBtn.setTypeface(null, android.graphics.Typeface.BOLD);
             readBtn.setTextColor(0xFFFFFFFF);
@@ -286,18 +288,18 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
 
     private void openArticle(JSONObject item) {
         Intent intent = new Intent(context, ArticleActivity.class);
-        intent.putExtra(ArticleActivity.EXTRA_TITLE, item.optString("title", ""));
+        intent.putExtra(ArticleActivity.EXTRA_TITLE, Lang.title(context, item));
         intent.putExtra(ArticleActivity.EXTRA_ICON, item.optString("icon", "⭐"));
-        intent.putExtra(ArticleActivity.EXTRA_CONTENT, item.optString("contentHtml", ""));
-        intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, item.optString("detailUrl", ""));
+        intent.putExtra(ArticleActivity.EXTRA_CONTENT, Lang.content(context, item));
+        intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, Lang.detailPath(context, item));
         context.startActivity(intent);
         context.overridePendingTransition(0, 0);
     }
 
     private void openWebView(JSONObject item) {
         Intent intent = new Intent(context, WebViewActivity.class);
-        intent.putExtra(WebViewActivity.EXTRA_TITLE, item.optString("title", ""));
-        intent.putExtra(WebViewActivity.EXTRA_URL, HakolahApi.ORIGIN + item.optString("detailUrl", ""));
+        intent.putExtra(WebViewActivity.EXTRA_TITLE, Lang.title(context, item));
+        intent.putExtra(WebViewActivity.EXTRA_URL, Lang.detailUrl(context, item));
         context.startActivity(intent);
         context.overridePendingTransition(0, 0);
     }
@@ -306,11 +308,11 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
     // موجود (أقسام المقالات)، وإلا رابط القسم مع ?q=العنوان — عبر مشاركة
     // النظام الأصلية (ACTION_SEND) بدل Web Share API
     private void shareItem(JSONObject item) {
-        String title = item.optString("title", "");
+        String title = Lang.title(context, item);
         String detailUrl = item.optString("detailUrl", "");
         String url;
         if (!detailUrl.isEmpty()) {
-            url = HakolahApi.ORIGIN + detailUrl;
+            url = Lang.detailUrl(context, item);
         } else {
             String encodedTitle;
             try {
@@ -318,15 +320,15 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             } catch (Exception e) {
                 encodedTitle = title;
             }
-            url = HakolahApi.ORIGIN + itemSection(item) + ".html?q=" + encodedTitle;
+            url = Lang.siteUrl(context, itemSection(item) + ".html?q=" + encodedTitle);
         }
-        String text = title + " — على موقع هكوله 👇\n" + url;
+        String text = title + context.getString(R.string.share_suffix) + "\n" + url;
 
         Intent send = new Intent(Intent.ACTION_SEND);
         send.setType("text/plain");
         send.putExtra(Intent.EXTRA_TEXT, text);
         try {
-            context.startActivity(Intent.createChooser(send, "مشاركة"));
+            context.startActivity(Intent.createChooser(send, context.getString(R.string.share_title)));
         } catch (Exception ignored) {
         }
     }

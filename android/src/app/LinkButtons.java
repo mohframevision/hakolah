@@ -19,7 +19,7 @@ class LinkButtons {
         container.removeAllViews();
         String detailUrl = item.optString("detailUrl", "");
         if (!detailUrl.isEmpty()) {
-            add(context, container, R.drawable.ic_menu_book, "التفاصيل", "url:" + origin + detailUrl, true, listener);
+            add(context, container, R.drawable.ic_menu_book, context.getString(R.string.btn_details), "url:" + Lang.detailUrl(context, item), true, listener);
             return;
         }
         JSONObject links = item.optJSONObject("links");
@@ -28,20 +28,20 @@ class LinkButtons {
         // أحياناً كسلسلة فاضية "" لا غائبة تماماً (مثال: ameen-kebab.md)
         boolean first = true;
         if (!links.optString("website", "").isEmpty()) {
-            add(context, container, R.drawable.ic_language, "زيارة", "url:" + links.optString("website"), first, listener);
+            add(context, container, R.drawable.ic_language, context.getString(R.string.btn_visit), "url:" + links.optString("website"), first, listener);
             first = false;
         }
         if (!links.optString("phone", "").isEmpty()) {
             String phone = links.optString("phone").split(",")[0].trim();
-            add(context, container, R.drawable.ic_call, "اتصال", "tel:" + phone, first, listener);
+            add(context, container, R.drawable.ic_call, context.getString(R.string.btn_call), "tel:" + phone, first, listener);
             first = false;
         }
         if (!links.optString("maps", "").isEmpty()) {
-            add(context, container, R.drawable.ic_location_on, "الخريطة", "url:" + links.optString("maps"), first, listener);
+            add(context, container, R.drawable.ic_location_on, context.getString(R.string.btn_map), "url:" + links.optString("maps"), first, listener);
             first = false;
         }
         if (!links.optString("instagram", "").isEmpty()) {
-            add(context, container, R.drawable.ic_photo_camera, "إنستقرام", "url:" + links.optString("instagram"), first, listener);
+            add(context, container, R.drawable.ic_photo_camera, context.getString(R.string.btn_instagram), "url:" + links.optString("instagram"), first, listener);
         }
     }
 

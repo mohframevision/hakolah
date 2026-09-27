@@ -73,13 +73,13 @@ public class ArticleActivity extends Activity implements View.OnClickListener {
     // نفس buildShareText/buildShareUrl بالموقع: العنوان + لاحقة عربية ثابتة +
     // رابط المقال الفعلي (detailUrl موجود دوماً هنا)
     private void share() {
-        String url = HakolahApi.ORIGIN + (detailUrl == null ? "" : detailUrl);
-        String text = (title == null ? "" : title) + " — على موقع هكوله 👇\n" + url;
+        String url = Lang.siteUrl(this, detailUrl == null ? "" : detailUrl);
+        String text = (title == null ? "" : title) + getString(R.string.share_suffix) + "\n" + url;
         Intent send = new Intent(Intent.ACTION_SEND);
         send.setType("text/plain");
         send.putExtra(Intent.EXTRA_TEXT, text);
         try {
-            startActivity(Intent.createChooser(send, "مشاركة"));
+            startActivity(Intent.createChooser(send, getString(R.string.share_title)));
         } catch (Exception ignored) {
         }
     }

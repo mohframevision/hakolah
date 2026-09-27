@@ -50,6 +50,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private CardStackView dailyStack;
     private TextView dailyCount;
     private int dailyCards;
+    // اللغة وقت إنشاء الشاشة — لو تغيّرت من الإعدادات بشاشة ثانية نعيد البناء
+    private String createdLang;
     private final List<JSONObject> dailyItems = new ArrayList<>();
 
     // نفس فكرة initHeaderScroll بالموقع (يخفي الهيدر أثناء النزول بالقائمة
@@ -86,6 +88,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        createdLang = Prefs.getLang(this);
 
         loadingView = findViewById(R.id.loadingView);
         errorView = findViewById(R.id.errorView);
@@ -231,6 +234,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     @Override
     protected void onResume() {
         super.onResume();
+        if (!Prefs.getLang(this).equals(createdLang)) {
+            recreate();
+            return;
+        }
         // يغطّي حالة "التطبيق كان بالخلفية طويلاً" — onCreate/loadData()
         // الأصلية تغطّي فقط الفتح من الصفر
         if (sections != null && System.currentTimeMillis() - lastFetchTime > STALE_AFTER_MS) {
@@ -301,10 +308,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     // 4 وجهات ثابتة بس — لا تتغيّر مع البيانات، تُبنى مرة وحدة. انظر
     // sectionTabs للأقسام الفعلية (بيانات القسم القابلة للتغيّر، تبقى إيموجي)
     private void buildMainNav() {
-        addMainNavTab(R.drawable.ic_home, "الرئيسية", HOME_TAG);
+        addMainNavTab(R.drawable.ic_home, getString(R.string.nav_home), HOME_TAG);
         addMainNavFab(PICKER_TAG);
-        addMainNavTab(R.drawable.ic_favorite_fill, "المفضلة", FAVORITES_TAG);
-        addMainNavTab(R.drawable.ic_settings, "الإعدادات", SETTINGS_TAG);
+        addMainNavTab(R.drawable.ic_favorite_fill, getString(R.string.nav_favorites), FAVORITES_TAG);
+        addMainNavTab(R.drawable.ic_settings, getString(R.string.nav_settings), SETTINGS_TAG);
     }
 
     private void addMainNavTab(int iconRes, String label, String tag) {
@@ -375,9 +382,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         // واحدة) بدل إعادة جلب/تحليل نفس JSON من جديد
         cachedSections = sections;
         cachedSectionOrder = sectionOrder;
+        cachedTagsEn = data.optJSONObject("tagsEn");
         String firstBrowsable = firstBrowsableSlug();
         if (sections == null || firstBrowsable == null) {
-            showError("لا يوجد محتوى حالياً");
+            showError(getString(R.string.no_content));
             return;
         }
         buildSectionTabs();
@@ -387,7 +395,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         }
         selectSection(firstBrowsable);
         if (fromCache) {
-            headerTitle.append(" (بلا اتصال)");
+            headerTitle.append(getString(R.string.offline_suffix));
         }
     }
 
@@ -401,6 +409,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         String path = data.getPath();
         if (path == null) return false;
         String rel = path.startsWith("/hakolah/") ? path.substring("/hakolah/".length()) : path.replaceFirst("^/", "");
+        // رابط الصفحة الإنجليزية (hakolah/en/...) يوصل لنفس القسم/العنصر
+        if (rel.startsWith("en/")) rel = rel.substring(3);
         if (rel.isEmpty() || !rel.endsWith(".html")) return false;
 
         if (rel.contains("/")) {
@@ -436,17 +446,17 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
     private Intent articleIntentFor(JSONObject item) {
         Intent intent = new Intent(this, ArticleActivity.class);
-        intent.putExtra(ArticleActivity.EXTRA_TITLE, item.optString("title", ""));
+        intent.putExtra(ArticleActivity.EXTRA_TITLE, Lang.title(this, item));
         intent.putExtra(ArticleActivity.EXTRA_ICON, item.optString("icon", "⭐"));
-        intent.putExtra(ArticleActivity.EXTRA_CONTENT, item.optString("contentHtml", ""));
-        intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, item.optString("detailUrl", ""));
+        intent.putExtra(ArticleActivity.EXTRA_CONTENT, Lang.content(this, item));
+        intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, Lang.detailPath(this, item));
         return intent;
     }
 
     private Intent webViewIntentFor(JSONObject item) {
         Intent intent = new Intent(this, WebViewActivity.class);
-        intent.putExtra(WebViewActivity.EXTRA_TITLE, item.optString("title", ""));
-        intent.putExtra(WebViewActivity.EXTRA_URL, HakolahApi.ORIGIN + item.optString("detailUrl", ""));
+        intent.putExtra(WebViewActivity.EXTRA_TITLE, Lang.title(this, item));
+        intent.putExtra(WebViewActivity.EXTRA_URL, Lang.detailUrl(this, item));
         return intent;
     }
 
@@ -457,6 +467,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     // -----------------------------
 
     static JSONObject cachedSections;
+    static JSONObject cachedTagsEn;
     static JSONArray cachedSectionOrder;
 
     // كل قسم فيه عناصر يظهر بالتنقّل — أقسام "أدلة"/"أماكن" (hasDetailPages)
@@ -487,7 +498,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
             View tab = getLayoutInflater().inflate(R.layout.nav_tab, sectionTabs, false);
             ((TextView) tab.findViewById(R.id.tabIcon)).setText(section.optString("icon", "⭐"));
-            ((TextView) tab.findViewById(R.id.tabLabel)).setText(section.optString("title", slug));
+            ((TextView) tab.findViewById(R.id.tabLabel)).setText(Lang.title(this, section));
             tab.setTag(slug);
             tab.setOnClickListener(this);
             Touch.springy(tab, 0.92f);
@@ -514,7 +525,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         searchBox.removeTextChangedListener(this);
         searchBox.setText("");
         searchBox.addTextChangedListener(this);
-        headerTitle.setText("هكوله — " + section.optString("title", ""));
+        headerTitle.setText(getString(R.string.header_format, Lang.title(this, section)));
 
         buildFilterChips();
         Ui.scrollToStart(filterChipsScroll);
@@ -540,8 +551,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
                 if (!t.isEmpty() && !tags.contains(t)) tags.add(t);
             }
         }
-        addChip("الكل", null);
-        for (String t : tags) addChip(t, t);
+        addChip(getString(R.string.chip_all), null);
+        for (String t : tags) addChip(Lang.tag(this, t), t);
     }
 
     private void addChip(String label, String tagValue) {
@@ -596,7 +607,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             JSONObject item = currentItems.optJSONObject(i);
             if (item == null) continue;
             if (currentTag != null && !hasTag(item, currentTag)) continue;
-            String haystack = item.optString("title", "") + " " + item.optString("desc", "");
+            // البحث باللغتين دائماً — تكتب "burger" أو "برجر" وتلقى نفس العنصر
+            String haystack = item.optString("title", "") + " " + item.optString("desc", "") + " "
+                    + item.optString("title_en", "") + " " + item.optString("desc_en", "");
             if (!SearchUtil.fuzzyIncludes(haystack, searchQuery)) continue;
             matched.add(item);
         }
@@ -632,12 +645,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     // ترتيب إدراج يدوي بـCollator عربي — بنفس سبب تفادي Comparator<T> بملفات
     // ثانية بالمشروع (bridge method مصنَّع يكسر d8 بهذي البيئة)
     private void sortAlphabetically(List<JSONObject> list) {
-        java.text.Collator collator = java.text.Collator.getInstance(new java.util.Locale("ar"));
+        java.text.Collator collator = java.text.Collator.getInstance(new java.util.Locale(Prefs.getLang(this)));
         for (int i = 1; i < list.size(); i++) {
             JSONObject key = list.get(i);
-            String keyTitle = key.optString("title", "");
+            String keyTitle = Lang.title(this, key);
             int j = i - 1;
-            while (j >= 0 && collator.compare(list.get(j).optString("title", ""), keyTitle) > 0) {
+            while (j >= 0 && collator.compare(Lang.title(this, list.get(j)), keyTitle) > 0) {
                 list.set(j + 1, list.get(j));
                 j--;
             }
@@ -676,10 +689,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     // الصلاحية بلا سبب واضح
     private void showLocationRationale() {
         new android.app.AlertDialog.Builder(this)
-                .setTitle("الوصول للموقع")
-                .setMessage("عشان نرتّب النتائج حسب الأقرب لك، نحتاج إذنك للوصول لموقعك الجغرافي. يُستخدم محلياً بالجهاز فقط، ما يُرسَل لأي سيرفر.")
-                .setPositiveButton("متابعة", new RequestLocationPermission(this))
-                .setNegativeButton("إلغاء", null)
+                .setTitle(getString(R.string.loc_title))
+                .setMessage(getString(R.string.loc_msg))
+                .setPositiveButton(getString(R.string.loc_continue), new RequestLocationPermission(this))
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -721,7 +734,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             }
         }
         if (best == null) {
-            Toast.makeText(this, "تعذّر تحديد موقعك — تأكد من تفعيل خدمة الموقع بالجهاز", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.loc_fail), Toast.LENGTH_LONG).show();
             return;
         }
         userLat = best.getLatitude();
@@ -745,7 +758,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
 
     private void updateNearMeButton() {
         nearMeButton.setActivated(sortByDistance);
-        nearMeButton.setText(sortByDistance ? "الأقرب ✕" : "الأقرب");
+        nearMeButton.setText(getString(sortByDistance ? R.string.near_active : R.string.near));
         int color = sortByDistance ? getColor(R.color.white) : getColor(R.color.text);
         nearMeButton.setTextColor(color);
         nearMeButton.setCompoundDrawableTintList(android.content.res.ColorStateList.valueOf(color));
@@ -862,7 +875,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         card.setLayoutParams(new android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         TextView badge = new TextView(this);
-        badge.setText(section.optString("icon", "⭐") + "  " + section.optString("title", ""));
+        badge.setText(section.optString("icon", "⭐") + "  " + Lang.title(this, section));
         badge.setTextSize(12f);
         badge.setTextColor(0xFFFFFFFF);
         badge.setBackgroundResource(R.drawable.glass_pill);
@@ -879,7 +892,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         card.addView(icon);
 
         TextView title = new TextView(this);
-        title.setText(item.optString("title", ""));
+        title.setText(Lang.title(this, item));
         title.setTextSize(20f);
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         title.setTextColor(0xFFFFFFFF);
@@ -891,7 +904,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         card.addView(title);
 
         TextView desc = new TextView(this);
-        desc.setText(item.optString("desc", ""));
+        desc.setText(Lang.desc(this, item));
         desc.setTextSize(14f);
         desc.setTextColor(0xD9FFFFFF);
         desc.setMaxLines(2);
@@ -916,7 +929,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         if (!item.optString("detailUrl", "").isEmpty() && actions.getChildCount() > 0) {
             TextView open = (TextView) actions.getChildAt(0);
             boolean experiment = "ai-experiments".equals(currentSlug);
-            open.setText(experiment ? "افتح التجربة" : "قراءة المقال");
+            open.setText(getString(experiment ? R.string.open_experiment : R.string.read_article));
             open.setTag("daily:" + index);
         }
         // على الأخضر: الزر الأول أبيض بنص أخضر، والباقي زجاج شفاف بنص أبيض

@@ -120,7 +120,7 @@ class HakolahApi {
                 deliver(cached, true);
             } else {
                 activity.runOnUiThread(
-                        new DeliverResult(callback, null, "تعذّر تحميل البيانات — تأكد من الاتصال بالإنترنت", false));
+                        new DeliverResult(callback, null, activity.getString(R.string.load_error), false));
             }
         }
 
@@ -129,7 +129,7 @@ class HakolahApi {
             try {
                 obj = new JSONObject(json);
             } catch (Exception e) {
-                activity.runOnUiThread(new DeliverResult(callback, null, "بيانات غير صالحة", false));
+                activity.runOnUiThread(new DeliverResult(callback, null, activity.getString(R.string.bad_data), false));
                 return;
             }
             activity.runOnUiThread(new DeliverResult(callback, obj, null, fromCache));

@@ -19,9 +19,10 @@ class SoundPlayer {
     static final int CLOSE = 5;
     static final int SUCCESS = 6;
     static final int SHIMMER = 7;
+    static final int HAKOLAH = 16;
     // نغمات سلّم ري الكبير الصاعد (8 درجات) — لصفحة القصة: كل قسم يطلع بنغمة أعلى
     private static final int NOTE_BASE = 8;
-    private static final int COUNT = 16;
+    private static final int COUNT = 17;
     private static final double[] SCALE = {587.33, 659.25, 739.99, 880, 987.77, 1174.66, 1318.51, 1479.98};
 
     static int note(int i) {
@@ -218,8 +219,16 @@ class SoundPlayer {
                 noise(b, 0, 0.25, 6000, 1.5, 0.012, 9000, 0.002);
                 break;
             }
+            case HAKOLAH: {
+                // اندفاعة هواء صاعدة ثم أربيجيو سريع
+                noise(b, 0, 0.35, 500, 0.9, 0.05, 5000, 0.25);
+                double[] notes = {D5, FS5, A5, D6};
+                for (int i = 0; i < 4; i++) voice(b, notes[i], 0.2 + i * 0.04, 0.006, 0.45, 0.035, 1, -0.3 + i * 0.2);
+                voice(b, D3, 0.2, 0.004, 0.6, 0.06);
+                break;
+            }
             default:
-                if (sound >= NOTE_BASE) {
+                if (sound >= NOTE_BASE && sound < NOTE_BASE + SCALE.length) {
                     int i = sound - NOTE_BASE;
                     voice(b, SCALE[i], 0, 0.008, 0.4, 0.03, 1, ((i % 5) - 2) * 0.12);
                     voice(b, SCALE[i] * 2, 0, 0.004, 0.15, 0.008);

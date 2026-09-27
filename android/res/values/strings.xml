@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- نصوص الواجهة — العربية هي الافتراضية. النسخة الإنجليزية بـvalues-en/،
+     وتُختار حسب إعداد "اللغة" بالتطبيق (Prefs.wrapThemeContext يضبط اللغة
+     واتجاه الواجهة قبل إنشاء كل شاشة). أي نص جديد بالواجهة يُضاف بالملفين. -->
+<resources>
+    <string name="brand">هكوله</string>
+    <string name="header_format">هكوله — %1$s</string>
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_favorites">المفضلة</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="close">إغلاق</string>
+
+    <string name="search_hint">ابحث…</string>
+    <string name="near">الأقرب</string>
+    <string name="near_active">الأقرب ✕</string>
+    <string name="near_desc">رتّب حسب الأقرب مني</string>
+    <string name="chip_all">الكل</string>
+    <string name="load_error">تعذّر تحميل البيانات — تأكد من الاتصال بالإنترنت</string>
+    <string name="bad_data">بيانات غير صالحة</string>
+    <string name="retry">إعادة المحاولة</string>
+    <string name="empty_section">لا توجد عناصر بهذا القسم بعد</string>
+    <string name="browse_all">تصفّح الكل</string>
+    <string name="no_content">لا يوجد محتوى حالياً</string>
+    <string name="offline_suffix">" (بلا اتصال)"</string>
+
+    <string name="loc_title">الوصول للموقع</string>
+    <string name="loc_msg">لنرتّب النتائج حسب الأقرب إليك، نحتاج إذنك للوصول إلى موقعك الجغرافي. يُستخدم محلياً على جهازك فقط، ولا يُرسَل إلى أي خادم.</string>
+    <string name="loc_continue">متابعة</string>
+    <string name="cancel">إلغاء</string>
+    <string name="loc_fail">تعذّر تحديد موقعك — تأكد من تفعيل خدمة الموقع في الجهاز</string>
+    <string name="dist_m">%1$d م</string>
+    <string name="dist_km">%1$.1f كم</string>
+    <string name="nearest_branch">" — أقرب فرع: "</string>
+
+    <string name="open_experiment">افتح التجربة</string>
+    <string name="read_article">قراءة المقال</string>
+    <string name="share_suffix">" — على موقع هكوله 👇"</string>
+    <string name="share_title">مشاركة</string>
+    <string name="btn_details">التفاصيل</string>
+    <string name="btn_visit">زيارة</string>
+    <string name="btn_call">اتصال</string>
+    <string name="btn_map">الخريطة</string>
+    <string name="btn_instagram">إنستقرام</string>
+
+    <string name="daily_title">اختيار اليوم</string>
+    <string name="daily_hint">اسحب البطاقة يميناً أو يساراً لترى غيرها</string>
+
+    <string name="favorites_title">المفضلة</string>
+    <string name="favorites_empty">لم تُضِف أي عنصر إلى المفضلة بعد.\nتصفّح الأقسام واضغط على أيقونة القلب لحفظ ما يعجبك.</string>
+
+    <string name="picker_title">اختار لي</string>
+    <string name="picker_idle">إلى أين اليوم؟</string>
+    <string name="picker_headline">دع هكوله يختار لك</string>
+    <string name="picker_sub">اختر قسماً، أو اترك الاختيار على الكل</string>
+    <string name="picker_go">اختار لي</string>
+    <string name="picker_spinning">يختار لك…</string>
+    <string name="picker_result">اختيار هكوله لك</string>
+    <string name="picker_again">جرّب مرة ثانية</string>
+
+    <string name="settings_title">الإعدادات</string>
+    <string name="appearance">المظهر</string>
+    <string name="theme_auto">تلقائي</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="language">اللغة</string>
+    <string name="sound">الصوت</string>
+    <string name="sound_enable">تفعيل الأصوات</string>
+    <string name="about">عن التطبيق</string>
+
+    <string name="story_title">قصة هكوله</string>
+    <string name="music_desc">موسيقى الخلفية</string>
+    <string name="music_pause">إيقاف موسيقى الخلفية</string>
+    <string name="music_play">تشغيل موسيقى الخلفية</string>
+    <string name="contact_title">تواصل معنا</string>
+    <string name="share_app_text">هكوله — كل شيء مفيد في البحرين بمكان واحد 👇</string>
+
+    <string name="story_intro">دليل بحريني يجمع كل شيء مفيد في مكان واحد: مطاعم، كافيهات، متاجر، أماكن، روابط وأدوات، ومقالات. بالنسبة لي، هكوله نقطة تحوّل معرفية — تقنيات جديدة عليّ لم أحلم يوماً أن تكون في يدي.</string>
+    <string name="stat_items">عنصر حقيقي</string>
+    <string name="stat_sections">أقسام</string>
+    <string name="stat_days">يوماً منذ الإطلاق</string>
+    <string name="stat_langs">لغتان: عربي وإنجليزي</string>
+    <string name="story_how_title">كيف بدأ</string>
+    <string name="story_how_1">بدأ هكوله بدافع الفضول: أردت أن أستكشف أدوات الذكاء الاصطناعي وقدرتها على كتابة الكود، وإلى أي حدّ يمكنني أن أصل. وأنا حقاً منبهر.</string>
+    <string name="story_how_2">هكوله ليس أول موقع أبنيه بالذكاء الاصطناعي — موقعي الشخصي كان الأول — لكنه أول ما أبنيه بـClaude Code تحديداً. تجربة مثيرة للاهتمام: أستطيع أن أصنع ما أشاء بالكلمات وبقليل من الوقت. شعور لا يوصف، وإلى اليوم لم أفقد الحماس ولا الشغف.</string>
+    <string name="story_stops_title">المحطات</string>
+    <string-array name="story_stop_dates">
+        <item>29 يوليو 2026</item>
+        <item>3 أغسطس</item>
+        <item>4 أغسطس</item>
+        <item>8 أغسطس</item>
+        <item>20 أغسطس</item>
+        <item>26 أغسطس</item>
+        <item>4 سبتمبر</item>
+        <item>19 سبتمبر</item>
+        <item>27 سبتمبر</item>
+    </string-array>
+    <string-array name="story_stop_texts">
+        <item>النسخة الأولى: الأقسام، البحث، الفلترة، المفضلة، ولوحة تحكم لإضافة المحتوى بلا كتابة كود — وأول مطعم حقيقي يُضاف.</item>
+        <item>إعجاب مشترك بين كل الزوار، يحفظه خادم صغير على Cloudflare.</item>
+        <item>سياسة أمان صارمة للموقع وإزالة كل السكربتات المضمّنة.</item>
+        <item>رفضت Google AdSense الموقع بسبب «محتوى قليل القيمة» — وفي اليوم نفسه بُنيت صفحات تفصيلية حقيقية للعناصر.</item>
+        <item>قسم محلات السيارات، ثم عشرات المطاعم والمتاجر الجديدة.</item>
+        <item>«اختار لي» يتحول إلى عرض متحرك يكشف الاقتراح قطعة قطعة.</item>
+        <item>قسم «تجارب الذكاء الاصطناعي»: أدوات صغيرة مبنية بالذكاء الاصطناعي.</item>
+        <item>بدء تطبيق أندرويد أصلي لهكوله — وهو الذي بين يديك الآن.</item>
+        <item>شكل جديد للتطبيق: كرة «اختار لي» ثلاثية الأبعاد، ورصّة «اختيار اليوم»، وأصوات هادئة، ونسخة إنجليزية كاملة.</item>
+    </string-array>
+    <string name="story_learned_title">ما تعلّمته في الطريق</string>
+    <string-array name="story_tech_titles">
+        <item>Claude Code</item>
+        <item>Eleventy</item>
+        <item>Sveltia CMS</item>
+        <item>GitHub Pages</item>
+        <item>Cloudflare Workers</item>
+        <item>أصوات تُصنع بالكود</item>
+        <item>تطبيق أندرويد أصلي</item>
+    </string-array>
+    <string-array name="story_tech_texts">
+        <item>أكتب ما أريده بالكلمات، فيتحول إلى كود يعمل.</item>
+        <item>يبني من ملفات بسيطة صفحات جاهزة وسريعة.</item>
+        <item>لوحة تحكم أضيف منها مطعماً أو متجراً من المتصفح.</item>
+        <item>كل تعديل يُنشر على الإنترنت تلقائياً وبالمجان.</item>
+        <item>خادم صغير يحفظ عدد الإعجابات لكل عنصر.</item>
+        <item>كل نقرة تسمعها هنا تتولد بالكود، بلا ملف صوتي واحد.</item>
+        <item>هذا التطبيق: واجهة للمس، ومحتوى يتحدث تلقائياً من الموقع.</item>
+    </string-array>
+    <string name="story_challenge_title">التحدي</string>
+    <string name="story_challenge">مشكلة عويصة: أطوّر مشروعاً يستنزف جزءاً من وقتي دون أي مدخول. لكنني فهمت أن إنشاءه خطوة، وجعله يعمل على أكمل وجه خطوة أخرى، وتعريف الناس به خطوة أكبر، والحصول على جمهور خطوة أكبر وأكبر — وتنمية المحتوى مهمة أيضاً. لذا ما زلت أعمل عليه.</string>
+    <string name="story_help_title">وأحتاج مساعدتك</string>
+    <string name="story_help_text">إذا كان لديك أي اقتراح لهكوله، أخبرني. وإذا أعجبك، شاركه مع من يحتاجه.</string>
+    <string name="story_help_suggest">أرسل اقتراحك</string>
+    <string name="story_help_share">شارك هكوله</string>
+    <string name="story_sign">— محمد، صانع هكوله</string>
+</resources>

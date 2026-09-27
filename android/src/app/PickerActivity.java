@@ -34,7 +34,6 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
     private static final String ALL = "__all__";
     private static final String PREFIX_CATEGORY = "cat:";
     private static final String ACTION_BACK = "action:back";
-    private static final String IDLE_TEXT = "إلى أين اليوم؟";
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Random random = new Random();
@@ -60,9 +59,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
     // هي اللي تناسب الخلفية الخضراء الغامقة (أزرار ثانوية، شريط سفلي)
     @Override
     protected void attachBaseContext(Context newBase) {
-        Configuration config = new Configuration(newBase.getResources().getConfiguration());
-        config.uiMode = (config.uiMode & ~Configuration.UI_MODE_NIGHT_MASK) | Configuration.UI_MODE_NIGHT_YES;
-        super.attachBaseContext(newBase.createConfigurationContext(config));
+        super.attachBaseContext(Prefs.wrapNightContext(newBase));
     }
 
     @Override
@@ -99,12 +96,12 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         categoriesWrap.removeAllViews();
         JSONArray order = MainActivity.cachedSectionOrder;
         if (sections == null || order == null) return;
-        addChip("✨", "الكل", ALL);
+        addChip("✨", getString(R.string.chip_all), ALL);
         for (int i = 0; i < order.length(); i++) {
             String slug = order.optString(i);
             JSONObject section = sections.optJSONObject(slug);
             if (!MainActivity.isBrowsable(section)) continue;
-            addChip(section.optString("icon", "⭐"), section.optString("title", slug), slug);
+            addChip(section.optString("icon", "⭐"), Lang.title(this, section), slug);
         }
         Ui.scrollToStart(categoriesScroll);
     }
@@ -209,7 +206,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         chosen = pool.get(random.nextInt(pool.size()));
         spinBtn.setEnabled(false);
         spinBtn.animate().alpha(0.6f).setDuration(200).start();
-        pill.setText("يختار لك…");
+        pill.setText(getString(R.string.picker_spinning));
         // وضع "تقليل الحركة" بالنظام: بلا دوران طويل، كشف شبه فوري
         boolean animations = Build.VERSION.SDK_INT < 26 || ValueAnimator.areAnimatorsEnabled();
         orb.spin(animations ? 2400 : 150);
@@ -218,7 +215,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
     // ---- OrbView.Listener ----
     @Override
     public void onFrontItem(JSONObject item, boolean spinning) {
-        if (spinning && item != null) pill.setText(item.optString("icon", "⭐") + "  " + item.optString("title", ""));
+        if (spinning && item != null) pill.setText(item.optString("icon", "⭐") + "  " + Lang.title(this, item));
     }
 
     @Override
@@ -232,9 +229,9 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         revealed = true;
         orb.animate().alpha(0.22f).scaleX(0.78f).scaleY(0.78f).setDuration(520).setInterpolator(new DecelerateInterpolator(2f)).start();
         pill.animate().alpha(0f).setDuration(200).start();
-        headline.setText("اختيار هكوله لك");
+        headline.setText(getString(R.string.picker_result));
         sub.setText(sectionTitleOf(item));
-        spinBtn.setText("جرّب مرة ثانية");
+        spinBtn.setText(getString(R.string.picker_again));
         spinBtn.setEnabled(true);
         spinBtn.animate().alpha(1f).setDuration(200).start();
 
@@ -261,7 +258,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         card.addView(icon);
 
         TextView title = new TextView(this);
-        title.setText(item.optString("title", ""));
+        title.setText(Lang.title(this, item));
         title.setTextSize(22f);
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         title.setTextColor(0xFFFFFFFF);
@@ -271,7 +268,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         title.setLayoutParams(tlp);
         card.addView(title);
 
-        String descText = item.optString("desc", "");
+        String descText = Lang.desc(this, item);
         if (!descText.isEmpty()) {
             TextView desc = new TextView(this);
             desc.setText(descText);
@@ -319,7 +316,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         if (t != null) {
             for (int i = 0; i < t.length() && tags.size() < 4; i++) {
                 String s = t.optString(i);
-                if (!s.isEmpty()) tags.add(s);
+                if (!s.isEmpty()) tags.add(Lang.tag(this, s));
             }
         }
         return tags;
@@ -342,7 +339,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
 
     private String sectionTitleOf(JSONObject item) {
         JSONObject section = sections == null ? null : sections.optJSONObject(sectionSlugOf(item));
-        return section == null ? "" : section.optString("title", "");
+        return section == null ? "" : Lang.title(this, section);
     }
 
     private String sectionIconOf(JSONObject item) {
@@ -431,11 +428,11 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         bobs.clear();
         reveal.animate().alpha(0f).setDuration(220).withEndAction(new ClearReveal(reveal)).start();
         orb.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(520).setInterpolator(new OvershootInterpolator(1.2f)).start();
-        pill.setText(IDLE_TEXT);
+        pill.setText(getString(R.string.picker_idle));
         pill.animate().alpha(1f).setDuration(300).start();
-        headline.setText("دع هكوله يختار لك");
-        sub.setText("اختر قسماً، أو اترك الاختيار على الكل");
-        spinBtn.setText("اختار لي");
+        headline.setText(getString(R.string.picker_headline));
+        sub.setText(getString(R.string.picker_sub));
+        spinBtn.setText(getString(R.string.picker_go));
     }
 
     private static final class ClearReveal implements Runnable {

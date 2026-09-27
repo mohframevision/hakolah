@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layoutDirection="rtl"
+    android:layoutDirection="locale"
     android:background="@color/bg">
 
     <LinearLayout
@@ -22,7 +22,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="المفضلة"
+            android:text="@string/favorites_title"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -82,7 +82,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="لم تُضِف أي عنصر إلى المفضلة بعد.\nتصفّح الأقسام واضغط على أيقونة القلب لحفظ ما يعجبك."
+                android:text="@string/favorites_empty"
                 android:textColor="@color/text_muted"
                 android:textSize="14sp"
                 android:gravity="center" />

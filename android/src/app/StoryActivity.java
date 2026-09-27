@@ -33,7 +33,6 @@ import org.json.JSONObject;
 //
 // بلا lambdas ولا كلاسات مجهولة — د8 بهذي البيئة يفشل عليها.
 public class StoryActivity extends Activity implements View.OnClickListener, View.OnScrollChangeListener {
-    private static final String CONTACT_URL = HakolahApi.ORIGIN + "contact.html";
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final List<View> pending = new ArrayList<>();
@@ -46,13 +45,15 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
     private View statsBlock;
     private LinearLayout timeline;
     private android.widget.ImageView musicBtn;
+    private VolumeSlider slider;
+    private TextView volTip;
+    private View dockFold;
+    private boolean dockOpen;
     private android.animation.ObjectAnimator musicPulse;
 
     @Override
     protected void attachBaseContext(Context newBase) {
-        Configuration config = new Configuration(newBase.getResources().getConfiguration());
-        config.uiMode = (config.uiMode & ~Configuration.UI_MODE_NIGHT_MASK) | Configuration.UI_MODE_NIGHT_YES;
-        super.attachBaseContext(newBase.createConfigurationContext(config));
+        super.attachBaseContext(Prefs.wrapNightContext(newBase));
     }
 
     @Override
@@ -70,6 +71,17 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
         musicBtn = findViewById(R.id.storyMusic);
         musicBtn.setOnClickListener(this);
         Touch.springy(musicBtn, 0.85f);
+
+        slider = findViewById(R.id.storySlider);
+        volTip = findViewById(R.id.storyVolTip);
+        dockFold = findViewById(R.id.storyDockFold);
+        dockFold.setOnClickListener(this);
+        float level = Prefs.getMusicLevel(this);
+        slider.setLevel(level);
+        MusicPlayer.setLevel(level);
+        slider.setListener(new SliderListener(this));
+        dockOpen = Prefs.isMusicDockOpen(this);
+        applyDock(false);
         scroll.setOnScrollChangeListener(this);
 
         build();
@@ -82,44 +94,31 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
 
     // ================= المحتوى =================
     private void build() {
-        TextView title = text("هكوله", 44, 0xFFFFFFFF, true);
+        TextView title = text(getString(R.string.brand), 44, 0xFFFFFFFF, true);
         content.addView(title);
-        content.addView(para("دليل بحريني يجمع كل شيء مفيد في مكان واحد: مطاعم، كافيهات، متاجر، أماكن، روابط وأدوات، ومقالات. "
-                + "بالنسبة لي، هكوله نقطة تحوّل معرفية — تقنيات جديدة عليّ لم أحلم يوماً أن تكون في يدي.", 6));
+        content.addView(para(getString(R.string.story_intro), 6));
 
         statsBlock = buildStats();
         reveal(statsBlock, 28);
 
-        heading("كيف بدأ");
-        reveal(para("بدأ هكوله بدافع الفضول: أردت أن أستكشف أدوات الذكاء الاصطناعي وقدرتها على كتابة الكود، "
-                + "وإلى أي حدّ يمكنني أن أصل. وأنا حقاً منبهر.", 0), 12);
-        reveal(para("هكوله ليس أول موقع أبنيه بالذكاء الاصطناعي — موقعي الشخصي كان الأول — لكنه أول ما أبنيه بـ"
-                + "Claude Code تحديداً. تجربة مثيرة للاهتمام: أستطيع أن أصنع ما أشاء بالكلمات وبقليل من الوقت. "
-                + "شعور لا يوصف، وإلى اليوم لم أفقد الحماس ولا الشغف.", 0), 12);
+        heading(getString(R.string.story_how_title));
+        reveal(para(getString(R.string.story_how_1), 0), 12);
+        reveal(para(getString(R.string.story_how_2), 0), 12);
 
-        heading("المحطات");
+        heading(getString(R.string.story_stops_title));
         timeline = buildTimeline();
         reveal(timeline, 12);
 
-        heading("ما تعلّمته في الطريق");
-        String[][] tech = {
-                {"Claude Code", "أكتب ما أريده بالكلمات، فيتحول إلى كود يعمل."},
-                {"Eleventy", "يبني من ملفات بسيطة صفحات جاهزة وسريعة."},
-                {"Sveltia CMS", "لوحة تحكم أضيف منها مطعماً أو متجراً من المتصفح."},
-                {"GitHub Pages", "كل تعديل يُنشر على الإنترنت تلقائياً وبالمجان."},
-                {"Cloudflare Workers", "خادم صغير يحفظ عدد الإعجابات لكل عنصر."},
-                {"أصوات تُصنع بالكود", "كل نقرة تسمعها هنا تتولد بالكود، بلا ملف صوتي واحد."},
-                {"تطبيق أندرويد أصلي", "هذا التطبيق: واجهة للمس، ومحتوى يتحدث تلقائياً من الموقع."},
-        };
-        for (String[] t : tech) reveal(techRow(t[0], t[1]), 10);
+        heading(getString(R.string.story_learned_title));
+        String[] techTitles = getResources().getStringArray(R.array.story_tech_titles);
+        String[] techTexts = getResources().getStringArray(R.array.story_tech_texts);
+        for (int i = 0; i < techTitles.length; i++) reveal(techRow(techTitles[i], techTexts[i]), 10);
 
-        heading("التحدي");
-        reveal(para("مشكلة عويصة: أطوّر مشروعاً يستنزف جزءاً من وقتي دون أي مدخول. لكنني فهمت أن إنشاءه خطوة، "
-                + "وجعله يعمل على أكمل وجه خطوة أخرى، وتعريف الناس به خطوة أكبر، والحصول على جمهور خطوة أكبر وأكبر — "
-                + "وتنمية المحتوى مهمة أيضاً. لذا ما زلت أعمل عليه.", 0), 12);
+        heading(getString(R.string.story_challenge_title));
+        reveal(para(getString(R.string.story_challenge), 0), 12);
 
         reveal(buildHelpPanel(), 32);
-        TextView sign = text("— محمد، صانع هكوله", 13, 0x99FFFFFF, false);
+        TextView sign = text(getString(R.string.story_sign), 13, 0x99FFFFFF, false);
         sign.setGravity(Gravity.CENTER);
         reveal(sign, 20);
     }
@@ -196,10 +195,10 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
         LinearLayout row2 = new LinearLayout(this);
         grid.addView(row1);
         grid.addView(row2);
-        addStat(row1, items, "عنصر حقيقي", true);
-        addStat(row1, sections, "أقسام", false);
-        addStat(row2, days, "يوماً منذ الإطلاق", true);
-        addStat(row2, 2, "لغتان: عربي وإنجليزي", false);
+        addStat(row1, items, getString(R.string.stat_items), true);
+        addStat(row1, sections, getString(R.string.stat_sections), false);
+        addStat(row2, days, getString(R.string.stat_days), true);
+        addStat(row2, 2, getString(R.string.stat_langs), false);
         ((LinearLayout.LayoutParams) row2.getLayoutParams()).topMargin = dp(10);
         return grid;
     }
@@ -227,17 +226,10 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
     }
 
     private LinearLayout buildTimeline() {
-        String[][] stops = {
-                {"29 يوليو 2026", "النسخة الأولى: الأقسام، البحث، الفلترة، المفضلة، ولوحة تحكم لإضافة المحتوى بلا كتابة كود — وأول مطعم حقيقي يُضاف."},
-                {"3 أغسطس", "إعجاب مشترك بين كل الزوار، يحفظه خادم صغير على Cloudflare."},
-                {"4 أغسطس", "سياسة أمان صارمة للموقع وإزالة كل السكربتات المضمّنة."},
-                {"8 أغسطس", "رفضت Google AdSense الموقع بسبب «محتوى قليل القيمة» — وفي اليوم نفسه بُنيت صفحات تفصيلية حقيقية للعناصر."},
-                {"20 أغسطس", "قسم محلات السيارات، ثم عشرات المطاعم والمتاجر الجديدة."},
-                {"26 أغسطس", "«اختار لي» يتحول إلى عرض متحرك يكشف الاقتراح قطعة قطعة."},
-                {"4 سبتمبر", "قسم «تجارب الذكاء الاصطناعي»: أدوات صغيرة مبنية بالذكاء الاصطناعي."},
-                {"19 سبتمبر", "بدء تطبيق أندرويد أصلي لهكوله — وهو الذي بين يديك الآن."},
-                {"27 سبتمبر", "شكل جديد للتطبيق: كرة «اختار لي» ثلاثية الأبعاد، ورصّة «اختيار اليوم»، وأصوات هادئة."},
-        };
+        String[] dates = getResources().getStringArray(R.array.story_stop_dates);
+        String[] stopTexts = getResources().getStringArray(R.array.story_stop_texts);
+        String[][] stops = new String[dates.length][];
+        for (int i = 0; i < dates.length; i++) stops[i] = new String[]{dates[i], stopTexts[i]};
         LinearLayout list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
         for (String[] s : stops) {
@@ -293,10 +285,10 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
         panel.setGravity(Gravity.CENTER_HORIZONTAL);
         panel.setBackgroundResource(R.drawable.glass_card);
         panel.setPadding(dp(22), dp(24), dp(22), dp(24));
-        TextView t = text("وأحتاج مساعدتك", 22, 0xFFFFFFFF, true);
+        TextView t = text(getString(R.string.story_help_title), 22, 0xFFFFFFFF, true);
         t.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         panel.addView(t);
-        TextView p = text("إذا كان لديك أي اقتراح لهكوله، أخبرني. وإذا أعجبك، شاركه مع من يحتاجه.", 14, 0xCCFFFFFF, false);
+        TextView p = text(getString(R.string.story_help_text), 14, 0xCCFFFFFF, false);
         p.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         p.setLineSpacing(0, 1.1f);
         LinearLayout.LayoutParams plp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -310,8 +302,8 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
         LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         blp.topMargin = dp(18);
         buttons.setLayoutParams(blp);
-        buttons.addView(button("أرسل اقتراحك", "contact", true));
-        buttons.addView(button("شارك هكوله", "share", false));
+        buttons.addView(button(getString(R.string.story_help_suggest), "contact", true));
+        buttons.addView(button(getString(R.string.story_help_share), "share", false));
         panel.addView(buttons);
         return panel;
     }
@@ -351,7 +343,7 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
     private void updateMusicButton() {
         boolean on = Prefs.isMusicEnabled(this);
         musicBtn.setColorFilter(on ? 0xFF8FD9BA : 0x99FFFFFF);
-        musicBtn.setContentDescription(on ? "إيقاف موسيقى الخلفية" : "تشغيل موسيقى الخلفية");
+        musicBtn.setContentDescription(getString(on ? R.string.music_pause : R.string.music_play));
         if (on && animations) {
             if (musicPulse == null) {
                 musicPulse = android.animation.ObjectAnimator.ofFloat(musicBtn, "alpha", 1f, 0.55f);
@@ -366,8 +358,86 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
         }
     }
 
+    // الطي: المنزلق يصغر لفوق ويختفي، والسهم ينقلب — يبقى السهم وحده تحت زر الموسيقى
+    private void applyDock(boolean animate) {
+        dockFold.animate().rotation(dockOpen ? 0f : 180f).setDuration(animate ? 400 : 0)
+                .setInterpolator(new OvershootInterpolator(2f)).start();
+        if (dockOpen) {
+            slider.setVisibility(View.VISIBLE);
+            slider.setPivotY(0);
+            if (animate) {
+                slider.setScaleY(0f);
+                slider.setAlpha(0f);
+                slider.animate().scaleY(1f).alpha(1f).setDuration(420).setInterpolator(new OvershootInterpolator(1.3f)).start();
+            }
+        } else if (animate) {
+            slider.setPivotY(0);
+            slider.animate().scaleY(0f).alpha(0f).setDuration(220).withEndAction(new HideView(slider)).start();
+        } else {
+            slider.setVisibility(View.GONE);
+        }
+    }
+
+    private static final class HideView implements Runnable {
+        private final View v;
+
+        HideView(View v) {
+            this.v = v;
+        }
+
+        @Override
+        public void run() {
+            v.setVisibility(View.GONE);
+            v.setScaleY(1f);
+            v.setAlpha(1f);
+        }
+    }
+
+    // الرقم يمشي مع حافة التعبئة ويطلع وقت السحب بس
+    private static final class SliderListener implements VolumeSlider.Listener {
+        private final StoryActivity a;
+
+        SliderListener(StoryActivity a) {
+            this.a = a;
+        }
+
+        @Override
+        public void onLevel(float level, boolean dragging) {
+            MusicPlayer.setLevel(level);
+            a.volTip.setText(Math.round(level * 100) + "%");
+            float top = a.slider.getTop() + ((View) a.slider.getParent()).getTop();
+            float ty = top + (1 - level) * a.slider.getHeight() - a.volTip.getHeight() / 2f - a.volTip.getTop();
+            // داخل حدود العدّة — عند 100٪ كان نصه يطلع فوقها وينقص
+            float max = ((View) a.volTip.getParent()).getHeight() - a.volTip.getHeight() - a.volTip.getTop();
+            a.volTip.setTranslationY(Math.max(-a.volTip.getTop(), Math.min(max, ty)));
+            // يظهر فوراً: إعادة تشغيل حركة ظهور مع كل حركة إصبع كانت تبدأها من
+            // الصفر كل مرة فما يطلع الرقم أبداً وقت السحب
+            a.volTip.animate().cancel();
+            a.volTip.setAlpha(1f);
+        }
+
+        @Override
+        public void onRelease(float level) {
+            Prefs.setMusicLevel(a, level);
+            a.volTip.animate().alpha(0f).setStartDelay(500).setDuration(200).start();
+            // رفع الصوت والموسيقى طافية = يبغاها تشتغل (نفس منزلق الموقع)
+            if (level > 0 && !Prefs.isMusicEnabled(a)) {
+                Prefs.setMusicEnabled(a, true);
+                MusicPlayer.start();
+                a.updateMusicButton();
+            }
+        }
+    }
+
     @Override
     public void onClick(View v) {
+        if (v.getId() == R.id.storyDockFold) {
+            dockOpen = !dockOpen;
+            Prefs.setMusicDockOpen(this, dockOpen);
+            Touch.feedback(v, Touch.TAP, dockOpen ? SoundPlayer.OPEN : SoundPlayer.CLOSE);
+            applyDock(true);
+            return;
+        }
         if (v.getId() == R.id.storyMusic) {
             boolean on = !Prefs.isMusicEnabled(this);
             Prefs.setMusicEnabled(this, on);
@@ -387,17 +457,17 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
         if ("contact".equals(tag)) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
             Intent i = new Intent(this, WebViewActivity.class);
-            i.putExtra(WebViewActivity.EXTRA_TITLE, "تواصل معنا");
-            i.putExtra(WebViewActivity.EXTRA_URL, CONTACT_URL);
+            i.putExtra(WebViewActivity.EXTRA_TITLE, getString(R.string.contact_title));
+            i.putExtra(WebViewActivity.EXTRA_URL, Lang.siteUrl(this, "contact.html"));
             startActivity(i);
             overridePendingTransition(0, 0);
         } else if ("share".equals(tag)) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             Intent send = new Intent(Intent.ACTION_SEND);
             send.setType("text/plain");
-            send.putExtra(Intent.EXTRA_TEXT, "هكوله — كل شيء مفيد في البحرين بمكان واحد 👇\n" + HakolahApi.ORIGIN);
+            send.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_app_text) + "\n" + Lang.siteUrl(this, ""));
             try {
-                startActivity(Intent.createChooser(send, "مشاركة"));
+                startActivity(Intent.createChooser(send, getString(R.string.share_title)));
             } catch (Exception ignored) {
             }
         }

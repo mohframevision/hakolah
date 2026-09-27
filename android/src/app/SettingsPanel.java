@@ -21,6 +21,8 @@ class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedCha
     private final TextView themeAuto;
     private final TextView themeLight;
     private final TextView themeDark;
+    private final TextView langAr;
+    private final TextView langEn;
 
     static void show(Activity activity) {
         new SettingsPanel(activity);
@@ -36,6 +38,10 @@ class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedCha
         themeAuto.setOnClickListener(this);
         themeLight.setOnClickListener(this);
         themeDark.setOnClickListener(this);
+        langAr = panel.findViewById(R.id.langAr);
+        langEn = panel.findViewById(R.id.langEn);
+        langAr.setOnClickListener(this);
+        langEn.setOnClickListener(this);
         panel.findViewById(R.id.settingsCloseButton).setOnClickListener(this);
         View storyRow = panel.findViewById(R.id.storyRow);
         storyRow.setOnClickListener(this);
@@ -69,6 +75,9 @@ class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedCha
         setButtonState(themeAuto, Prefs.THEME_AUTO.equals(mode));
         setButtonState(themeLight, Prefs.THEME_LIGHT.equals(mode));
         setButtonState(themeDark, Prefs.THEME_DARK.equals(mode));
+        String lang = Prefs.getLang(activity);
+        setButtonState(langAr, Prefs.LANG_AR.equals(lang));
+        setButtonState(langEn, Prefs.LANG_EN.equals(lang));
     }
 
     private void setButtonState(TextView button, boolean active) {
@@ -84,8 +93,21 @@ class SettingsPanel implements View.OnClickListener, CompoundButton.OnCheckedCha
             dialog.dismiss();
             return;
         }
+        if (id == R.id.langAr || id == R.id.langEn) {
+            String lang = id == R.id.langEn ? Prefs.LANG_EN : Prefs.LANG_AR;
+            if (lang.equals(Prefs.getLang(activity))) return;
+            Prefs.setLang(activity, lang);
+            Touch.feedback(v, Touch.CONFIRM, SoundPlayer.TAP);
+            recreating = true;
+            dialog.dismiss();
+            // الشاشة الحالية تنبني من جديد باللغة الجديدة؛ الرئيسية (لو تحتها)
+            // تلاحظ التغيير بـonResume وتعيد بناء نفسها
+            activity.recreate();
+            return;
+        }
         if (id == R.id.storyRow) {
-            Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
+            // صوت دخول هكوله (اندفاعة + أربيجيو) — نفس بطاقة هكوله بالموقع
+            Touch.feedback(v, Touch.CONFIRM, SoundPlayer.HAKOLAH);
             recreating = true; // صوت الفتح يكفي — بلا صوت إغلاق فوقه
             dialog.dismiss();
             activity.startActivity(new android.content.Intent(activity, StoryActivity.class));

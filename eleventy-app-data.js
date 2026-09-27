@@ -3,6 +3,25 @@
 // نقي، بدل ما يتكرر ويصير له نسختان تنحرفان عن بعض بمرور الوقت.
 const NEW_BADGE_DAYS = 7;
 
+// نص المقال الإنجليزي للتطبيق: صفحات src/en/** مستبعدة من المجموعات
+// (eleventyExcludeFromCollections) فما فيه templateContent لها هنا — نقرأ
+// ملف الماركداون مباشرة ونحوّله بنفس المكتبة. ينفع لأن المقالات الإنجليزية
+// ماركداون صافي بلا أكواد قوالب (تحقّقنا: لا {% %} ولا {{ }} فيها)
+const fs = require("fs");
+const path = require("path");
+const matter = require("gray-matter");
+const md = require("markdown-it")({ html: true });
+
+function englishContentHtml(sectionSlug, fileSlug) {
+  const file = path.join(__dirname, "src", "en", sectionSlug, fileSlug + ".md");
+  if (!fs.existsSync(file)) return "";
+  try {
+    return md.render(matter(fs.readFileSync(file, "utf8")).content);
+  } catch {
+    return "";
+  }
+}
+
 // يُحسب مرة وحدة وقت تحميل هذا الموديول، لا داخل buildSiteData() — الموديول
 // نفسه يُخزَّن بذاكرة Node (require cache)، فكل من data.js.11ty.js وapp-
 // data.json.11ty.js يشتركان بنفس القيمة تماماً. لو كل استدعاء يحسب Date.now()
@@ -127,7 +146,10 @@ function buildSiteData(data, options = {}) {
         item.detailUrlEn = `${meta.slug}/${entry.data.slug_en || entry.fileSlug}.html`;
         // app-data.json فقط (لا data.js اللي يحمّله كل زائر متصفح) — تطبيق
         // الأندرويد يحتاج نص المقال الفعلي ليعرضه محلياً بدل فتح رابط خارجي
-        if (includeContent) item.contentHtml = entry.templateContent || "";
+        if (includeContent) {
+          item.contentHtml = entry.templateContent || "";
+          item.contentHtml_en = englishContentHtml(meta.slug, entry.data.slug_en || entry.fileSlug);
+        }
       } else {
         item.links = entry.data.links || {};
         item.cta = entry.data.cta || null;

@@ -19,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="الإعدادات"
+            android:text="@string/settings_title"
             android:textStyle="bold"
             android:textColor="@color/text"
             android:textSize="17sp"
@@ -54,7 +54,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="المظهر"
+            android:text="@string/appearance"
             android:textAllCaps="true"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -74,7 +74,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="تلقائي"
+                android:text="@string/theme_auto"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:gravity="center"
@@ -90,7 +90,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="فاتح"
+                android:text="@string/theme_light"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:gravity="center"
@@ -106,7 +106,59 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="داكن"
+                android:text="@string/theme_dark"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:background="@drawable/filter_chip_bg"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- مجموعة اللغة — اسم كل لغة بلغتها هي (لا يُترجم) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/language"
+            android:textAllCaps="true"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_muted"
+            android:letterSpacing="0.04"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/settings_row_bg"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/langAr"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="العربية"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:background="@drawable/filter_chip_bg"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/langEn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="English"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:gravity="center"
@@ -121,7 +173,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="الصوت"
+            android:text="@string/sound"
             android:textAllCaps="true"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -145,7 +197,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="تفعيل الأصوات"
+                android:text="@string/sound_enable"
                 android:textColor="@color/text"
                 android:textSize="14sp" />
 
@@ -159,7 +211,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="عن التطبيق"
+            android:text="@string/about"
             android:textAllCaps="true"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -172,7 +224,7 @@
             android:id="@+id/storyRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="قصة هكوله"
+            android:text="@string/story_title"
             android:textColor="@color/text"
             android:textSize="14sp"
             android:background="@drawable/settings_row_bg"
