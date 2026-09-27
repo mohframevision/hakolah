@@ -16,4 +16,28 @@ links:
   website: https://adamsubs.invopos.app/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPOTM2NjE5NzQzMzkyNDU5AAGnFvFHdNfDudlrE0uaJCP3EQd2uvlvguOWaFNlYwNxDUkg7N3lBa_xNd4kY2Q_aem_i45O50a1DogQDXsjb03myQ
   maps: https://maps.app.goo.gl/tKwmtVSJeEhnRWdG7
   instagram: https://www.instagram.com/adamsubs/
+hasDetailPage: true
+slug_en: adam-subs
+langSwitchUrl: "/en/restaurants/adam-subs.html"
+recommendation: كرسبر برجر اللحم — بصل مقلي مكرمّل فوق قطعة لحم طازجة مطبوخة حديثاً، مزيج يستاهل التجربة.
 ---
+
+## نبذة عن المطعم
+
+آدم سابز مطعم برجر وسندويشات (Subs) متنوعة، مع خدمة توصيل عبر عدة تطبيقات.
+
+## يشتهر بـ
+
+**كرسبر برجر (لحم)** — الطبق المفضّل هنا: بصل مقلي مكرمّل فوق قطعة لحم
+طازجة مطبوخة حديثاً، مش قطعة جاهزة سولد، ومزيج البصل المكرمّل مع اللحم
+يعطي طعم مميز يصعب وصفه. **الزنجر** برجر قوي بعد. من أفضل الخيارات
+للبرجر والفيليه ستيك.
+
+## التواصل والطلب
+
+[📸 إنستقرام](https://www.instagram.com/adamsubs/) ·
+[🔗 الموقع](https://adamsubs.invopos.app)
+
+## الموقع
+
+[📍 افتح الموقع على خرائط قوقل](https://maps.app.goo.gl/tKwmtVSJeEhnRWdG7)

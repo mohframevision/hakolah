@@ -53,6 +53,9 @@ const SLUG_ALIASES = {
   "restaurants/معجنات-آدم.html": "restaurants/adam-pastries.html",
   "bakeries/مخابز-المنار.html": "bakeries/al-manar-bakeries.html",
   "bakeries/ميلتوز.html": "bakeries/meltose.html",
+  "restaurants/adam-subs-1.html": "restaurants/adam-subs.html",
+  "restaurants/مطعم-الشعلة.html": "restaurants/al-shola-restaurant.html",
+  "bakeries/مخبز-الجزيرة.html": "bakeries/al-jazira-bakery.html",
 };
 
 const allHtml = walk(SITE)
