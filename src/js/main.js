@@ -5472,7 +5472,18 @@ function createPickerHelix(stage, onPick) {
     if (!rotor || busy || !e.target.closest(".picker-helix")) return;
     stopIdle();
     cancelAnimationFrame(moveFrame);
-    drag = { id: e.pointerId, x: e.clientX, start: pos, lastX: e.clientX, lastT: e.timeStamp, v: 0, moved: false };
+    // نحسب المسافة بالبكسل مرة واحدة عند بداية السحب بدل كل pointermove —
+    // تتغيّر فقط بتغيّر حجم الشاشة/التكبير، وهذا لا يحدث أثناء سحبة واحدة مستمرة
+    drag = {
+      id: e.pointerId,
+      x: e.clientX,
+      start: pos,
+      lastX: e.clientX,
+      lastT: e.timeStamp,
+      v: 0,
+      moved: false,
+      px: cardPx(),
+    };
   });
   stage.addEventListener("pointermove", (e) => {
     if (!drag || e.pointerId !== drag.id) return;
@@ -5485,11 +5496,11 @@ function createPickerHelix(stage, onPick) {
       cards.forEach(({ el }) => el.classList.remove("chosen"));
     }
     const dt = e.timeStamp - drag.lastT;
-    if (dt > 0) drag.v = -(e.clientX - drag.lastX) / cardPx() / dt;
+    if (dt > 0) drag.v = -(e.clientX - drag.lastX) / drag.px / dt;
     drag.lastX = e.clientX;
     drag.lastT = e.timeStamp;
     // سحب لليسار يجيب البطاقة اللي على اليمين للواجهة (البطاقة k+1 يمين)
-    moveTo(drag.start - dx / cardPx());
+    moveTo(drag.start - dx / drag.px);
   });
   stage.addEventListener("pointerup", (e) => endDrag(e, false));
   stage.addEventListener("pointercancel", (e) => endDrag(e, true));
