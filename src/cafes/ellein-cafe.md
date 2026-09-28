@@ -10,5 +10,5 @@ links:
   instagram: ''
   website: ''
 lat: 26.2306934
-lng: 50.4935241
+lng: 50.5062648
 ---

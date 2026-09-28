@@ -14,4 +14,6 @@ links:
   phone: ''
   maps: https://maps.app.goo.gl/LU8PpZEDEXaTDu5G7
   instagram: https://www.instagram.com/mezo.bh/
+lat: 26.2118193
+lng: 50.473687299999995
 ---

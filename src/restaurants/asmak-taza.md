@@ -16,4 +16,6 @@ links:
   instagram: https://www.instagram.com/asmaktaza.bh/
   phone: '32169185'
 dateAdded: 2026-08-05
+lat: 26.1467574
+lng: 50.4891692
 ---

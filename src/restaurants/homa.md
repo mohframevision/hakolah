@@ -12,6 +12,6 @@ links:
   phone: '38111722'
   maps: 'https://maps.app.goo.gl/T6z6Q6aTGgDMZVUf7'
   instagram: 'https://www.instagram.com/homabahrain/'
-lat: 26.1889679
-lng: 50.4631819
+lat: 26.1905154
+lng: 50.466777
 ---

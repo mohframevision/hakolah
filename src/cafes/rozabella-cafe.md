@@ -13,5 +13,5 @@ links:
   maps: https://maps.app.goo.gl/HgY1JeiY1XcGBNpd7
   instagram: https://www.instagram.com/rozabellacafe?igsh=dXF1aWQ4ejRzN2lz
 lat: 26.2204621
-lng: 50.5397337
+lng: 50.5436696
 ---

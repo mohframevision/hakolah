@@ -10,6 +10,6 @@ links:
   maps: https://maps.app.goo.gl/GXnsgAnMZqAHk3ND9
   instagram: ''
   website: ''
-lat: 26.1755979
-lng: 50.5146434
+lat: 26.1758961
+lng: 50.5335636
 ---

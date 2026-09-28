@@ -17,6 +17,6 @@ links:
   website: https://www.zoom.bh/
   maps: https://maps.app.goo.gl/9jugpBTCkaTnB6jh8
   instagram: https://www.instagram.com/zoom.bhr/
-lat: 26.1979734
-lng: 50.5616477
+lat: 26.1979686
+lng: 50.5642226
 ---

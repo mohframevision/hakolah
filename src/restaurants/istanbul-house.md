@@ -12,6 +12,6 @@ links:
   phone: '17280707'
   maps: 'https://maps.app.goo.gl/bsLgkQqXWBya6SPVA'
   instagram: 'https://www.instagram.com/istanbulhouserestaurant/'
-lat: 26.1871303
-lng: 50.4722181
+lat: 26.186623
+lng: 50.4769113
 ---
