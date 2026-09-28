@@ -8,7 +8,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-// شريط التنقّل السفلي الثابت (4 عناصر)، مشترك بين كل شاشة غير MainActivity —
+// شريط التنقّل السفلي الثابت (5 عناصر)، مشترك بين كل شاشة غير MainActivity —
 // بدونه، فتح "اختار لي" أو "المفضلة" كان يحسّ المستخدم إنه طلع من التطبيق
 // كلياً (لا بار، شاشة سوداء فاضية أسفلها). MainActivity نفسها تبني نسختها
 // الخاصة (فيها سلوك إضافي: نقرة "الرئيسية" وهي نشطة أصلاً تصفّر الفلاتر) —
@@ -20,6 +20,7 @@ class BottomNav implements View.OnClickListener {
     static final String PICKER = "picker";
     static final String FAVORITES = "favorites";
     static final String SETTINGS = "settings";
+    static final String SOUNDS = "sounds";
 
     private final Activity activity;
     private final String active;
@@ -36,6 +37,7 @@ class BottomNav implements View.OnClickListener {
     private void build(LinearLayout container) {
         container.removeAllViews();
         addTab(container, R.drawable.ic_home, activity.getString(R.string.nav_home), HOME);
+        addTab(container, R.drawable.ic_music_note, activity.getString(R.string.nav_sounds), SOUNDS);
         addFab(container, PICKER);
         addTab(container, R.drawable.ic_favorite_fill, activity.getString(R.string.nav_favorites), FAVORITES);
         addTab(container, R.drawable.ic_settings, activity.getString(R.string.nav_settings), SETTINGS);
@@ -85,8 +87,12 @@ class BottomNav implements View.OnClickListener {
         } else if (SETTINGS.equals(tag)) {
             SettingsPanel.show(activity);
         } else {
-            Class<?> target = PICKER.equals(tag) ? PickerActivity.class : FavoritesActivity.class;
-            activity.startActivity(new Intent(activity, target));
+            if (SOUNDS.equals(tag)) {
+                activity.startActivity(WebViewActivity.soundsIntent(activity));
+            } else {
+                Class<?> target = PICKER.equals(tag) ? PickerActivity.class : FavoritesActivity.class;
+                activity.startActivity(new Intent(activity, target));
+            }
             activity.finish();
             activity.overridePendingTransition(0, 0);
         }

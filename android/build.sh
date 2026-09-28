@@ -43,8 +43,10 @@ javac --release 11 -nowarn \
   $(find "$SAFE/src/app" "$OUT/gen" -name '*.java' -exec cygpath -w {} \;)
 
 echo "4/6 dexing"
-mapfile -t CLASSES < <(find "$OUT/classes" -name '*.class' -exec cygpath -w {} \;)
-"$BT/d8.bat" --min-api 24 --output "$(cygpath -w "$OUT")" "${CLASSES[@]}"
+# ملف jar واحد بدل مسار كل كلاس — قائمة المسارات تجاوزت حد طول الأمر بويندوز
+# ("The command line is too long") لما كثرت الكلاسات
+(cd "$OUT/classes" && jar cf ../classes.jar .)
+"$BT/d8.bat" --min-api 24 --output "$(cygpath -w "$OUT")" "$(cygpath -w "$OUT/classes.jar")"
 
 echo "5/6 packaging"
 cd "$OUT"

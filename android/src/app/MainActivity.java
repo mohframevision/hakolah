@@ -275,6 +275,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             Touch.feedback(v, Touch.CONFIRM, SoundPlayer.OPEN);
             startActivity(new android.content.Intent(this, PickerActivity.class));
             overridePendingTransition(0, 0);
+        } else if (SOUNDS_TAG.equals(value)) {
+            Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
+            startActivity(WebViewActivity.soundsIntent(this));
+            overridePendingTransition(0, 0);
         } else if (FAVORITES_TAG.equals(value)) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             startActivity(new android.content.Intent(this, FavoritesActivity.class));
@@ -304,11 +308,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     private static final String PICKER_TAG = "__picker__";
     private static final String FAVORITES_TAG = "__favorites__";
     private static final String SETTINGS_TAG = "__settings__";
+    private static final String SOUNDS_TAG = "__sounds__";
 
     // 4 وجهات ثابتة بس — لا تتغيّر مع البيانات، تُبنى مرة وحدة. انظر
     // sectionTabs للأقسام الفعلية (بيانات القسم القابلة للتغيّر، تبقى إيموجي)
     private void buildMainNav() {
         addMainNavTab(R.drawable.ic_home, getString(R.string.nav_home), HOME_TAG);
+        addMainNavTab(R.drawable.ic_music_note, getString(R.string.nav_sounds), SOUNDS_TAG);
         addMainNavFab(PICKER_TAG);
         addMainNavTab(R.drawable.ic_favorite_fill, getString(R.string.nav_favorites), FAVORITES_TAG);
         addMainNavTab(R.drawable.ic_settings, getString(R.string.nav_settings), SETTINGS_TAG);
