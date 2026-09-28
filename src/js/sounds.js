@@ -1808,17 +1808,25 @@ function initBeepMelodyExperiment() {
     document.getElementById("beepOctDown").addEventListener("click", () => shiftOctave(-1));
     document.getElementById("beepOctUp").addEventListener("click", () => shiftOctave(1));
 
+    // e.code يجي فاضي من بعض كيبوردات الجوال (مفتاح بلا scancode) — keyCode
+    // بديل يتبع المفتاح الفعلي أيضاً (65-90 للحروف مهما كانت لغة الكيبورد)
+    const physicalCode = (e) => {
+      if (e.code && e.code !== "Unidentified") return e.code;
+      if (e.keyCode >= 65 && e.keyCode <= 90) return "Key" + String.fromCharCode(e.keyCode);
+      return { 186: "Semicolon", 59: "Semicolon", 222: "Quote" }[e.keyCode] || "";
+    };
     document.addEventListener("keydown", (e) => {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.target.closest("input, textarea, select, [contenteditable]")) return;
-      if (e.code === "KeyZ" || e.code === "KeyX") {
-        shiftOctave(e.code === "KeyZ" ? -1 : 1);
-      } else if (e.code in KEY_MAP) {
+      const code = physicalCode(e);
+      if (code === "KeyZ" || code === "KeyX") {
+        shiftOctave(code === "KeyZ" ? -1 : 1);
+      } else if (code in KEY_MAP) {
         e.preventDefault(); // ' بفايرفوكس يفتح البحث السريع
-        keyOn(e.code);
+        keyOn(code);
       }
     });
-    document.addEventListener("keyup", (e) => keyOff(e.code));
+    document.addEventListener("keyup", (e) => keyOff(physicalCode(e)));
     // الصفحة فقدت التركيز والمفتاح ممسوك: ما بيوصلنا keyup، نسكّت الكل
     window.addEventListener("blur", () => [...held.keys()].forEach(keyOff));
 
