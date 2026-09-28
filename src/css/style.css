@@ -4030,3 +4030,90 @@ img {
 .beep-param .filter-chip:not(.active, :hover) {
   background: transparent;
 }
+
+/* ===== تجربة الموسيقى بهوية "اختار لي" في التطبيق =====
+   نفس ألوان picker_bg / glass_card / picker_chip_bg / picker_go_bg بالتطبيق:
+   دائماً داكنة (بالوضعين)، تدرّج أخضر هكوله من شبه أسود لأخضر عميق، توهّج
+   ناعم من تحت، وبطاقات زجاجية. الرموز تُعاد تعريفها داخل الحاوية فكل ما
+   بداخلها (أزرار، لوحات، نوتة، تحليل) يتبعها تلقائياً */
+.beep-experiment {
+  --color-text: #ffffff;
+  --color-text-muted: rgba(255, 255, 255, 0.74);
+  --color-surface: rgba(255, 255, 255, 0.08);
+  --color-bg: rgba(255, 255, 255, 0.06);
+  --color-border: rgba(255, 255, 255, 0.2);
+  --color-primary: #3fa480;
+  --color-primary-fill: #2a7f60;
+  --color-primary-dark: #236b51;
+  --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.35);
+  color: var(--color-text);
+  background:
+    radial-gradient(520px 360px at 50% 100%, rgba(63, 164, 128, 0.4), transparent 70%),
+    linear-gradient(180deg, #06120e 0%, #0d2b22 50%, #17513f 100%);
+  border-color: rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  color-scheme: dark;
+}
+
+.beep-experiment .beep-stage,
+.beep-experiment .beep-panel,
+.beep-experiment .beep-analysis,
+.beep-experiment .beep-quiz {
+  background: linear-gradient(180deg, rgba(26, 74, 59, 0.95), rgba(14, 44, 35, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+  box-shadow: var(--shadow-card);
+}
+
+/* رقائق زجاجية، والمختارة خضراء مضيئة بحدّ فاتح */
+.beep-experiment .filter-chip {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.beep-experiment .filter-chip.active,
+.beep-experiment .filter-chip:hover {
+  background: var(--color-primary-fill);
+  border-color: #6fc8a4;
+  color: #fff;
+}
+
+/* زر التشغيل = زر "لف" بالتطبيق: كبسولة بتدرّج أخضر وتوهّج */
+.beep-experiment #beepMelodyPlay {
+  background: linear-gradient(90deg, #2a7f60, #35946f);
+  border: 1px solid rgba(111, 200, 164, 0.5);
+  box-shadow: 0 8px 24px rgba(63, 164, 128, 0.35);
+}
+
+.beep-experiment .btn.secondary {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.beep-experiment .beep-staff-scroll {
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.beep-experiment .beep-white {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.beep-experiment .beep-white.active,
+.beep-experiment .beep-black.active {
+  box-shadow: 0 0 14px rgba(111, 200, 164, 0.8);
+}
+
+.beep-experiment .st-note.on .st-head,
+.beep-experiment .st-note.on .st-stem,
+.beep-experiment .st-rest.on {
+  fill: #6fc8a4;
+  stroke: #6fc8a4;
+  filter: drop-shadow(0 0 4px rgba(111, 200, 164, 0.9));
+}
+
+.beep-experiment .st-note.on .st-head.hollow {
+  fill: none;
+}
