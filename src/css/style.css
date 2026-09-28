@@ -3824,3 +3824,209 @@ img {
   font-weight: 700;
   font-size: 0.9rem;
 }
+
+/* ===== تجربة الموسيقى: المسرح (التشغيل + ما ينعزف) واللوحات المطوية ===== */
+.beep-stage {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+/* داخل المسرح النوتة جزء منه، مو بطاقة ثانية فوق بطاقة */
+.beep-stage .beep-staff-wrap {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+.beep-stage .beep-staff-scroll {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+/* منزلق الصوت: مسار يمتلئ بالأخضر حتى المستوى الحالي (--level من الجافاسكربت) */
+.beep-volume {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 300px);
+  direction: ltr;
+}
+
+.beep-volume input {
+  flex: 1;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+}
+
+.beep-volume input::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--color-primary) var(--level, 80%), var(--color-border) var(--level, 80%));
+}
+
+.beep-volume input::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-border);
+}
+
+.beep-volume input::-moz-range-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+
+.beep-volume input::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px solid var(--color-primary);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.12s ease;
+}
+
+.beep-volume input::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px solid var(--color-primary);
+}
+
+.beep-volume input:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+
+.beep-volume input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+.beep-panel,
+.beep-more {
+  width: 100%;
+  max-width: 560px;
+}
+
+.beep-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.beep-panel > summary,
+.beep-more > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.beep-more > summary {
+  justify-content: center;
+  padding: 4px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.beep-panel > summary::-webkit-details-marker,
+.beep-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.beep-panel > summary::after {
+  content: "⌄";
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.beep-panel[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+.beep-panel > summary {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.beep-panel > summary::after {
+  margin-inline-start: auto;
+}
+
+/* الاختيار الحالي بسطر تحت العنوان — جنبه يزاحمه ويكسره على الجوال */
+.beep-panel-now {
+  order: 3;
+  flex-basis: 100%;
+  text-align: start;
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.beep-panel[open] {
+  padding-bottom: 14px;
+}
+
+.beep-panel[open] > :not(summary) {
+  margin: 0 12px 10px;
+}
+
+.beep-more[open] > p {
+  margin-top: 6px;
+}
+
+/* الأبعاد الأربعة كمفاتيح مقطّعة: سطر لكل بُعد بدل كبسولات متفرقة */
+.beep-panel .beep-params {
+  padding: 0;
+  background: none;
+  border: 0;
+  max-width: none;
+  width: auto;
+}
+
+.beep-param {
+  width: 100%;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.beep-param .instrument-picker {
+  gap: 0;
+  flex-wrap: nowrap;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+}
+
+.beep-param .filter-chip {
+  border: 0;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+.beep-param .filter-chip:not(.active, :hover) {
+  background: transparent;
+}

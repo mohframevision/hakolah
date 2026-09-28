@@ -1196,6 +1196,8 @@ function initBeepMelodyExperiment() {
   let delayNode = null; // مسار صدى مشترك (Delay + Feedback) — كل نغمة ترسل له
   let delayFeedbackGain = null; // مرجع خارجي عشان نضبط كمية الصدى حسب المزاج بكل تشغيلة
   let delayWetGain = null;
+  let masterInput = null; // مدخل مسار الخروج — كل النغمات تمر منه
+  let volumeGain = null; // منزلق الصوت (التشغيل الحي فقط، لا يأثر على الملفات المصدَّرة)
   let playing = false;
   let stopRequested = false;
   let activeOscillators = [];
@@ -1206,15 +1208,45 @@ function initBeepMelodyExperiment() {
   // (كمية الصدى) تُضبط بدالة applyMood كل تشغيلة حسب المزاج المختار
   function ensureAudioGraph() {
     if (delayNode) return;
-    delayNode = audioCtx.createDelay();
-    delayNode.delayTime.value = 0.22;
-    delayFeedbackGain = audioCtx.createGain();
-    delayWetGain = audioCtx.createGain();
+    volumeGain = audioCtx.createGain();
+    volumeGain.gain.value = volumeLevel * volumeLevel;
+    volumeGain.connect(audioCtx.destination);
+    const bus = buildOutput(audioCtx, volumeGain);
+    masterInput = bus.input;
+    delayNode = bus.delay;
+    delayFeedbackGain = bus.feedback;
+    delayWetGain = bus.wet;
+  }
 
-    delayNode.connect(delayFeedbackGain);
-    delayFeedbackGain.connect(delayNode);
-    delayNode.connect(delayWetGain);
-    delayWetGain.connect(audioCtx.destination);
+  /* مسار الخروج — نفس فكرة مسار مؤثرات الموقع: فلتر يليّن الحدّة، صدى غرفة
+     حقيقي (يعطي مساحة بدل الصدى القصير الجاف لحاله)، وضاغط ناعم بالآخر
+     يمنع التشوّه لما تتجمع النغمات أو تكون الديناميكية "قوي" */
+  function buildOutput(ctx, out) {
+    const input = ctx.createGain();
+    const soften = ctx.createBiquadFilter();
+    soften.type = "lowpass";
+    soften.frequency.value = 5500;
+    const verb = ctx.createConvolver();
+    verb.buffer = makeRoomImpulse(ctx, 2.4);
+    const verbWet = ctx.createGain();
+    verbWet.gain.value = 0.3;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14;
+    comp.knee.value = 12;
+    comp.ratio.value = 3;
+    comp.attack.value = 0.01;
+    comp.release.value = 0.25;
+    input.connect(soften).connect(comp);
+    soften.connect(verb).connect(verbWet).connect(comp);
+    comp.connect(out);
+
+    const delay = ctx.createDelay();
+    delay.delayTime.value = 0.22;
+    const feedback = ctx.createGain();
+    const wet = ctx.createGain();
+    delay.connect(feedback).connect(delay);
+    delay.connect(wet).connect(input);
+    return { input, delay, feedback, wet };
   }
 
   /* 10 "آلات" مصنوعة كلها تركيب توافقيات (Harmonics) — نفس الأسلوب، بس بنِسَب
@@ -1354,11 +1386,38 @@ function initBeepMelodyExperiment() {
   };
 
   let currentInstrument = "piano";
+
+  // منزلق الصوت — تربيعي لأن الأذن تسمع الصوت لوغاريتمياً (نفس منزلق الموقع الشخصي)
+  let volumeLevel = 0.8;
+  try {
+    const saved = parseFloat(localStorage.getItem("beepVolume"));
+    if (saved >= 0 && saved <= 1) volumeLevel = saved;
+  } catch {
+    // التخزين محجوب — نكمل بالقيمة الافتراضية
+  }
+  const volumeInput = document.getElementById("beepVolume");
+  if (volumeInput) {
+    const paint = () => volumeInput.style.setProperty("--level", volumeLevel * 100 + "%");
+    volumeInput.value = volumeLevel;
+    paint();
+    volumeInput.addEventListener("input", () => {
+      volumeLevel = Number(volumeInput.value);
+      paint();
+      if (volumeGain) volumeGain.gain.setTargetAtTime(volumeLevel * volumeLevel, audioCtx.currentTime, 0.04);
+      playSound("tick"); // تكّة لكل درجة — إحساس ملموس
+      try {
+        localStorage.setItem("beepVolume", String(volumeLevel));
+      } catch {
+        // لا شيء
+      }
+    });
+  }
   const instrumentButtons = document.querySelectorAll("#instrumentPicker .instrument-btn");
   instrumentButtons.forEach((el) => {
     el.addEventListener("click", () => {
       currentInstrument = el.dataset.instrument;
       instrumentButtons.forEach((b) => b.classList.toggle("active", b === el));
+      updateSoundSummary();
       playClickSound();
     });
   });
@@ -1522,8 +1581,17 @@ function initBeepMelodyExperiment() {
       currentMood = el.dataset.mood;
       moodButtons.forEach((b) => b.classList.toggle("active", b === el));
       playClickSound();
+      updateSoundSummary();
     });
   });
+
+  // اللوحة المطوية تعرض اختيارك الحالي بعنوانها، فما تحتاج تفتحها عشان تعرفه
+  function updateSoundSummary() {
+    const now = document.getElementById("beepSoundNow");
+    if (!now) return;
+    const pick = (sel) => document.querySelector(sel + " .active")?.textContent.trim() || "";
+    now.textContent = pick("#instrumentPicker") + " · " + pick("#moodPicker");
+  }
 
   // مفتاح التبديل بين اللوحة المبسطة (أوكتافة) والكاملة (٤ أوكتافات)
   const keyboardToggle = document.getElementById("keyboardToggle");
@@ -1737,7 +1805,7 @@ function initBeepMelodyExperiment() {
   /* يرسم نغمة واحدة داخل أي سياق صوتي. الوسيط target يحمل السياق ووجهتيه
      (الجافة والصدى) — بدونه ما نقدر نصدّر ملفاً صوتياً إلا بتكرار كل منطق
      التخليق مرة ثانية. التشغيل الحي والتصدير يستخدمان نفس الدالة الآن. */
-  function playNote(target, noteIndex, startTime, duration, peakGain) {
+  function playNote(target, noteIndex, startTime, duration, peakGain, pan = 0, detune = 0) {
     const { ctx, dry, wet, live } = target;
     const freq = NOTES[noteIndex] * 2 ** octaveShift;
     peakGain *= dynamicsGain;
@@ -1770,8 +1838,14 @@ function initBeepMelodyExperiment() {
     filter.frequency.exponentialRampToValueAtTime(clamp(freq * instrument.filterDarkMult, 400, 2000), startTime + ringDuration);
 
     envelope.connect(filter);
-    filter.connect(dry);
-    filter.connect(wet);
+    let out = filter;
+    if (pan && ctx.createStereoPanner) {
+      out = ctx.createStereoPanner();
+      out.pan.value = pan;
+      filter.connect(out);
+    }
+    out.connect(dry);
+    out.connect(wet);
 
     // نغمة اهتزاز خفيفة (Vibrato) — سمة آلات النفخ (الفلوت هنا)، ما تُستخدم
     // إلا لو الآلة الحالية معرّفة لها vibrato. vibratoGain يحوّل تذبذب اللفو
@@ -1794,6 +1868,7 @@ function initBeepMelodyExperiment() {
       const osc = ctx.createOscillator();
       osc.type = type;
       osc.frequency.value = freq * mult;
+      osc.detune.value = detune;
       if (vibratoGain) vibratoGain.connect(osc.frequency);
       const harmonicGain = ctx.createGain();
       harmonicGain.gain.value = mult === 1 ? weight : weight * harmonicRichness;
@@ -1884,7 +1959,9 @@ function initBeepMelodyExperiment() {
         const chordRoot = chords[bar];
         bars.push({ start: barBeat, chord: chordRoot });
         voices = voiceChord(chordRoot, voices);
-        const add = (degree, startBeat, durBeats, gain) => events.push({ degree, startBeat, durBeats, gain });
+        // المرافقة تتوزع يمين/يسار حسب حدّتها (مثل أصابع البيانو)، واللحن بالنص
+        const add = (degree, startBeat, durBeats, gain, pan = clamp((degree - BASS_LOW - 3) * 0.1, -0.35, 0.35)) =>
+          events.push({ degree, startBeat, durBeats, gain, pan });
 
         if (accompaniment === "arpeggio") {
           // وتر مكسور: نغمة على كل ضربة — حركة مستمرة تحت اللحن
@@ -1916,7 +1993,7 @@ function initBeepMelodyExperiment() {
           melody.push({ degree: note, length: Math.abs(length), start: barBeat + beat });
           if (note !== null) {
             const gain = mood.gainBase + mood.gainSwell * (beat === 0 ? 1 : 0.55);
-            add(note, barBeat + beat, length * 0.92, gain);
+            add(note, barBeat + beat, length * 0.92, gain, 0);
           }
           beat += Math.abs(length);
         });
@@ -1935,8 +2012,12 @@ function initBeepMelodyExperiment() {
 
   // يجدول أحداث القطعة داخل أي سياق صوتي (حي أو غير متصل للتصدير)
   function scheduleEvents(target, piece, startTime, beatDur = 60 / piece.meta.bpm, events = piece.events) {
+    // لمسة بشرية: فروق صغيرة جداً بالتوقيت (±٨ ملّي ثانية) والقوة (±١٠٪) والنغمة
+    // (±٤ سنت) — عازف حقيقي ما يضرب نغمتين متطابقتين أبداً
+    const jitter = (amount) => (Math.random() * 2 - 1) * amount;
     events.forEach((ev) => {
-      playNote(target, ev.degree, startTime + ev.startBeat * beatDur, ev.durBeats * beatDur, ev.gain);
+      const at = startTime + ev.startBeat * beatDur + (ev.startBeat > 0 ? jitter(0.008) : 0);
+      playNote(target, ev.degree, at, ev.durBeats * beatDur, ev.gain * (1 + jitter(0.1)), ev.pan || 0, jitter(4));
     });
   }
 
@@ -1965,18 +2046,11 @@ function initBeepMelodyExperiment() {
     const seconds = piece.meta.totalBeats * beatDur + tail;
     const ctx = new OfflineAudioContext(1, Math.ceil(44100 * seconds), 44100);
 
-    const delay = ctx.createDelay();
-    delay.delayTime.value = 0.22;
-    const feedback = ctx.createGain();
-    feedback.gain.value = mood.delayFeedback;
-    const wet = ctx.createGain();
-    wet.gain.value = mood.delayWet;
-    delay.connect(feedback);
-    feedback.connect(delay);
-    delay.connect(wet);
-    wet.connect(ctx.destination);
+    const bus = buildOutput(ctx, ctx.destination);
+    bus.feedback.gain.value = mood.delayFeedback;
+    bus.wet.gain.value = mood.delayWet;
 
-    scheduleEvents({ ctx, dry: ctx.destination, wet: delay, live: false }, piece, 0.05);
+    scheduleEvents({ ctx, dry: bus.input, wet: bus.delay, live: false }, piece, 0.05);
     return ctx.startRendering();
   }
 
@@ -2288,7 +2362,7 @@ function initBeepMelodyExperiment() {
     btn.textContent = btn.dataset.stopLabel;
 
     const startTime = audioCtx.currentTime + 0.12;
-    scheduleEvents({ ctx: audioCtx, dry: audioCtx.destination, wet: delayNode, live: true }, piece, startTime);
+    scheduleEvents({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, piece, startTime);
 
     renderAnalysis(piece.meta);
     showNotation(piece, startTime);
@@ -2458,7 +2532,7 @@ function initBeepMelodyExperiment() {
     const clip = piece.events.filter((ev) => ev.startBeat < piece.meta.meter * 2);
     const beatDur = 60 / piece.meta.bpm;
     const clipSec = piece.meta.meter * 2 * beatDur + 0.9;
-    const target = { ctx: audioCtx, dry: audioCtx.destination, wet: delayNode, live: true };
+    const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: true };
     const t0 = audioCtx.currentTime + 0.12;
     scheduleEvents(target, piece, t0, beatDur, clip);
 
@@ -2697,6 +2771,7 @@ function initBeepMelodyExperiment() {
       instrumentButtons.forEach((b) => b.classList.toggle("active", b.dataset.instrument === instrumentParam));
     }
   }
+  updateSoundSummary();
 }
 
 /* ===== محوّل الصور — يشتغل كاملاً داخل المتصفح =====
