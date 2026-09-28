@@ -53,6 +53,16 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
       <p class="beep-param-note">🎹 الكورد الكبير والصغير: الفرق بالنغمة الوسطى بس — بالكبير تبعد ٤ أنصاف درجات عن الأساس، وبالصغير ٣. هذا الفرق الصغير هو اللي يخلي الكبير يحس مضيء والصغير يحس حزين.</p>
     </details>
   </div>
+  <div class="beep-play">
+    <p class="beep-params-title">🎹 اعزف بنفسك بالكيبورد</p>
+    <p class="beep-param-note">الصف الأوسط <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> = المفاتيح البيضاء، والصف فوقه <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> = السوداء. <kbd>Z</kbd> / <kbd>X</kbd> يغيّر الأوكتاف. وبالجوال المس المفاتيح. الصوت = الآلة اللي مختارها تحت.</p>
+    <div class="beep-play-octave">
+      <button type="button" class="filter-chip" id="beepOctDown" aria-label="أوكتاف أوطى">Z ⬇️</button>
+      <span id="beepOctLabel" dir="ltr">C4</span>
+      <button type="button" class="filter-chip" id="beepOctUp" aria-label="أوكتاف أعلى">X ⬆️</button>
+    </div>
+    <div class="beep-play-keys" id="beepPlayKeys"></div>
+  </div>
   <details class="beep-panel">
     <summary>🎛️ الآلة والطابع <span class="beep-panel-now" id="beepSoundNow"></span></summary>
     <div class="instrument-picker" id="instrumentPicker">

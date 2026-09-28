@@ -1216,6 +1216,8 @@ function initBeepMelodyExperiment() {
     delayNode = bus.delay;
     delayFeedbackGain = bus.feedback;
     delayWetGain = bus.wet;
+    delayFeedbackGain.gain.value = MOODS[currentMood].delayFeedback;
+    delayWetGain.gain.value = MOODS[currentMood].delayWet;
   }
 
   /* مسار الخروج — نفس فكرة مسار مؤثرات الموقع: فلتر يليّن الحدّة، صدى غرفة
@@ -1805,9 +1807,9 @@ function initBeepMelodyExperiment() {
   /* يرسم نغمة واحدة داخل أي سياق صوتي. الوسيط target يحمل السياق ووجهتيه
      (الجافة والصدى) — بدونه ما نقدر نصدّر ملفاً صوتياً إلا بتكرار كل منطق
      التخليق مرة ثانية. التشغيل الحي والتصدير يستخدمان نفس الدالة الآن. */
-  function playNote(target, noteIndex, startTime, duration, peakGain, pan = 0, detune = 0) {
+  function playNote(target, noteIndex, startTime, duration, peakGain, pan = 0, detune = 0, exactFreq = 0) {
     const { ctx, dry, wet, live } = target;
-    const freq = NOTES[noteIndex] * 2 ** octaveShift;
+    const freq = exactFreq || NOTES[noteIndex] * 2 ** octaveShift;
     peakGain *= dynamicsGain;
     const instrument = INSTRUMENTS[currentInstrument];
 
@@ -1879,6 +1881,7 @@ function initBeepMelodyExperiment() {
     });
 
     if (live) highlightKey(freq, (startTime - ctx.currentTime) * 1000, ringDuration * 1000);
+    return envelope;
   }
 
   /* المؤلّف: قطعة من ٨ مازورات (فترة موسيقية كاملة Period) — مو نغمات متتابعة.
@@ -2574,6 +2577,114 @@ function initBeepMelodyExperiment() {
         else playClickSound();
       });
     });
+  }
+
+  /* ===== اعزف بنفسك: بيانو بالكيبورد (مثل وضع لوحة الكمبيوتر بباندلاب) =====
+     الصف الأوسط = المفاتيح البيضاء، والصف فوقه = السوداء بنفس ترتيب البيانو.
+     نقرأ e.code (المفتاح الفعلي) لا e.key، فيشتغل حتى لو الكيبورد عربي.
+     الصوت = الآلة المختارة بلوحة "الآلة والطابع" ونفس مسار الخروج. */
+  const playBox = document.getElementById("beepPlayKeys");
+  const KEY_MAP = {
+    KeyA: 0, KeyW: 1, KeyS: 2, KeyE: 3, KeyD: 4, KeyF: 5, KeyT: 6, KeyG: 7, KeyY: 8, KeyH: 9,
+    KeyU: 10, KeyJ: 11, KeyK: 12, KeyO: 13, KeyL: 14, KeyP: 15, Semicolon: 16, Quote: 17,
+  };
+  const KEY_LABEL = { Semicolon: ";", Quote: "'" };
+  const CHROMA = {
+    letters: ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"],
+    solfege: ["Do", "Do♯", "Re", "Re♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si"],
+  };
+  let playOctave = 4;
+  const held = new Map(); // المفتاح الممسوك → غلاف صوته (نخمده لما ينرفع)
+
+  function renderPlayKeys() {
+    if (!playBox) return;
+    const codes = Object.keys(KEY_MAP);
+    const whites = codes.filter((c) => ![1, 3, 6, 8, 10, 13, 15].includes(KEY_MAP[c]));
+    playBox.style.setProperty("--whites", whites.length);
+    playBox.innerHTML = codes
+      .map((code) => {
+        const semi = KEY_MAP[code];
+        const black = !whites.includes(code);
+        // السوداء تقع على الحد بين البيضاء اللي قبلها واللي بعدها
+        const pos = black ? whites.filter((c) => KEY_MAP[c] < semi).length : whites.indexOf(code);
+        const letter = KEY_LABEL[code] || code.slice(3);
+        const name = CHROMA[noteStyle][semi % 12];
+        return `<button type="button" class="${black ? "pk-black" : "pk-white"}" data-code="${code}" style="--i:${pos}" aria-label="${name}"><b>${letter}</b><small>${name}</small></button>`;
+      })
+      .join("");
+    document.getElementById("beepOctLabel").textContent = "C" + playOctave;
+  }
+
+  async function keyOn(code) {
+    if (held.has(code)) return;
+    held.set(code, null); // نحجزه قبل await عشان التكرار ما يعزفه مرتين
+    await ensureContext();
+    const semi = KEY_MAP[code] + 12 * (playOctave - 4);
+    const midi = 60 + semi;
+    const freq = 261.63 * 2 ** (semi / 12);
+    // درجة تقريبية على سلّم المولّد — بس لرنين الواطي الأطول والحاد الأقصر
+    const pseudoIndex = clamp(Math.round(((midi - 48) * 7) / 12), 0, 21);
+    const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: false };
+    const env = playNote(target, pseudoIndex, audioCtx.currentTime + 0.005, 2.4, 0.2, 0, 0, freq);
+    if (!held.has(code)) return keyRelease(env); // انرفع قبل ما يجهز الصوت
+    held.set(code, env);
+    playBox?.querySelector(`[data-code="${code}"]`)?.classList.add("down");
+  }
+
+  function keyRelease(env) {
+    if (!env) return;
+    const now = audioCtx.currentTime;
+    env.gain.cancelScheduledValues(now);
+    env.gain.setTargetAtTime(0.0001, now, 0.09); // مخمّد البيانو: ذيل قصير ناعم مو قطع
+  }
+
+  function keyOff(code) {
+    if (!held.has(code)) return;
+    keyRelease(held.get(code));
+    held.delete(code);
+    playBox?.querySelector(`[data-code="${code}"]`)?.classList.remove("down");
+  }
+
+  function shiftOctave(step) {
+    playOctave = clamp(playOctave + step, 2, 6);
+    renderPlayKeys();
+    playClickSound();
+  }
+
+  if (playBox) {
+    renderPlayKeys();
+    noteNameToggle?.addEventListener("click", renderPlayKeys);
+    document.getElementById("beepOctDown").addEventListener("click", () => shiftOctave(-1));
+    document.getElementById("beepOctUp").addEventListener("click", () => shiftOctave(1));
+
+    document.addEventListener("keydown", (e) => {
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.target.closest("input, textarea, select, [contenteditable]")) return;
+      if (e.code === "KeyZ" || e.code === "KeyX") {
+        shiftOctave(e.code === "KeyZ" ? -1 : 1);
+      } else if (e.code in KEY_MAP) {
+        e.preventDefault(); // ' بفايرفوكس يفتح البحث السريع
+        keyOn(e.code);
+      }
+    });
+    document.addEventListener("keyup", (e) => keyOff(e.code));
+    // الصفحة فقدت التركيز والمفتاح ممسوك: ما بيوصلنا keyup، نسكّت الكل
+    window.addEventListener("blur", () => [...held.keys()].forEach(keyOff));
+
+    // اللمس بالجوال: كل إصبع مفتاح مستقل
+    playBox.addEventListener("pointerdown", (e) => {
+      const key = e.target.closest("[data-code]");
+      if (!key) return;
+      e.preventDefault();
+      key.releasePointerCapture?.(e.pointerId);
+      keyOn(key.dataset.code);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach((type) =>
+      playBox.addEventListener(type, (e) => {
+        const key = e.target.closest("[data-code]");
+        if (key) keyOff(key.dataset.code);
+      }, true)
+    );
   }
 
   function stopPlayback() {

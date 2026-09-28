@@ -4117,3 +4117,122 @@ img {
 .beep-experiment .st-note.on .st-head.hollow {
   fill: none;
 }
+
+/* ===== اعزف بنفسك: بيانو بالكيبورد ===== */
+.beep-experiment .beep-play {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(26, 74, 59, 0.95), rgba(14, 44, 35, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+  box-shadow: var(--shadow-card);
+}
+
+.beep-play kbd {
+  display: inline-block;
+  min-width: 1.5em;
+  padding: 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: #fff;
+  direction: ltr;
+}
+
+.beep-play-octave {
+  direction: ltr; /* Z يسار وX يمين مثل الكيبورد نفسه */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+}
+
+/* ١١ مفتاح أبيض بعرض متساوٍ، والسوداء فوق الحدود بينها (--i = ترتيبها) */
+.beep-play-keys {
+  position: relative;
+  direction: ltr;
+  display: grid;
+  grid-template-columns: repeat(var(--whites, 11), 1fr);
+  width: 100%;
+  height: 150px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pk-white,
+.pk-black {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 2px;
+  padding: 0 0 8px;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.06s ease, background 0.08s ease, box-shadow 0.08s ease;
+}
+
+.pk-white {
+  grid-row: 1;
+  grid-column: calc(var(--i) + 1);
+  margin: 0 1px;
+  background: linear-gradient(180deg, #f4f4f4, #ffffff 70%, #e8e8e8);
+  border-radius: 0 0 8px 8px;
+  color: #1a1a1a;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+}
+
+.pk-black {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  left: calc(100% / var(--whites, 11) * var(--i));
+  width: calc(100% / var(--whites, 11) * 0.62);
+  height: 60%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #2a2a2a, #111);
+  border-radius: 0 0 6px 6px;
+  color: #fff;
+  box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.12);
+}
+
+.pk-white b,
+.pk-black b {
+  font-size: 0.85rem;
+}
+
+.pk-white small,
+.pk-black small {
+  font-size: 0.6rem;
+  opacity: 0.6;
+}
+
+/* المضغوط ينزل شوي ويتوهّج بأخضر هكوله */
+.pk-white.down {
+  background: linear-gradient(180deg, #cfeee0, #a8dcc5);
+  box-shadow: 0 0 18px rgba(111, 200, 164, 0.8);
+  transform: translateY(2px);
+}
+
+.pk-black.down {
+  background: linear-gradient(180deg, #3fa480, #2a7f60);
+  box-shadow: 0 0 16px rgba(111, 200, 164, 0.9);
+  transform: translateX(-50%) translateY(2px);
+}
+
+/* بالجوال المفتاح الأسود أضيق من اسم مثل "Sol♯" — يكفي الحرف */
+@media (max-width: 560px) {
+  .pk-black small {
+    display: none;
+  }
+}

@@ -48,6 +48,16 @@ A simple question: can a random algorithm actually compose something that feels 
       <p class="beep-param-note">🎹 Major vs. minor chords: the only difference is the middle note — 4 semitones above the root in a major chord, 3 in a minor one. That small gap is what makes major sound bright and minor sound sad.</p>
     </details>
   </div>
+  <div class="beep-play">
+    <p class="beep-params-title">🎹 Play it yourself on your keyboard</p>
+    <p class="beep-param-note">Middle row <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> = white keys, the row above <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> = black keys. <kbd>Z</kbd> / <kbd>X</kbd> shift the octave. On a phone, just touch the keys. The sound is whichever instrument you picked below.</p>
+    <div class="beep-play-octave">
+      <button type="button" class="filter-chip" id="beepOctDown" aria-label="Octave down">Z ⬇️</button>
+      <span id="beepOctLabel" dir="ltr">C4</span>
+      <button type="button" class="filter-chip" id="beepOctUp" aria-label="Octave up">X ⬆️</button>
+    </div>
+    <div class="beep-play-keys" id="beepPlayKeys"></div>
+  </div>
   <details class="beep-panel">
     <summary>🎛️ Instrument & character <span class="beep-panel-now" id="beepSoundNow"></span></summary>
     <div class="instrument-picker" id="instrumentPicker">
