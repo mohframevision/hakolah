@@ -30,6 +30,26 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     <button type="button" class="filter-chip mood-btn" data-mood="stately">🕊️ رصين</button>
     <button type="button" class="filter-chip mood-btn" data-mood="happy">😊 سعيد</button>
     <button type="button" class="filter-chip mood-btn" data-mood="dreamy">🌙 حالم</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="cinematic">🎬 سينمائي</button>
+  </div>
+  <div class="beep-params" id="beepParams">
+    <p class="beep-params-title">🎚️ أبعاد الصوت الأربعة — غيّر بُعداً واحداً وأنت تسمع، واسمع وش يتغيّر</p>
+    <div class="beep-param"><span>التردد (حدّة النغمة)</span><div class="instrument-picker">
+      <button type="button" class="filter-chip param-btn" data-param="octave" data-value="-1">⬇️ أوطى</button>
+      <button type="button" class="filter-chip param-btn active" data-param="octave" data-value="0">عادي</button>
+      <button type="button" class="filter-chip param-btn" data-param="octave" data-value="1">⬆️ أعلى</button>
+    </div></div>
+    <div class="beep-param"><span>الإيقاع (السرعة)</span><div class="instrument-picker">
+      <button type="button" class="filter-chip param-btn" data-param="tempo" data-value="0.75">🐢 أبطأ</button>
+      <button type="button" class="filter-chip param-btn active" data-param="tempo" data-value="1">عادي</button>
+      <button type="button" class="filter-chip param-btn" data-param="tempo" data-value="1.25">أسرع</button>
+    </div></div>
+    <div class="beep-param"><span>الديناميكية (القوة)</span><div class="instrument-picker">
+      <button type="button" class="filter-chip param-btn" data-param="dynamics" data-value="0.4">p هادئ</button>
+      <button type="button" class="filter-chip param-btn active" data-param="dynamics" data-value="1">mf متوسط</button>
+      <button type="button" class="filter-chip param-btn" data-param="dynamics" data-value="1.6">f قوي</button>
+    </div></div>
+    <p class="beep-param-note">🎨 الطابع الصوتي (لون الصوت): هو الآلة — غيّرها من الأزرار فوق وبتسمع نفس اللحن بلون ثاني.</p>
   </div>
   <div class="beep-controls">
     <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ شغّل الموسيقى" data-stop-label="⏹ إيقاف">▶️ شغّل الموسيقى</button>
@@ -67,6 +87,13 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
   <div class="beep-keys-scroll" id="beepKeysFullWrap" hidden>
     <div class="beep-keys beep-keys-full" id="beepKeysFull" aria-hidden="true"></div>
   </div>
+  <div class="beep-staff-wrap" id="beepStaffWrap" hidden>
+    <p class="beep-params-title">🎼 النوتة وهي تنعزف</p>
+    <div class="beep-staff-scroll" id="beepStaff"></div>
+    <p class="beep-chord" id="beepChord" data-label="الكورد الآن" data-major="كبير" data-minor="صغير" data-dim="ناقص"></p>
+    <p class="beep-param-note">💰 مدة النوتة مثل الفلوس: المستديرة (مفرّغة بلا عصا) = ٤ دنانير · البيضاء (مفرّغة بعصا) = ٢ · السوداء = دينار · المشطورة = ٥٠٠ فلس · نصف المشطورة = ٢٥٠ فلس. والنقطة جنب النوتة تزيدها نصف قيمتها (البيضاء بنقطة = ٣ دنانير).</p>
+    <p class="beep-param-note">🎹 الكورد الكبير والصغير: الفرق بالنغمة الوسطى بس — بالكبير تبعد ٤ أنصاف درجات عن الأساس، وبالصغير ٣. هذا الفرق الصغير هو اللي يخلي الكبير يحس مضيء والصغير يحس حزين.</p>
+  </div>
   <div class="beep-analysis" id="beepAnalysis"
     data-label-key="المفتاح"
     data-label-major="كبير (Major)"
@@ -81,4 +108,17 @@ aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة
     data-label-cadence-plagal="ختام كنسي"
     data-label-seed="البذرة"></div>
   <p class="beep-experiment-hint">🎧 يُفضَّل سماعات — وكل تشغيلة لحن مختلف تماماً، جرّب أكثر من مرة</p>
+  <div class="beep-quiz" id="beepQuiz" data-right="✅ صح! اللي تغيّر: " data-wrong="❌ لا — اللي تغيّر: " data-names="التردد|الإيقاع|الطابع الصوتي|الديناميكية">
+    <p class="beep-params-title">👂 تدريب الأذن: وش اللي تغيّر؟</p>
+    <p class="beep-param-note">بتسمع نفس المقطع مرتين، وبالمرة الثانية يتغيّر بُعد واحد بس. خمّن أي واحد.</p>
+    <button type="button" class="btn secondary" id="beepQuizPlay">▶️ اسمع المقطعين</button>
+    <div class="instrument-picker">
+      <button type="button" class="filter-chip quiz-btn" data-answer="pitch" disabled>التردد</button>
+      <button type="button" class="filter-chip quiz-btn" data-answer="rhythm" disabled>الإيقاع</button>
+      <button type="button" class="filter-chip quiz-btn" data-answer="timbre" disabled>الطابع الصوتي</button>
+      <button type="button" class="filter-chip quiz-btn" data-answer="dynamics" disabled>الديناميكية</button>
+    </div>
+    <p class="beep-quiz-result" id="beepQuizResult" aria-live="polite"></p>
+  </div>
+  <p class="beep-experiment-hint">📚 أدوات التعلّم هنا (أبعاد الصوت، النوتة، تدريب الأذن، الطابع السينمائي) مستوحاة من مادة إنتاج موسيقي أدرسها بالجامعة.</p>
 </div>

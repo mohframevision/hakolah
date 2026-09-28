@@ -1161,7 +1161,7 @@ function initBeepMelodyExperiment() {
 
   function buildScale(root, mode) {
     const steps = SCALES[mode];
-    return Array.from({ length: 22 }, (_, d) => {
+    return Array.from({ length: 29 }, (_, d) => {
       const semitone = steps[d % 7] + 12 * (Math.floor(d / 7) - 1);
       return root * 2 ** (semitone / 12);
     });
@@ -1478,10 +1478,44 @@ function initBeepMelodyExperiment() {
       delayWet: 0.28,
       delayFeedback: 0.34,
     },
+    /* سينمائي: مستوحى من أسلوبين بمقالات مؤلفي الأفلام — مرافقة بيانو متكررة
+       بسيطة (Ostinato، أسلوب هيسايشي الأدنى)، و"لحن مرتبط" (Leitmotif، هوارد
+       شور): الجملة كاملة ترجع مرة ثانية لكن بأوكتاف أعلى — نفس الفكرة بلون
+       جديد. نفس قيود الطوابع الأخرى: بطيء، بلا تقطيع، بلا أي إيقاع ضارب. */
+    cinematic: {
+      bpmRange: [54, 66],
+      scale: "major",
+      formRepeats: 2,
+      leitmotif: true,
+      accompaniment: "arpeggio",
+      rhythms: {
+        4: [
+          [2, 2],
+          [3, 1],
+          [2, 1, 1],
+          [4],
+        ],
+        3: [
+          [3],
+          [2, 1],
+          [1.5, 1.5],
+        ],
+      },
+      cadenceRhythms: { 4: [4], 3: [3] },
+      gainBase: 0.1,
+      gainSwell: 0.08,
+      delayWet: 0.24,
+      delayFeedback: 0.3,
+    },
   };
 
 
   let currentMood = "calm";
+  // الأبعاد الأربعة للصوت (مادة FA7007): التردد، الإيقاع، الطابع، الديناميكية —
+  // الطابع هو الآلة نفسها، والثلاثة الباقية هنا
+  let octaveShift = 0;
+  let tempoFactor = 1;
+  let dynamicsGain = 1;
   const moodButtons = document.querySelectorAll("#moodPicker .mood-btn");
   moodButtons.forEach((el) => {
     el.addEventListener("click", () => {
@@ -1705,14 +1739,15 @@ function initBeepMelodyExperiment() {
      التخليق مرة ثانية. التشغيل الحي والتصدير يستخدمان نفس الدالة الآن. */
   function playNote(target, noteIndex, startTime, duration, peakGain) {
     const { ctx, dry, wet, live } = target;
-    const freq = NOTES[noteIndex];
+    const freq = NOTES[noteIndex] * 2 ** octaveShift;
+    peakGain *= dynamicsGain;
     const instrument = INSTRUMENTS[currentInstrument];
 
     // آلة وترية (يسار اللوحة = نغمات واطية بأوتار أطول وأثخن فترن أطول
     // وأغنى، يمينها = نغمات حادة تخفت أسرع وأنحف) — يشتغل بأي مفتاح موسيقي
     // عشوائي بلا ما يحتاج نغمة مرجعية ثابتة، ومضروب بمعامل الآلة نفسها
     // (بانجو يخفت أسرع من البيانو، فلوت يرن أطول لأنه آلة نفخ مستمرة)
-    const registerFactor = 1.5 - (noteIndex / (NOTES.length - 1)) * 0.9; // ١٫٥ (واطي) → ٠٫٦ (حاد)
+    const registerFactor = 1.5 - (Math.min(noteIndex, 21) / 21) * 0.9; // ١٫٥ (واطي) → ٠٫٦ (حاد)
     const ringDuration = duration * registerFactor * instrument.ringScale;
 
     const envelope = ctx.createGain();
@@ -1797,7 +1832,7 @@ function initBeepMelodyExperiment() {
 
     /* كل هذي كانت ثابتة بكل تشغيلة، فحتى مع اختلاف النغمات كانت المقطوعات
        تحس متشابهة. الحين كلها تتغيّر مع البذرة: */
-    const bpm = Math.round(mood.bpmRange[0] + rand() * (mood.bpmRange[1] - mood.bpmRange[0]));
+    const bpm = Math.min(96, Math.round((mood.bpmRange[0] + rand() * (mood.bpmRange[1] - mood.bpmRange[0])) * tempoFactor));
     // الميزان: أغلب القطع ٤/٤، وواحدة من كل أربع بميزان ثلاثي (فالس) — الميزان
     // من أقوى ما يغيّر إحساس القطعة، وكان ٤/٤ دايماً
     const meter = rand() < 0.25 ? 3 : 4;
@@ -1807,7 +1842,8 @@ function initBeepMelodyExperiment() {
     // تحتفظ بإيقاعها عند تكرارها (وإلا ضاع التكرار اللي يمسكه المستمع)
     const themeRhythm = pool[Math.floor(rand() * pool.length)];
     const answerRhythm = pool[Math.floor(rand() * pool.length)];
-    const accompaniment = ACCOMPANIMENT_STYLES[Math.floor(rand() * ACCOMPANIMENT_STYLES.length)];
+    const accompanimentPick = ACCOMPANIMENT_STYLES[Math.floor(rand() * ACCOMPANIMENT_STYLES.length)];
+    const accompaniment = mood.accompaniment || accompanimentPick;
     const openingDegree = MELODY_LOW + [0, 2, 4][Math.floor(rand() * 3)];
     const cadenceApproach = rand() < 0.7 ? 4 : 3;
     const cadenceRhythm = mood.cadenceRhythms[meter];
@@ -1836,6 +1872,8 @@ function initBeepMelodyExperiment() {
     ];
 
     const events = [];
+    const melody = []; // اللحن بسكتاته — للنوتة المرسومة
+    const bars = []; // بداية كل مازورة ووترها — لقراءة الكورد الحالي
     const bassGain = mood.gainBase * 0.55;
     const padGain = mood.gainBase * 0.3;
     let voices = null; // أصوات المرافقة بالمازورة السابقة — أساس قيادة الأصوات
@@ -1844,6 +1882,7 @@ function initBeepMelodyExperiment() {
     for (let repeat = 0; repeat < mood.formRepeats; repeat++) {
       for (let bar = 0; bar < period.length; bar++) {
         const chordRoot = chords[bar];
+        bars.push({ start: barBeat, chord: chordRoot });
         voices = voiceChord(chordRoot, voices);
         const add = (degree, startBeat, durBeats, gain) => events.push({ degree, startBeat, durBeats, gain });
 
@@ -1871,10 +1910,13 @@ function initBeepMelodyExperiment() {
 
         // اللحن فوقهم — القيم السالبة بالإيقاع سكتات: تتقدّم بالزمن بلا نغمة
         let beat = 0;
+        const motifShift = mood.leitmotif && repeat > 0 ? 7 : 0;
         period[bar].forEach(({ degree, length }) => {
-          if (length > 0 && degree !== null) {
+          const note = length > 0 && degree !== null ? degree + motifShift : null;
+          melody.push({ degree: note, length: Math.abs(length), start: barBeat + beat });
+          if (note !== null) {
             const gain = mood.gainBase + mood.gainSwell * (beat === 0 ? 1 : 0.55);
-            add(degree, barBeat + beat, length * 0.92, gain);
+            add(note, barBeat + beat, length * 0.92, gain);
           }
           beat += Math.abs(length);
         });
@@ -1885,14 +1927,15 @@ function initBeepMelodyExperiment() {
 
     return {
       events,
+      melody,
+      bars,
       meta: { seed, bpm, meter, rootIndex, mode: mood.scale, chords, cadenceApproach, totalBeats: barBeat },
     };
   }
 
   // يجدول أحداث القطعة داخل أي سياق صوتي (حي أو غير متصل للتصدير)
-  function scheduleEvents(target, piece, startTime) {
-    const beatDur = 60 / piece.meta.bpm;
-    piece.events.forEach((ev) => {
+  function scheduleEvents(target, piece, startTime, beatDur = 60 / piece.meta.bpm, events = piece.events) {
+    events.forEach((ev) => {
       playNote(target, ev.degree, startTime + ev.startBeat * beatDur, ev.durBeats * beatDur, ev.gain);
     });
   }
@@ -2207,10 +2250,14 @@ function initBeepMelodyExperiment() {
     return new Blob([new Uint8Array(header), new Uint8Array(bytes)], { type: "audio/midi" });
   }
 
-  async function playSequence() {
+  async function ensureContext() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") await audioCtx.resume();
     ensureAudioGraph();
+  }
+
+  async function playSequence() {
+    await ensureContext();
 
     const mood = MOODS[currentMood];
     delayFeedbackGain.gain.value = mood.delayFeedback;
@@ -2244,6 +2291,7 @@ function initBeepMelodyExperiment() {
     scheduleEvents({ ctx: audioCtx, dry: audioCtx.destination, wet: delayNode, live: true }, piece, startTime);
 
     renderAnalysis(piece.meta);
+    showNotation(piece, startTime);
 
     const endsAt = startTime + (piece.meta.totalBeats * 60) / piece.meta.bpm;
     activeTimeouts.push(
@@ -2256,6 +2304,202 @@ function initBeepMelodyExperiment() {
         (endsAt - audioCtx.currentTime) * 1000
       )
     );
+  }
+
+  /* ===== طبقة التعليم: النوتة، الكورد، أبعاد الصوت، تدريب الأذن ===== */
+
+  // موضع النغمة على المدرج: درجات السلّم (لا أنصاف النغمات) من دو٠ — كل درجة
+  // = خط أو فراغ. الدرجة ٠ بالسلّم = المفتاح بأوكتاف ٣ (NOTES تبدأ تحت المفتاح بأوكتاف)
+  const NATURAL_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
+  function spell(degree, rootIndex) {
+    const pos = 7 * (3 + octaveShift) + rootIndex + degree;
+    const letter = pos % 7;
+    const octave = Math.floor(pos / 7);
+    const midi = Math.round(69 + 12 * Math.log2((NOTES[degree] * 2 ** octaveShift) / 440));
+    const accidental = midi - (12 * (octave + 1) + NATURAL_SEMITONES[letter]); // +1 دييز، -1 بيمول
+    return { pos, letter, accidental };
+  }
+  function noteLabel(degree, rootIndex) {
+    const { letter, accidental } = spell(degree, rootIndex);
+    return NOTE_NAMES[noteStyle][letter] + (accidental > 0 ? "♯" : accidental < 0 ? "♭" : "");
+  }
+
+  const staffWrap = document.getElementById("beepStaffWrap");
+  const staffBox = document.getElementById("beepStaff");
+  const chordBox = document.getElementById("beepChord");
+  const STEP = 5; // نصف المسافة بين خطين
+  const BEAT_W = 28;
+  const E4 = 30; // الخط الأسفل بمفتاح صول
+
+  // ponytail: مفتاح صول والسكتة رموز يونيكود — تعتمد على خط الجهاز (موجودة
+  // بويندوز وماك وأندرويد). ارسمها SVG لو ظهرت مربعات بجهاز ما.
+  function renderStaff(piece) {
+    const { rootIndex, meter, totalBeats } = piece.meta;
+    const notes = piece.melody.map((m) => ({ ...m, sp: m.degree === null ? null : spell(m.degree, rootIndex) }));
+    const positions = notes.filter((n) => n.sp).map((n) => n.sp.pos);
+    const maxPos = Math.max(40, ...positions);
+    const minPos = Math.min(28, ...positions);
+    const top = 16 + (maxPos - 38) * STEP;
+    const y = (pos) => top + (38 - pos) * STEP;
+    const height = y(minPos) + 34;
+
+    // علامة المفتاح: عدد الدييز أو البيمول الثابتة بالسلّم، بترتيبها القياسي
+    const accs = [7, 8, 9, 10, 11, 12, 13].map((d) => spell(d, rootIndex).accidental);
+    const sharps = accs.filter((a) => a > 0).length;
+    const flats = accs.filter((a) => a < 0).length;
+    const SHARP_POS = [38, 35, 39, 36, 33, 37, 34];
+    const FLAT_POS = [34, 37, 33, 36, 32, 35, 31];
+    let out = "";
+    let x = 44;
+    for (let i = 0; i < sharps; i++, x += 9) out += '<text class="st-acc" x="' + x + '" y="' + (y(SHARP_POS[i]) + 4) + '">♯</text>';
+    for (let i = 0; i < flats; i++, x += 9) out += '<text class="st-acc" x="' + x + '" y="' + (y(FLAT_POS[i]) + 3) + '">♭</text>';
+    const startX = x + 16;
+    const width = startX + totalBeats * BEAT_W + 20;
+
+    for (let p = E4; p <= 38; p += 2) out += '<line class="st-line" x1="0" x2="' + width + '" y1="' + y(p) + '" y2="' + y(p) + '"/>';
+    out += '<text class="st-clef" x="4" y="' + (y(E4) + 10) + '">𝄞</text>';
+    for (let b = meter; b <= totalBeats; b += meter) {
+      const bx = startX + b * BEAT_W - 8;
+      out += '<line class="st-bar" x1="' + bx + '" x2="' + bx + '" y1="' + y(38) + '" y2="' + y(E4) + '"/>';
+    }
+
+    notes.forEach((n, i) => {
+      const nx = startX + n.start * BEAT_W;
+      if (!n.sp) {
+        out += '<text class="st-rest" data-i="' + i + '" x="' + nx + '" y="' + (y(34) + 7) + '">𝄽</text>';
+        return;
+      }
+      const p = n.sp.pos;
+      const ny = y(p);
+      let g = "";
+      for (let q = 28; q >= p; q -= 2) g += '<line class="st-line" x1="' + (nx - 9) + '" x2="' + (nx + 9) + '" y1="' + y(q) + '" y2="' + y(q) + '"/>';
+      for (let q = 40; q <= p; q += 2) g += '<line class="st-line" x1="' + (nx - 9) + '" x2="' + (nx + 9) + '" y1="' + y(q) + '" y2="' + y(q) + '"/>';
+      // الشكل من المدة: المستديرة والبيضاء مفرّغة، السوداء مليانة، والنقطة = نصف قيمة زيادة
+      const hollow = n.length >= 2;
+      g += '<ellipse class="st-head' + (hollow ? " hollow" : "") + '" cx="' + nx + '" cy="' + ny + '" rx="6" ry="4.4" transform="rotate(-20 ' + nx + " " + ny + ')"/>';
+      if (n.length < 4) {
+        const up = p < 34;
+        const sx = up ? nx + 5.6 : nx - 5.6;
+        g += '<line class="st-stem" x1="' + sx + '" x2="' + sx + '" y1="' + ny + '" y2="' + (up ? ny - 30 : ny + 30) + '"/>';
+      }
+      if (n.length === 3 || n.length === 1.5) g += '<circle class="st-head" cx="' + (nx + 11) + '" cy="' + (ny - (p % 2 === 0 ? 3 : 0)) + '" r="1.8"/>';
+      out += '<g class="st-note" data-i="' + i + '">' + g + "</g>";
+    });
+
+    staffBox.innerHTML = '<svg width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + " " + height + '" aria-hidden="true">' + out + "</svg>";
+    staffBox.scrollLeft = 0;
+    return { startX };
+  }
+
+  function chordText(chordDeg, rootIndex) {
+    const t = chordBox.dataset;
+    const third = Math.round(12 * Math.log2(NOTES[chordDeg + 2] / NOTES[chordDeg]));
+    const fifth = Math.round(12 * Math.log2(NOTES[chordDeg + 4] / NOTES[chordDeg]));
+    const quality = fifth === 6 ? t.dim : third === 4 ? t.major : t.minor;
+    // LRI…PDI: أسماء النوتات لاتينية، بدونها ينقلب ترتيبها و♯ داخل سطر عربي
+    const ltr = (s) => "⁦" + s + "⁩";
+    const tones = [0, 2, 4].map((k) => noteLabel(chordDeg + k, rootIndex)).join(" · ");
+    return t.label + ": " + ltr(noteLabel(chordDeg, rootIndex)) + " " + quality + " (" + ltr(tones) + ")";
+  }
+
+  // تُستدعى بعد جدولة القطعة: ترسم النوتة، ثم تضيء كل نوتة وكل كورد بوقته
+  function showNotation(piece, startTime) {
+    if (!staffWrap) return;
+    staffWrap.hidden = false;
+    const { startX } = renderStaff(piece);
+    const beatMs = (60 / piece.meta.bpm) * 1000;
+    const offsetMs = (startTime - audioCtx.currentTime) * 1000;
+    const els = staffBox.querySelectorAll("[data-i]");
+    piece.melody.forEach((n, i) => {
+      activeTimeouts.push(
+        setTimeout(() => {
+          els.forEach((el) => el.classList.toggle("on", el.dataset.i === String(i)));
+          staffBox.scrollLeft = startX + n.start * BEAT_W - staffBox.clientWidth / 2;
+        }, offsetMs + n.start * beatMs)
+      );
+    });
+    piece.bars.forEach((b) => {
+      activeTimeouts.push(setTimeout(() => (chordBox.textContent = chordText(b.chord, piece.meta.rootIndex)), offsetMs + b.start * beatMs));
+    });
+  }
+
+  // غيّر بُعد واحد وأنت تسمع: نعيد نفس المقطوعة (نفس البذرة) بالقيمة الجديدة
+  document.querySelectorAll("#beepParams .param-btn").forEach((el) => {
+    el.addEventListener("click", () => {
+      const value = Number(el.dataset.value);
+      if (el.dataset.param === "octave") octaveShift = value;
+      else if (el.dataset.param === "tempo") tempoFactor = value;
+      else dynamicsGain = value;
+      document.querySelectorAll('#beepParams .param-btn[data-param="' + el.dataset.param + '"]').forEach((b) => b.classList.toggle("active", b === el));
+      playClickSound();
+      if (playing && currentSeed != null) {
+        pinnedSeed = currentSeed;
+        navigatingHistory = true;
+        stopPlayback();
+        playSequence();
+      }
+    });
+  });
+
+  /* تدريب الأذن — نفس تمرين ملف المادة: مقطع قصير مرتين، والمرة الثانية
+     تغيّر بُعد واحد بس (التردد أو الإيقاع أو الطابع أو الديناميكية) */
+  const quizBox = document.getElementById("beepQuiz");
+  const quizPlayBtn = document.getElementById("beepQuizPlay");
+  const quizResult = document.getElementById("beepQuizResult");
+  const quizButtons = document.querySelectorAll("#beepQuiz .quiz-btn");
+  let quizAnswer = null;
+
+  async function playQuiz() {
+    if (playing) stopPlayback();
+    await ensureContext();
+    activeOscillators = [];
+    activeTimeouts = [];
+    const piece = composePiece((Math.random() * 4294967296) >>> 0);
+    const clip = piece.events.filter((ev) => ev.startBeat < piece.meta.meter * 2);
+    const beatDur = 60 / piece.meta.bpm;
+    const clipSec = piece.meta.meter * 2 * beatDur + 0.9;
+    const target = { ctx: audioCtx, dry: audioCtx.destination, wet: delayNode, live: true };
+    const t0 = audioCtx.currentTime + 0.12;
+    scheduleEvents(target, piece, t0, beatDur, clip);
+
+    quizAnswer = ["pitch", "rhythm", "timbre", "dynamics"][Math.floor(Math.random() * 4)];
+    const saved = { octaveShift, dynamicsGain, currentInstrument };
+    let beatB = beatDur;
+    if (quizAnswer === "pitch") octaveShift += octaveShift < 1 ? 1 : -1;
+    else if (quizAnswer === "dynamics") dynamicsGain = dynamicsGain >= 1 ? 0.35 : 1.6;
+    else if (quizAnswer === "timbre") currentInstrument = currentInstrument === "flute" ? "piano" : "flute";
+    else beatB = beatDur * 1.5; // أبطأ لا أسرع: ما نتجاوز سقف السرعة
+    scheduleEvents(target, piece, t0 + clipSec, beatB, clip);
+    ({ octaveShift, dynamicsGain, currentInstrument } = saved);
+
+    quizResult.textContent = "";
+    quizButtons.forEach((b) => {
+      b.disabled = false;
+      b.classList.remove("active");
+    });
+  }
+
+  if (quizBox) {
+    quizPlayBtn.addEventListener("click", () => {
+      playQuiz();
+      playClickSound();
+    });
+    const names = quizBox.dataset.names.split("|");
+    const keys = ["pitch", "rhythm", "timbre", "dynamics"];
+    quizButtons.forEach((b) => {
+      b.addEventListener("click", () => {
+        if (!quizAnswer) return;
+        const right = b.dataset.answer === quizAnswer;
+        quizResult.textContent = (right ? quizBox.dataset.right : quizBox.dataset.wrong) + names[keys.indexOf(quizAnswer)];
+        quizButtons.forEach((q) => {
+          q.disabled = true;
+          q.classList.toggle("active", q.dataset.answer === quizAnswer);
+        });
+        quizAnswer = null;
+        if (right) playSound("success");
+        else playClickSound();
+      });
+    });
   }
 
   function stopPlayback() {

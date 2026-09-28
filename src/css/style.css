@@ -3695,3 +3695,132 @@ img {
 .type-levels {
   margin-bottom: 4px;
 }
+
+/* ===== تجربة الموسيقى: أدوات التعلّم (أبعاد الصوت، النوتة، تدريب الأذن) ===== */
+.beep-params,
+.beep-staff-wrap,
+.beep-quiz {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.beep-staff-wrap[hidden] {
+  display: none;
+}
+
+.beep-params-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.beep-param {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.beep-param-note,
+.beep-quiz-result {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.beep-quiz-result {
+  font-weight: 700;
+  color: var(--color-text);
+  min-height: 1.5em;
+}
+
+.quiz-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* النوتة تُقرأ يسار-لليمين عالمياً حتى بصفحة عربية — نفس قاعدة لوحة البيانو */
+.beep-staff-scroll {
+  direction: ltr;
+  width: 100%;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  background: color-mix(in srgb, var(--color-surface) 90%, white);
+  border-radius: calc(var(--radius) / 2);
+}
+
+.beep-staff-scroll svg {
+  display: block;
+}
+
+.st-line,
+.st-bar,
+.st-stem {
+  stroke: var(--color-text);
+  stroke-width: 1;
+}
+
+.st-stem {
+  stroke-width: 1.3;
+}
+
+.st-head {
+  fill: var(--color-text);
+  stroke: var(--color-text);
+  stroke-width: 1.4;
+  transition: fill 0.12s ease, stroke 0.12s ease;
+}
+
+.st-head.hollow {
+  fill: none;
+}
+
+.st-clef,
+.st-acc,
+.st-rest {
+  fill: var(--color-text);
+  font-family: "Segoe UI Symbol", "Noto Music", "Noto Sans Symbols 2", "Apple Symbols", serif;
+}
+
+.st-clef {
+  font-size: 44px;
+}
+
+.st-acc {
+  font-size: 16px;
+}
+
+.st-rest {
+  font-size: 22px;
+}
+
+.st-note.on .st-head,
+.st-note.on .st-stem,
+.st-rest.on {
+  fill: var(--color-primary);
+  stroke: var(--color-primary);
+}
+
+.st-note.on .st-head.hollow {
+  fill: none;
+}
+
+.beep-chord {
+  margin: 0;
+  min-height: 1.5em;
+  font-weight: 700;
+  font-size: 0.9rem;
+}

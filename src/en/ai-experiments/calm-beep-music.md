@@ -25,6 +25,26 @@ A simple question: can a random algorithm actually compose something that feels 
     <button type="button" class="filter-chip mood-btn" data-mood="stately">🕊️ Stately</button>
     <button type="button" class="filter-chip mood-btn" data-mood="happy">😊 Happy</button>
     <button type="button" class="filter-chip mood-btn" data-mood="dreamy">🌙 Dreamy</button>
+    <button type="button" class="filter-chip mood-btn" data-mood="cinematic">🎬 Cinematic</button>
+  </div>
+  <div class="beep-params" id="beepParams">
+    <p class="beep-params-title">🎚️ The four parameters of sound — change one while it plays and hear what changes</p>
+    <div class="beep-param"><span>Frequency (pitch)</span><div class="instrument-picker">
+      <button type="button" class="filter-chip param-btn" data-param="octave" data-value="-1">⬇️ Lower</button>
+      <button type="button" class="filter-chip param-btn active" data-param="octave" data-value="0">Normal</button>
+      <button type="button" class="filter-chip param-btn" data-param="octave" data-value="1">⬆️ Higher</button>
+    </div></div>
+    <div class="beep-param"><span>Rhythm (tempo)</span><div class="instrument-picker">
+      <button type="button" class="filter-chip param-btn" data-param="tempo" data-value="0.75">🐢 Slower</button>
+      <button type="button" class="filter-chip param-btn active" data-param="tempo" data-value="1">Normal</button>
+      <button type="button" class="filter-chip param-btn" data-param="tempo" data-value="1.25">Faster</button>
+    </div></div>
+    <div class="beep-param"><span>Dynamics (loudness)</span><div class="instrument-picker">
+      <button type="button" class="filter-chip param-btn" data-param="dynamics" data-value="0.4">p Soft</button>
+      <button type="button" class="filter-chip param-btn active" data-param="dynamics" data-value="1">mf Medium</button>
+      <button type="button" class="filter-chip param-btn" data-param="dynamics" data-value="1.6">f Loud</button>
+    </div></div>
+    <p class="beep-param-note">🎨 Timbre (the color of the sound) is the instrument — switch it with the buttons above and hear the same melody in a new color.</p>
   </div>
   <div class="beep-controls">
     <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Play Music" data-stop-label="⏹ Stop">▶️ Play Music</button>
@@ -62,6 +82,13 @@ A simple question: can a random algorithm actually compose something that feels 
   <div class="beep-keys-scroll" id="beepKeysFullWrap" hidden>
     <div class="beep-keys beep-keys-full" id="beepKeysFull" aria-hidden="true"></div>
   </div>
+  <div class="beep-staff-wrap" id="beepStaffWrap" hidden>
+    <p class="beep-params-title">🎼 The notation as it plays</p>
+    <div class="beep-staff-scroll" id="beepStaff"></div>
+    <p class="beep-chord" id="beepChord" data-label="Chord now" data-major="major" data-minor="minor" data-dim="diminished"></p>
+    <p class="beep-param-note">💰 Note lengths are like money: whole note (hollow, no stem) = 4 dinars · half note (hollow with stem) = 2 · quarter note = 1 dinar · eighth note = 500 fils · sixteenth = 250 fils. A dot next to a note adds half its value (a dotted half = 3 dinars).</p>
+    <p class="beep-param-note">🎹 Major vs. minor chords: the only difference is the middle note — 4 semitones above the root in a major chord, 3 in a minor one. That small gap is what makes major sound bright and minor sound sad.</p>
+  </div>
   <div class="beep-analysis" id="beepAnalysis"
     data-label-key="Key"
     data-label-major="major"
@@ -76,4 +103,17 @@ A simple question: can a random algorithm actually compose something that feels 
     data-label-cadence-plagal="Plagal cadence"
     data-label-seed="Seed"></div>
   <p class="beep-experiment-hint">🎧 Headphones recommended — and every play is a completely different tune, try it more than once</p>
+  <div class="beep-quiz" id="beepQuiz" data-right="✅ Correct! It was: " data-wrong="❌ Not quite — it was: " data-names="Frequency|Rhythm|Timbre|Dynamics">
+    <p class="beep-params-title">👂 Ear training: what changed?</p>
+    <p class="beep-param-note">You'll hear the same clip twice; the second time, exactly one parameter changes. Guess which.</p>
+    <button type="button" class="btn secondary" id="beepQuizPlay">▶️ Hear both clips</button>
+    <div class="instrument-picker">
+      <button type="button" class="filter-chip quiz-btn" data-answer="pitch" disabled>Frequency</button>
+      <button type="button" class="filter-chip quiz-btn" data-answer="rhythm" disabled>Rhythm</button>
+      <button type="button" class="filter-chip quiz-btn" data-answer="timbre" disabled>Timbre</button>
+      <button type="button" class="filter-chip quiz-btn" data-answer="dynamics" disabled>Dynamics</button>
+    </div>
+    <p class="beep-quiz-result" id="beepQuizResult" aria-live="polite"></p>
+  </div>
+  <p class="beep-experiment-hint">📚 The learning tools here (sound parameters, notation, ear training, the cinematic style) are inspired by a music production course I'm taking at university.</p>
 </div>
