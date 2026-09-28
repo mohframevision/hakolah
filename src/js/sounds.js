@@ -1645,7 +1645,7 @@ function initBeepMelodyExperiment() {
     try {
       await ensureContext();
       const buffer = prepareSample(await audioCtx.decodeAudioData(bytes));
-      if (!buffer) return setCustomStatus("failed");
+      if (!buffer) return setCustomStatus("silent"); // وصل الملف بس ما فيه صوت مسموع
       useSample(buffer, true);
       playSound("success");
     } catch {
