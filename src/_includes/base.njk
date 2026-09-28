@@ -181,6 +181,7 @@
            كأيقونات، عشان القائمة تضل بسطر واحد حتى لما تُضاف أقسام جديدة #}
         <a class="icon-btn{% if navActive == "favorites" %} active{% endif %}"{% if navActive == "favorites" %} aria-current="page"{% endif %} href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}" title="{{ t.nav_favorites }}" aria-label="{{ t.nav_favorites }}">{{ icon("heart-fill") }}</a>
         <a class="icon-btn icon-btn-picker{% if navActive == "picker" %} active{% endif %}"{% if navActive == "picker" %} aria-current="page"{% endif %} href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}" title="{{ t.nav_picker }}" aria-label="{{ t.nav_picker }}">{{ icon("dice") }}</a>
+        <a class="icon-btn{% if navActive == "sounds" %} active{% endif %}"{% if navActive == "sounds" %} aria-current="page"{% endif %} href="{{ (('/en/sounds.html' if lang == 'en' else '/sounds.html')) | url }}" title="{{ t.nav_sounds }}" aria-label="{{ t.nav_sounds }}">{{ icon("music") }}</a>
         <span class="header-divider" aria-hidden="true"></span>
         {# على الشاشات الضيقة نعرض الاختصار بدل الاسم الكامل عشان يضل الهيدر بصف واحد #}
         <a class="lang-switch" href="{{ (langSwitchUrl or ('/index.html' if lang == 'en' else '/en/index.html')) | url }}" title="{{ t.lang_switch }}" aria-label="{{ t.lang_switch }}"><span class="lang-full">{{ t.lang_switch }}</span><span class="lang-short" aria-hidden="true">{{ t.lang_switch_short }}</span></a>
@@ -225,6 +226,9 @@
     <a href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}"{% if navActive == "picker" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("dice", 22) }}</span><span>{{ t.nav_picker | replace("🎲 ", "") }}</span>
     </a>
+    <a href="{{ (('/en/sounds.html' if lang == 'en' else '/sounds.html')) | url }}"{% if navActive == "sounds" %} class="active" aria-current="page"{% endif %}>
+      <span class="bottom-nav-icon">{{ icon("music", 22) }}</span><span>{{ t.nav_sounds_short }}</span>
+    </a>
     <button type="button" class="nav-toggle bottom-nav-menu" aria-label="{{ t.nav_toggle_open }}" aria-expanded="false" aria-controls="main-nav">
       <span class="bottom-nav-icon">{{ icon("menu", 22) }}</span><span>{{ t.nav_toggle_open }}</span>
     </button>
@@ -263,5 +267,7 @@
   <script src="{{ '/js/bootstrap.js' | url }}?v={{ buildVersion }}"></script>
   <script src="{{ '/js/data.js' | url }}?v={{ buildVersion }}"></script>
   <script src="{{ '/js/main.js' | url }}?v={{ buildVersion }}"></script>
+  {# سكربت خاص بصفحة وحدة (مثل صوتيات هكوله) — ما ينزل مع بقية الصفحات #}
+  {% if pageScript %}<script src="{{ ('/js/' + pageScript + '.js') | url }}?v={{ buildVersion }}"></script>{% endif %}
 </body>
 </html>

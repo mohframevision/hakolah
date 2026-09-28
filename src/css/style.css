@@ -4236,3 +4236,99 @@ img {
     display: none;
   }
 }
+
+/* ===== صوتيات هكوله: شريط علوي مشترك + تبويبات ===== */
+.sounds-top {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sounds-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sounds-tab {
+  padding: 9px 18px;
+  white-space: nowrap;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sounds-tab.active {
+  background: linear-gradient(90deg, #2a7f60, #35946f);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(63, 164, 128, 0.35);
+}
+
+.sounds-tab:focus-visible {
+  outline: 2px solid #6fc8a4;
+  outline-offset: 2px;
+}
+
+.sounds-pane {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.sounds-pane[hidden] {
+  display: none;
+}
+
+.sounds-lesson .beep-param-note {
+  text-align: start;
+}
+
+.beep-param-note strong {
+  color: #fff;
+}
+
+.custom-sound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.custom-sound label.filter-chip {
+  cursor: pointer;
+}
+
+/* داخل التطبيق: شريط التطبيق يغني عن هيدر الموقع وفوتره وشريطه السفلي */
+.in-app .site-header,
+.in-app .site-footer,
+.in-app .bottom-nav,
+.in-app .breadcrumb,
+.in-app .page-header,
+.in-app .cookie-banner,
+.in-app .daily-pick-reminder {
+  display: none !important;
+}
+
+.in-app body {
+  padding-bottom: 0;
+}
+
+.in-app .beep-experiment {
+  margin-top: 8px;
+}

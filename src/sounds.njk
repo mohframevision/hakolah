@@ -1,0 +1,190 @@
+---
+layout: base.njk
+permalink: "sounds.html"
+title: "صوتيات هكوله 🎹 | هكوله"
+description: "بيانو تعزف عليه بلوحة المفاتيح أو بلمس الشاشة، بأي آلة أو حتى بصوت تسجّله بنفسك، ومؤلّف موسيقى تلقائي، ودروس في أساسيات الموسيقى — مجاناً في المتصفح."
+navActive: "sounds"
+langSwitchUrl: "/en/sounds.html"
+pageScript: "sounds"
+---
+<div class="breadcrumb"><a href="{{ '/index.html' | url }}">الرئيسية</a> / صوتيات هكوله</div>
+<section class="page-header">
+  <h1>🎹 صوتيات هكوله</h1>
+  <p>اعزف على البيانو بلوحة المفاتيح أو بلمس الشاشة، أو دع هكوله يؤلّف لك مقطوعة جديدة، وتعلّم أساسيات الموسيقى وأنت تستمع.</p>
+</section>
+
+<div class="beep-experiment sounds-tool">
+  <div class="sounds-top">
+    <label class="beep-volume"><span aria-hidden="true">🔈</span><input type="range" id="beepVolume" min="0" max="1" step="0.05" value="0.8" aria-label="مستوى الصوت" /><span aria-hidden="true">🔊</span></label>
+    <details class="beep-panel">
+      <summary>🎛️ الآلة <span class="beep-panel-now" id="beepSoundNow"></span></summary>
+      <div class="instrument-picker" id="instrumentPicker">
+        <button type="button" class="filter-chip instrument-btn active" data-instrument="piano">🎹 بيانو</button>
+        <button type="button" class="filter-chip instrument-btn" data-instrument="flute">🪈 فلوت</button>
+        <button type="button" class="filter-chip instrument-btn" data-instrument="violin">🎻 كمان</button>
+        <button type="button" class="filter-chip instrument-btn" data-instrument="trumpet">🎺 بوق</button>
+        <button type="button" class="filter-chip instrument-btn" data-instrument="sax">🎷 ساكسفون</button>
+        <button type="button" class="filter-chip instrument-btn" data-instrument="banjo">🪕 بانجو</button>
+        <button type="button" class="filter-chip instrument-btn" data-instrument="bell">🔔 جرس</button>
+        <button type="button" class="filter-chip instrument-btn" data-instrument="accordion">🪗 أكورديون</button>
+        <button type="button" class="filter-chip instrument-btn" data-instrument="musicbox">🎐 صندوق موسيقى</button>
+        <button type="button" class="filter-chip instrument-btn" data-instrument="custom">🎙️ صوتك</button>
+      </div>
+      <div class="custom-sound" id="customSound">
+        <p class="beep-param-note">حوّل أي صوت إلى آلة: سجّل ثانيتين أو ثلاثاً (خوار بقرة، صفير، ضحكة…) أو اختر ملفاً صوتياً، ثم اختر «🎙️ صوتك» واعزف به على البيانو.</p>
+        <div class="instrument-picker">
+          <button type="button" class="filter-chip" id="customRecord" data-label="🔴 سجّل صوتاً" data-stop="⏹ أوقف التسجيل">🔴 سجّل صوتاً</button>
+          <label class="filter-chip" for="customFile">📁 اختر ملفاً</label>
+          <input type="file" id="customFile" accept="audio/*" hidden />
+          <button type="button" class="filter-chip" id="customPreview" disabled>▶️ استمع إليه</button>
+        </div>
+        <p class="beep-quiz-result" id="customStatus" aria-live="polite"
+          data-empty="لم تضف صوتاً بعد."
+          data-need="سجّل صوتاً أو اختر ملفاً أولاً."
+          data-recording="🎙️ جارٍ التسجيل… (ثلاث ثوانٍ كحد أقصى)"
+          data-ready="✅ صوتك جاهز — اعزف به الآن."
+          data-denied="لم يُسمح باستخدام الميكروفون."
+          data-failed="تعذّرت قراءة هذا الصوت، جرّب ملفاً آخر."></p>
+      </div>
+    </details>
+  </div>
+
+  <div class="sounds-tabs" role="tablist">
+    <button type="button" class="sounds-tab active" role="tab" aria-selected="true" aria-controls="panePlay" data-pane="panePlay">🎹 اعزف</button>
+    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneCompose" data-pane="paneCompose">🎼 ألّف</button>
+    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneLearn" data-pane="paneLearn">📚 تعلّم</button>
+  </div>
+
+  <section class="sounds-pane" id="panePlay" role="tabpanel">
+    <div class="beep-play">
+      <p class="beep-param-note">الصف الأوسط <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> للمفاتيح البيضاء، والصف الذي فوقه <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> للسوداء، و<kbd>Z</kbd> / <kbd>X</kbd> لتغيير الأوكتاف. تعمل أيضاً بلوحة مفاتيح موصولة بالجوال، أو بلمس المفاتيح مباشرة.</p>
+      <div class="beep-play-octave">
+        <button type="button" class="filter-chip" id="beepOctDown" aria-label="أوكتاف أخفض">Z ⬇️</button>
+        <span id="beepOctLabel" dir="ltr">C4</span>
+        <button type="button" class="filter-chip" id="beepOctUp" aria-label="أوكتاف أعلى">X ⬆️</button>
+      </div>
+      <div class="beep-play-keys" id="beepPlayKeys"></div>
+    </div>
+  </section>
+
+  <section class="sounds-pane" id="paneCompose" role="tabpanel" hidden>
+    <div class="beep-stage">
+      <div class="beep-controls">
+        <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ ألّف وشغّل" data-stop-label="⏹ إيقاف">▶️ ألّف وشغّل</button>
+        <button type="button" id="beepMelodyPrev" class="btn secondary">⏮️ السابقة</button>
+        <button type="button" id="beepMelodyNext" class="btn secondary">⏭️ مقطوعة جديدة</button>
+      </div>
+      <div class="instrument-picker" id="moodPicker">
+        <button type="button" class="filter-chip mood-btn active" data-mood="calm">😌 هادئ</button>
+        <button type="button" class="filter-chip mood-btn" data-mood="stately">🕊️ رصين</button>
+        <button type="button" class="filter-chip mood-btn" data-mood="happy">😊 مبهج</button>
+        <button type="button" class="filter-chip mood-btn" data-mood="dreamy">🌙 حالم</button>
+        <button type="button" class="filter-chip mood-btn" data-mood="cinematic">🎬 سينمائي</button>
+      </div>
+      <div class="beep-keys" id="beepKeys" aria-hidden="true">
+        <div class="beep-white" data-pitch-class="0"></div>
+        <div class="beep-white" data-pitch-class="2"></div>
+        <div class="beep-white" data-pitch-class="4"></div>
+        <div class="beep-white" data-pitch-class="5"></div>
+        <div class="beep-white" data-pitch-class="7"></div>
+        <div class="beep-white" data-pitch-class="9"></div>
+        <div class="beep-white" data-pitch-class="11"></div>
+        <div class="beep-black" data-pitch-class="1" style="left: 24px"></div>
+        <div class="beep-black" data-pitch-class="3" style="left: 58px"></div>
+        <div class="beep-black" data-pitch-class="6" style="left: 126px"></div>
+        <div class="beep-black" data-pitch-class="8" style="left: 160px"></div>
+        <div class="beep-black" data-pitch-class="10" style="left: 194px"></div>
+      </div>
+      <div class="beep-keys-scroll" id="beepKeysFullWrap" hidden>
+        <div class="beep-keys beep-keys-full" id="beepKeysFull" aria-hidden="true"></div>
+      </div>
+      <div class="instrument-picker">
+        <button type="button" class="filter-chip keyboard-toggle" id="keyboardToggle" data-label-full="🎹 لوحة كاملة" data-label-mini="🎹 لوحة مبسطة">🎹 لوحة كاملة</button>
+        <button type="button" class="filter-chip" id="noteNameToggle" data-default="solfege" data-label-letters="🔤 C D E" data-label-solfege="🎼 Do Re Mi">🔤 C D E</button>
+      </div>
+      <div class="beep-staff-wrap" id="beepStaffWrap" hidden>
+        <p class="beep-params-title">🎼 المدوّنة الموسيقية أثناء العزف</p>
+        <div class="beep-staff-scroll" id="beepStaff"></div>
+        <p class="beep-chord" id="beepChord" data-label="الكورد الحالي" data-major="كبير" data-minor="صغير" data-dim="ناقص"></p>
+      </div>
+    </div>
+    <details class="beep-panel">
+      <summary>🎚️ أبعاد الصوت الأربعة</summary>
+      <div class="beep-params" id="beepParams">
+        <div class="beep-param"><span>التردد (حدّة النغمة)</span><div class="instrument-picker">
+          <button type="button" class="filter-chip param-btn" data-param="octave" data-value="-1">⬇️ أخفض</button>
+          <button type="button" class="filter-chip param-btn active" data-param="octave" data-value="0">عادي</button>
+          <button type="button" class="filter-chip param-btn" data-param="octave" data-value="1">⬆️ أعلى</button>
+        </div></div>
+        <div class="beep-param"><span>الإيقاع (السرعة)</span><div class="instrument-picker">
+          <button type="button" class="filter-chip param-btn" data-param="tempo" data-value="0.75">🐢 أبطأ</button>
+          <button type="button" class="filter-chip param-btn active" data-param="tempo" data-value="1">عادي</button>
+          <button type="button" class="filter-chip param-btn" data-param="tempo" data-value="1.25">أسرع</button>
+        </div></div>
+        <div class="beep-param"><span>الديناميكية (القوة)</span><div class="instrument-picker">
+          <button type="button" class="filter-chip param-btn" data-param="dynamics" data-value="0.4">p هادئ</button>
+          <button type="button" class="filter-chip param-btn active" data-param="dynamics" data-value="1">mf متوسط</button>
+          <button type="button" class="filter-chip param-btn" data-param="dynamics" data-value="1.6">f قوي</button>
+        </div></div>
+        <p class="beep-param-note">🎨 الطابع الصوتي (لون الصوت) هو الآلة نفسها — غيّرها من لوحة «الآلة» في الأعلى لتسمع اللحن ذاته بلون مختلف.</p>
+      </div>
+    </details>
+    <details class="beep-panel">
+      <summary>⬇️ التحميل والمشاركة</summary>
+      <div class="instrument-picker">
+        <button type="button" class="filter-chip" id="beepShareSeed" data-copied="نُسخ رابط هذه المقطوعة">🔗 انسخ رابط المقطوعة</button>
+        <button type="button" class="filter-chip" id="beepDownloadWav" data-working="⏳ جارٍ تجهيز الملف...">⬇️ تحميل WAV</button>
+        <button type="button" class="filter-chip" id="beepDownloadMp3" data-working="⏳ جارٍ تجهيز الملف..." data-failed="تعذّر تجهيز ملف MP3">⬇️ تحميل MP3</button>
+        <button type="button" class="filter-chip" id="beepDownloadVideo" data-working="⏳ جارٍ تسجيل الفيديو" data-failed="متصفحك لا يدعم تسجيل الفيديو">🎬 تحميل فيديو</button>
+        <button type="button" class="filter-chip" id="beepDownloadMidi">🎼 تحميل MIDI</button>
+      </div>
+      <div class="beep-seed-row">
+        <label class="beep-seed-label" for="beepSeedInput">🌱 البذرة</label>
+        <input type="text" inputmode="numeric" id="beepSeedInput" class="beep-seed-input" placeholder="اكتب رقم البذرة" data-invalid="اكتب رقماً صحيحاً للبذرة" />
+        <button type="button" class="filter-chip" id="beepSeedPlay">▶️ شغّل هذه البذرة</button>
+      </div>
+    </details>
+    <div class="beep-analysis" id="beepAnalysis"
+      data-label-key="المقام"
+      data-label-major="كبير (Major)"
+      data-label-minor="صغير (Minor)"
+      data-label-progression="تتابع الكوردات"
+      data-label-form="البنية"
+      data-label-form-value="جملة من ٨ مازورات: سؤال (١-٤) + جواب (٥-٨)"
+      data-label-tempo="السرعة"
+      data-label-meter="الميزان"
+      data-label-cadence="القفلة"
+      data-label-cadence-authentic="قفلة تامة"
+      data-label-cadence-plagal="قفلة كنسية"
+      data-label-seed="البذرة"></div>
+    <p class="beep-experiment-hint">🎧 يُفضَّل استخدام السماعات — وكل مقطوعة لحن جديد تماماً، فجرّب أكثر من مرة.</p>
+  </section>
+
+  <section class="sounds-pane" id="paneLearn" role="tabpanel" hidden>
+    <div class="beep-quiz sounds-lesson">
+      <p class="beep-params-title">🎚️ أبعاد الصوت الأربعة</p>
+      <p class="beep-param-note">كل صوت تسمعه يوصف بأربعة أبعاد: <strong>التردد</strong> (حدّة النغمة أو غلظتها)، و<strong>الإيقاع</strong> (مدة النغمات وسرعة النبض)، و<strong>الطابع الصوتي</strong> (لون الصوت الذي يميّز آلة عن أخرى)، و<strong>الديناميكية</strong> (قوة الصوت، ويُرمز لها بـ p للهادئ وf للقوي). جرّب تغيير كل بُعد على حدة من تبويب «ألّف».</p>
+    </div>
+    <div class="beep-quiz sounds-lesson">
+      <p class="beep-params-title">💰 مدد النوتات كالنقود</p>
+      <p class="beep-param-note">المستديرة (مفرّغة بلا ساق) = ٤ دنانير · البيضاء (مفرّغة بساق) = ديناران · السوداء = دينار · ذات السن = ٥٠٠ فلس · ذات السنّين = ٢٥٠ فلساً. والنقطة بجانب النوتة تزيدها نصف قيمتها (البيضاء المنقوطة = ٣ دنانير).</p>
+    </div>
+    <div class="beep-quiz sounds-lesson">
+      <p class="beep-params-title">🎹 الكورد الكبير والصغير</p>
+      <p class="beep-param-note">الفرق بينهما في النغمة الوسطى فقط: تبعد في الكبير أربعة أنصاف درجات عن الأساس، وفي الصغير ثلاثة. هذا الفرق الصغير هو ما يجعل الكبير مشرقاً والصغير حزيناً.</p>
+    </div>
+    <div class="beep-quiz" id="beepQuiz" data-right="✅ إجابة صحيحة! الذي تغيّر: " data-wrong="❌ ليست هذه — الذي تغيّر: " data-names="التردد|الإيقاع|الطابع الصوتي|الديناميكية">
+      <p class="beep-params-title">👂 تدريب الأذن: ما الذي تغيّر؟</p>
+      <p class="beep-param-note">ستسمع المقطع نفسه مرتين، ويتغيّر في المرة الثانية بُعد واحد فقط. خمّن أيّها.</p>
+      <button type="button" class="btn secondary" id="beepQuizPlay">▶️ استمع إلى المقطعين</button>
+      <div class="instrument-picker">
+        <button type="button" class="filter-chip quiz-btn" data-answer="pitch" disabled>التردد</button>
+        <button type="button" class="filter-chip quiz-btn" data-answer="rhythm" disabled>الإيقاع</button>
+        <button type="button" class="filter-chip quiz-btn" data-answer="timbre" disabled>الطابع الصوتي</button>
+        <button type="button" class="filter-chip quiz-btn" data-answer="dynamics" disabled>الديناميكية</button>
+      </div>
+      <p class="beep-quiz-result" id="beepQuizResult" aria-live="polite"></p>
+    </div>
+    <p class="beep-experiment-hint">📚 أدوات التعلّم هنا مستوحاة من مقرر إنتاج موسيقي يدرسه صاحب الموقع في الجامعة.</p>
+  </section>
+</div>
