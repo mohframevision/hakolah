@@ -2411,6 +2411,11 @@ function initBeepMelodyExperiment() {
   let selected = null; // المقطع المحدد
 
   const snap = (sec) => Math.max(0, Math.round(sec * 20) / 20); // خطوة ٥٠م.ث
+  /* الموقع يكبّر الصفحة كلها بـzoom على الشاشات العريضة (theme-init.js، حتى ١٫٨×).
+     الماوس وgetBoundingClientRect بوحدات الشاشة، بينما left/width للمقاطع والخط
+     بوحدات الصفحة قبل التكبير — فبدون القسمة على المعامل يبتعد الخط عن الماوس
+     بقدر التكبير، وأكثر كل ما رحت يمين. */
+  const zoomOf = () => board.getBoundingClientRect().width / board.offsetWidth || 1;
   const layerLen = (l) => l.t1 - l.t0; // طول الجزء الظاهر من المقطع
   const layerEnd = (l) => l.offset + layerLen(l);
   // النغمات الظاهرة داخل نافذة المقطع [t0,t1] بأوقات نسبية لبدايته؛ النغمة التي تعبر
@@ -2574,7 +2579,7 @@ function initBeepMelodyExperiment() {
     const offa = l.offset;
     const canvas = clip.querySelector("canvas");
     const move = (ev) => {
-      const d = (ev.clientX - x0) / pxPerSec;
+      const d = (ev.clientX - x0) / zoomOf() / pxPerSec;
       if (side === "right") {
         l.t1 = Math.min(l.end, Math.max(l.t0 + TRIM_MIN, Math.round((t1a + d) * 20) / 20));
       } else {
@@ -2636,7 +2641,7 @@ function initBeepMelodyExperiment() {
       select(l);
       // مثل باند لاب: الضغط على المقطع نفسه يضع الخط الأبيض تحت الماوس بالضبط
       // (قبل كان يحدّد فقط ويبقى الخط بعيداً) — فالقص بـS يصير عند مكان النقر
-      cursor = snap((e.clientX - board.getBoundingClientRect().left) / pxPerSec);
+      cursor = snap((e.clientX - board.getBoundingClientRect().left) / zoomOf() / pxPerSec);
       setPlayhead(null);
       clip.classList.add("dragging");
       const x0 = e.clientX;
@@ -2647,8 +2652,8 @@ function initBeepMelodyExperiment() {
       const maxRow = rowCount(); // آخر خانة = مسار جديد تحت الكل
       let moved = false;
       const move = (ev) => {
-        l.offset = snap(off0 + (ev.clientX - x0) / pxPerSec);
-        l.row = Math.min(maxRow, Math.max(0, row0 + Math.round((ev.clientY - y0) / ROW_H)));
+        l.offset = snap(off0 + (ev.clientX - x0) / zoomOf() / pxPerSec);
+        l.row = Math.min(maxRow, Math.max(0, row0 + Math.round((ev.clientY - y0) / zoomOf() / ROW_H)));
         moved = moved || l.offset !== off0 || l.row !== row0;
         clip.style.left = l.offset * pxPerSec + "px";
         clip.style.top = l.row * ROW_H + 3 + "px";
@@ -2738,7 +2743,7 @@ function initBeepMelodyExperiment() {
     e.preventDefault();
     captureEl.setPointerCapture(e.pointerId);
     const set = (ev) => {
-      cursor = snap((ev.clientX - rectEl.getBoundingClientRect().left) / pxPerSec);
+      cursor = snap((ev.clientX - rectEl.getBoundingClientRect().left) / zoomOf() / pxPerSec);
       setPlayhead(null);
     };
     set(e);
