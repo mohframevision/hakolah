@@ -653,7 +653,9 @@ img {
   font-size: 1.2rem;
 }
 
-.hero-stats {
+/* .hero .hero-stats لا .hero-stats وحدها: قاعدة ".hero p" أعلاه أقوى وكانت تكبّر
+   الخط وتلغي الهامش فتلصق الكبسولة بالسطر اللي فوقها وتلفّها على سطرين */
+.hero .hero-stats {
   display: inline-flex;
   margin: 18px auto 0;
   padding: 6px 16px;
@@ -664,7 +666,7 @@ img {
   font-size: 0.88rem;
 }
 
-.hero-stats:empty {
+.hero .hero-stats:empty {
   display: none;
 }
 
@@ -863,7 +865,8 @@ img {
 /* ===== شبكة الأقسام في الرئيسية ===== */
 .section-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  /* 220 لا 240: تتسع 5 أعمدة فتنقسم البطاقات العشر صفّين كاملين بدل 4+4+2 */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 28px;
   padding: 16px 0 60px;
 }
