@@ -21,7 +21,7 @@
 
   var homeLink = document.getElementById("notFoundHomeLink");
   if (homeLink) {
-    homeLink.href = "/hakolah/en/index.html";
+    homeLink.href = "/en/index.html";
     homeLink.textContent = "🏠 Back to Home";
   }
 })();

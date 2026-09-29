@@ -46,7 +46,7 @@ Start the dev server in the background and wait for it to actually serve
 ```bash
 npm start > /tmp/eleventy-serve.log 2>&1 &
 disown
-timeout 30 bash -c 'until curl -sf http://localhost:8080/hakolah/ >/dev/null 2>&1; do sleep 1; done'
+timeout 30 bash -c 'until curl -sf http://localhost:8080/ >/dev/null 2>&1; do sleep 1; done'
 ```
 
 Stop it later with:
@@ -61,7 +61,7 @@ commands strictly in order):
 ```bash
 node .claude/skills/run-hakolah/driver.mjs <<'EOF'
 launch
-nav http://localhost:8080/hakolah/
+nav http://localhost:8080/
 wait-for text=كل شيء مفيد
 screenshot home
 quit
@@ -74,7 +74,7 @@ the most JS-heavy feature on the site):
 ```bash
 node .claude/skills/run-hakolah/driver.mjs <<'EOF'
 launch
-nav http://localhost:8080/hakolah/picker.html
+nav http://localhost:8080/picker.html
 wait-for .picker-category
 click .picker-category
 click #pickerSpinBtn
@@ -108,7 +108,7 @@ Driver commands:
 ## Run (human path)
 
 ```bash
-npm start   # -> http://localhost:8080/hakolah/, Ctrl+C to stop
+npm start   # -> http://localhost:8080/, Ctrl+C to stop
 ```
 
 Same watch/live-reload server a human developer uses; useless headless.
@@ -126,7 +126,7 @@ clean (verified this session: `npm run lint` → no output/errors,
 
 - **Everything is under `/hakolah/`, not `/`.** GitHub Pages project-site
   base path — `http://localhost:8080/` 404s; the real root is
-  `http://localhost:8080/hakolah/`.
+  `http://localhost:8080/`.
 - **Never run `npm run build` / `npm run check:i18n` while `npm start` is
   running.** Both write `_site/` concurrently; hit this directly —
   `npm run build` crashed with `ENOENT ... _site\js\bootstrap.js` because

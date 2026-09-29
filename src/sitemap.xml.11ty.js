@@ -3,7 +3,7 @@ exports.data = {
   eleventyExcludeFromCollections: true,
 };
 
-const SITE_URL = "https://mohframevision.github.io/hakolah";
+const SITE_URL = "https://hakolah.com";
 
 exports.render = function (data) {
   // كل قسم له تلقائياً نسخة إنجليزية (src/en/section.njk يولّدها بالـ pagination

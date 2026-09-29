@@ -39,7 +39,7 @@ assert.equal(kv.ops.list + kv.ops.get, 0);
 
 // 3) a like invalidates memory and stores metadata; next read = 1 list, 0 gets
 Object.assign(kv.ops, { get: 0, list: 0, put: 0 });
-res = await worker.fetch(req("/like", { method: "POST", headers: { Origin: "https://mohframevision.github.io", "Content-Type": "application/json", "CF-Connecting-IP": "1.2.3.4" }, body: JSON.stringify({ section: "restaurants", id: "item5" }) }), env, {});
+res = await worker.fetch(req("/like", { method: "POST", headers: { Origin: "https://hakolah.com", "Content-Type": "application/json", "CF-Connecting-IP": "1.2.3.4" }, body: JSON.stringify({ section: "restaurants", id: "item5" }) }), env, {});
 assert.equal(res.status, 200, "like accepted");
 Object.assign(kv.ops, { get: 0, list: 0, put: 0 });
 counts = await (await worker.fetch(req("/likes"), env, {})).json();
