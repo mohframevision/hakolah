@@ -4566,44 +4566,10 @@ img {
 }
 
 /* ===== طبقات التسجيل ===== */
-.beep-layer-list {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
 
-.beep-layer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px 4px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
-  font-size: 0.85rem;
-}
 
-.beep-layer > span {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: start;
-}
 
-.beep-layer.muted > span {
-  opacity: 0.5;
-  text-decoration: line-through;
-}
 
-.beep-layer .filter-chip {
-  padding: 4px 10px;
-}
 
 /* ===== الآلات مجمّعة بفئات ===== */
 #instrumentPicker {
@@ -4774,45 +4740,11 @@ img {
 }
 
 /* الصف صار عمودياً: رأس (الاسم + كتم/حذف) ثم مسار الكتلة */
-.beep-layer {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 4px;
-  padding: 6px 0 8px;
-  border: 0;
-  border-radius: 0;
-  background: none;
-}
 
-.beep-layer + .beep-layer {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
 
-.beep-layer-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.beep-layer-head > span {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: start;
-}
 
-.beep-layer.muted .beep-layer-head > span {
-  opacity: 0.5;
-  text-decoration: line-through;
-}
 
-.beep-lane {
-  position: relative;
-  height: 40px;
-  direction: ltr;
-}
 
 .beep-clip {
   position: absolute;
@@ -4846,9 +4778,6 @@ img {
   outline-offset: 1px;
 }
 
-.beep-layer.muted .beep-clip {
-  opacity: 0.35;
-}
 
 .beep-playhead {
   position: absolute;
@@ -4864,4 +4793,64 @@ img {
 
 .beep-playhead[hidden] {
   display: none;
+}
+
+/* ===== لوحة المسارات ===== */
+.beep-board {
+  position: relative;
+  direction: ltr;
+  min-height: 44px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--rowh, 44px) - 1px),
+    rgba(255, 255, 255, 0.14) calc(var(--rowh, 44px) - 1px),
+    rgba(255, 255, 255, 0.14) var(--rowh, 44px)
+  );
+  cursor: crosshair;
+}
+
+.beep-clip {
+  bottom: auto; /* الارتفاع والمسار بأنماط مضمّنة */
+}
+
+.beep-clip.selected {
+  outline: 2px solid #fff;
+  outline-offset: 0;
+  z-index: 2;
+}
+
+.beep-clip.muted {
+  opacity: 0.35;
+}
+
+.beep-clip-label {
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  font-size: 0.75rem;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.beep-playhead.idle {
+  background: #6fc8a4;
+  box-shadow: 0 0 6px rgba(111, 200, 164, 0.8);
+}
+
+.beep-clip-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.beep-clip-tools .filter-chip:disabled {
+  opacity: 0.4;
+}
+
+.beep-ruler {
+  cursor: col-resize;
+  touch-action: none;
 }

@@ -2355,7 +2355,6 @@ function initBeepMelodyExperiment() {
   const recTime = document.getElementById("beepRecTime");
   const recTake = document.getElementById("beepRecTake");
   const recPlay = document.getElementById("beepRecPlay");
-  const layerList = document.getElementById("beepLayerList");
 
   const sounding = () => layers.filter((l) => !l.muted);
   const instrumentLabel = (id) => document.querySelector(`.instrument-btn[data-instrument="${id}"]`)?.textContent.trim() || id;
@@ -2391,43 +2390,52 @@ function initBeepMelodyExperiment() {
     ev.durBeats = Math.min(holdSeconds(rec.instrument), ev.held + 0.4);
   }
 
-  function layerButton(label, text, onClick) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "filter-chip";
-    b.textContent = label;
-    b.setAttribute("aria-label", text);
-    b.title = text;
-    b.addEventListener("click", () => {
-      onClick();
-      playClickSound();
-    });
-    return b;
-  }
-
-  /* ===== الجدول الزمني للطبقات =====
-     كل طبقة صف، وكتلتها (clip) مرسومة بنغماتها على خط زمن مشترك. السحب يحرّك
-     إزاحة الطبقة (offset بالثواني) — تُطبَّق بالتشغيل والتصدير. الطبقات تُعزف كلها
-     معاً؛ الجدول يرينا كيف تتراكب. مفتاحا الأسهم يحرّكان الكتلة المركّزة (١٠٠م.ث،
-     ومعه Shift ثانية)، والنقر المزدوج يرجعها للبداية. */
+  /* ===== لوحة المسارات (مثل باند لاب) =====
+     كل طبقة "مقطع" (clip) له آلته ونغماته، يقف بمسار (row) وزمن (offset بالثواني).
+     يُسحب بحرية: يميناً ويساراً بالزمن، وفوق وتحت بين المسارات (السحب لتحت آخر
+     مسار يفتح مساراً جديداً، والمسارات الفارغة تُطوى). المؤشر الأبيض الثابت يوضع
+     بالنقر/السحب على المسطرة، وعنده يُقصّ المقطع المحدد. المقاطع تُعزف كلها معاً
+     مهما كان مسارها؛ المسار للترتيب البصري فقط. */
   const timeline = document.getElementById("beepTimeline");
   const ruler = document.getElementById("beepRuler");
   const playhead = document.getElementById("beepPlayhead");
-  const LANE_HEIGHT = 40;
+  const board = document.getElementById("beepBoard");
+  const tools = document.getElementById("beepClipTools");
+  const ROW_H = 44;
   let pxPerSec = 30;
   let timelineSeconds = 10;
   let playheadTimer = null;
+  let cursor = 0; // موضع المؤشر الأبيض الثابت (ثوانٍ) — نقطة القص
+  let selected = null; // المقطع المحدد
 
   const snap = (sec) => Math.max(0, Math.round(sec * 20) / 20); // خطوة ٥٠م.ث
   const layerEnd = (l) => l.end + l.offset;
+  const rowCount = () => (layers.length ? Math.max(...layers.map((l) => l.row)) + 1 : 0);
 
+  // مسار فاضي بالنص ما له معنى: نرقّم المسارات المستعملة من جديد بلا فراغات
+  function compactRows() {
+    const used = [...new Set(layers.map((l) => l.row))].sort((a, b) => a - b);
+    layers.forEach((l) => (l.row = used.indexOf(l.row)));
+  }
+
+  // sec = رقم: الخط يمشي مع التشغيل/التسجيل. null: يرجع لمكان المؤشر الثابت
   function setPlayhead(sec) {
-    if (sec == null) {
-      playhead.hidden = true;
-      return;
-    }
-    playhead.hidden = false;
-    playhead.style.left = Math.min(Math.max(0, sec), timelineSeconds) * pxPerSec + "px";
+    const idle = sec == null;
+    playhead.hidden = layers.length === 0;
+    playhead.classList.toggle("idle", idle);
+    playhead.style.left = Math.min(Math.max(0, idle ? cursor : sec), timelineSeconds) * pxPerSec + "px";
+  }
+
+  function updateTools() {
+    tools.querySelectorAll("button").forEach((b) => (b.disabled = !selected));
+    const mute = document.getElementById("beepToolMute");
+    mute.textContent = selected?.muted ? mute.dataset.unmute : mute.dataset.mute;
+  }
+
+  function select(l) {
+    selected = l;
+    board.querySelectorAll(".beep-clip").forEach((c) => c.classList.toggle("selected", layers[+c.dataset.i] === l));
+    updateTools();
   }
 
   function drawClip(canvas, l, w, h) {
@@ -2441,59 +2449,153 @@ function initBeepMelodyExperiment() {
     const hi = Math.max(...ms);
     g.fillStyle = "rgba(255,255,255,0.92)";
     l.events.forEach((ev, i) => {
-      const y = hi === lo ? h / 2 - 1.5 : 4 + (1 - (ms[i] - lo) / (hi - lo)) * (h - 11); // النغمة الأحد أعلى
+      const y = hi === lo ? h / 2 - 1.5 : 12 + (1 - (ms[i] - lo) / (hi - lo)) * (h - 18); // النغمة الأحد أعلى
       g.fillRect(ev.startBeat * pxPerSec, y, Math.max(2, ev.held * pxPerSec), 3);
     });
   }
 
-  function enableClipDrag(clip, l, index) {
+  const focusLayer = (l) => board.querySelector('[data-i="' + layers.indexOf(l) + '"]')?.focus();
+
+  function deleteSelected() {
+    if (!selected) return;
+    layers.splice(layers.indexOf(selected), 1);
+    selected = null;
+    compactRows();
+    if (!layers.length) stopTake();
+    renderLayers();
+  }
+
+  function copySelected() {
+    if (!selected) return;
+    const copy = { ...selected, events: selected.events.map((e) => ({ ...e })), offset: selected.offset + selected.end, lastTap: 0 };
+    layers.splice(layers.indexOf(selected) + 1, 0, copy);
+    selected = copy;
+    renderLayers();
+  }
+
+  // قص المقطع المحدد عند المؤشر الأبيض: نغمة تبدأ قبل القص تبقى يسار (وتُقصّ مدتها
+  // عنده)، وما يبدأ بعده ينتقل لمقطع جديد يمين. ponytail: النغمة التي تعبر القص لا
+  // تُكمَل يمينه (مثل قص MIDI بسيط)
+  function splitSelected() {
+    const l = selected;
+    if (!l) return;
+    const t = cursor - l.offset;
+    const left = [];
+    const right = [];
+    l.events.forEach((ev) => {
+      if (ev.startBeat < t) {
+        const e = { ...ev };
+        if (e.startBeat + e.held > t) {
+          e.held = Math.max(0.05, t - e.startBeat);
+          e.durBeats = e.held + 0.4;
+        }
+        left.push(e);
+      } else {
+        right.push({ ...ev, startBeat: ev.startBeat - t });
+      }
+    });
+    if (!left.length || !right.length) return showToast(document.getElementById("beepToolSplit").dataset.cut);
+    const endOf = (list) => Math.max(...list.map((e) => e.startBeat + e.durBeats));
+    const a = { ...l, events: left, end: endOf(left) };
+    const b = { ...l, events: right, offset: l.offset + t, end: endOf(right), lastTap: 0 };
+    layers.splice(layers.indexOf(l), 1, a, b);
+    selected = b;
+    renderLayers();
+  }
+
+  function buildClip(l, i) {
+    const clip = document.createElement("div");
+    clip.className = "beep-clip" + (l.muted ? " muted" : "") + (l === selected ? " selected" : "");
+    clip.dataset.i = String(i);
+    clip.style.setProperty("--h", String((i * 53 + 150) % 360));
+    clip.tabIndex = 0;
+    clip.setAttribute("role", "button");
+    clip.setAttribute("aria-pressed", String(l === selected));
+    clip.title = instrumentLabel(l.instrument);
+    clip.setAttribute("aria-label", recTake.dataset.layer + " " + (i + 1) + " · " + instrumentLabel(l.instrument));
+    const w = Math.max(8, l.end * pxPerSec);
+    clip.style.left = l.offset * pxPerSec + "px";
+    clip.style.top = l.row * ROW_H + 3 + "px";
+    clip.style.width = w + "px";
+    clip.style.height = ROW_H - 6 + "px";
+    const label = document.createElement("span");
+    label.className = "beep-clip-label";
+    label.textContent = instrumentLabel(l.instrument).split(" ")[0]; // الرمز فقط: الاسم لا يتسع بمقطع قصير
+    const canvas = document.createElement("canvas");
+    clip.append(canvas, label);
+    drawClip(canvas, l, w, ROW_H - 6);
+
     clip.addEventListener("pointerdown", (e) => {
       if (e.button) return;
       e.preventDefault();
       clip.setPointerCapture(e.pointerId);
+      select(l);
       clip.classList.add("dragging");
       const x0 = e.clientX;
+      const y0 = e.clientY;
       const off0 = l.offset;
+      const row0 = l.row;
+      const maxRow = rowCount(); // آخر خانة = مسار جديد تحت الكل
+      let moved = false;
       const move = (ev) => {
         l.offset = snap(off0 + (ev.clientX - x0) / pxPerSec);
+        l.row = Math.min(maxRow, Math.max(0, row0 + Math.round((ev.clientY - y0) / ROW_H)));
+        moved = moved || l.offset !== off0 || l.row !== row0;
         clip.style.left = l.offset * pxPerSec + "px";
-        clip.setAttribute("aria-valuenow", l.offset.toFixed(2));
+        clip.style.top = l.row * ROW_H + 3 + "px";
       };
       const up = () => {
         clip.removeEventListener("pointermove", move);
         clip.removeEventListener("pointerup", up);
         clip.removeEventListener("pointercancel", up);
-        // نقرتان سريعتان بلا سحب = رجوع للبداية. dblclick الأصلي ما يصلح: renderLayers
-        // تستبدل العنصر بين النقرتين فلا يوصله الحدث
-        if (l.offset === off0) {
+        if (moved) {
+          compactRows();
+        } else {
+          // نقرتان سريعتان بلا سحب = رجوع لبداية الزمن. dblclick الأصلي ما يصلح:
+          // renderLayers تستبدل العنصر بين النقرتين فلا يوصله الحدث
           const now = performance.now();
           if (now - (l.lastTap || 0) < 350) l.offset = 0;
           l.lastTap = now;
         }
         renderLayers(); // يعيد حساب طول الجدول بعد الإزاحة
+        focusLayer(l); // العنصر استُبدل: نرجّع التركيز عشان Delete والأسهم تشتغل بعد النقر
       };
       clip.addEventListener("pointermove", move);
       clip.addEventListener("pointerup", up);
       clip.addEventListener("pointercancel", up);
     });
+
     clip.addEventListener("keydown", (e) => {
-      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const step = e.shiftKey ? 1 : 0.1;
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        l.offset = snap(l.offset + (e.key === "ArrowRight" ? 1 : -1) * step);
+      } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        l.row = Math.min(rowCount(), Math.max(0, l.row + (e.key === "ArrowDown" ? 1 : -1)));
+        compactRows();
+      } else if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        return deleteSelected();
+      } else {
+        return;
+      }
       e.preventDefault();
-      l.offset = snap(l.offset + (e.key === "ArrowRight" ? 1 : -1) * (e.shiftKey ? 1 : 0.1));
+      select(l);
       renderLayers();
-      layerList.children[index]?.querySelector(".beep-clip")?.focus();
+      focusLayer(l);
     });
+    return clip;
   }
 
   function renderLayers() {
-    const d = recTake.dataset;
     recTake.hidden = layers.length === 0;
     if (!rec) recToggle.textContent = idleLabel();
 
-    const laneW = layerList.clientWidth;
+    const laneW = board.clientWidth;
     timelineSeconds = Math.max(6, Math.ceil(Math.max(0, ...layers.map(layerEnd))) + 2); // تسجيلة قصيرة تظهر عريضة
     pxPerSec = laneW > 0 ? laneW / timelineSeconds : 30; // مخفي (عرض صفر): نرسم عند ظهوره
     timeline.style.setProperty("--px", pxPerSec + "px");
+    board.style.setProperty("--rowh", ROW_H + "px");
+    board.style.height = (rowCount() + 1) * ROW_H + "px"; // + مسار فاضي للإسقاط فيه
 
     // المسطرة: علامة كل ١/٥/١٠ ثوانٍ حسب الطول
     const step = timelineSeconds > 40 ? 10 : timelineSeconds > 20 ? 5 : 1;
@@ -2507,52 +2609,51 @@ function initBeepMelodyExperiment() {
       })
     );
 
-    layerList.replaceChildren(
-      ...layers.map((l, i) => {
-        const li = document.createElement("li");
-        li.className = "beep-layer" + (l.muted ? " muted" : "");
-        li.style.setProperty("--h", String((i * 53 + 150) % 360));
-
-        const head = document.createElement("div");
-        head.className = "beep-layer-head";
-        const name = document.createElement("span");
-        name.textContent = `${d.layer} ${i + 1} · ${instrumentLabel(l.instrument)} · ${l.events.length} ♪`;
-        head.append(
-          name,
-          layerButton(l.muted ? "🔇" : "🔊", l.muted ? d.unmute : d.mute, () => {
-            l.muted = !l.muted;
-            renderLayers();
-          }),
-          layerButton("🗑️", d.delete, () => {
-            layers.splice(i, 1);
-            if (!layers.length) stopTake();
-            renderLayers();
-          })
-        );
-
-        const lane = document.createElement("div");
-        lane.className = "beep-lane";
-        const clip = document.createElement("div");
-        clip.className = "beep-clip";
-        clip.tabIndex = 0;
-        clip.setAttribute("role", "slider");
-        clip.setAttribute("aria-label", `${d.layer} ${i + 1}`);
-        clip.setAttribute("aria-valuemin", "0");
-        clip.setAttribute("aria-valuemax", String(timelineSeconds));
-        clip.setAttribute("aria-valuenow", l.offset.toFixed(2));
-        const clipW = Math.max(8, l.end * pxPerSec);
-        clip.style.left = l.offset * pxPerSec + "px";
-        clip.style.width = clipW + "px";
-        const canvas = document.createElement("canvas");
-        clip.append(canvas);
-        lane.append(clip);
-        li.append(head, lane);
-        drawClip(canvas, l, clipW, LANE_HEIGHT - 8);
-        enableClipDrag(clip, l, i);
-        return li;
-      })
-    );
+    board.replaceChildren(...layers.map(buildClip));
+    updateTools();
+    if (!playheadTimer) setPlayhead(null);
   }
+
+  // النقر على الخلفية يلغي التحديد ويضع المؤشر؛ المسطرة تسحب المؤشر
+  const cursorFrom = (e, el) => {
+    cursor = snap((e.clientX - el.getBoundingClientRect().left) / pxPerSec);
+    setPlayhead(null);
+  };
+  board.addEventListener("pointerdown", (e) => {
+    if (e.target !== board) return;
+    select(null);
+    cursorFrom(e, board);
+  });
+  ruler.addEventListener("pointerdown", (e) => {
+    ruler.setPointerCapture(e.pointerId);
+    cursorFrom(e, ruler);
+    const move = (ev) => cursorFrom(ev, ruler);
+    const up = () => {
+      ruler.removeEventListener("pointermove", move);
+      ruler.removeEventListener("pointerup", up);
+    };
+    ruler.addEventListener("pointermove", move);
+    ruler.addEventListener("pointerup", up);
+  });
+
+  [
+    ["beepToolSplit", splitSelected],
+    ["beepToolCopy", copySelected],
+    [
+      "beepToolMute",
+      () => {
+        if (!selected) return;
+        selected.muted = !selected.muted;
+        renderLayers();
+      },
+    ],
+    ["beepToolDelete", deleteSelected],
+  ].forEach(([id, fn]) =>
+    document.getElementById(id).addEventListener("click", () => {
+      fn();
+      playClickSound();
+    })
+  );
 
   // تغيّر عرض الشاشة (تدوير الجوال): نعيد الرسم بالمقياس الجديد
   let resizeTimer = null;
@@ -2600,7 +2701,7 @@ function initBeepMelodyExperiment() {
     const first = base ? Math.min(...events.map((e) => e.startBeat)) : 0;
     events.forEach((e) => (e.startBeat = Math.max(0, e.startBeat - first)));
     const end = Math.max(...events.map((e) => e.startBeat + e.durBeats));
-    layers.push({ events, instrument, muted: false, end, offset: 0 });
+    layers.push({ events, instrument, muted: false, end, offset: 0, row: rowCount() }); // مسار جديد تحت الباقي
     recTime.textContent = clock(Math.max(...layers.map((l) => l.end + l.offset)) - 0.4) + " · " + layers.length + " ▤";
     renderLayers();
   }
@@ -2609,6 +2710,7 @@ function initBeepMelodyExperiment() {
     takeTimers.forEach(clearTimeout);
     takeTimers = [];
     clearInterval(playheadTimer);
+    playheadTimer = null;
     setPlayhead(null);
     activeOscillators.forEach((osc) => {
       try {
@@ -2676,6 +2778,7 @@ function initBeepMelodyExperiment() {
     document.getElementById("beepRecClear").addEventListener("click", () => {
       stopTake();
       layers = [];
+      selected = null;
       recTime.textContent = "";
       renderLayers();
       playClickSound();

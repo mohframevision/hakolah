@@ -135,13 +135,19 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="ملء الشاشة">⛶</button>
       </div>
       <div class="beep-play-keys" id="beepPlayKeys"></div>
-      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="طبقة" data-mute="كتم الطبقة" data-unmute="إلغاء الكتم" data-delete="احذف الطبقة" data-max="الحد الأقصى ٨ طبقات" data-silent="كل الطبقات مكتومة">
+      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="طبقة" data-max="الحد الأقصى ٨ طبقات" data-silent="كل الطبقات مكتومة">
+        <div class="beep-clip-tools" id="beepClipTools">
+          <button type="button" class="filter-chip" id="beepToolSplit" disabled data-cut="اختر مقطعاً، ثم ضع الخط الأبيض داخله بالنقر على المسطرة، ثم اضغط قصّ.">✂️ قصّ</button>
+          <button type="button" class="filter-chip" id="beepToolCopy" disabled>⧉ نسخ</button>
+          <button type="button" class="filter-chip" id="beepToolMute" disabled data-mute="🔇 كتم" data-unmute="🔊 إلغاء الكتم">🔇 كتم</button>
+          <button type="button" class="filter-chip" id="beepToolDelete" disabled>🗑️ حذف</button>
+        </div>
         <div class="beep-timeline" id="beepTimeline">
-          <div class="beep-ruler" id="beepRuler" aria-hidden="true"></div>
-          <ul class="beep-layer-list" id="beepLayerList"></ul>
+          <div class="beep-ruler" id="beepRuler" title="المسطرة: انقر لوضع نقطة القص"></div>
+          <div class="beep-board" id="beepBoard"></div>
           <div class="beep-playhead" id="beepPlayhead" hidden></div>
         </div>
-        <p class="beep-param-note" id="beepTimelineHint">↔ اسحب أي طبقة يميناً أو يساراً لتحريكها في الزمن (أو استخدم مفتاحي الأسهم). الطبقات كلها تُعزف معاً في الوقت نفسه؛ وانقر مرتين على طبقة لإعادتها إلى البداية.</p>
+        <p class="beep-param-note" id="beepTimelineHint">↔️↕️ اسحب أي طبقة بحرية: يميناً ويساراً في الزمن، وإلى أعلى وأسفل بين المسارات (أنزلها تحت آخر مسار لتبدأ مساراً جديداً). انقر على المسطرة لتضع الخط الأبيض، ثم حدّد طبقة واضغط «قصّ» ليقصّها عنده. مفتاح Delete يحذفها، والأسهم تحرّكها، والنقر المزدوج يعيدها إلى بداية الزمن. الطبقات كلها تُعزف معاً مهما كان مسارها.</p>
         <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ شغّل الطبقات" data-stop="⏹ أوقف">▶️ شغّل الطبقات</button>
         <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ WAV</button>
         <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ MP3</button>

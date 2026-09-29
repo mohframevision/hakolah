@@ -136,13 +136,19 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="Fullscreen">⛶</button>
       </div>
       <div class="beep-play-keys" id="beepPlayKeys"></div>
-      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-mute="Mute layer" data-unmute="Unmute" data-delete="Delete layer" data-max="Maximum 8 layers" data-silent="All layers are muted">
+      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-max="Maximum 8 layers" data-silent="All layers are muted">
+        <div class="beep-clip-tools" id="beepClipTools">
+          <button type="button" class="filter-chip" id="beepToolSplit" disabled data-cut="Select a clip, place the white line inside it by clicking the ruler, then press Split.">✂️ Split</button>
+          <button type="button" class="filter-chip" id="beepToolCopy" disabled>⧉ Duplicate</button>
+          <button type="button" class="filter-chip" id="beepToolMute" disabled data-mute="🔇 Mute" data-unmute="🔊 Unmute">🔇 Mute</button>
+          <button type="button" class="filter-chip" id="beepToolDelete" disabled>🗑️ Delete</button>
+        </div>
         <div class="beep-timeline" id="beepTimeline">
-          <div class="beep-ruler" id="beepRuler" aria-hidden="true"></div>
-          <ul class="beep-layer-list" id="beepLayerList"></ul>
+          <div class="beep-ruler" id="beepRuler" title="Ruler: click to set the split point"></div>
+          <div class="beep-board" id="beepBoard"></div>
           <div class="beep-playhead" id="beepPlayhead" hidden></div>
         </div>
-        <p class="beep-param-note" id="beepTimelineHint">↔ Drag any layer left or right to move it in time (or use the arrow keys). All layers play together at the same time; double-click a layer to send it back to the start.</p>
+        <p class="beep-param-note" id="beepTimelineHint">↔️↕️ Drag any layer freely: left and right in time, up and down between tracks (drop it below the last track to start a new one). Click the ruler to place the white line, select a layer and press Split to cut it there. The Delete key removes it, the arrow keys move it, and a double-click sends it back to the start. All layers play together whichever track they're on.</p>
         <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ Play layers" data-stop="⏹ Stop">▶️ Play layers</button>
         <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ WAV</button>
         <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ MP3</button>
