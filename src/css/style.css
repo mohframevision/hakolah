@@ -4909,3 +4909,72 @@ img {
   color: #fff;
   text-align: center;
 }
+
+/* ===== تقصير/تطويل المقطع + سحب المؤشر ===== */
+.beep-timeline {
+  user-select: none;
+  -webkit-user-select: none; /* بلا تظليل الأرقام أثناء السحب */
+}
+
+.beep-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: min(14px, 30%); /* أعرض قليلاً: أسهل للإمساك بالماوس والإصبع */
+  z-index: 3;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.beep-handle.left {
+  left: 0;
+  border-radius: 8px 0 0 8px;
+}
+
+.beep-handle.right {
+  right: 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.beep-handle::after {
+  content: "";
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.beep-handle.left::after {
+  left: 3px;
+}
+
+.beep-handle.right::after {
+  right: 3px;
+}
+
+.beep-clip.selected .beep-handle::after,
+.beep-handle:hover::after {
+  background: #fff;
+}
+
+.beep-handle:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* مقبض الخط الأبيض: دائرة صغيرة برأسه تُمسك وتُسحب */
+.beep-playhead-knob {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: inherit;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+  pointer-events: auto;
+  cursor: ew-resize;
+  touch-action: none;
+}

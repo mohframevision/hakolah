@@ -2366,7 +2366,8 @@ function initBeepMelodyExperiment() {
     const saved = currentInstrument;
     list.forEach((l) => {
       currentInstrument = l.instrument;
-      const events = from ? l.events.filter((e) => e.startBeat + l.offset >= from) : l.events;
+      const all = clipEvents(l);
+      const events = from ? all.filter((e) => e.startBeat + l.offset >= from) : all;
       scheduleEvents(target, { events, meta: { bpm: 60 } }, start + l.offset - from);
     });
     currentInstrument = saved;
@@ -2377,8 +2378,8 @@ function initBeepMelodyExperiment() {
     const live = sounding();
     return {
       layers: live,
-      events: live.flatMap((l) => l.events.map((e) => ({ ...e, startBeat: e.startBeat + l.offset }))), // MIDI: مسار واحد (الآلات ما تُحفظ فيه)
-      meta: { seed: "piano", bpm: 60, meter: 4, totalBeats: Math.max(...live.map((l) => l.end + l.offset)) },
+      events: live.flatMap((l) => clipEvents(l).map((e) => ({ ...e, startBeat: e.startBeat + l.offset }))), // MIDI: مسار واحد (الآلات ما تُحفظ فيه)
+      meta: { seed: "piano", bpm: 60, meter: 4, totalBeats: Math.max(...live.map(layerEnd)) },
     };
   }
 
@@ -2410,7 +2411,19 @@ function initBeepMelodyExperiment() {
   let selected = null; // المقطع المحدد
 
   const snap = (sec) => Math.max(0, Math.round(sec * 20) / 20); // خطوة ٥٠م.ث
-  const layerEnd = (l) => l.end + l.offset;
+  const layerLen = (l) => l.t1 - l.t0; // طول الجزء الظاهر من المقطع
+  const layerEnd = (l) => l.offset + layerLen(l);
+  // النغمات الظاهرة داخل نافذة المقطع [t0,t1] بأوقات نسبية لبدايته؛ النغمة التي تعبر
+  // النهاية تُقصّر. التقصير لا يمسح شيئاً (l.events كما سُجّلت)، فالتطويل يرجّعها.
+  function clipEvents(l) {
+    const out = [];
+    l.events.forEach((ev) => {
+      if (ev.startBeat < l.t0 - 1e-6 || ev.startBeat >= l.t1) return;
+      const held = Math.min(ev.held, l.t1 - ev.startBeat);
+      out.push({ ...ev, startBeat: ev.startBeat - l.t0, held, durBeats: held < ev.held ? held + 0.4 : ev.durBeats });
+    });
+    return out;
+  }
   const rowCount = () => (layers.length ? Math.max(...layers.map((l) => l.row)) + 1 : 0);
 
   // مسار فاضي بالنص ما له معنى: نرقّم المسارات المستعملة من جديد بلا فراغات
@@ -2445,11 +2458,12 @@ function initBeepMelodyExperiment() {
     canvas.height = Math.round(h * dpr);
     const g = canvas.getContext("2d");
     g.scale(dpr, dpr);
-    const ms = l.events.map((ev) => 69 + 12 * Math.log2(ev.freq / 440));
+    const evs = clipEvents(l);
+    const ms = evs.map((ev) => 69 + 12 * Math.log2(ev.freq / 440));
     const lo = Math.min(...ms);
     const hi = Math.max(...ms);
     g.fillStyle = "rgba(255,255,255,0.92)";
-    l.events.forEach((ev, i) => {
+    evs.forEach((ev, i) => {
       const y = hi === lo ? h / 2 - 1.5 : 12 + (1 - (ms[i] - lo) / (hi - lo)) * (h - 18); // النغمة الأحد أعلى
       g.fillRect(ev.startBeat * pxPerSec, y, Math.max(2, ev.held * pxPerSec), 3);
     });
@@ -2519,41 +2533,72 @@ function initBeepMelodyExperiment() {
   function copySelected() {
     if (!selected) return;
     pushHistory();
-    const copy = { ...selected, events: selected.events.map((e) => ({ ...e })), offset: selected.offset + selected.end, lastTap: 0 };
+    const copy = { ...selected, events: selected.events.map((e) => ({ ...e })), offset: selected.offset + layerLen(selected), lastTap: 0 };
     layers.splice(layers.indexOf(selected) + 1, 0, copy);
     selected = copy;
     renderLayers();
   }
 
-  // قص المقطع المحدد عند المؤشر الأبيض: نغمة تبدأ قبل القص تبقى يسار (وتُقصّ مدتها
-  // عنده)، وما يبدأ بعده ينتقل لمقطع جديد يمين. ponytail: النغمة التي تعبر القص لا
-  // تُكمَل يمينه (مثل قص MIDI بسيط)
+  // قص المقطع المحدد عند المؤشر الأبيض. القص غير مدمّر: نقسم "نافذة" المقطع [t0,t1]
+  // إلى نافذتين على نفس النغمات — فيبقى تطويل الحافة لاحقاً يرجّع كل شي. نغمة تعبر
+  // نقطة القص تُقصّر يسارها ولا تُكمَل يمينها. ponytail: مثل قص MIDI بسيط
   function splitSelected() {
     const l = selected;
     if (!l) return;
-    const t = cursor - l.offset;
-    const left = [];
-    const right = [];
-    l.events.forEach((ev) => {
-      if (ev.startBeat < t) {
-        const e = { ...ev };
-        if (e.startBeat + e.held > t) {
-          e.held = Math.max(0.05, t - e.startBeat);
-          e.durBeats = e.held + 0.4;
-        }
-        left.push(e);
-      } else {
-        right.push({ ...ev, startBeat: ev.startBeat - t });
-      }
-    });
-    if (!left.length || !right.length) return showToast(document.getElementById("beepToolSplit").dataset.cut);
+    const t = l.t0 + (cursor - l.offset); // نقطة القص بزمن المقطع الأصلي
+    const a = { ...l, t1: t };
+    const b = { ...l, t0: t, offset: l.offset + (t - l.t0), lastTap: 0 };
+    const inside = t > l.t0 + 0.05 && t < l.t1 - 0.05;
+    if (!inside || !clipEvents(a).length || !clipEvents(b).length) return showToast(document.getElementById("beepToolSplit").dataset.cut);
     pushHistory();
-    const endOf = (list) => Math.max(...list.map((e) => e.startBeat + e.durBeats));
-    const a = { ...l, events: left, end: endOf(left) };
-    const b = { ...l, events: right, offset: l.offset + t, end: endOf(right), lastTap: 0 };
     layers.splice(layers.indexOf(l), 1, a, b);
     selected = b;
     renderLayers();
+  }
+
+  /* تقصير/تطويل المقطع بسحب حافته (بلا قص): الحافة اليمنى تغيّر t1، واليسرى تغيّر
+     t0 وتحرّك offset بنفس المقدار فيبقى المحتوى مكانه. غير مدمّر: التطويل يرجّع
+     النغمات المخفية، لحد طول التسجيل الأصلي. */
+  const TRIM_MIN = 0.1;
+  function startTrim(e, handle, clip, l, side) {
+    if (e.button) return;
+    e.preventDefault();
+    e.stopPropagation(); // لا يبدأ سحب المقطع كله
+    handle.setPointerCapture(e.pointerId);
+    select(l);
+    clip.classList.add("dragging");
+    const x0 = e.clientX;
+    const before = snapshot();
+    const t0a = l.t0;
+    const t1a = l.t1;
+    const offa = l.offset;
+    const canvas = clip.querySelector("canvas");
+    const move = (ev) => {
+      const d = (ev.clientX - x0) / pxPerSec;
+      if (side === "right") {
+        l.t1 = Math.min(l.end, Math.max(l.t0 + TRIM_MIN, Math.round((t1a + d) * 20) / 20));
+      } else {
+        const lowest = Math.max(0, t0a - offa); // لا يتجاوز بداية المحتوى ولا بداية الجدول
+        const nt0 = Math.min(l.t1 - TRIM_MIN, Math.max(lowest, Math.round((t0a + d) * 20) / 20));
+        l.offset = snap(offa + (nt0 - t0a));
+        l.t0 = nt0;
+      }
+      const w = Math.max(8, layerLen(l) * pxPerSec);
+      clip.style.left = l.offset * pxPerSec + "px";
+      clip.style.width = w + "px";
+      drawClip(canvas, l, w, ROW_H - 6);
+    };
+    const up = () => {
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", up);
+      handle.removeEventListener("pointercancel", up);
+      if (l.t0 !== t0a || l.t1 !== t1a) pushHistory(before);
+      renderLayers();
+      focusLayer(l);
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+    handle.addEventListener("pointercancel", up);
   }
 
   function buildClip(l, i) {
@@ -2566,7 +2611,7 @@ function initBeepMelodyExperiment() {
     clip.setAttribute("aria-pressed", String(l === selected));
     clip.title = instrumentLabel(l.instrument);
     clip.setAttribute("aria-label", recTake.dataset.layer + " " + (i + 1) + " · " + instrumentLabel(l.instrument));
-    const w = Math.max(8, l.end * pxPerSec);
+    const w = Math.max(8, layerLen(l) * pxPerSec);
     clip.style.left = l.offset * pxPerSec + "px";
     clip.style.top = l.row * ROW_H + 3 + "px";
     clip.style.width = w + "px";
@@ -2576,6 +2621,12 @@ function initBeepMelodyExperiment() {
     label.textContent = instrumentLabel(l.instrument).split(" ")[0]; // الرمز فقط: الاسم لا يتسع بمقطع قصير
     const canvas = document.createElement("canvas");
     clip.append(canvas, label);
+    ["left", "right"].forEach((side) => {
+      const handle = document.createElement("div");
+      handle.className = "beep-handle " + side;
+      handle.addEventListener("pointerdown", (e) => startTrim(e, handle, clip, l, side));
+      clip.append(handle);
+    });
     drawClip(canvas, l, w, ROW_H - 6);
 
     clip.addEventListener("pointerdown", (e) => {
@@ -2675,27 +2726,37 @@ function initBeepMelodyExperiment() {
     if (!playheadTimer) setPlayhead(null);
   }
 
-  // النقر على الخلفية يلغي التحديد ويضع المؤشر؛ المسطرة تسحب المؤشر
-  const cursorFrom = (e, el) => {
-    cursor = snap((e.clientX - el.getBoundingClientRect().left) / pxPerSec);
-    setPlayhead(null);
-  };
+  /* تحريك المؤشر الأبيض بالسحب من أي مكان: اللوحة الفاضية، المسطرة، أو مقبضه
+     الدائري. preventDefault يمنع المتصفح من تظليل النص أثناء السحب (كان يبدأ
+     تحديد الأرقام وينفصل الخط عن الماوس لأن اللوحة كانت تسمع الضغطة فقط). */
+  function scrub(e, captureEl, rectEl) {
+    if (e.button) return;
+    e.preventDefault();
+    captureEl.setPointerCapture(e.pointerId);
+    const set = (ev) => {
+      cursor = snap((ev.clientX - rectEl.getBoundingClientRect().left) / pxPerSec);
+      setPlayhead(null);
+    };
+    set(e);
+    const up = () => {
+      captureEl.removeEventListener("pointermove", set);
+      captureEl.removeEventListener("pointerup", up);
+      captureEl.removeEventListener("pointercancel", up);
+    };
+    captureEl.addEventListener("pointermove", set);
+    captureEl.addEventListener("pointerup", up);
+    captureEl.addEventListener("pointercancel", up);
+  }
   board.addEventListener("pointerdown", (e) => {
     if (e.target !== board) return;
     select(null);
-    cursorFrom(e, board);
+    scrub(e, board, board);
   });
-  ruler.addEventListener("pointerdown", (e) => {
-    ruler.setPointerCapture(e.pointerId);
-    cursorFrom(e, ruler);
-    const move = (ev) => cursorFrom(ev, ruler);
-    const up = () => {
-      ruler.removeEventListener("pointermove", move);
-      ruler.removeEventListener("pointerup", up);
-    };
-    ruler.addEventListener("pointermove", move);
-    ruler.addEventListener("pointerup", up);
-  });
+  ruler.addEventListener("pointerdown", (e) => scrub(e, ruler, ruler));
+  const knob = document.createElement("span");
+  knob.className = "beep-playhead-knob";
+  playhead.append(knob);
+  knob.addEventListener("pointerdown", (e) => scrub(e, knob, timeline));
 
   [
     ["beepToolSplit", splitSelected],
@@ -2756,8 +2817,8 @@ function initBeepMelodyExperiment() {
     events.forEach((e) => (e.startBeat = Math.max(0, e.startBeat - first)));
     const end = Math.max(...events.map((e) => e.startBeat + e.durBeats));
     pushHistory();
-    layers.push({ events, instrument, muted: false, end, offset: 0, row: rowCount() }); // مسار جديد تحت الباقي
-    recTime.textContent = clock(Math.max(...layers.map((l) => l.end + l.offset)) - 0.4) + " · " + layers.length + " ▤";
+    layers.push({ events, instrument, muted: false, end, t0: 0, t1: end, offset: 0, row: rowCount() }); // مسار جديد تحت الباقي
+    recTime.textContent = clock(Math.max(...layers.map(layerEnd)) - 0.4) + " · " + layers.length + " ▤";
     renderLayers();
   }
 
@@ -2796,7 +2857,7 @@ function initBeepMelodyExperiment() {
     scheduleLayers({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, list, start, from);
     // المفاتيح تنضغط وتنرفع مع الصوت (نفس شكل العزف الحي)
     list.forEach((l) =>
-      l.events.forEach((ev) => {
+      clipEvents(l).forEach((ev) => {
         const at = ev.startBeat + l.offset - from;
         if (at < 0) return;
         const key = () => playBox?.querySelector(`[data-code="${ev.code}"]`);
