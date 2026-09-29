@@ -3,6 +3,7 @@
 // منشور 1080x1350 (متصفح) وستوري 1080x1920 (جوالان). القديم عليه خط، الجديد بإطار.
 // يصوّر hakolah.com الحي بالوضع الداكن بـPlaywright ثم يرسم HTML → PNG.
 //   node scripts/generate-poster-domain-dark.js [ar|en]   (بلا وسيط = الاثنين)
+/* global document -- داخل page.evaluate (يُنفَّذ بالمتصفح) */
 const path = require("path");
 const { chromium } = require("playwright");
 

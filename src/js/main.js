@@ -535,11 +535,15 @@ function initDailyPickReminder() {
 
   if (localStorage.getItem(SEEN_KEY) === today) return;
   if (sessionStorage.getItem(DISMISSED_KEY)) return;
+  // مرة وحدة باليوم (أول صفحة فرعية فقط) — كانت تطلع بكل صفحة وتغطي البطاقات
+  const SHOWN_KEY = "daily_pick_reminder_shown";
+  if (localStorage.getItem(SHOWN_KEY) === today) return;
 
   const banner = document.getElementById("dailyPickReminder");
   const closeBtn = document.getElementById("dailyPickReminderClose");
   if (!banner || !closeBtn) return;
 
+  localStorage.setItem(SHOWN_KEY, today);
   banner.classList.add("open");
 
   closeBtn.addEventListener("click", () => {

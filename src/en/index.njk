@@ -44,10 +44,10 @@ langSwitchUrl: "/index.html"
   {# "Day Plan" card hidden for now — the feature needs a better algorithm
      (see the note at the top of src/plan.njk). The page itself still works
      via its direct URL for testing. #}
-  <a class="section-card" href="{{ '/en/favorites.html' | url }}">
-    <span class="icon">❤️</span>
-    <h3>{{ t.home_favorites_title }}</h3>
-    <p>{{ t.home_favorites_desc }}</p>
+  <a class="section-card" data-group="tools" href="{{ '/en/sounds.html' | url }}">
+    <span class="icon">🎹</span>
+    <h3>{{ t.home_sounds_title }}</h3>
+    <p>{{ t.home_sounds_desc }}</p>
   </a>
 </section>
 

@@ -1453,6 +1453,14 @@ img {
   margin-top: 4px;
 }
 
+/* الأزرار تتقاسم عرض السطر: بدونها زرّان عريضان (رقم الهاتف + إنستقرام) ما
+   يتسعون فينزل واحد وحده لسطر ثانٍ بعرض مختلف وتتفاوت البطاقات */
+.item-card .item-actions .btn {
+  flex: 1 1 auto;
+  justify-content: center;
+  padding-inline: 14px;
+}
+
 .report-link {
   display: inline-block;
   margin-top: 8px;
@@ -2000,11 +2008,14 @@ img {
 }
 
 /* ===== اختار لي (اختيار عشوائي) ===== */
+/* شبكة خلايا متساوية (3 أعمدة = 3×3 للأقسام التسعة) بدل flex-wrap اللي كان
+   يعطي كل بطاقة عرض نصّها فيطلع صف 7 وصف 2 بأعراض مختلفة */
 .picker-categories {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  justify-content: center;
+  max-width: 720px;
+  margin: 0 auto;
   padding: 10px 0 30px;
 }
 
@@ -2028,6 +2039,14 @@ img {
     transform 0.18s ease,
     border-color 0.18s ease,
     box-shadow 0.18s ease;
+}
+
+@media (max-width: 600px) {
+  .picker-category {
+    min-width: 0;
+    padding: 14px 6px;
+    font-size: 0.85rem;
+  }
 }
 
 .picker-category-icon {
