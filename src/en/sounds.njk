@@ -253,6 +253,26 @@ pageScript: "sounds"
       <p class="beep-params-title">🎹 Major vs. minor chords</p>
       <p class="beep-param-note">The only difference is the middle note: 4 semitones above the root in a major chord, 3 in a minor one. That small gap is what makes major sound bright and minor sound sad.</p>
     </div>
+    <div class="beep-quiz sounds-lesson piper" id="piperLesson">
+      <p class="beep-params-title">🎬 Scoring exercise: the first 36 seconds of Piper</p>
+      <p class="beep-param-note">An exercise from a music production course: score a short scene that moves through five emotional states, each with its own instruments and instruction. Press the button to hear an example that applies them, and watch the highlighted section follow the music.</p>
+      <button type="button" class="btn secondary" id="piperPlay" data-play="▶️ Listen to the example" data-stop="⏹ Stop">▶️ Listen to the example</button>
+      <div class="piper-bar" aria-hidden="true"><span id="piperProgress"></span></div>
+      <ol class="piper-list" id="piperList">
+        <li data-start="0" data-end="3"><span class="piper-time" dir="ltr">0:00–0:03</span><div><strong>Curiosity</strong><span class="piper-inst">Clarinet solo (motif)</span><small>Create a short, repeating motif using two or three notes.</small></div></li>
+        <li data-start="3" data-end="8"><span class="piper-time" dir="ltr">0:03–0:08</span><div><strong>Tension</strong><span class="piper-inst">String ensemble + Beauty Blubbers</span><small>Add dissonance and gradually increase the volume using automation.</small></div></li>
+        <li data-start="8" data-end="13"><span class="piper-time" dir="ltr">0:08–0:13</span><div><strong>Danger / Waves</strong><span class="piper-inst">String ensemble + Dusty Strings + Foley (waves)</span><small>Increase tension through dissonance and intensity.</small></div></li>
+        <li data-start="13" data-end="23"><span class="piper-time" dir="ltr">0:13–0:23</span><div><strong>Time freezes</strong><span class="piper-inst">Event Horizon + Foley (bubbles)</span><small>Use static harmony and long sustained sounds, with little or no rhythm. Use reverb to create space.</small></div></li>
+        <li data-start="23" data-end="36"><span class="piper-time" dir="ltr">0:23–0:36</span><div><strong>Uplifting / Happy</strong><span class="piper-inst">String ensemble + clarinet solo (motif) + marimba</span><small>Use consonant, major harmony and gradually increase the energy.</small></div></li>
+      </ol>
+      <p class="beep-params-title">Technical</p>
+      <ul class="piper-tech">
+        <li><strong>Automation:</strong> volume and panning.</li>
+        <li><strong>Tempo:</strong> use the Tempo Track when appropriate.</li>
+        <li><strong>Plugins:</strong> EQ + reverb (Space Designer) on each layer.</li>
+      </ul>
+      <p class="beep-param-note">🎧 The example is generated in code to apply the instructions; it is not the film's original score. Beauty Blubbers and Event Horizon are sounds from the course library, so they are stood in for by a celesta shimmer and a long choir chord.</p>
+    </div>
     <div class="beep-quiz" id="beepQuiz" data-right="✅ Correct! It was: " data-wrong="❌ Not quite — it was: " data-names="Frequency|Rhythm|Timbre|Dynamics">
       <p class="beep-params-title">👂 Ear training: what changed?</p>
       <p class="beep-param-note">You'll hear the same clip twice; the second time, exactly one parameter changes. Guess which.</p>

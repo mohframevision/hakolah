@@ -252,6 +252,26 @@ pageScript: "sounds"
       <p class="beep-params-title">🎹 الكورد الكبير والصغير</p>
       <p class="beep-param-note">الفرق بينهما في النغمة الوسطى فقط: تبعد في الكبير أربعة أنصاف درجات عن الأساس، وفي الصغير ثلاثة. هذا الفرق الصغير هو ما يجعل الكبير مشرقاً والصغير حزيناً.</p>
     </div>
+    <div class="beep-quiz sounds-lesson piper" id="piperLesson">
+      <p class="beep-params-title">🎬 تمرين تأليف: أول ٣٦ ثانية من فيلم Piper</p>
+      <p class="beep-param-note">تمرين من مقرر الإنتاج الموسيقي: تأليف موسيقى لمشهد قصير يتنقّل بين خمس حالات شعورية، وكل قسم له آلاته وتعليمته. اضغط الزر لتسمع مثالاً يطبّقها، ولاحظ كيف يتغيّر القسم المضيء مع الموسيقى.</p>
+      <button type="button" class="btn secondary" id="piperPlay" data-play="▶️ استمع إلى المثال" data-stop="⏹ أوقف">▶️ استمع إلى المثال</button>
+      <div class="piper-bar" aria-hidden="true"><span id="piperProgress"></span></div>
+      <ol class="piper-list" id="piperList">
+        <li data-start="0" data-end="3"><span class="piper-time" dir="ltr">0:00–0:03</span><div><strong>الفضول</strong><span class="piper-inst">كلارينت منفرد (لحن مميّز)</span><small>اصنع لحناً قصيراً متكرراً من نغمتين أو ثلاث.</small></div></li>
+        <li data-start="3" data-end="8"><span class="piper-time" dir="ltr">0:03–0:08</span><div><strong>التوتر</strong><span class="piper-inst">فرقة أوتار + <span dir="ltr">Beauty Blubbers</span></span><small>أضف تنافراً وارفع الصوت تدريجياً باستخدام الأتمتة.</small></div></li>
+        <li data-start="8" data-end="13"><span class="piper-time" dir="ltr">0:08–0:13</span><div><strong>الخطر / الأمواج</strong><span class="piper-inst">فرقة أوتار + <span dir="ltr">Dusty Strings</span> + مؤثرات فولي (أمواج)</span><small>ارفع التوتر بالتنافر وشدّة الأداء.</small></div></li>
+        <li data-start="13" data-end="23"><span class="piper-time" dir="ltr">0:13–0:23</span><div><strong>توقّف الزمن</strong><span class="piper-inst"><span dir="ltr">Event Horizon</span> + مؤثرات فولي (فقاعات)</span><small>استخدم هارمونياً ثابتاً وأصواتاً ممدودة طويلة بإيقاع قليل أو بلا إيقاع، واستعن بالصدى لخلق مساحة.</small></div></li>
+        <li data-start="23" data-end="36"><span class="piper-time" dir="ltr">0:23–0:36</span><div><strong>الارتقاء / البهجة</strong><span class="piper-inst">فرقة أوتار + كلارينت منفرد (اللحن المميّز) + ماريمبا</span><small>استخدم هارمونياً متوافقاً (كبيراً) وارفع الطاقة تدريجياً.</small></div></li>
+      </ol>
+      <p class="beep-params-title">الجانب التقني</p>
+      <ul class="piper-tech">
+        <li><strong>الأتمتة:</strong> مستوى الصوت والتوزيع الجانبي (Pan).</li>
+        <li><strong>التمبو:</strong> استخدم مسار التمبو (Tempo Track) عند الحاجة.</li>
+        <li><strong>الإضافات:</strong> معادِل (EQ) + صدى (Space Designer) على كل طبقة.</li>
+      </ul>
+      <p class="beep-param-note">🎧 المثال مولَّد بالكود ليطبّق التعليمات، وليس مقطوعة الفيلم الأصلية. أصوات <bdi dir="ltr">Beauty Blubbers</bdi> و <bdi dir="ltr">Event Horizon</bdi> من مكتبة المقرر، فاستُبدلت بأقرب ما عندنا: لمعان سيليستا ووتر كورس ممدود.</p>
+    </div>
     <div class="beep-quiz" id="beepQuiz" data-right="✅ إجابة صحيحة! الذي تغيّر: " data-wrong="❌ ليست هذه — الذي تغيّر: " data-names="التردد|الإيقاع|الطابع الصوتي|الديناميكية">
       <p class="beep-params-title">👂 تدريب الأذن: ما الذي تغيّر؟</p>
       <p class="beep-param-note">ستسمع المقطع نفسه مرتين، ويتغيّر في المرة الثانية بُعد واحد فقط. خمّن أيّها.</p>

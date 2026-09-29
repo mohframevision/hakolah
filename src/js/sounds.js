@@ -2048,6 +2048,184 @@ function initBeepMelodyExperiment() {
     });
   }
 
+  /* ===== تمرين تأليف: أول ٣٦ ثانية من فيلم Piper (تبويب "تعلّم") =====
+     مثال مولَّد بالكود يطبّق ملخص التمرين قسماً قسماً — ليس مقطوعة الفيلم الأصلية:
+       ٠–٣ فضول: كلارينت منفرد بلحن قصير متكرر (٣ نغمات).
+       ٣–٨ توتر: أوتار + تنافر يتراكم، ورفع تدريجي للصوت بالأتمتة.
+       ٨–١٣ خطر: تنافر أشد + أوتار غليظة (Dusty) + مؤثرات فولي لأمواج.
+       ١٣–٢٣ توقّف الزمن: تناغم ثابت وأصوات ممدودة بلا إيقاع + فقاعات + صدى واسع.
+       ٢٣–٣٦ بهجة: تناغم كبير، عودة لحن الكلارينت، وماريمبا تزداد كثافة.
+     الأتمتة: مستوى كل طبقة والتوزيع الجانبي والصدى كلها منحنيات على AudioParam.
+     لا طبول ولا نبض ضارب: الماريمبا تعزف تقاسيم لحنية. */
+  const piperBtn = document.getElementById("piperPlay");
+  if (piperBtn) {
+    const PIPER_SECONDS = 36;
+    const items = [...document.querySelectorAll("#piperList li")];
+    const bar = document.getElementById("piperProgress");
+    const midiHz = (m) => 440 * 2 ** ((m - 69) / 12);
+    let piperTimer = null;
+
+    function piperStop() {
+      clearInterval(piperTimer);
+      piperTimer = null;
+      activeOscillators.forEach((o) => {
+        try {
+          o.stop();
+        } catch {
+          // خلص وقته أصلاً
+        }
+      });
+      activeOscillators = [];
+      items.forEach((li) => li.classList.remove("on"));
+      bar.style.width = "0%";
+      piperBtn.textContent = piperBtn.dataset.play;
+    }
+
+    async function piperPlay() {
+      if (playing) stopPlayback();
+      await ensureContext();
+      piperStop();
+      const ctx = audioCtx;
+      const t0 = ctx.currentTime + 0.15;
+
+      // ---- المزج: صدى محلي (٤٫٥ث) فوق صدى المسار العام، وطبقة لكل مصدر ----
+      const mix = ctx.createGain();
+      mix.connect(masterInput);
+      const verb = ctx.createConvolver();
+      verb.buffer = makeRoomImpulse(ctx, 4.5);
+      const wet = ctx.createGain();
+      mix.connect(verb).connect(wet).connect(masterInput);
+
+      const ramp = (param, points) => {
+        param.setValueAtTime(points[0][1], t0 + points[0][0]);
+        points.slice(1).forEach(([t, v]) => param.linearRampToValueAtTime(v, t0 + t));
+      };
+      const layer = (pan = 0) => {
+        const g = ctx.createGain();
+        g.gain.value = 1;
+        const p = ctx.createStereoPanner();
+        p.pan.value = pan;
+        g.connect(p).connect(mix);
+        return { in: g, gain: g.gain, pan: p.pan };
+      };
+      const clar = layer(-0.15);
+      const str = layer(0);
+      const dusty = layer(0.3);
+      const shine = layer(0.4);
+      const pad = layer(0);
+      const mar = layer(0.25);
+      const foley = layer(0);
+
+      // playNote يقرأ الآلة العامة لحظة الجدولة: نبدّلها ثم نرجّعها
+      const note = (inst, m, t, dur, gain, l) => {
+        const saved = currentInstrument;
+        currentInstrument = inst;
+        playNote({ ctx, dry: l.in, wet: l.in, live: true }, clamp(Math.round(((m - 48) * 7) / 12), 0, 21), t0 + t, dur, gain, 0, 0, midiHz(m));
+        currentInstrument = saved;
+      };
+      const chord = (inst, ms, t, dur, gain, l) => ms.forEach((m) => note(inst, m, t, dur, gain, l));
+
+      // ---- ٠–٣ فضول: كلارينت، لحن من ٣ نغمات يتكرر مرتين (ري صغير) ----
+      [0, 1.5].forEach((s) => {
+        note("clarinet", 64, s, 0.45, 0.17, clar);
+        note("clarinet", 67, s + 0.5, 0.45, 0.17, clar);
+        note("clarinet", 65, s + 1.0, 0.5, 0.17, clar);
+      });
+
+      // ---- ٣–٨ توتر: وتر ري صغير ثم نغمات تنافر تدخل تباعاً، والصوت يصعد ----
+      chord("strings", [50, 57, 65], 3, 5.4, 0.15, str);
+      note("strings", 63, 5.0, 3.4, 0.13, str); // مي بيمول ضد ري/ري بيمول
+      note("strings", 56, 6.4, 2.2, 0.13, str); // لا بيمول ضد لا
+      [[3.4, 86], [4.5, 84], [5.6, 89], [6.5, 83], [7.3, 88]].forEach(([t, m]) => note("celesta", m, t, 0.6, 0.09, shine)); // لمعان خفيف بدل Beauty Blubbers
+
+      // ---- ٨–١٣ خطر: عنقود أشد تنافراً + تشيلو غليظ + أمواج (ضجيج مفلتر يتموّج) ----
+      chord("strings", [50, 56, 60, 66], 8, 5.4, 0.15, str);
+      note("cello", 38, 8, 3.2, 0.22, dusty);
+      note("cello", 39, 10.8, 2.5, 0.24, dusty); // نصف درجة فوقه = تنافر زاحف
+      const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const nd = noiseBuf.getChannelData(0);
+      for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+      const swell = (center, vol) => {
+        const src = ctx.createBufferSource();
+        src.buffer = noiseBuf;
+        src.loop = true;
+        const f = ctx.createBiquadFilter();
+        f.type = "bandpass";
+        f.Q.value = 0.7;
+        const g = ctx.createGain();
+        ramp(f.frequency, [[center - 0.9, 300], [center, 1800], [center + 0.9, 400]]);
+        ramp(g.gain, [[center - 0.9, 0.0001], [center, vol], [center + 0.9, 0.0001]]);
+        src.connect(f).connect(g).connect(foley.in);
+        src.start(t0 + center - 0.9);
+        src.stop(t0 + center + 1);
+        activeOscillators.push(src);
+      };
+      [[9.2, 0.05], [10.9, 0.08], [12.5, 0.12]].forEach(([c, v]) => swell(c, v));
+
+      // ---- ١٣–٢٣ توقّف الزمن: وتر ثابت ممدود (كورس)، بلا إيقاع، وفقاعات متفرقة ----
+      chord("choir", [50, 57, 64], 13, 10.6, 0.13, pad);
+      const bubble = (t, panValue) => {
+        const o = ctx.createOscillator();
+        o.type = "sine";
+        const g = ctx.createGain();
+        const p = ctx.createStereoPanner();
+        p.pan.value = panValue;
+        const f0 = 380 + Math.random() * 300;
+        o.frequency.setValueAtTime(f0, t0 + t);
+        o.frequency.exponentialRampToValueAtTime(f0 * 2.6, t0 + t + 0.09);
+        g.gain.setValueAtTime(0.0001, t0 + t);
+        g.gain.exponentialRampToValueAtTime(0.06, t0 + t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + t + 0.14);
+        o.connect(g).connect(p).connect(mix);
+        o.start(t0 + t);
+        o.stop(t0 + t + 0.2);
+        activeOscillators.push(o);
+      };
+      [13.6, 14.4, 15.9, 17.2, 18.1, 19.7, 20.9, 22.1].forEach((t, i) => bubble(t, i % 2 ? 0.5 : -0.5));
+
+      // ---- ٢٣–٣٦ بهجة: ري كبير، عودة اللحن (بالكبير)، وماريمبا تتكاثف تدريجياً ----
+      [[23, 27, [50, 57, 66]], [27, 30, [55, 59, 62]], [30, 33, [57, 61, 64]], [33, 36.8, [50, 57, 66, 74]]].forEach(([a, z, ms]) =>
+        chord("strings", ms, a, z - a + 0.3, 0.14, str)
+      );
+      [23.5, 25.5, 27.5].forEach((s) => {
+        note("clarinet", 66, s, 0.45, 0.17, clar);
+        note("clarinet", 69, s + 0.5, 0.45, 0.17, clar);
+        note("clarinet", 67, s + 1.0, 0.6, 0.17, clar);
+      });
+      note("clarinet", 69, 31, 0.5, 0.17, clar);
+      note("clarinet", 71, 31.6, 0.5, 0.17, clar);
+      note("clarinet", 74, 32.2, 2.2, 0.19, clar);
+      const arps = [[23, [62, 66, 69, 74]], [27, [62, 67, 71, 74]], [30, [64, 69, 73, 76]], [33, [62, 66, 69, 74]]];
+      const arpAt = (t) => arps.filter(([s]) => s <= t).pop()[1];
+      for (let mt = 26, k = 0; mt < 35.7; k++) {
+        note("marimba", arpAt(mt)[[0, 1, 2, 3, 2, 1][k % 6]], mt, 0.5, 0.1 + (mt - 26) * 0.012, mar);
+        mt += mt < 30 ? 0.6 : mt < 33 ? 0.45 : 0.33; // الطاقة تزيد بكثافة النغمات، لا بنبض ضارب
+      }
+
+      // ---- الأتمتة: مستوى الصوت، التوزيع الجانبي، والصدى ----
+      ramp(str.gain, [[0, 0], [3, 0.15], [8, 0.6], [13, 0.95], [13.4, 0], [23, 0], [23.6, 0.35], [PIPER_SECONDS, 0.95]]);
+      ramp(str.pan, [[3, -0.6], [8, 0], [13, 0.6], [13.4, 0], [PIPER_SECONDS, 0.25]]);
+      ramp(dusty.gain, [[0, 0], [8, 0.5], [13, 1], [13.4, 0]]);
+      ramp(pad.gain, [[0, 0], [12.9, 0], [15.5, 0.95], [22.6, 0.95], [24, 0]]);
+      ramp(wet.gain, [[0, 0.3], [13, 0.4], [14.5, 0.9], [22, 0.9], [25, 0.4]]); // الصدى يتّسع وقت "توقّف الزمن"
+
+      piperBtn.textContent = piperBtn.dataset.stop;
+      piperTimer = setInterval(() => {
+        const elapsed = ctx.currentTime - t0;
+        if (elapsed < 0) return;
+        if (elapsed > PIPER_SECONDS + 2.5) return piperStop();
+        bar.style.width = Math.min(100, (elapsed / PIPER_SECONDS) * 100) + "%";
+        items.forEach((li) => li.classList.toggle("on", elapsed >= +li.dataset.start && elapsed < +li.dataset.end));
+      }, 100);
+    }
+
+    piperBtn.addEventListener("click", () => {
+      if (piperTimer) piperStop();
+      else piperPlay();
+      playClickSound();
+    });
+  }
+
   /* ===== التبويبات: اعزف / ألّف / تعلّم ===== */
   const tabs = document.querySelectorAll(".sounds-tab");
   function showPane(id) {
