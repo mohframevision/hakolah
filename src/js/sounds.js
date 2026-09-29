@@ -1745,6 +1745,15 @@ function initBeepMelodyExperiment() {
     solfege: ["Do", "Do♯", "Re", "Re♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si"],
   };
   let playOctave = 4;
+  // ما يُكتب على المفاتيح المرسومة: أحرف الكيبورد (الافتراضي) أو أسماء النغمات
+  // القياسية C D E أو Do Re Mi — للتعلّم. التحكم نفسه بالحالات الثلاث لا يتغيّر.
+  let labelMode = "keys";
+  try {
+    const saved = localStorage.getItem("beepLabels");
+    if (saved === "letters" || saved === "solfege") labelMode = saved;
+  } catch {
+    // التخزين محجوب — الافتراضي
+  }
   const held = new Map(); // المفتاح الممسوك → غلاف صوته (نخمده لما ينرفع)
 
   function renderPlayKeys() {
@@ -1752,6 +1761,7 @@ function initBeepMelodyExperiment() {
     const codes = Object.keys(KEY_MAP);
     const whites = codes.filter((c) => ![1, 3, 6, 8, 10, 13, 15].includes(KEY_MAP[c]));
     playBox.style.setProperty("--whites", whites.length);
+    playBox.dataset.labels = labelMode;
     playBox.innerHTML = codes
       .map((code) => {
         const semi = KEY_MAP[code];
@@ -1759,8 +1769,9 @@ function initBeepMelodyExperiment() {
         // السوداء تقع على الحد بين البيضاء اللي قبلها واللي بعدها
         const pos = black ? whites.filter((c) => KEY_MAP[c] < semi).length : whites.indexOf(code);
         const letter = KEY_LABEL[code] || code.slice(3);
-        const name = CHROMA[noteStyle][semi % 12];
-        return `<button type="button" class="${black ? "pk-black" : "pk-white"}" data-code="${code}" style="--i:${pos}" aria-label="${name}"><b>${letter}</b><small>${name}</small></button>`;
+        const asNotes = labelMode !== "keys";
+        const name = CHROMA[asNotes ? labelMode : noteStyle][semi % 12];
+        return `<button type="button" class="${black ? "pk-black" : "pk-white"}" data-code="${code}" style="--i:${pos}" aria-label="${name}"><b>${asNotes ? name : letter}</b>${asNotes ? "" : `<small>${name}</small>`}</button>`;
       })
       .join("");
     document.getElementById("beepOctLabel").textContent = "C" + playOctave;
@@ -1805,6 +1816,34 @@ function initBeepMelodyExperiment() {
   if (playBox) {
     renderPlayKeys();
     noteNameToggle?.addEventListener("click", renderPlayKeys);
+    const labelChips = document.querySelectorAll("#beepPlayLabels [data-labels]");
+    const markLabels = () => labelChips.forEach((c) => c.classList.toggle("active", c.dataset.labels === labelMode));
+    markLabels();
+    labelChips.forEach((chip) =>
+      chip.addEventListener("click", () => {
+        labelMode = chip.dataset.labels;
+        try {
+          localStorage.setItem("beepLabels", labelMode);
+        } catch {
+          // لا شيء
+        }
+        markLabels();
+        renderPlayKeys();
+        playClickSound();
+      })
+    );
+    // ملء الشاشة: يخفي شريط المتصفح بالجوال الأفقي. داخل التطبيق ما يشتغل (WebView
+    // بلا onShowCustomView) والتطبيق يخفي أشرطته بنفسه عند الأفقي
+    const fsBtn = document.getElementById("beepFullscreen");
+    const tool = document.querySelector(".sounds-tool");
+    if (fsBtn && tool.requestFullscreen && !document.documentElement.classList.contains("in-app")) {
+      fsBtn.hidden = false;
+      fsBtn.addEventListener("click", () => {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else tool.requestFullscreen().catch(() => {});
+        playClickSound();
+      });
+    }
     document.getElementById("beepOctDown").addEventListener("click", () => shiftOctave(-1));
     document.getElementById("beepOctUp").addEventListener("click", () => shiftOctave(1));
 

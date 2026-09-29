@@ -60,10 +60,16 @@ pageScript: "sounds"
   <section class="sounds-pane" id="panePlay" role="tabpanel">
     <div class="beep-play">
       <p class="beep-param-note">Middle row <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> for the white keys, the row above <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> for the black keys, and <kbd>Z</kbd> / <kbd>X</kbd> to shift the octave. It also works with a keyboard plugged into your phone, or by touching the keys directly.</p>
+      <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="What is written on the keys">
+        <button type="button" class="filter-chip active" data-labels="keys">⌨️ Keyboard letters</button>
+        <button type="button" class="filter-chip" data-labels="letters">C D E</button>
+        <button type="button" class="filter-chip" data-labels="solfege">Do Re Mi</button>
+      </div>
       <div class="beep-play-octave">
         <button type="button" class="filter-chip" id="beepOctDown" aria-label="Octave down">Z ⬇️</button>
         <span id="beepOctLabel" dir="ltr">C4</span>
         <button type="button" class="filter-chip" id="beepOctUp" aria-label="Octave up">X ⬆️</button>
+        <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="Fullscreen">⛶</button>
       </div>
       <div class="beep-play-keys" id="beepPlayKeys"></div>
     </div>

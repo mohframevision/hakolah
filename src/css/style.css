@@ -4332,3 +4332,171 @@ img {
 .in-app .beep-experiment {
   margin-top: 8px;
 }
+
+/* ===== صوتيات هكوله: بيانو يتكيّف مع الشاشة (أفقي بالجوال / شاشة طويلة) ===== */
+.sounds-tool .beep-play {
+  max-width: 900px;
+}
+
+/* ارتفاع المفاتيح يتبع عرضها (نسبة قريبة من البيانو الحقيقي) بدل ١٥٠px ثابتة */
+.sounds-tool .beep-play-keys {
+  height: auto;
+  aspect-ratio: 11 / 4;
+  max-height: 60vh;
+}
+
+.beep-play-keys[data-labels="letters"] .pk-white b,
+.beep-play-keys[data-labels="solfege"] .pk-white b {
+  font-size: clamp(0.85rem, 2.2vw, 1.5rem);
+}
+
+.beep-play-keys[data-labels="letters"] .pk-black b,
+.beep-play-keys[data-labels="solfege"] .pk-black b {
+  font-size: clamp(0.62rem, 1.5vw, 1rem);
+}
+
+.beep-play-octave #beepFullscreen[hidden] {
+  display: none;
+}
+
+.sounds-tool:fullscreen {
+  overflow-y: auto;
+  justify-content: center;
+  border-radius: 0;
+  margin: 0;
+}
+
+/* الجوال بالوضع الأفقي: الأشرطة والعناوين كانت تغطي الشاشة والمفاتيح تحت الطيّة.
+   نخفي كل شي غير الأداة (يرجع كله بإرجاع الجوال عمودياً)، ونعطي المفاتيح كل
+   الارتفاع المتبقي. pointer:coarse = شاشة لمس، فنافذة مكتب قصيرة ما تتأثر */
+@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+  body {
+    padding-bottom: 0;
+  }
+
+  .site-header,
+  .bottom-nav,
+  .site-footer,
+  .breadcrumb,
+  .page-header,
+  .cookie-banner,
+  .daily-pick-reminder {
+    display: none !important;
+  }
+
+  .container {
+    padding-block: 6px;
+  }
+
+  .sounds-tool {
+    margin: 0;
+    padding: 8px 12px;
+    gap: 6px;
+    border-radius: 18px;
+  }
+
+  .sounds-top {
+    max-width: none;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .sounds-top .beep-volume {
+    flex: 1;
+    width: auto;
+    padding-top: 6px;
+  }
+
+  .sounds-top .beep-panel {
+    flex: 1;
+    max-width: none;
+  }
+
+  .sounds-top .beep-panel > summary {
+    padding: 8px 14px;
+  }
+
+  .sounds-tab {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+  }
+
+  .sounds-tool .beep-play {
+    max-width: none;
+    padding: 6px 10px 8px;
+    gap: 6px;
+    border-radius: 18px;
+  }
+
+  .sounds-tool .beep-play > .beep-param-note {
+    display: none;
+  }
+
+  .sounds-tool .beep-play-keys {
+    aspect-ratio: auto;
+    max-height: none;
+    height: max(110px, calc(100dvh - 190px));
+  }
+}
+
+/* شاشة طويلة (كمبيوتر مقلوب أو تابلت عمودي): المفاتيح أكبر */
+@media (min-width: 900px) and (orientation: portrait) {
+  .sounds-tool .beep-play {
+    max-width: 1000px;
+  }
+
+  .sounds-tool .beep-play-keys {
+    aspect-ratio: 11 / 5;
+    max-height: 45vh;
+  }
+}
+
+/* أفقي بالجوال، ضغط ثاني: الصفوف الأربعة فوق المفاتيح تصير صفّين جنب بعض */
+@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+  .sounds-tool {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .sounds-tool > .sounds-top {
+    flex: 1 1 200px;
+    width: auto;
+  }
+
+  .sounds-tool > .sounds-pane {
+    flex-basis: 100%;
+  }
+
+  .sounds-top .beep-panel > summary {
+    flex-wrap: nowrap;
+    padding: 6px 12px;
+  }
+
+  .sounds-top .beep-panel-now {
+    order: 0;
+    flex-basis: auto;
+    margin-inline-start: auto;
+  }
+
+  .sounds-tool .beep-play {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    column-gap: 14px;
+  }
+
+  .sounds-tool .beep-play-keys {
+    flex-basis: 100%;
+    height: max(110px, calc(100dvh - 148px));
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 720px) and (pointer: coarse) {
+  .sounds-tool .beep-play-keys {
+    height: max(100px, calc(100dvh - 205px));
+  }
+}
