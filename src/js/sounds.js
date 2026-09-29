@@ -2239,6 +2239,7 @@ function initBeepMelodyExperiment() {
   tabs.forEach((tab) =>
     tab.addEventListener("click", () => {
       showPane(tab.dataset.pane);
+      if (tab.dataset.pane === "panePlay" && layers.length) renderLayers();
       playClickSound();
     })
   );
@@ -2366,7 +2367,7 @@ function initBeepMelodyExperiment() {
     const saved = currentInstrument;
     list.forEach((l) => {
       currentInstrument = l.instrument;
-      scheduleEvents(target, { events: l.events, meta: { bpm: 60 } }, start);
+      scheduleEvents(target, { events: l.events, meta: { bpm: 60 } }, start + l.offset);
     });
     currentInstrument = saved;
   }
@@ -2376,8 +2377,8 @@ function initBeepMelodyExperiment() {
     const live = sounding();
     return {
       layers: live,
-      events: live.flatMap((l) => l.events), // MIDI: مسار واحد (الآلات ما تُحفظ فيه)
-      meta: { seed: "piano", bpm: 60, meter: 4, totalBeats: Math.max(...live.map((l) => l.end)) },
+      events: live.flatMap((l) => l.events.map((e) => ({ ...e, startBeat: e.startBeat + l.offset }))), // MIDI: مسار واحد (الآلات ما تُحفظ فيه)
+      meta: { seed: "piano", bpm: 60, meter: 4, totalBeats: Math.max(...live.map((l) => l.end + l.offset)) },
     };
   }
 
@@ -2404,17 +2405,119 @@ function initBeepMelodyExperiment() {
     return b;
   }
 
+  /* ===== الجدول الزمني للطبقات =====
+     كل طبقة صف، وكتلتها (clip) مرسومة بنغماتها على خط زمن مشترك. السحب يحرّك
+     إزاحة الطبقة (offset بالثواني) — تُطبَّق بالتشغيل والتصدير. الطبقات تُعزف كلها
+     معاً؛ الجدول يرينا كيف تتراكب. مفتاحا الأسهم يحرّكان الكتلة المركّزة (١٠٠م.ث،
+     ومعه Shift ثانية)، والنقر المزدوج يرجعها للبداية. */
+  const timeline = document.getElementById("beepTimeline");
+  const ruler = document.getElementById("beepRuler");
+  const playhead = document.getElementById("beepPlayhead");
+  const LANE_HEIGHT = 40;
+  let pxPerSec = 30;
+  let timelineSeconds = 10;
+  let playheadTimer = null;
+
+  const snap = (sec) => Math.max(0, Math.round(sec * 20) / 20); // خطوة ٥٠م.ث
+  const layerEnd = (l) => l.end + l.offset;
+
+  function setPlayhead(sec) {
+    if (sec == null) {
+      playhead.hidden = true;
+      return;
+    }
+    playhead.hidden = false;
+    playhead.style.left = Math.min(Math.max(0, sec), timelineSeconds) * pxPerSec + "px";
+  }
+
+  function drawClip(canvas, l, w, h) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(w * dpr));
+    canvas.height = Math.round(h * dpr);
+    const g = canvas.getContext("2d");
+    g.scale(dpr, dpr);
+    const ms = l.events.map((ev) => 69 + 12 * Math.log2(ev.freq / 440));
+    const lo = Math.min(...ms);
+    const hi = Math.max(...ms);
+    g.fillStyle = "rgba(255,255,255,0.92)";
+    l.events.forEach((ev, i) => {
+      const y = hi === lo ? h / 2 - 1.5 : 4 + (1 - (ms[i] - lo) / (hi - lo)) * (h - 11); // النغمة الأحد أعلى
+      g.fillRect(ev.startBeat * pxPerSec, y, Math.max(2, ev.held * pxPerSec), 3);
+    });
+  }
+
+  function enableClipDrag(clip, l, index) {
+    clip.addEventListener("pointerdown", (e) => {
+      if (e.button) return;
+      e.preventDefault();
+      clip.setPointerCapture(e.pointerId);
+      clip.classList.add("dragging");
+      const x0 = e.clientX;
+      const off0 = l.offset;
+      const move = (ev) => {
+        l.offset = snap(off0 + (ev.clientX - x0) / pxPerSec);
+        clip.style.left = l.offset * pxPerSec + "px";
+        clip.setAttribute("aria-valuenow", l.offset.toFixed(2));
+      };
+      const up = () => {
+        clip.removeEventListener("pointermove", move);
+        clip.removeEventListener("pointerup", up);
+        clip.removeEventListener("pointercancel", up);
+        // نقرتان سريعتان بلا سحب = رجوع للبداية. dblclick الأصلي ما يصلح: renderLayers
+        // تستبدل العنصر بين النقرتين فلا يوصله الحدث
+        if (l.offset === off0) {
+          const now = performance.now();
+          if (now - (l.lastTap || 0) < 350) l.offset = 0;
+          l.lastTap = now;
+        }
+        renderLayers(); // يعيد حساب طول الجدول بعد الإزاحة
+      };
+      clip.addEventListener("pointermove", move);
+      clip.addEventListener("pointerup", up);
+      clip.addEventListener("pointercancel", up);
+    });
+    clip.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      l.offset = snap(l.offset + (e.key === "ArrowRight" ? 1 : -1) * (e.shiftKey ? 1 : 0.1));
+      renderLayers();
+      layerList.children[index]?.querySelector(".beep-clip")?.focus();
+    });
+  }
+
   function renderLayers() {
     const d = recTake.dataset;
     recTake.hidden = layers.length === 0;
     if (!rec) recToggle.textContent = idleLabel();
+
+    const laneW = layerList.clientWidth;
+    timelineSeconds = Math.max(6, Math.ceil(Math.max(0, ...layers.map(layerEnd))) + 2); // تسجيلة قصيرة تظهر عريضة
+    pxPerSec = laneW > 0 ? laneW / timelineSeconds : 30; // مخفي (عرض صفر): نرسم عند ظهوره
+    timeline.style.setProperty("--px", pxPerSec + "px");
+
+    // المسطرة: علامة كل ١/٥/١٠ ثوانٍ حسب الطول
+    const step = timelineSeconds > 40 ? 10 : timelineSeconds > 20 ? 5 : 1;
+    ruler.replaceChildren(
+      ...Array.from({ length: Math.floor(timelineSeconds / step) + 1 }, (_, k) => {
+        const tick = document.createElement("span");
+        tick.className = "beep-tick";
+        tick.style.left = k * step * pxPerSec + "px";
+        tick.textContent = k * step < 60 ? String(k * step) : clock(k * step); // ثوانٍ فقط: "0:01" تزاحم بعضها
+        return tick;
+      })
+    );
+
     layerList.replaceChildren(
       ...layers.map((l, i) => {
         const li = document.createElement("li");
         li.className = "beep-layer" + (l.muted ? " muted" : "");
+        li.style.setProperty("--h", String((i * 53 + 150) % 360));
+
+        const head = document.createElement("div");
+        head.className = "beep-layer-head";
         const name = document.createElement("span");
         name.textContent = `${d.layer} ${i + 1} · ${instrumentLabel(l.instrument)} · ${l.events.length} ♪`;
-        li.append(
+        head.append(
           name,
           layerButton(l.muted ? "🔇" : "🔊", l.muted ? d.unmute : d.mute, () => {
             l.muted = !l.muted;
@@ -2426,10 +2529,36 @@ function initBeepMelodyExperiment() {
             renderLayers();
           })
         );
+
+        const lane = document.createElement("div");
+        lane.className = "beep-lane";
+        const clip = document.createElement("div");
+        clip.className = "beep-clip";
+        clip.tabIndex = 0;
+        clip.setAttribute("role", "slider");
+        clip.setAttribute("aria-label", `${d.layer} ${i + 1}`);
+        clip.setAttribute("aria-valuemin", "0");
+        clip.setAttribute("aria-valuenow", l.offset.toFixed(2));
+        const clipW = Math.max(8, l.end * pxPerSec);
+        clip.style.left = l.offset * pxPerSec + "px";
+        clip.style.width = clipW + "px";
+        const canvas = document.createElement("canvas");
+        clip.append(canvas);
+        lane.append(clip);
+        li.append(head, lane);
+        drawClip(canvas, l, clipW, LANE_HEIGHT - 8);
+        enableClipDrag(clip, l, i);
         return li;
       })
     );
   }
+
+  // تغيّر عرض الشاشة (تدوير الجوال): نعيد الرسم بالمقياس الجديد
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => layers.length && renderLayers(), 150);
+  });
 
   async function startRec() {
     if (layers.length >= MAX_LAYERS) return showToast(recTake.dataset.max);
@@ -2448,8 +2577,9 @@ function initBeepMelodyExperiment() {
     rec.timer = setInterval(() => {
       const sec = Math.max(0, (performance.now() - rec.t0) / 1000);
       recTime.textContent = clock(sec);
+      if (layers.length) setPlayhead(sec); // خط التشغيل يمشي فوق الطبقات اللي تُعزف معك
       if (sec >= MAX_TAKE_SECONDS) stopRec();
-    }, 250);
+    }, 100);
   }
 
   function stopRec() {
@@ -2469,14 +2599,16 @@ function initBeepMelodyExperiment() {
     const first = base ? Math.min(...events.map((e) => e.startBeat)) : 0;
     events.forEach((e) => (e.startBeat = Math.max(0, e.startBeat - first)));
     const end = Math.max(...events.map((e) => e.startBeat + e.durBeats));
-    layers.push({ events, instrument, muted: false, end });
-    recTime.textContent = clock(Math.max(...layers.map((l) => l.end)) - 0.4) + " · " + layers.length + " ▤";
+    layers.push({ events, instrument, muted: false, end, offset: 0 });
+    recTime.textContent = clock(Math.max(...layers.map((l) => l.end + l.offset)) - 0.4) + " · " + layers.length + " ▤";
     renderLayers();
   }
 
   function stopTake() {
     takeTimers.forEach(clearTimeout);
     takeTimers = [];
+    clearInterval(playheadTimer);
+    setPlayhead(null);
     activeOscillators.forEach((osc) => {
       try {
         osc.stop();
@@ -2488,6 +2620,8 @@ function initBeepMelodyExperiment() {
     playBox?.querySelectorAll(".down").forEach((k) => k.classList.remove("down"));
     if (recPlay) recPlay.textContent = recPlay.dataset.play;
   }
+
+  const ctx0 = () => audioCtx.currentTime;
 
   async function playTake() {
     const list = sounding();
@@ -2502,13 +2636,14 @@ function initBeepMelodyExperiment() {
       l.events.forEach((ev) => {
         const key = () => playBox?.querySelector(`[data-code="${ev.code}"]`);
         takeTimers.push(
-          setTimeout(() => key()?.classList.add("down"), 100 + ev.startBeat * 1000),
-          setTimeout(() => key()?.classList.remove("down"), 100 + (ev.startBeat + ev.held) * 1000)
+          setTimeout(() => key()?.classList.add("down"), 100 + (ev.startBeat + l.offset) * 1000),
+          setTimeout(() => key()?.classList.remove("down"), 100 + (ev.startBeat + l.offset + ev.held) * 1000)
         );
       })
     );
     recPlay.textContent = recPlay.dataset.stop;
-    takeTimers.push(setTimeout(stopTake, 200 + Math.max(...list.map((l) => l.end)) * 1000));
+    takeTimers.push(setTimeout(stopTake, 200 + Math.max(...list.map(layerEnd)) * 1000));
+    playheadTimer = setInterval(() => setPlayhead(ctx0() - start), 50);
   }
 
   async function exportTake(btn, make, ext) {

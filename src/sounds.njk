@@ -136,7 +136,12 @@ pageScript: "sounds"
       </div>
       <div class="beep-play-keys" id="beepPlayKeys"></div>
       <div class="beep-rec-take" id="beepRecTake" hidden data-layer="طبقة" data-mute="كتم الطبقة" data-unmute="إلغاء الكتم" data-delete="احذف الطبقة" data-max="الحد الأقصى ٨ طبقات" data-silent="كل الطبقات مكتومة">
-        <ul class="beep-layer-list" id="beepLayerList"></ul>
+        <div class="beep-timeline" id="beepTimeline">
+          <div class="beep-ruler" id="beepRuler" aria-hidden="true"></div>
+          <ul class="beep-layer-list" id="beepLayerList"></ul>
+          <div class="beep-playhead" id="beepPlayhead" hidden></div>
+        </div>
+        <p class="beep-param-note" id="beepTimelineHint">↔ اسحب أي طبقة يميناً أو يساراً لتحريكها في الزمن (أو استخدم مفتاحي الأسهم). الطبقات كلها تُعزف معاً في الوقت نفسه؛ وانقر مرتين على طبقة لإعادتها إلى البداية.</p>
         <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ شغّل الطبقات" data-stop="⏹ أوقف">▶️ شغّل الطبقات</button>
         <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ WAV</button>
         <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ MP3</button>

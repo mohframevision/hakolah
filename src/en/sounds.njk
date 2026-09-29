@@ -137,7 +137,12 @@ pageScript: "sounds"
       </div>
       <div class="beep-play-keys" id="beepPlayKeys"></div>
       <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-mute="Mute layer" data-unmute="Unmute" data-delete="Delete layer" data-max="Maximum 8 layers" data-silent="All layers are muted">
-        <ul class="beep-layer-list" id="beepLayerList"></ul>
+        <div class="beep-timeline" id="beepTimeline">
+          <div class="beep-ruler" id="beepRuler" aria-hidden="true"></div>
+          <ul class="beep-layer-list" id="beepLayerList"></ul>
+          <div class="beep-playhead" id="beepPlayhead" hidden></div>
+        </div>
+        <p class="beep-param-note" id="beepTimelineHint">↔ Drag any layer left or right to move it in time (or use the arrow keys). All layers play together at the same time; double-click a layer to send it back to the start.</p>
         <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ Play layers" data-stop="⏹ Stop">▶️ Play layers</button>
         <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ WAV</button>
         <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ MP3</button>
