@@ -2044,6 +2044,7 @@ function initBeepMelodyExperiment() {
       if (e.key !== "Enter") return;
       e.preventDefault();
       chips.find((c) => !c.hidden)?.click();
+      instrumentSearch.blur(); // وإلا بقي المؤشر بالمربع وحروف البيانو صارت تُكتب فيه
     });
   }
 
@@ -2131,7 +2132,7 @@ function initBeepMelodyExperiment() {
       rec.events.push(ev);
     }
     const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: false };
-    const env = playNote(target, pseudoIndex, audioCtx.currentTime + 0.005, 2.4, 0.2, 0, 0, freq);
+    const env = playNote(target, pseudoIndex, audioCtx.currentTime + 0.005, holdSeconds(currentInstrument), 0.2, 0, 0, freq);
     if (!held.has(code)) {
       noteEnd(code); // انرفع قبل ما يجهز الصوت
       return keyRelease(env);
@@ -2139,6 +2140,10 @@ function initBeepMelodyExperiment() {
     held.set(code, env);
     playBox?.querySelector(`[data-code="${code}"]`)?.classList.add("down");
   }
+
+  // آلة ممدودة (أرغن، كورس، وتريات...) تستمر ما دام المفتاح مضغوطاً؛ المقروعة تخفت
+  // طبيعياً. الرفع يخمّد الاثنين (keyRelease)، فالمدة الطويلة ما تكلّف شي بعد الرفع.
+  const holdSeconds = (id) => (INSTRUMENTS[id].sustainRatio > 0 ? 12 : 2.4);
 
   function keyRelease(env) {
     if (!env) return;
@@ -2204,7 +2209,7 @@ function initBeepMelodyExperiment() {
     rec.open.delete(code);
     ev.held = Math.max(0.05, (performance.now() - rec.t0) / 1000 - ev.startBeat);
     // مدة الرنين = مدة الضغط + ذيل قصير (المخمّد الحي يقطع الرنين بعد الرفع بنحو ٠٫٤ث)
-    ev.durBeats = Math.min(2.4, ev.held + 0.4);
+    ev.durBeats = Math.min(holdSeconds(rec.instrument), ev.held + 0.4);
   }
 
   function layerButton(label, text, onClick) {
