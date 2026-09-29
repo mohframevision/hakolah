@@ -2538,6 +2538,7 @@ function initBeepMelodyExperiment() {
         clip.setAttribute("role", "slider");
         clip.setAttribute("aria-label", `${d.layer} ${i + 1}`);
         clip.setAttribute("aria-valuemin", "0");
+        clip.setAttribute("aria-valuemax", String(timelineSeconds));
         clip.setAttribute("aria-valuenow", l.offset.toFixed(2));
         const clipW = Math.max(8, l.end * pxPerSec);
         clip.style.left = l.offset * pxPerSec + "px";
