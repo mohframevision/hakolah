@@ -2634,6 +2634,10 @@ function initBeepMelodyExperiment() {
       e.preventDefault();
       clip.setPointerCapture(e.pointerId);
       select(l);
+      // مثل باند لاب: الضغط على المقطع نفسه يضع الخط الأبيض تحت الماوس بالضبط
+      // (قبل كان يحدّد فقط ويبقى الخط بعيداً) — فالقص بـS يصير عند مكان النقر
+      cursor = snap((e.clientX - board.getBoundingClientRect().left) / pxPerSec);
+      setPlayhead(null);
       clip.classList.add("dragging");
       const x0 = e.clientX;
       const y0 = e.clientY;
