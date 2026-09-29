@@ -4369,71 +4369,71 @@ img {
 /* الجوال بالوضع الأفقي: الأشرطة والعناوين كانت تغطي الشاشة والمفاتيح تحت الطيّة.
    نخفي كل شي غير الأداة (يرجع كله بإرجاع الجوال عمودياً)، ونعطي المفاتيح كل
    الارتفاع المتبقي. pointer:coarse = شاشة لمس، فنافذة مكتب قصيرة ما تتأثر */
-@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
-  body {
+@media (orientation: landscape) and (max-height: 520px) {
+  html.touch body {
     padding-bottom: 0;
   }
 
-  .site-header,
-  .bottom-nav,
-  .site-footer,
-  .breadcrumb,
-  .page-header,
-  .cookie-banner,
-  .daily-pick-reminder {
+  html.touch .site-header,
+  html.touch .bottom-nav,
+  html.touch .site-footer,
+  html.touch .breadcrumb,
+  html.touch .page-header,
+  html.touch .cookie-banner,
+  html.touch .daily-pick-reminder {
     display: none !important;
   }
 
-  .container {
+  html.touch .container {
     padding-block: 6px;
   }
 
-  .sounds-tool {
+  html.touch .sounds-tool {
     margin: 0;
     padding: 8px 12px;
     gap: 6px;
     border-radius: 18px;
   }
 
-  .sounds-top {
+  html.touch .sounds-top {
     max-width: none;
     flex-direction: row;
     align-items: flex-start;
     gap: 8px;
   }
 
-  .sounds-top .beep-volume {
+  html.touch .sounds-top .beep-volume {
     flex: 1;
     width: auto;
     padding-top: 6px;
   }
 
-  .sounds-top .beep-panel {
+  html.touch .sounds-top .beep-panel {
     flex: 1;
     max-width: none;
   }
 
-  .sounds-top .beep-panel > summary {
+  html.touch .sounds-top .beep-panel > summary {
     padding: 8px 14px;
   }
 
-  .sounds-tab {
+  html.touch .sounds-tab {
     padding: 6px 14px;
     font-size: 0.85rem;
   }
 
-  .sounds-tool .beep-play {
+  html.touch .sounds-tool .beep-play {
     max-width: none;
     padding: 6px 10px 8px;
     gap: 6px;
     border-radius: 18px;
   }
 
-  .sounds-tool .beep-play > .beep-param-note {
+  html.touch .sounds-tool .beep-play > .beep-param-note {
     display: none;
   }
 
-  .sounds-tool .beep-play-keys {
+  html.touch .sounds-tool .beep-play-keys {
     aspect-ratio: auto;
     max-height: none;
     height: max(110px, calc(100dvh - 190px));
@@ -4453,35 +4453,35 @@ img {
 }
 
 /* أفقي بالجوال، ضغط ثاني: الصفوف الأربعة فوق المفاتيح تصير صفّين جنب بعض */
-@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
-  .sounds-tool {
+@media (orientation: landscape) and (max-height: 520px) {
+  html.touch .sounds-tool {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
   }
 
-  .sounds-tool > .sounds-top {
+  html.touch .sounds-tool > .sounds-top {
     flex: 1 1 200px;
     width: auto;
   }
 
-  .sounds-tool > .sounds-pane {
+  html.touch .sounds-tool > .sounds-pane {
     flex-basis: 100%;
   }
 
-  .sounds-top .beep-panel > summary {
+  html.touch .sounds-top .beep-panel > summary {
     flex-wrap: nowrap;
     padding: 6px 12px;
   }
 
-  .sounds-top .beep-panel-now {
+  html.touch .sounds-top .beep-panel-now {
     order: 0;
     flex-basis: auto;
     margin-inline-start: auto;
   }
 
-  .sounds-tool .beep-play {
+  html.touch .sounds-tool .beep-play {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
@@ -4489,14 +4489,14 @@ img {
     column-gap: 14px;
   }
 
-  .sounds-tool .beep-play-keys {
+  html.touch .sounds-tool .beep-play-keys {
     flex-basis: 100%;
     height: max(110px, calc(100dvh - 148px));
   }
 }
 
-@media (orientation: landscape) and (max-height: 520px) and (max-width: 720px) and (pointer: coarse) {
-  .sounds-tool .beep-play-keys {
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 720px) {
+  html.touch .sounds-tool .beep-play-keys {
     height: max(100px, calc(100dvh - 205px));
   }
 }

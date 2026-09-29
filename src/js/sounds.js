@@ -1709,6 +1709,10 @@ function initBeepMelodyExperiment() {
     });
   }
 
+  // شاشة لمس؟ نحدّدها بنفسنا لأن pointer:coarse ما يتطابق داخل بعض WebViews.
+  // تحكم CSS الأفقي بالجوال (إخفاء الهيدر) — فنافذة مكتب قصيرة ما تتأثر
+  if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("touch");
+
   /* ===== التبويبات: اعزف / ألّف / تعلّم ===== */
   const tabs = document.querySelectorAll(".sounds-tab");
   function showPane(id) {
