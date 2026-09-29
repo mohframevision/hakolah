@@ -10,7 +10,7 @@
     "test": "node test-likes.mjs"
   },
   "devDependencies": {
-    "wrangler": "^3.90.0"
+    "wrangler": "^4.143.1"
   },
   "dependencies": {
     "web-push": "^3.6.7"
