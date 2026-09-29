@@ -68,7 +68,7 @@ src/
 
 ### الطريقة الأسهل: لوحة التحكم
 
-1. افتح `https://mohframevision.github.io/hakolah/admin/` (بعد نشر هذا التحديث).
+1. افتح `https://hakolah.com/admin/` (بعد نشر هذا التحديث).
 2. سجّل دخولك برمز (Token) من GitHub (Settings → Developer settings → Personal access tokens،
    صلاحية `repo` كافية).
 3. اختر المجموعة (مطاعم/متاجر/أدوات/أماكن)، اضغط **New** لإضافة عنصر جديد
@@ -116,7 +116,7 @@ src/
 title: "جوديز (Joody's)"
 icon: "🥪"
 desc: "وصف قصير."
-image: "/hakolah/assets/uploads/joodys.jpg"
+image: "/assets/uploads/joodys.jpg"
 categories: ["سندويشات", "وجبات سريعة"]
 links: { "maps": "https://maps.app.goo.gl/...", "instagram": "https://instagram.com/..." }
 ---

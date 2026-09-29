@@ -16,7 +16,7 @@ const outDir =
 const VARIANTS = {
   ar: {
     file: "poster-bilingual-ar.png",
-    url: "https://mohframevision.github.io/hakolah/",
+    url: "https://hakolah.com/",
     dir: "rtl",
     badge: "🎉 مجاني بالكامل",
     brand: "هكوله",
@@ -34,7 +34,7 @@ const VARIANTS = {
   en: {
     file: "poster-bilingual-en.png",
     // بلا index.html — رابط أقصر يعني رمز QR أقل كثافة وأسهل مسحاً بالجوال
-    url: "https://mohframevision.github.io/hakolah/en/",
+    url: "https://hakolah.com/en/",
     dir: "ltr",
     badge: "🎉 100% Free",
     brand: "Hakolah",

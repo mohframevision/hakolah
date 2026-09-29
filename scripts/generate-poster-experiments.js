@@ -25,7 +25,7 @@ const POSTERS = [
     title: "موسيقى تتألّف الحين",
     subtitle: "كل ضغطة زر تعطيك مقطوعة ما سمعها أحد قبلك",
     hero: "🎵",
-    url: "https://mohframevision.github.io/hakolah/ai-experiments/calm-beep-music.html",
+    url: "https://hakolah.com/ai-experiments/calm-beep-music.html",
     points: [
       ["🎹", "اختر الآلة: بيانو، كمان، فلوت، وغيرها"],
       ["😌", "واختر الطابع: هادئ، رصين، سعيد، حالم"],
@@ -40,7 +40,7 @@ const POSTERS = [
     title: "وين راحت فلوسك؟",
     subtitle: "حاسبة دخلك ومصروفاتك، بسيطة وسريعة",
     hero: "🧮",
-    url: "https://mohframevision.github.io/hakolah/ai-experiments/expense-calculator.html",
+    url: "https://hakolah.com/ai-experiments/expense-calculator.html",
     points: [
       ["💵", "تقول لك كم باقي عندك فعلاً، لا كم صرفت"],
       ["🔢", "لوحة أرقام تلمسها، بلا كتابة ولا لوحة مفاتيح"],

@@ -2,7 +2,7 @@
 title: Bahrain Fort
 icon: 🏛️
 desc: An archaeological site over 4,000 years old, former capital of the ancient Dilmun civilization, and a UNESCO World Heritage Site.
-image: /hakolah/assets/uploads/ondrej-bocek-hEPkfOY7ibY-unsplash.jpg
+image: /assets/uploads/ondrej-bocek-hEPkfOY7ibY-unsplash.jpg
 langSwitchUrl: "/places/bahrain-fort.html"
 ---
 

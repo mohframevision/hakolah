@@ -32,7 +32,7 @@ const PRESETS = {
       ["", ""],
     ],
     cta: "امسح وجرّب الحين مجاناً",
-    url: "https://mohframevision.github.io/hakolah/",
+    url: "https://hakolah.com/",
     foot: "hakolah",
   },
   en: {
@@ -51,7 +51,7 @@ const PRESETS = {
       ["", ""],
     ],
     cta: "Scan and try it free",
-    url: "https://mohframevision.github.io/hakolah/en/",
+    url: "https://hakolah.com/en/",
     foot: "hakolah/en",
   },
 };

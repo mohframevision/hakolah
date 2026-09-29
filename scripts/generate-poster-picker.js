@@ -8,7 +8,7 @@ const QRCode = require("qrcode");
 const { fitGlyphInRect } = require("./heh-glyph.js");
 
 const SIZE = 1080;
-const PICKER_URL = "https://mohframevision.github.io/hakolah/picker.html";
+const PICKER_URL = "https://hakolah.com/picker.html";
 const outDir =
   "C:\\Users\\Computia.ME\\AppData\\Local\\Temp\\claude\\D-----------\\79ddc704-5480-4e31-b983-b66d3efa52e6\\scratchpad";
 

@@ -129,7 +129,8 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             Uri uri = request.getUrl();
-            if ("mohframevision.github.io".equals(uri.getHost())) return false;
+            String host = uri.getHost();
+            if ("hakolah.com".equals(host) || "www.hakolah.com".equals(host) || "mohframevision.github.io".equals(host)) return false;
             try {
                 view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, uri));
             } catch (Exception ignored) {

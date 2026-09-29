@@ -651,8 +651,8 @@ function initAutoUpdateCheck() {
   async function checkVersion() {
     try {
       // مسار مطلق: الرابط النسبي كان ينحل على مجلد الصفحة، فيصير
-      // /hakolah/ai-experiments/version.json ويرجع 404 بكل صفحات التفاصيل
-      const res = await fetch(`/hakolah/version.json?_=${Date.now()}`, { cache: "no-store" });
+      // /ai-experiments/version.json ويرجع 404 بكل صفحات التفاصيل
+      const res = await fetch(`/version.json?_=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
       const seen = sessionStorage.getItem(SEEN_KEY);
@@ -843,8 +843,8 @@ function nearestBranch(item, userCoords) {
 }
 
 /* ===== مشاركة عبر واتساب ===== */
-const SITE_ORIGIN = "https://mohframevision.github.io/hakolah/";
-const SITE_ROOT_PATH = "/hakolah/";
+const SITE_ORIGIN = "https://hakolah.com/";
+const SITE_ROOT_PATH = "/";
 
 /*
   قياس "الروابط" لا "الزيارات": كم زائراً شارك أو خرج لمحل فعلي.
@@ -3551,7 +3551,7 @@ async function initPushNotifications() {
 
   btn.classList.remove("hidden");
 
-  const registration = await navigator.serviceWorker.register("/hakolah/sw.js");
+  const registration = await navigator.serviceWorker.register("/sw.js");
   let subscription = await registration.pushManager.getSubscription();
 
   function apply(subscribed) {
@@ -4243,7 +4243,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // تسجيل الـ service worker بكل صفحة (لا بس الرئيسية) — شرط أساسي لصلاحية
   // "إضافة للشاشة الرئيسية" (PWA) بمعظم المتصفحات. التسجيل بدوال initPushNotifications
   // يبقى منفصل وآمن (register() على نفس الرابط يرجّع نفس التسجيل، ما يكرره)
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/hakolah/sw.js");
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
 
   // ما يخص كل صفحة على حدة — كانت سكربتات مضمّنة بـ base.njk، صارت تُقرأ من
   // إعدادات الصفحة (#site-config) عشان تشتغل سياسة CSP بدون unsafe-inline

@@ -2,8 +2,8 @@
   "name": "Hakolah",
   "short_name": "Hakolah",
   "description": "A directory of links, tools, restaurants, stores, and places — everything useful in one site.",
-  "start_url": "/hakolah/en/index.html",
-  "scope": "/hakolah/",
+  "start_url": "/en/index.html",
+  "scope": "/",
   "display": "standalone",
   "lang": "en",
   "dir": "ltr",
@@ -11,25 +11,25 @@
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/hakolah/assets/android-chrome-192x192.png",
+      "src": "/assets/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/hakolah/assets/android-chrome-512x512.png",
+      "src": "/assets/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/hakolah/assets/maskable-192x192.png",
+      "src": "/assets/maskable-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/hakolah/assets/maskable-512x512.png",
+      "src": "/assets/maskable-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -40,19 +40,19 @@
       "name": "Pick for me",
       "short_name": "Pick for me",
       "description": "Picks a random place for you",
-      "url": "/hakolah/en/picker.html"
+      "url": "/en/picker.html"
     },
     {
       "name": "Favorites",
       "short_name": "Favorites",
       "description": "The places you saved",
-      "url": "/hakolah/en/favorites.html"
+      "url": "/en/favorites.html"
     },
     {
       "name": "Expense calculator",
       "short_name": "Calculator",
       "description": "Log your income and expenses",
-      "url": "/hakolah/en/ai-experiments/expense-calculator.html"
+      "url": "/en/ai-experiments/expense-calculator.html"
     }
   ]
 }

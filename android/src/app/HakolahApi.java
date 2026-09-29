@@ -21,7 +21,7 @@ import org.json.JSONObject;
 class HakolahApi {
     // مصدر واحد للنطاق — ItemAdapter يستخدم نفس الثابت لبناء روابط "التفاصيل"
     // بدل ما يكرّر نفس السلسلة النصية بملف ثانٍ
-    static final String ORIGIN = "https://mohframevision.github.io/hakolah/";
+    static final String ORIGIN = "https://hakolah.com/";
     private static final String DATA_URL = ORIGIN + "app-data.json";
     private static final String CACHE_FILE = "hakolah-data-cache.json";
 

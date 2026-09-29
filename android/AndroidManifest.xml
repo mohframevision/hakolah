@@ -39,6 +39,16 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
+                    android:host="hakolah.com"
+                    android:pathPrefix="/" />
+            </intent-filter>
+            <!-- الروابط القديمة المنشورة قبل الدومين (github.io/hakolah/...) تبقى تفتح التطبيق -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
                     android:host="mohframevision.github.io"
                     android:pathPrefix="/hakolah/" />
             </intent-filter>

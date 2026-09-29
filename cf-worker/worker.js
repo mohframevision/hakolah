@@ -3,8 +3,8 @@
 import webpush from "web-push";
 
 const VAPID_SUBJECT = "mailto:mohframevision@outlook.com";
-const SITE_ORIGIN = "https://mohframevision.github.io";
-const DATA_URL = `${SITE_ORIGIN}/hakolah/js/data.js`;
+const SITE_ORIGIN = "https://hakolah.com";
+const DATA_URL = `${SITE_ORIGIN}/js/data.js`;
 
 function corsHeaders() {
   return {
@@ -352,8 +352,8 @@ async function sendDailyPick(env) {
   const daysSinceEpoch = Math.floor(Date.now() / 86400000);
   const pick = allItems[daysSinceEpoch % allItems.length];
   const pageUrl = pick.item.detailUrl
-    ? `${SITE_ORIGIN}/hakolah/${pick.item.detailUrl}`
-    : `${SITE_ORIGIN}/hakolah/${pick.section}.html`;
+    ? `${SITE_ORIGIN}/${pick.item.detailUrl}`
+    : `${SITE_ORIGIN}/${pick.section}.html`;
 
   const payload = JSON.stringify({
     title: "🎯 اختيار اليوم من هكوله",

@@ -482,7 +482,7 @@ exports.render = function (data) {
       branch: "main",
     },
     media_folder: "src/assets/uploads",
-    public_folder: "/hakolah/assets/uploads",
+    public_folder: "/assets/uploads",
     collections: [
       ...sectionCollections,
       sectionsMetaCollection,

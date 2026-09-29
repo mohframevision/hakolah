@@ -1,6 +1,6 @@
 module.exports = {
-  origin: "https://mohframevision.github.io",
-  url: "https://mohframevision.github.io/hakolah",
+  origin: "https://hakolah.com",
+  url: "https://hakolah.com",
   name: "هكوله",
   locale: "ar_AR",
 };
