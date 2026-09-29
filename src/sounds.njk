@@ -67,10 +67,19 @@ pageScript: "sounds"
       <div class="beep-play-octave">
         <button type="button" class="filter-chip" id="beepOctDown" aria-label="أوكتاف أخفض">Z ⬇️</button>
         <span id="beepOctLabel" dir="ltr">C4</span>
+        <button type="button" class="filter-chip" id="beepRecToggle" data-label="⏺ سجّل" data-stop="⏹ أوقف" data-empty="لم تعزف أي نغمة بعد">⏺ سجّل</button>
+        <span class="beep-rec-time" id="beepRecTime" dir="ltr"></span>
         <button type="button" class="filter-chip" id="beepOctUp" aria-label="أوكتاف أعلى">X ⬆️</button>
         <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="ملء الشاشة">⛶</button>
       </div>
       <div class="beep-play-keys" id="beepPlayKeys"></div>
+      <div class="beep-rec-take" id="beepRecTake" hidden>
+        <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ شغّل التسجيل" data-stop="⏹ أوقف">▶️ شغّل التسجيل</button>
+        <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ WAV</button>
+        <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ MP3</button>
+        <button type="button" class="filter-chip" id="beepRecMidi">🎼 MIDI</button>
+        <button type="button" class="filter-chip" id="beepRecClear" aria-label="احذف التسجيل" title="احذف التسجيل">🗑️</button>
+      </div>
     </div>
   </section>
 

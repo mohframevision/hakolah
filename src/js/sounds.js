@@ -991,14 +991,25 @@ function initBeepMelodyExperiment() {
     // (±٤ سنت) — عازف حقيقي ما يضرب نغمتين متطابقتين أبداً
     const jitter = (amount) => (Math.random() * 2 - 1) * amount;
     events.forEach((ev) => {
-      const at = startTime + ev.startBeat * beatDur + (ev.startBeat > 0 ? jitter(0.008) : 0);
-      playNote(target, ev.degree, at, ev.durBeats * beatDur, ev.gain * (1 + jitter(0.1)), ev.pan || 0, jitter(4));
+      const human = !ev.freq; // تسجيل عزف حقيقي فيه بشريته أصلاً — لا نضيف عليه عشوائية
+      const at = startTime + ev.startBeat * beatDur + (human && ev.startBeat > 0 ? jitter(0.008) : 0);
+      playNote(target, ev.degree, at, ev.durBeats * beatDur, ev.gain * (human ? 1 + jitter(0.1) : 1), ev.pan || 0, human ? jitter(4) : 0, ev.freq || 0);
     });
   }
 
   /* ===== تصدير الملفات ===== */
 
   function downloadBlob(blob, filename) {
+    // داخل تطبيق أندرويد: WebView ما ينزّل روابط blob:، فنسلّم الملف للتطبيق يحفظه
+    if (window.HakolahApp) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const ok = window.HakolahApp.save(filename, blob.type, String(reader.result).split(",")[1]);
+        if (!ok) showToast("⚠️");
+      };
+      reader.readAsDataURL(blob);
+      return;
+    }
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -1271,7 +1282,7 @@ function initBeepMelodyExperiment() {
 
     const points = [];
     piece.events.forEach((ev) => {
-      const freq = NOTES[ev.degree];
+      const freq = ev.freq || NOTES[ev.degree];
       if (!freq) return;
       const note = Math.round(69 + 12 * Math.log2(freq / 440));
       if (note < 0 || note > 127) return;
@@ -1784,15 +1795,24 @@ function initBeepMelodyExperiment() {
   async function keyOn(code) {
     if (held.has(code)) return;
     held.set(code, null); // نحجزه قبل await عشان التكرار ما يعزفه مرتين
+    const pressedAt = performance.now(); // وقت الضغط الفعلي، قبل انتظار تجهيز الصوت
     await ensureContext();
     const semi = KEY_MAP[code] + 12 * (playOctave - 4);
     const midi = 60 + semi;
     const freq = 261.63 * 2 ** (semi / 12);
     // درجة تقريبية على سلّم المولّد — بس لرنين الواطي الأطول والحاد الأقصر
     const pseudoIndex = clamp(Math.round(((midi - 48) * 7) / 12), 0, 21);
+    if (rec) {
+      const ev = { code, degree: pseudoIndex, freq, startBeat: (pressedAt - rec.t0) / 1000, durBeats: 0, held: 0, gain: 0.2, pan: 0 };
+      rec.open.set(code, ev);
+      rec.events.push(ev);
+    }
     const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: false };
     const env = playNote(target, pseudoIndex, audioCtx.currentTime + 0.005, 2.4, 0.2, 0, 0, freq);
-    if (!held.has(code)) return keyRelease(env); // انرفع قبل ما يجهز الصوت
+    if (!held.has(code)) {
+      noteEnd(code); // انرفع قبل ما يجهز الصوت
+      return keyRelease(env);
+    }
     held.set(code, env);
     playBox?.querySelector(`[data-code="${code}"]`)?.classList.add("down");
   }
@@ -1808,7 +1828,135 @@ function initBeepMelodyExperiment() {
     if (!held.has(code)) return;
     keyRelease(held.get(code));
     held.delete(code);
+    noteEnd(code);
     playBox?.querySelector(`[data-code="${code}"]`)?.classList.remove("down");
+  }
+
+  /* ===== تسجيل العزف =====
+     نسجّل كل نغمة (الوقت، النغمة، مدة الضغط) كقائمة أحداث بنفس شكل أحداث المولّد
+     — فمصدّرات WAV وMP3 وMIDI تشتغل عليها كما هي. نبضة القطعة ٦٠ (الضربة = ثانية)
+     عشان الأوقات الحقيقية تنطبق على الضربات مباشرة. التسجيل قائمة نغمات لا صوت
+     ملتقط: يُعزف ويُصدَّر بالآلة المختارة وقت التشغيل/التصدير. */
+  const MAX_TAKE_SECONDS = 300;
+  let rec = null; // تسجيل جارٍ: { t0, open: Map(code→حدث), events, timer }
+  let take = null; // آخر تسجيل مكتمل بصيغة "قطعة"
+  let takeTimers = [];
+
+  const recToggle = document.getElementById("beepRecToggle");
+  const recTime = document.getElementById("beepRecTime");
+  const recTake = document.getElementById("beepRecTake");
+  const recPlay = document.getElementById("beepRecPlay");
+
+  function noteEnd(code) {
+    const ev = rec?.open.get(code);
+    if (!ev) return;
+    rec.open.delete(code);
+    ev.held = Math.max(0.05, (performance.now() - rec.t0) / 1000 - ev.startBeat);
+    // مدة الرنين = مدة الضغط + ذيل قصير (المخمّد الحي يقطع الرنين بعد الرفع بنحو ٠٫٤ث)
+    ev.durBeats = Math.min(2.4, ev.held + 0.4);
+  }
+
+  const clock = (sec) => Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0");
+
+  function startRec() {
+    stopTake();
+    rec = { t0: performance.now(), open: new Map(), events: [], timer: null };
+    recToggle.textContent = recToggle.dataset.stop;
+    recToggle.classList.add("recording");
+    recTime.textContent = "0:00";
+    rec.timer = setInterval(() => {
+      const sec = (performance.now() - rec.t0) / 1000;
+      recTime.textContent = clock(sec);
+      if (sec >= MAX_TAKE_SECONDS) stopRec();
+    }, 250);
+  }
+
+  function stopRec() {
+    clearInterval(rec.timer);
+    [...rec.open.keys()].forEach(noteEnd);
+    const events = rec.events;
+    rec = null;
+    recToggle.textContent = recToggle.dataset.label;
+    recToggle.classList.remove("recording");
+    if (!events.length) {
+      recTime.textContent = "";
+      showToast(recToggle.dataset.empty);
+      return;
+    }
+    // نقصّ الصمت اللي قبل أول نغمة — التسجيل يبدأ بالنغمة الأولى
+    const first = Math.min(...events.map((e) => e.startBeat));
+    events.forEach((e) => (e.startBeat -= first));
+    const end = Math.max(...events.map((e) => e.startBeat + e.durBeats));
+    take = { events, meta: { seed: "piano", bpm: 60, meter: 4, totalBeats: end } };
+    recTime.textContent = clock(end - 0.4) + " · " + events.length + " ♪";
+    recTake.hidden = false;
+  }
+
+  function stopTake() {
+    takeTimers.forEach(clearTimeout);
+    takeTimers = [];
+    activeOscillators.forEach((osc) => {
+      try {
+        osc.stop();
+      } catch {
+        // خلص وقته أصلاً
+      }
+    });
+    activeOscillators = [];
+    playBox?.querySelectorAll(".down").forEach((k) => k.classList.remove("down"));
+    if (recPlay) recPlay.textContent = recPlay.dataset.play;
+  }
+
+  async function playTake() {
+    if (playing) stopPlayback(); // مولّد المقطوعات ما يتزامن مع التسجيل
+    await ensureContext();
+    stopTake();
+    const start = audioCtx.currentTime + 0.1;
+    scheduleEvents({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, take, start);
+    // المفاتيح تنضغط وتنرفع مع الصوت (نفس شكل العزف الحي)
+    take.events.forEach((ev) => {
+      const key = () => playBox?.querySelector(`[data-code="${ev.code}"]`);
+      takeTimers.push(
+        setTimeout(() => key()?.classList.add("down"), 100 + ev.startBeat * 1000),
+        setTimeout(() => key()?.classList.remove("down"), 100 + (ev.startBeat + ev.held) * 1000)
+      );
+    });
+    recPlay.textContent = recPlay.dataset.stop;
+    takeTimers.push(setTimeout(stopTake, 200 + take.meta.totalBeats * 1000));
+  }
+
+  async function exportTake(btn, make, ext) {
+    const original = btn.textContent;
+    btn.disabled = true;
+    if (btn.dataset.working) btn.textContent = btn.dataset.working;
+    try {
+      downloadBlob(await make(take), `hakolah-piano-${Date.now()}.${ext}`);
+    } catch {
+      showToast(btn.dataset.failed || "");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+    playClickSound();
+  }
+
+  if (recToggle) {
+    recToggle.addEventListener("click", () => {
+      if (rec) stopRec();
+      else startRec();
+      playClickSound();
+    });
+    recPlay.addEventListener("click", () => (takeTimers.length ? stopTake() : playTake()));
+    document.getElementById("beepRecWav").addEventListener("click", (e) => exportTake(e.currentTarget, renderPieceToWav, "wav"));
+    document.getElementById("beepRecMp3").addEventListener("click", (e) => exportTake(e.currentTarget, renderPieceToMp3, "mp3"));
+    document.getElementById("beepRecMidi").addEventListener("click", (e) => exportTake(e.currentTarget, async (p) => pieceToMidi(p), "mid"));
+    document.getElementById("beepRecClear").addEventListener("click", () => {
+      stopTake();
+      take = null;
+      recTake.hidden = true;
+      recTime.textContent = "";
+      playClickSound();
+    });
   }
 
   function shiftOctave(step) {

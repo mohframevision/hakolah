@@ -4500,3 +4500,53 @@ img {
     height: max(100px, calc(100dvh - 205px));
   }
 }
+
+/* ===== تسجيل العزف ===== */
+.beep-rec-time {
+  min-width: 4.5em;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.beep-experiment #beepRecToggle.recording {
+  background: rgba(200, 55, 55, 0.9);
+  border-color: #f3a3a3;
+  color: #fff;
+  animation: rec-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes rec-pulse {
+  50% {
+    box-shadow: 0 0 14px rgba(243, 120, 120, 0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beep-experiment #beepRecToggle.recording {
+    animation: none;
+  }
+}
+
+.beep-rec-take {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.beep-rec-take[hidden] {
+  display: none;
+}
+
+.beep-rec-take .filter-chip:disabled {
+  opacity: 0.5;
+}
+
+/* أفقي بالجوال: صف أزرار التسجيل يظهر تحت المفاتيح بعد التسجيل — نصغّر المفاتيح
+   بمقداره عشان الصفحة ما تحتاج تمرير */
+@media (orientation: landscape) and (max-height: 520px) {
+  html.touch .beep-play:has(.beep-rec-take:not([hidden])) .beep-play-keys {
+    height: max(90px, calc(100dvh - 205px));
+  }
+}
