@@ -121,7 +121,7 @@ pageScript: "sounds"
 
   <section class="sounds-pane" id="panePlay" role="tabpanel">
     <div class="beep-play">
-      <p class="beep-param-note">Middle row <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> for the white keys, the row above <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> for the black keys, and <kbd>Z</kbd> / <kbd>X</kbd> to shift the octave. It also works with a keyboard plugged into your phone, or by touching the keys directly.</p>
+      <p class="beep-param-note">Middle row <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> for the white keys, the row above <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> for the black keys, and <kbd>Z</kbd> / <kbd>X</kbd> to shift the octave. It also works with a keyboard plugged into your phone, or by touching the keys directly. Recording shortcuts: <kbd>R</kbd> start/stop, and <kbd>Space</kbd> play/stop after your first recording (the full list appears with it).</p>
       <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="What is written on the keys">
         <button type="button" class="filter-chip active" data-labels="keys">⌨️ Keyboard letters</button>
         <button type="button" class="filter-chip" data-labels="letters">C D E</button>
@@ -149,6 +149,24 @@ pageScript: "sounds"
           <div class="beep-playhead" id="beepPlayhead" hidden></div>
         </div>
         <p class="beep-param-note" id="beepTimelineHint">↔️↕️ Drag any layer freely: left and right in time, up and down between tracks (drop it below the last track to start a new one). Click the ruler to place the white line, select a layer and press Split to cut it there. The Delete key removes it, the arrow keys move it, and a double-click sends it back to the start. All layers play together whichever track they're on.</p>
+        <details class="beep-shortcuts" id="beepShortcuts">
+          <summary>⌨️ Keyboard shortcuts <span dir="ltr">(Ctrl+/)</span></summary>
+          <ul class="beep-shortcut-list">
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Space</kbd></span><span>Play from the white line / stop</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd> + <kbd>Space</kbd></span><span>Play from the start</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>R</kbd></span><span>Start / stop recording</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Esc</kbd></span><span>Stop everything and deselect (back to playing with letters)</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Enter</kbd> · <kbd>Home</kbd> · <kbd>End</kbd></span><span>Move the white line to the start · start · end</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>← →</kbd></span><span>Move the focused layer (or the white line if no layer is focused); Shift = one second; ↑ ↓ between tracks</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>S</kbd></span><span>Split the selected layer at the white line — only while a layer is selected; otherwise S plays a piano note</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Delete</kbd> · <kbd>Backspace</kbd></span><span>Delete the layer</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>C</kbd> · <kbd>X</kbd> · <kbd>V</kbd></span><span>Copy · cut · paste at the white line</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>D</kbd></span><span>Duplicate the layer</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd> + <kbd>M</kbd></span><span>Mute / unmute the layer</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>Z</kbd> · <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></span><span>Undo · redo</span></li>
+          </ul>
+          <p class="beep-param-note">On a Mac use ⌘ instead of Ctrl. The other piano keys (A…' W…P Z X) stay for playing.</p>
+        </details>
         <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ Play layers" data-stop="⏹ Stop">▶️ Play layers</button>
         <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ WAV</button>
         <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ MP3</button>

@@ -2362,11 +2362,12 @@ function initBeepMelodyExperiment() {
   const idleLabel = () => (layers.length ? recToggle.dataset.more : recToggle.dataset.label);
 
   // كل طبقة بآلتها: نبدّل الآلة العامة أثناء الجدولة فقط (playNote يقرأها لحظتها)
-  function scheduleLayers(target, list, start) {
+  function scheduleLayers(target, list, start, from = 0) {
     const saved = currentInstrument;
     list.forEach((l) => {
       currentInstrument = l.instrument;
-      scheduleEvents(target, { events: l.events, meta: { bpm: 60 } }, start + l.offset);
+      const events = from ? l.events.filter((e) => e.startBeat + l.offset >= from) : l.events;
+      scheduleEvents(target, { events, meta: { bpm: 60 } }, start + l.offset - from);
     });
     currentInstrument = saved;
   }
@@ -2454,10 +2455,60 @@ function initBeepMelodyExperiment() {
     });
   }
 
-  const focusLayer = (l) => board.querySelector('[data-i="' + layers.indexOf(l) + '"]')?.focus();
+  const focusLayer = (l) => board.querySelector('[data-i="' + layers.indexOf(l) + '"]')?.focus({ preventScroll: true }); // بلا قفز للصفحة على الجوال
+
+  /* تراجع/إعادة: لقطة سطحية من قائمة الطبقات قبل كل تعديل. مصفوفات النغمات تُشارَك
+     بين اللقطات لأنها لا تتغيّر بعد التسجيل (القص ينشئ نسخاً جديدة). */
+  const HISTORY_MAX = 60;
+  let history = [];
+  let future = [];
+  let clipboard = null;
+  const snapshot = () => layers.map((l) => ({ ...l }));
+  function pushHistory(before = snapshot()) {
+    history.push(before);
+    if (history.length > HISTORY_MAX) history.shift();
+    future = [];
+  }
+  function restoreFrom(from, to) {
+    if (!from.length) return;
+    to.push(snapshot());
+    layers = from.pop();
+    selected = null;
+    renderLayers();
+  }
+  const undo = () => restoreFrom(history, future);
+  const redo = () => restoreFrom(future, history);
+
+  function toggleMute() {
+    if (!selected) return;
+    pushHistory();
+    selected.muted = !selected.muted;
+    renderLayers();
+  }
+
+  const cloneLayer = (l) => ({ ...l, events: l.events.map((e) => ({ ...e })), lastTap: 0 });
+  function copyToClipboard() {
+    if (selected) clipboard = cloneLayer(selected);
+  }
+  function cutSelected() {
+    copyToClipboard();
+    deleteSelected();
+  }
+  // اللصق عند المؤشر الأبيض (مثل باند لاب: عند الـplayhead)
+  function pasteClipboard() {
+    if (!clipboard) return;
+    pushHistory();
+    const c = { ...cloneLayer(clipboard), offset: cursor };
+    layers.push(c);
+    selected = c;
+    compactRows();
+    renderLayers();
+    focusLayer(c);
+  }
 
   function deleteSelected() {
     if (!selected) return;
+    pushHistory();
     layers.splice(layers.indexOf(selected), 1);
     selected = null;
     compactRows();
@@ -2467,6 +2518,7 @@ function initBeepMelodyExperiment() {
 
   function copySelected() {
     if (!selected) return;
+    pushHistory();
     const copy = { ...selected, events: selected.events.map((e) => ({ ...e })), offset: selected.offset + selected.end, lastTap: 0 };
     layers.splice(layers.indexOf(selected) + 1, 0, copy);
     selected = copy;
@@ -2495,6 +2547,7 @@ function initBeepMelodyExperiment() {
       }
     });
     if (!left.length || !right.length) return showToast(document.getElementById("beepToolSplit").dataset.cut);
+    pushHistory();
     const endOf = (list) => Math.max(...list.map((e) => e.startBeat + e.durBeats));
     const a = { ...l, events: left, end: endOf(left) };
     const b = { ...l, events: right, offset: l.offset + t, end: endOf(right), lastTap: 0 };
@@ -2535,6 +2588,7 @@ function initBeepMelodyExperiment() {
       const y0 = e.clientY;
       const off0 = l.offset;
       const row0 = l.row;
+      const before = snapshot(); // للتراجع
       const maxRow = rowCount(); // آخر خانة = مسار جديد تحت الكل
       let moved = false;
       const move = (ev) => {
@@ -2550,11 +2604,15 @@ function initBeepMelodyExperiment() {
         clip.removeEventListener("pointercancel", up);
         if (moved) {
           compactRows();
+          pushHistory(before);
         } else {
           // نقرتان سريعتان بلا سحب = رجوع لبداية الزمن. dblclick الأصلي ما يصلح:
           // renderLayers تستبدل العنصر بين النقرتين فلا يوصله الحدث
           const now = performance.now();
-          if (now - (l.lastTap || 0) < 350) l.offset = 0;
+          if (now - (l.lastTap || 0) < 350 && l.offset !== 0) {
+            pushHistory(before);
+            l.offset = 0;
+          }
           l.lastTap = now;
         }
         renderLayers(); // يعيد حساب طول الجدول بعد الإزاحة
@@ -2565,11 +2623,14 @@ function initBeepMelodyExperiment() {
       clip.addEventListener("pointercancel", up);
     });
 
+    clip.addEventListener("focus", () => select(l)); // التنقل بـTab يحدّد الطبقة، فDelete ما يحذف غيرها
     clip.addEventListener("keydown", (e) => {
       const step = e.shiftKey ? 1 : 0.1;
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        pushHistory();
         l.offset = snap(l.offset + (e.key === "ArrowRight" ? 1 : -1) * step);
       } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        pushHistory();
         l.row = Math.min(rowCount(), Math.max(0, l.row + (e.key === "ArrowDown" ? 1 : -1)));
         compactRows();
       } else if (e.key === "Delete" || e.key === "Backspace") {
@@ -2639,14 +2700,7 @@ function initBeepMelodyExperiment() {
   [
     ["beepToolSplit", splitSelected],
     ["beepToolCopy", copySelected],
-    [
-      "beepToolMute",
-      () => {
-        if (!selected) return;
-        selected.muted = !selected.muted;
-        renderLayers();
-      },
-    ],
+    ["beepToolMute", toggleMute],
     ["beepToolDelete", deleteSelected],
   ].forEach(([id, fn]) =>
     document.getElementById(id).addEventListener("click", () => {
@@ -2701,6 +2755,7 @@ function initBeepMelodyExperiment() {
     const first = base ? Math.min(...events.map((e) => e.startBeat)) : 0;
     events.forEach((e) => (e.startBeat = Math.max(0, e.startBeat - first)));
     const end = Math.max(...events.map((e) => e.startBeat + e.durBeats));
+    pushHistory();
     layers.push({ events, instrument, muted: false, end, offset: 0, row: rowCount() }); // مسار جديد تحت الباقي
     recTime.textContent = clock(Math.max(...layers.map((l) => l.end + l.offset)) - 0.4) + " · " + layers.length + " ▤";
     renderLayers();
@@ -2726,27 +2781,34 @@ function initBeepMelodyExperiment() {
 
   const ctx0 = () => audioCtx.currentTime;
 
-  async function playTake() {
+  // fromStart=false: يبدأ من المؤشر الأبيض (مثل Space بباند لاب)، وإن كان المؤشر
+  // عند النهاية أو بعدها يبدأ من الصفر. ponytail: نغمة بدأت قبل نقطة البداية ولسا
+  // ترنّ لا تُعزف (لا نقص جزئي للنغمة)
+  async function playTake(fromStart = false) {
     const list = sounding();
     if (!list.length) return showToast(recTake.dataset.silent);
     if (playing) stopPlayback();
     await ensureContext();
     stopTake();
+    const total = Math.max(...list.map(layerEnd));
+    const from = fromStart || cursor >= total - 0.05 ? 0 : cursor;
     const start = audioCtx.currentTime + 0.1;
-    scheduleLayers({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, list, start);
+    scheduleLayers({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, list, start, from);
     // المفاتيح تنضغط وتنرفع مع الصوت (نفس شكل العزف الحي)
     list.forEach((l) =>
       l.events.forEach((ev) => {
+        const at = ev.startBeat + l.offset - from;
+        if (at < 0) return;
         const key = () => playBox?.querySelector(`[data-code="${ev.code}"]`);
         takeTimers.push(
-          setTimeout(() => key()?.classList.add("down"), 100 + (ev.startBeat + l.offset) * 1000),
-          setTimeout(() => key()?.classList.remove("down"), 100 + (ev.startBeat + l.offset + ev.held) * 1000)
+          setTimeout(() => key()?.classList.add("down"), 100 + at * 1000),
+          setTimeout(() => key()?.classList.remove("down"), 100 + (at + ev.held) * 1000)
         );
       })
     );
     recPlay.textContent = recPlay.dataset.stop;
-    takeTimers.push(setTimeout(stopTake, 200 + Math.max(...list.map(layerEnd)) * 1000));
-    playheadTimer = setInterval(() => setPlayhead(ctx0() - start), 50);
+    takeTimers.push(setTimeout(stopTake, 200 + (total - from) * 1000));
+    playheadTimer = setInterval(() => setPlayhead(from + ctx0() - start), 50);
   }
 
   async function exportTake(btn, make, ext) {
@@ -2777,11 +2839,87 @@ function initBeepMelodyExperiment() {
     document.getElementById("beepRecMidi").addEventListener("click", (e) => exportTake(e.currentTarget, async (p) => pieceToMidi(p), "mid"));
     document.getElementById("beepRecClear").addEventListener("click", () => {
       stopTake();
+      pushHistory();
       layers = [];
       selected = null;
       recTime.textContent = "";
       renderLayers();
       playClickSound();
+    });
+  }
+
+  /* ===== اختصارات لوحة المفاتيح (على خريطة باند لاب ستوديو) =====
+     Space تشغيل/إيقاف من الخط الأبيض · Shift+Space من البداية · R تسجيل · Esc إيقاف ·
+     S قص · Delete حذف · Ctrl+C/X/V نسخ/قص/لصق · Ctrl+D تكرار · Shift+M كتم ·
+     Ctrl+Z تراجع · Enter/Home/End تنقّل المؤشر · Ctrl+/ قائمة الاختصارات.
+     تعارض واحد: S نغمة بيانو أيضاً، فتقصّ فقط لما تكون طبقة محددة (وضع التحرير)؛
+     Esc يلغي التحديد فيرجع S نغمة. مفاتيح البيانو الباقية لا تُلمس. */
+  const shortcutsBox = document.getElementById("beepShortcuts");
+  const SHORTCUT_KEYCODES = { 32: "Space", 27: "Escape", 46: "Delete", 8: "Backspace", 36: "Home", 35: "End", 13: "Enter", 191: "Slash", 37: "ArrowLeft", 39: "ArrowRight" };
+  function shortcutCode(e) {
+    if (e.code && e.code !== "Unidentified") return e.code;
+    if (SHORTCUT_KEYCODES[e.keyCode]) return SHORTCUT_KEYCODES[e.keyCode];
+    return e.keyCode >= 65 && e.keyCode <= 90 ? "Key" + String.fromCharCode(e.keyCode) : "";
+  }
+  const totalSeconds = () => Math.max(0, ...layers.map(layerEnd));
+
+  if (recToggle) {
+    document.addEventListener("keydown", (e) => {
+      if (e.repeat || document.getElementById("panePlay").hidden) return;
+      if (e.target.closest("input, textarea, select, [contenteditable]")) return;
+      const code = shortcutCode(e);
+      // عنوان لوحة مطوية (summary) يبقى عليه التركيز بعد النقر: نترك له Space/Enter
+      // (يفتح ويغلق)، وباقي الاختصارات تشتغل عادي
+      if (e.target.closest("summary") && (code === "Space" || code === "Enter")) return;
+      const mod = e.ctrlKey || e.metaKey;
+      const onButton = e.target.closest("button, a");
+      let handled = true;
+      // أثناء التسجيل: لا تعديل على الطبقات (التراجع/اللصق...) — فقط تشغيل/إيقاف
+      if (rec && mod) return;
+      // بلا طبقات: Space وHome وEnter تبقى للصفحة (تمرير)، مو للمحرّر
+      const hasLayers = layers.length > 0 || rec;
+      if (code === "Space" && hasLayers) {
+        if (rec) stopRec();
+        else if (takeTimers.length) stopTake();
+        else playTake(e.shiftKey);
+      } else if (code === "KeyR" && !mod && !e.shiftKey && !e.altKey) {
+        recToggle.click();
+      } else if (code === "Escape") {
+        if (rec) stopRec();
+        stopTake();
+        select(null);
+      } else if (code === "Enter" && !onButton && layers.length) {
+        cursor = 0;
+        setPlayhead(null);
+      } else if ((code === "Home" || code === "End") && layers.length) {
+        cursor = code === "Home" ? 0 : snap(totalSeconds());
+        setPlayhead(null);
+      } else if (mod && code === "KeyZ") {
+        if (e.shiftKey) redo();
+        else undo();
+      } else if (mod && code === "KeyY") {
+        redo();
+      } else if (mod && code === "Slash") {
+        if (shortcutsBox) shortcutsBox.open = !shortcutsBox.open;
+      } else if (mod && (code === "KeyC" || code === "KeyX" || code === "KeyD") && selected) {
+        if (code === "KeyC") copyToClipboard();
+        else if (code === "KeyX") cutSelected();
+        else copySelected();
+      } else if (mod && code === "KeyV" && clipboard) {
+        pasteClipboard();
+      } else if ((code === "Delete" || code === "Backspace") && selected) {
+        deleteSelected();
+      } else if (code === "KeyS" && !mod && !e.shiftKey && selected) {
+        splitSelected();
+      } else if (code === "KeyM" && e.shiftKey && !mod && selected) {
+        toggleMute();
+      } else if ((code === "ArrowLeft" || code === "ArrowRight") && !e.target.closest(".beep-clip") && layers.length) {
+        cursor = snap(cursor + (code === "ArrowRight" ? 1 : -1) * (e.shiftKey ? 1 : 0.1));
+        setPlayhead(null);
+      } else {
+        handled = false;
+      }
+      if (handled) e.preventDefault(); // يمنع Space يفعّل زراً مركّزاً أو يمرّر الصفحة، وCtrl+Z يتراجع بمكان ثاني
     });
   }
 
@@ -2833,7 +2971,7 @@ function initBeepMelodyExperiment() {
       return { 186: "Semicolon", 59: "Semicolon", 222: "Quote" }[e.keyCode] || "";
     };
     document.addEventListener("keydown", (e) => {
-      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return; // defaultPrevented: اختصار محرّر أخذ المفتاح
       if (e.target.closest("input, textarea, select, [contenteditable]")) return;
       // البيانو للتبويب "اعزف" فقط — بغيره (تأليف/تعلّم) الحروف ما تعزف نغمات مفاجئة
       if (document.getElementById("panePlay").hidden) return;
