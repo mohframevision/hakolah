@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -65,8 +66,8 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         findViewById(R.id.webviewCloseButton).setOnClickListener(this);
         if (tab != null) {
             LinearLayout nav = findViewById(R.id.bottomNav);
-            nav.setVisibility(View.VISIBLE);
             BottomNav.attach(this, nav, tab);
+            applyOrientation(getResources().getConfiguration());
         }
 
         ProgressBar progress = findViewById(R.id.webviewProgress);
@@ -83,6 +84,28 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         webView.setFocusableInTouchMode(true);
         webView.requestFocus();
         if (url != null) webView.loadUrl(url);
+    }
+
+    // شاشات التبويبات (صوتيات) بالوضع الأفقي: شريط العنوان والشريط السفلي وشريط
+    // الحالة كلها تأكل ارتفاعاً ثميناً وتغطي البيانو، فنخفيها ونعرض الصفحة بملء
+    // الشاشة. الرجوع بزر/إيماءة النظام، وعودة الجوال عمودياً تعيدها. ما نعيد
+    // إنشاء الشاشة (configChanges بالمانيفست) فما ينقطع العزف.
+    // ملاحظة: getResources() هنا ملفوف بـwrapThemeContext (نسخة ثابتة من الإعدادات
+    // وقت الإنشاء)، فما يتحدّث مع التدوير — نقرأ الاتجاه من Configuration الحدث نفسه
+    private void applyOrientation(Configuration config) {
+        boolean land = config.orientation == Configuration.ORIENTATION_LANDSCAPE;
+        int vis = land ? View.GONE : View.VISIBLE;
+        findViewById(R.id.webviewBar).setVisibility(vis);
+        findViewById(R.id.bottomNav).setVisibility(vis);
+        getWindow().getDecorView().setSystemUiVisibility(land
+                ? View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                : View.SYSTEM_UI_FLAG_VISIBLE);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (getIntent().getStringExtra(EXTRA_TAB) != null) applyOrientation(newConfig);
     }
 
     // كلاس علوي مسمّى (مو مجهول) — د8 يفشل على الكلاسات المجهولة بهذي البيئة.
