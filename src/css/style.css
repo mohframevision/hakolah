@@ -4604,3 +4604,62 @@ img {
 .beep-layer .filter-chip {
   padding: 4px 10px;
 }
+
+/* ===== الآلات مجمّعة بفئات ===== */
+#instrumentPicker {
+  flex-direction: column;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+.instrument-group-title {
+  margin: 8px 0 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-align: start;
+}
+
+.instrument-group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+.instrument-group-chips .filter-chip {
+  white-space: nowrap;
+}
+
+.instrument-search {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.instrument-search::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.instrument-search:focus {
+  outline: 2px solid #6fc8a4;
+  outline-offset: 1px;
+}
+
+.instrument-none {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.instrument-none[hidden],
+.instrument-btn[hidden],
+.instrument-group[hidden] {
+  display: none;
+}

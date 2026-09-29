@@ -347,7 +347,291 @@ function initBeepMelodyExperiment() {
       filterDarkMult: 4,
       ringScale: 0.85,
     },
+    /* INSTRUMENTS-EXTRA-START — مولَّد بـgen-instruments، لا تعدّله يدوياً */
+    epiano: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 2, weight: 0.35, type: "sine" }, { mult: 3, weight: 0.06, type: "sine" }, { mult: 7, weight: 0.05, type: "sine" }],
+      attack: 0.005,
+      sustainRatio: 0,
+      filterBrightMult: 8,
+      filterDarkMult: 3,
+      ringScale: 1.3,
+      level: 0.93,
+    },
+    organ: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 2, weight: 0.6, type: "sine" }, { mult: 3, weight: 0.4, type: "sine" }, { mult: 4, weight: 0.3, type: "sine" }, { mult: 6, weight: 0.2, type: "sine" }, { mult: 8, weight: 0.12, type: "sine" }],
+      attack: 0.04,
+      sustainRatio: 0.92,
+      filterBrightMult: 6,
+      filterDarkMult: 5,
+      ringScale: 1.3,
+      level: 0.31,
+    },
+    harpsichord: {
+      harmonics: [{ mult: 1, weight: 1, type: "sawtooth" }, { mult: 2, weight: 0.5, type: "sawtooth" }, { mult: 3, weight: 0.3, type: "square" }, { mult: 4, weight: 0.2, type: "sine" }],
+      attack: 0.001,
+      sustainRatio: 0,
+      filterBrightMult: 14,
+      filterDarkMult: 4,
+      ringScale: 0.55,
+      level: 1.29,
+    },
+    celesta: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 4, weight: 0.35, type: "sine" }, { mult: 5, weight: 0.2, type: "sine" }, { mult: 6, weight: 0.1, type: "sine" }],
+      attack: 0.003,
+      sustainRatio: 0,
+      filterBrightMult: 12,
+      filterDarkMult: 5,
+      ringScale: 1.3,
+      level: 0.9,
+    },
+    melodica: {
+      harmonics: [{ mult: 1, weight: 1, type: "square" }, { mult: 2, weight: 0.3, type: "sine" }, { mult: 3, weight: 0.25, type: "sine" }],
+      attack: 0.05,
+      sustainRatio: 0.85,
+      filterBrightMult: 5,
+      filterDarkMult: 4,
+      ringScale: 1,
+      vibrato: { rateHz: 5, depthRatio: 0.004 },
+      level: 0.37,
+    },
+    harp: {
+      harmonics: [{ mult: 1, weight: 1, type: "triangle" }, { mult: 2, weight: 0.35, type: "sine" }, { mult: 3, weight: 0.15, type: "sine" }, { mult: 4, weight: 0.08, type: "sine" }],
+      attack: 0.004,
+      sustainRatio: 0,
+      filterBrightMult: 6,
+      filterDarkMult: 2,
+      ringScale: 1.6,
+      level: 1.04,
+    },
+    guitar: {
+      harmonics: [{ mult: 1, weight: 1, type: "triangle" }, { mult: 2, weight: 0.5, type: "sine" }, { mult: 3, weight: 0.3, type: "sine" }, { mult: 4, weight: 0.15, type: "sine" }, { mult: 5, weight: 0.1, type: "sine" }],
+      attack: 0.003,
+      sustainRatio: 0,
+      filterBrightMult: 8,
+      filterDarkMult: 2.2,
+      ringScale: 0.9,
+      level: 0.99,
+    },
+    oud: {
+      harmonics: [{ mult: 1, weight: 1, type: "sawtooth" }, { mult: 2, weight: 0.5, type: "sine" }, { mult: 3, weight: 0.35, type: "sine" }, { mult: 4, weight: 0.2, type: "sine" }, { mult: 5, weight: 0.12, type: "sine" }],
+      attack: 0.002,
+      sustainRatio: 0,
+      filterBrightMult: 7,
+      filterDarkMult: 2.2,
+      ringScale: 0.8,
+      level: 1.12,
+    },
+    qanun: {
+      harmonics: [{ mult: 1, weight: 1, type: "triangle" }, { mult: 2, weight: 0.6, type: "sine" }, { mult: 3, weight: 0.5, type: "sine" }, { mult: 4, weight: 0.4, type: "sine" }, { mult: 5, weight: 0.3, type: "sine" }, { mult: 6, weight: 0.2, type: "sine" }],
+      attack: 0.002,
+      sustainRatio: 0,
+      filterBrightMult: 13,
+      filterDarkMult: 4,
+      ringScale: 1.1,
+      level: 0.68,
+    },
+    santoor: {
+      harmonics: [{ mult: 1, weight: 1, type: "triangle" }, { mult: 1, weight: 0.7, type: "triangle", cents: 6 }, { mult: 2, weight: 0.5, type: "sine" }, { mult: 3.02, weight: 0.4, type: "sine" }, { mult: 4, weight: 0.3, type: "sine" }, { mult: 5.03, weight: 0.2, type: "sine" }],
+      attack: 0.002,
+      sustainRatio: 0,
+      filterBrightMult: 12,
+      filterDarkMult: 3.5,
+      ringScale: 1.2,
+      level: 0.69,
+    },
+    kalimba: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 5.4, weight: 0.35, type: "sine" }, { mult: 8.9, weight: 0.08, type: "sine" }],
+      attack: 0.002,
+      sustainRatio: 0,
+      filterBrightMult: 10,
+      filterDarkMult: 4,
+      ringScale: 0.95,
+      level: 0.97,
+    },
+    cello: {
+      harmonics: [{ mult: 1, weight: 1, type: "sawtooth" }, { mult: 2, weight: 0.5, type: "sawtooth" }, { mult: 3, weight: 0.3, type: "sine" }, { mult: 4, weight: 0.2, type: "sine" }],
+      attack: 0.12,
+      sustainRatio: 0.75,
+      filterBrightMult: 4,
+      filterDarkMult: 2,
+      ringScale: 1.1,
+      vibrato: { rateHz: 5.2, depthRatio: 0.006 },
+      level: 0.57,
+    },
+    strings: {
+      harmonics: [{ mult: 1, weight: 1, type: "sawtooth", cents: -8 }, { mult: 1, weight: 1, type: "sawtooth", cents: 8 }, { mult: 2, weight: 0.3, type: "sine" }, { mult: 3, weight: 0.2, type: "sine" }],
+      attack: 0.25,
+      sustainRatio: 0.9,
+      filterBrightMult: 5,
+      filterDarkMult: 3,
+      ringScale: 1.3,
+      vibrato: { rateHz: 5, depthRatio: 0.005 },
+      level: 0.39,
+    },
+    doublebass: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 2, weight: 0.6, type: "triangle" }, { mult: 3, weight: 0.3, type: "sine" }, { mult: 4, weight: 0.15, type: "sine" }],
+      attack: 0.02,
+      sustainRatio: 0.6,
+      filterBrightMult: 3,
+      filterDarkMult: 1.5,
+      ringScale: 1.1,
+      level: 0.41,
+    },
+    nay: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 2, weight: 0.12, type: "sine" }, { mult: 3, weight: 0.06, type: "sine" }, { mult: 4, weight: 0.03, type: "sine" }],
+      attack: 0.14,
+      sustainRatio: 0.75,
+      filterBrightMult: 3,
+      filterDarkMult: 2.5,
+      ringScale: 1.2,
+      vibrato: { rateHz: 5.2, depthRatio: 0.011 },
+      level: 0.48,
+    },
+    clarinet: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 3, weight: 0.5, type: "sine" }, { mult: 5, weight: 0.3, type: "sine" }, { mult: 7, weight: 0.15, type: "sine" }, { mult: 2, weight: 0.05, type: "sine" }],
+      attack: 0.04,
+      sustainRatio: 0.8,
+      filterBrightMult: 5,
+      filterDarkMult: 3.5,
+      ringScale: 1,
+      level: 0.41,
+    },
+    oboe: {
+      harmonics: [{ mult: 1, weight: 1, type: "sawtooth" }, { mult: 2, weight: 0.6, type: "sine" }, { mult: 3, weight: 0.5, type: "sine" }, { mult: 4, weight: 0.35, type: "sine" }, { mult: 5, weight: 0.25, type: "sine" }],
+      attack: 0.03,
+      sustainRatio: 0.8,
+      filterBrightMult: 8,
+      filterDarkMult: 4,
+      ringScale: 1,
+      vibrato: { rateHz: 5.5, depthRatio: 0.006 },
+      level: 0.36,
+    },
+    horn: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 2, weight: 0.5, type: "sine" }, { mult: 3, weight: 0.3, type: "triangle" }, { mult: 4, weight: 0.2, type: "sine" }],
+      attack: 0.07,
+      sustainRatio: 0.8,
+      filterBrightMult: 3,
+      filterDarkMult: 2.5,
+      ringScale: 1.1,
+      level: 0.37,
+    },
+    trombone: {
+      harmonics: [{ mult: 1, weight: 1, type: "sawtooth" }, { mult: 2, weight: 0.7, type: "sawtooth" }, { mult: 3, weight: 0.4, type: "sine" }, { mult: 4, weight: 0.25, type: "sine" }],
+      attack: 0.05,
+      sustainRatio: 0.75,
+      filterBrightMult: 6,
+      filterDarkMult: 3,
+      ringScale: 1,
+      level: 0.52,
+    },
+    harmonica: {
+      harmonics: [{ mult: 1, weight: 1, type: "square" }, { mult: 2, weight: 0.4, type: "sawtooth" }, { mult: 3, weight: 0.25, type: "sine" }],
+      attack: 0.03,
+      sustainRatio: 0.85,
+      filterBrightMult: 7,
+      filterDarkMult: 4,
+      ringScale: 1,
+      vibrato: { rateHz: 5, depthRatio: 0.008 },
+      level: 0.38,
+    },
+    recorder: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 2, weight: 0.08, type: "sine" }, { mult: 3, weight: 0.03, type: "sine" }],
+      attack: 0.06,
+      sustainRatio: 0.8,
+      filterBrightMult: 3,
+      filterDarkMult: 2.5,
+      ringScale: 1,
+      vibrato: { rateHz: 5, depthRatio: 0.003 },
+      level: 0.53,
+    },
+    marimba: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 4, weight: 0.25, type: "sine" }, { mult: 10, weight: 0.08, type: "sine" }],
+      attack: 0.002,
+      sustainRatio: 0,
+      filterBrightMult: 6,
+      filterDarkMult: 2,
+      ringScale: 0.75,
+      level: 1.16,
+    },
+    xylophone: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 3, weight: 0.45, type: "sine" }, { mult: 6, weight: 0.25, type: "sine" }],
+      attack: 0.001,
+      sustainRatio: 0,
+      filterBrightMult: 11,
+      filterDarkMult: 4,
+      ringScale: 0.45,
+      level: 1.22,
+    },
+    vibraphone: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 4, weight: 0.3, type: "sine" }, { mult: 10, weight: 0.06, type: "sine" }],
+      attack: 0.003,
+      sustainRatio: 0,
+      filterBrightMult: 8,
+      filterDarkMult: 3,
+      ringScale: 1.8,
+      vibrato: { rateHz: 5.5, depthRatio: 0.004 },
+      level: 0.84,
+    },
+    glockenspiel: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 2.76, weight: 0.5, type: "sine" }, { mult: 5.4, weight: 0.3, type: "sine" }, { mult: 8.93, weight: 0.15, type: "sine" }],
+      attack: 0.002,
+      sustainRatio: 0,
+      filterBrightMult: 14,
+      filterDarkMult: 6,
+      ringScale: 1.3,
+      level: 0.71,
+    },
+    steelpan: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 2, weight: 0.55, type: "sine" }, { mult: 3, weight: 0.3, type: "sine" }, { mult: 4.05, weight: 0.2, type: "sine" }],
+      attack: 0.004,
+      sustainRatio: 0,
+      filterBrightMult: 9,
+      filterDarkMult: 3,
+      ringScale: 0.9,
+      level: 0.82,
+    },
+    synth: {
+      harmonics: [{ mult: 1, weight: 1, type: "sawtooth", cents: -6 }, { mult: 1, weight: 0.8, type: "sawtooth", cents: 6 }, { mult: 2, weight: 0.25, type: "sine" }],
+      attack: 0.02,
+      sustainRatio: 0.8,
+      filterBrightMult: 5,
+      filterDarkMult: 3,
+      ringScale: 1.1,
+      level: 0.48,
+    },
+    chiptune: {
+      harmonics: [{ mult: 1, weight: 1, type: "square" }],
+      attack: 0.002,
+      sustainRatio: 0.85,
+      filterBrightMult: 10,
+      filterDarkMult: 6,
+      ringScale: 0.9,
+      level: 0.45,
+    },
+    synthbass: {
+      harmonics: [{ mult: 1, weight: 1, type: "sawtooth" }, { mult: 2, weight: 0.3, type: "square" }],
+      attack: 0.005,
+      sustainRatio: 0.5,
+      filterBrightMult: 3,
+      filterDarkMult: 1.2,
+      ringScale: 0.8,
+      level: 0.92,
+    },
+    choir: {
+      harmonics: [{ mult: 1, weight: 1, type: "sine" }, { mult: 2, weight: 0.5, type: "sine" }, { mult: 3, weight: 0.35, type: "sine" }, { mult: 4, weight: 0.2, type: "sine" }, { mult: 5, weight: 0.15, type: "sine" }, { mult: 1, weight: 0.6, type: "sine", cents: 9 }],
+      attack: 0.22,
+      sustainRatio: 0.9,
+      filterBrightMult: 4,
+      filterDarkMult: 3,
+      ringScale: 1.3,
+      vibrato: { rateHz: 5, depthRatio: 0.008 },
+      level: 0.3,
+    },
+    /* INSTRUMENTS-EXTRA-END */
   };
+  /* INSTRUMENT-LEVELS-START — مولَّد */
+  Object.entries({ accordion: 0.35, banjo: 1.81, violin: 0.59, flute: 0.54, trumpet: 0.51, sax: 0.48, bell: 0.66 }).forEach(([id, level]) => (INSTRUMENTS[id].level = level));
+  /* INSTRUMENT-LEVELS-END */
 
   // "صوتك": أي صوت يسجّله الزائر أو يختاره يصير آلة — نفس البيانو لين يوجد صوت
   INSTRUMENTS.custom = { ...INSTRUMENTS.piano, sample: true };
@@ -783,6 +1067,7 @@ function initBeepMelodyExperiment() {
     const freq = exactFreq || NOTES[noteIndex] * 2 ** octaveShift;
     peakGain *= dynamicsGain;
     const instrument = INSTRUMENTS[currentInstrument];
+    peakGain *= instrument.level || 1; // معايرة شدة كل آلة (تُقاس آلياً)
     if (instrument.sample && customSample) return playSample(target, freq, startTime, duration, peakGain, pan);
 
     // آلة وترية (يسار اللوحة = نغمات واطية بأوتار أطول وأثخن فترن أطول
@@ -838,11 +1123,11 @@ function initBeepMelodyExperiment() {
 
     // النغمات الواطية توافقياتها العليا أقوى شوي (صوت أغنى)، الحادة أخفت (أنحف)
     const harmonicRichness = clamp(registerFactor, 0.75, 1.3);
-    instrument.harmonics.forEach(({ mult, weight, type }) => {
+    instrument.harmonics.forEach(({ mult, weight, type, cents = 0 }) => {
       const osc = ctx.createOscillator();
       osc.type = type;
       osc.frequency.value = freq * mult;
-      osc.detune.value = detune;
+      osc.detune.value = detune + cents; // cents: طبقة مزاحة قليلاً = صوت جوقة/فرقة
       if (vibratoGain) vibratoGain.connect(osc.frequency);
       const harmonicGain = ctx.createGain();
       harmonicGain.gain.value = mult === 1 ? weight : weight * harmonicRichness;
@@ -1725,6 +2010,42 @@ function initBeepMelodyExperiment() {
   // شاشة لمس؟ نحدّدها بنفسنا لأن pointer:coarse ما يتطابق داخل بعض WebViews.
   // تحكم CSS الأفقي بالجوال (إخفاء الهيدر) — فنافذة مكتب قصيرة ما تتأثر
   if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("touch");
+
+  /* بحث الآلات: الاسم المعروض + كلمات بديلة (اسم اللغة الثانية، مرادفات). التطبيع
+     العربي (تشكيل، همزات، ياء/ألف مقصورة، تاء مربوطة) يخلّي "جيتار" و"غيتار" و
+     "guitar" كلها توصل لنفس الآلة. Enter يختار أول نتيجة. */
+  const instrumentSearch = document.getElementById("instrumentSearch");
+  if (instrumentSearch) {
+    const norm = (t) =>
+      t
+        .toLowerCase()
+        .normalize("NFKD")
+        .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+        .replace(/[أإآ]/g, "ا")
+        .replace(/ى/g, "ي")
+        .replace(/ة/g, "ه")
+        .replace(/[^\p{L}\p{N}]+/gu, " ")
+        .trim();
+    const chips = [...instrumentButtons];
+    const index = new Map(chips.map((c) => [c, norm(c.textContent + " " + (c.dataset.keywords || ""))]));
+    const groups = document.querySelectorAll("#instrumentPicker .instrument-group");
+    const none = document.getElementById("instrumentNone");
+    instrumentSearch.addEventListener("input", () => {
+      const words = norm(instrumentSearch.value).split(" ").filter(Boolean);
+      let shown = 0;
+      chips.forEach((c) => {
+        c.hidden = !words.every((w) => index.get(c).includes(w));
+        if (!c.hidden) shown++;
+      });
+      groups.forEach((g) => (g.hidden = !g.querySelector(".instrument-btn:not([hidden])")));
+      none.hidden = shown > 0;
+    });
+    instrumentSearch.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      chips.find((c) => !c.hidden)?.click();
+    });
+  }
 
   /* ===== التبويبات: اعزف / ألّف / تعلّم ===== */
   const tabs = document.querySelectorAll(".sounds-tab");
