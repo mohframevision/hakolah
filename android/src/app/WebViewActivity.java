@@ -78,6 +78,8 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         // الصوتيات تشغّل الصوت بعد ضغطة المستخدم أصلاً — بدون هذا بعض إصدارات
         // WebView ترفض AudioContext حتى مع الضغط
         settings.setMediaPlaybackRequiresUserGesture(false);
+        // حفظ الملفات المصدَّرة (WebView ما ينزّل روابط blob:) — لشاشة الصوتيات فقط
+        if (tab != null) webView.addJavascriptInterface(new SaveBridge(this), "HakolahApp");
         webView.setWebViewClient(new LoadingClient(progress));
         webView.setWebChromeClient(new PageChrome(this));
         // كيبورد موصول بالجوال: الأزرار توصل للصفحة فقط لو الـWebView هو المركّز

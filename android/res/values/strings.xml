@@ -10,6 +10,7 @@
     <string name="nav_settings">الإعدادات</string>
     <string name="nav_sounds">صوتيات</string>
     <string name="sounds_title">صوتيات هكوله</string>
+    <string name="saved_to_downloads">تم الحفظ في التنزيلات (مجلد Hakolah)</string>
     <string name="close">إغلاق</string>
 
     <string name="search_hint">ابحث…</string>

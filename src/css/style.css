@@ -4550,3 +4550,17 @@ img {
     height: max(90px, calc(100dvh - 205px));
   }
 }
+
+/* صف الأوكتاف صار فيه زر التسجيل ووقته: نمنع كسر النص ونخفي الوقت وهو فاضي */
+.beep-play-octave {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.beep-play-octave .filter-chip {
+  white-space: nowrap;
+}
+
+.beep-rec-time:empty {
+  display: none;
+}
