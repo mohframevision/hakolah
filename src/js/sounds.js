@@ -1861,6 +1861,8 @@ function initBeepMelodyExperiment() {
     document.addEventListener("keydown", (e) => {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.target.closest("input, textarea, select, [contenteditable]")) return;
+      // البيانو للتبويب "اعزف" فقط — بغيره (تأليف/تعلّم) الحروف ما تعزف نغمات مفاجئة
+      if (document.getElementById("panePlay").hidden) return;
       const code = physicalCode(e);
       if (code === "KeyZ" || code === "KeyX") {
         shiftOctave(code === "KeyZ" ? -1 : 1);
@@ -2079,7 +2081,8 @@ function initBeepMelodyExperiment() {
       moodButtons.forEach((b) => b.classList.toggle("active", b.dataset.mood === moodParam));
     }
     const instrumentParam = params.get("instrument");
-    if (INSTRUMENTS[instrumentParam]) {
+    // "صوتك" عينة على جهاز صاحبها فقط — الرابط المشارَك يرجع للبيانو
+    if (INSTRUMENTS[instrumentParam] && instrumentParam !== "custom") {
       currentInstrument = instrumentParam;
       instrumentButtons.forEach((b) => b.classList.toggle("active", b.dataset.instrument === instrumentParam));
     }
