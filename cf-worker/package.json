@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "secret:vapid": "wrangler secret put VAPID_PRIVATE_KEY"
+    "secret:vapid": "wrangler secret put VAPID_PRIVATE_KEY",
+    "test": "node test-likes.mjs"
   },
   "devDependencies": {
     "wrangler": "^3.90.0"

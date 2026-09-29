@@ -163,6 +163,52 @@ function weekKey(section, id) {
   return `${weekPrefix()}${section}:${id}`;
 }
 
+/* قراءة عدّادات الإعجاب — كانت list() ثم get() لكل مفتاح واحداً بعد الثاني: ١٠٠
+   عنصر معجَب به = ١٠١ قراءة متتالية لكل زيارة صفحة (حصة القراءة المجانية
+   ١٠٠ ألف/يوم = ~١٠٠٠ زيارة). الحين العدد محفوظ بـmetadata المفتاح نفسه وقت
+   الإعجاب، فـlist() وحدها ترجع كل العدادات = قراءة وحدة مهما كثرت الإعجابات.
+   المفاتيح القديمة (قبل هذا التعديل) بلا metadata: تُقرأ بالتوازي مرة وحدة
+   وتُكتب metadata لها، فتنضم للمسار السريع من الطلب اللي بعده. */
+async function readCounts(env, prefix, skip) {
+  const counts = {};
+  const legacy = [];
+  let cursor;
+  do {
+    const page = await env.SUBSCRIPTIONS.list({ prefix, cursor });
+    for (const key of page.keys) {
+      if (skip && key.name.startsWith(skip)) continue;
+      const name = key.name.slice(prefix.length);
+      if (key.metadata && typeof key.metadata.c === "number") counts[name] = key.metadata.c;
+      else legacy.push([name, key.name, key.expiration]);
+    }
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+  await Promise.all(
+    legacy.map(async ([name, full, expiration]) => {
+      const c = Number(await env.SUBSCRIPTIONS.get(full)) || 0;
+      counts[name] = c;
+      const opts = { metadata: { c } };
+      if (expiration) opts.expiration = expiration;
+      await env.SUBSCRIPTIONS.put(full, String(c), opts);
+    })
+  );
+  return counts;
+}
+
+/* نسخة بالذاكرة لـ٦٠ ثانية داخل نفس الـisolate. Cache API (caches.default) ما
+   يشتغل على نطاقات workers.dev، فهذا البديل: آلاف الزيارات بالدقيقة على نفس
+   الخادم = قراءة KV وحدة. ponytail: لكل isolate نسخته، فعدة مواقع Cloudflare
+   تقرأ كل واحد مرة بالدقيقة — يكفي لحجمنا؛ دومين خاص + caches.default لو كبرنا. */
+const memo = new Map();
+const MEMO_MS = 60 * 1000;
+async function cachedCounts(env, cacheKey, prefix, skip) {
+  const hit = memo.get(cacheKey);
+  if (hit && Date.now() - hit.at < MEMO_MS) return hit.body;
+  const body = JSON.stringify(await readCounts(env, prefix, skip));
+  memo.set(cacheKey, { at: Date.now(), body });
+  return body;
+}
+
 async function keyFor(endpoint) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(endpoint));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -224,9 +270,10 @@ export default {
         env.SUBSCRIPTIONS.get(wKey).then((v) => (Number(v) || 0) + 1),
       ]);
       await Promise.all([
-        env.SUBSCRIPTIONS.put(key, String(count)),
-        env.SUBSCRIPTIONS.put(wKey, String(weekCount), { expirationTtl: 60 * 60 * 24 * 14 }),
+        env.SUBSCRIPTIONS.put(key, String(count), { metadata: { c: count } }),
+        env.SUBSCRIPTIONS.put(wKey, String(weekCount), { expirationTtl: 60 * 60 * 24 * 14, metadata: { c: weekCount } }),
       ]);
+      memo.clear(); // صاحب الإعجاب يشوف العدد الجديد فوراً على هذا الخادم
       return new Response(JSON.stringify({ count }), {
         headers: { ...corsHeaders(), "Content-Type": "application/json" },
       });
@@ -245,25 +292,20 @@ export default {
         env.SUBSCRIPTIONS.get(wKey).then((v) => Math.max(0, (Number(v) || 0) - 1)),
       ]);
       await Promise.all([
-        env.SUBSCRIPTIONS.put(key, String(count)),
-        env.SUBSCRIPTIONS.put(wKey, String(weekCount), { expirationTtl: 60 * 60 * 24 * 14 }),
+        env.SUBSCRIPTIONS.put(key, String(count), { metadata: { c: count } }),
+        env.SUBSCRIPTIONS.put(wKey, String(weekCount), { expirationTtl: 60 * 60 * 24 * 14, metadata: { c: weekCount } }),
       ]);
+      memo.clear();
       return new Response(JSON.stringify({ count }), {
         headers: { ...corsHeaders(), "Content-Type": "application/json" },
       });
     }
 
     if (request.method === "GET" && url.pathname === "/likes") {
-      const list = await env.SUBSCRIPTIONS.list({ prefix: "likes:" });
-      const counts = {};
-      for (const key of list.keys) {
-        if (key.name.startsWith("likes:week:")) continue;
-        counts[key.name.slice("likes:".length)] =
-          Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
-      }
-      // Cache-Control قصير (60 ثانية) — يقلل استدعاءات KV.list() المتكررة
-      // على كل تحميل صفحة عنصر بلا أي فرق محسوس للزائر (عداد إعجابات).
-      return new Response(JSON.stringify(counts), {
+      const body = await cachedCounts(env, "all", "likes:", "likes:week:");
+      // Cache-Control قصير (60 ثانية) بالمتصفح أيضاً — نفس الزائر يتنقّل بين
+      // الصفحات بلا طلب جديد، بلا أي فرق محسوس (عداد إعجابات).
+      return new Response(body, {
         headers: {
           ...corsHeaders(),
           "Content-Type": "application/json",
@@ -274,12 +316,8 @@ export default {
 
     if (request.method === "GET" && url.pathname === "/likes/week") {
       const prefix = weekPrefix();
-      const list = await env.SUBSCRIPTIONS.list({ prefix });
-      const counts = {};
-      for (const key of list.keys) {
-        counts[key.name.slice(prefix.length)] = Number(await env.SUBSCRIPTIONS.get(key.name)) || 0;
-      }
-      return new Response(JSON.stringify(counts), {
+      const body = await cachedCounts(env, prefix, prefix);
+      return new Response(body, {
         headers: {
           ...corsHeaders(),
           "Content-Type": "application/json",
