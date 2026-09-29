@@ -68,18 +68,19 @@ pageScript: "sounds"
       <div class="beep-play-octave">
         <button type="button" class="filter-chip" id="beepOctDown" aria-label="Octave down">Z ⬇️</button>
         <span id="beepOctLabel" dir="ltr">C4</span>
-        <button type="button" class="filter-chip" id="beepRecToggle" data-label="⏺ Record" data-stop="⏹ Stop" data-empty="You haven't played any notes yet">⏺ Record</button>
+        <button type="button" class="filter-chip" id="beepRecToggle" data-label="⏺ Record" data-stop="⏹ Stop" data-more="⏺ Add layer" data-empty="You haven't played any notes yet">⏺ Record</button>
         <span class="beep-rec-time" id="beepRecTime" dir="ltr"></span>
         <button type="button" class="filter-chip" id="beepOctUp" aria-label="Octave up">X ⬆️</button>
         <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="Fullscreen">⛶</button>
       </div>
       <div class="beep-play-keys" id="beepPlayKeys"></div>
-      <div class="beep-rec-take" id="beepRecTake" hidden>
-        <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ Play recording" data-stop="⏹ Stop">▶️ Play recording</button>
+      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-mute="Mute layer" data-unmute="Unmute" data-delete="Delete layer" data-max="Maximum 8 layers" data-silent="All layers are muted">
+        <ul class="beep-layer-list" id="beepLayerList"></ul>
+        <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ Play layers" data-stop="⏹ Stop">▶️ Play layers</button>
         <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ WAV</button>
         <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ MP3</button>
         <button type="button" class="filter-chip" id="beepRecMidi">🎼 MIDI</button>
-        <button type="button" class="filter-chip" id="beepRecClear" aria-label="Delete recording" title="Delete recording">🗑️</button>
+        <button type="button" class="filter-chip" id="beepRecClear" aria-label="Delete all layers" title="Delete all layers">🗑️</button>
       </div>
     </div>
   </section>

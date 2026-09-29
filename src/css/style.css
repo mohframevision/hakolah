@@ -4564,3 +4564,43 @@ img {
 .beep-rec-time:empty {
   display: none;
 }
+
+/* ===== طبقات التسجيل ===== */
+.beep-layer-list {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.beep-layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.85rem;
+}
+
+.beep-layer > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+}
+
+.beep-layer.muted > span {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.beep-layer .filter-chip {
+  padding: 4px 10px;
+}

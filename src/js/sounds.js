@@ -1036,7 +1036,9 @@ function initBeepMelodyExperiment() {
     bus.feedback.gain.value = mood.delayFeedback;
     bus.wet.gain.value = mood.delayWet;
 
-    scheduleEvents({ ctx, dry: bus.input, wet: bus.delay, live: false }, piece, 0.05);
+    const target = { ctx, dry: bus.input, wet: bus.delay, live: false };
+    if (piece.layers) scheduleLayers(target, piece.layers, 0.05);
+    else scheduleEvents(target, piece, 0.05);
     return ctx.startRendering();
   }
 
@@ -1832,20 +1834,48 @@ function initBeepMelodyExperiment() {
     playBox?.querySelector(`[data-code="${code}"]`)?.classList.remove("down");
   }
 
-  /* ===== تسجيل العزف =====
-     نسجّل كل نغمة (الوقت، النغمة، مدة الضغط) كقائمة أحداث بنفس شكل أحداث المولّد
-     — فمصدّرات WAV وMP3 وMIDI تشتغل عليها كما هي. نبضة القطعة ٦٠ (الضربة = ثانية)
-     عشان الأوقات الحقيقية تنطبق على الضربات مباشرة. التسجيل قائمة نغمات لا صوت
-     ملتقط: يُعزف ويُصدَّر بالآلة المختارة وقت التشغيل/التصدير. */
+  /* ===== تسجيل العزف بطبقات =====
+     كل تسجيل "طبقة": قائمة نغمات (الوقت، النغمة، مدة الضغط) بنفس شكل أحداث المولّد
+     مع آلتها — فمصدّرات WAV وMP3 وMIDI تشتغل عليها كما هي. نبضة القطعة ٦٠ (الضربة =
+     ثانية) عشان الأوقات الحقيقية تنطبق على الضربات مباشرة. الطبقة الجديدة تُسجَّل
+     وباقي الطبقات تُعزف معها على خط زمن واحد (الطبقة الأولى فقط تُقصّ من صمتها
+     الأول). التسجيل قائمة نغمات لا صوت ملتقط: كل طبقة تُعزف وتُصدَّر بآلتها. */
   const MAX_TAKE_SECONDS = 300;
-  let rec = null; // تسجيل جارٍ: { t0, open: Map(code→حدث), events, timer }
-  let take = null; // آخر تسجيل مكتمل بصيغة "قطعة"
+  const MAX_LAYERS = 8;
+  let rec = null; // تسجيل جارٍ: { t0, open: Map(code→حدث), events, timer, instrument, base }
+  let layers = []; // [{ events, instrument, muted, end }]
   let takeTimers = [];
 
   const recToggle = document.getElementById("beepRecToggle");
   const recTime = document.getElementById("beepRecTime");
   const recTake = document.getElementById("beepRecTake");
   const recPlay = document.getElementById("beepRecPlay");
+  const layerList = document.getElementById("beepLayerList");
+
+  const sounding = () => layers.filter((l) => !l.muted);
+  const instrumentLabel = (id) => document.querySelector(`.instrument-btn[data-instrument="${id}"]`)?.textContent.trim() || id;
+  const clock = (sec) => Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0");
+  const idleLabel = () => (layers.length ? recToggle.dataset.more : recToggle.dataset.label);
+
+  // كل طبقة بآلتها: نبدّل الآلة العامة أثناء الجدولة فقط (playNote يقرأها لحظتها)
+  function scheduleLayers(target, list, start) {
+    const saved = currentInstrument;
+    list.forEach((l) => {
+      currentInstrument = l.instrument;
+      scheduleEvents(target, { events: l.events, meta: { bpm: 60 } }, start);
+    });
+    currentInstrument = saved;
+  }
+
+  // "قطعة" كاملة من الطبقات غير المكتومة — تمرّ على نفس مصدّرات المولّد
+  function mixPiece() {
+    const live = sounding();
+    return {
+      layers: live,
+      events: live.flatMap((l) => l.events), // MIDI: مسار واحد (الآلات ما تُحفظ فيه)
+      meta: { seed: "piano", bpm: 60, meter: 4, totalBeats: Math.max(...live.map((l) => l.end)) },
+    };
+  }
 
   function noteEnd(code) {
     const ev = rec?.open.get(code);
@@ -1856,16 +1886,63 @@ function initBeepMelodyExperiment() {
     ev.durBeats = Math.min(2.4, ev.held + 0.4);
   }
 
-  const clock = (sec) => Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0");
+  function layerButton(label, text, onClick) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "filter-chip";
+    b.textContent = label;
+    b.setAttribute("aria-label", text);
+    b.title = text;
+    b.addEventListener("click", () => {
+      onClick();
+      playClickSound();
+    });
+    return b;
+  }
 
-  function startRec() {
+  function renderLayers() {
+    const d = recTake.dataset;
+    recTake.hidden = layers.length === 0;
+    if (!rec) recToggle.textContent = idleLabel();
+    layerList.replaceChildren(
+      ...layers.map((l, i) => {
+        const li = document.createElement("li");
+        li.className = "beep-layer" + (l.muted ? " muted" : "");
+        const name = document.createElement("span");
+        name.textContent = `${d.layer} ${i + 1} · ${instrumentLabel(l.instrument)} · ${l.events.length} ♪`;
+        li.append(
+          name,
+          layerButton(l.muted ? "🔇" : "🔊", l.muted ? d.unmute : d.mute, () => {
+            l.muted = !l.muted;
+            renderLayers();
+          }),
+          layerButton("🗑️", d.delete, () => {
+            layers.splice(i, 1);
+            if (!layers.length) stopTake();
+            renderLayers();
+          })
+        );
+        return li;
+      })
+    );
+  }
+
+  async function startRec() {
+    if (layers.length >= MAX_LAYERS) return showToast(recTake.dataset.max);
+    if (playing) stopPlayback(); // مولّد المقطوعات ما يتزامن مع التسجيل
+    await ensureContext();
+    if (rec) return; // ضغطتين سريعتين
     stopTake();
-    rec = { t0: performance.now(), open: new Map(), events: [], timer: null };
+    const base = layers.length === 0;
+    const start = audioCtx.currentTime + 0.1;
+    if (!base) scheduleLayers({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, sounding(), start);
+    // الطبقات القديمة تبدأ بعد ٠٫١ث: زمن التسجيل يتأخر بنفس المقدار عشان يتطابقان
+    rec = { t0: performance.now() + (base ? 0 : 100), open: new Map(), events: [], timer: null, instrument: currentInstrument, base };
     recToggle.textContent = recToggle.dataset.stop;
     recToggle.classList.add("recording");
     recTime.textContent = "0:00";
     rec.timer = setInterval(() => {
-      const sec = (performance.now() - rec.t0) / 1000;
+      const sec = Math.max(0, (performance.now() - rec.t0) / 1000);
       recTime.textContent = clock(sec);
       if (sec >= MAX_TAKE_SECONDS) stopRec();
     }, 250);
@@ -1873,23 +1950,24 @@ function initBeepMelodyExperiment() {
 
   function stopRec() {
     clearInterval(rec.timer);
+    stopTake(); // أوقف الطبقات اللي كانت تُعزف مع التسجيل
     [...rec.open.keys()].forEach(noteEnd);
-    const events = rec.events;
+    const { events, instrument, base } = rec;
     rec = null;
-    recToggle.textContent = recToggle.dataset.label;
     recToggle.classList.remove("recording");
     if (!events.length) {
+      recToggle.textContent = idleLabel();
       recTime.textContent = "";
       showToast(recToggle.dataset.empty);
       return;
     }
-    // نقصّ الصمت اللي قبل أول نغمة — التسجيل يبدأ بالنغمة الأولى
-    const first = Math.min(...events.map((e) => e.startBeat));
-    events.forEach((e) => (e.startBeat -= first));
+    // الطبقة الأولى تبدأ بأول نغمة (نقصّ الصمت)؛ اللاحقة تحافظ على توقيتها مع الأولى
+    const first = base ? Math.min(...events.map((e) => e.startBeat)) : 0;
+    events.forEach((e) => (e.startBeat = Math.max(0, e.startBeat - first)));
     const end = Math.max(...events.map((e) => e.startBeat + e.durBeats));
-    take = { events, meta: { seed: "piano", bpm: 60, meter: 4, totalBeats: end } };
-    recTime.textContent = clock(end - 0.4) + " · " + events.length + " ♪";
-    recTake.hidden = false;
+    layers.push({ events, instrument, muted: false, end });
+    recTime.textContent = clock(Math.max(...layers.map((l) => l.end)) - 0.4) + " · " + layers.length + " ▤";
+    renderLayers();
   }
 
   function stopTake() {
@@ -1908,29 +1986,34 @@ function initBeepMelodyExperiment() {
   }
 
   async function playTake() {
-    if (playing) stopPlayback(); // مولّد المقطوعات ما يتزامن مع التسجيل
+    const list = sounding();
+    if (!list.length) return showToast(recTake.dataset.silent);
+    if (playing) stopPlayback();
     await ensureContext();
     stopTake();
     const start = audioCtx.currentTime + 0.1;
-    scheduleEvents({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, take, start);
+    scheduleLayers({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, list, start);
     // المفاتيح تنضغط وتنرفع مع الصوت (نفس شكل العزف الحي)
-    take.events.forEach((ev) => {
-      const key = () => playBox?.querySelector(`[data-code="${ev.code}"]`);
-      takeTimers.push(
-        setTimeout(() => key()?.classList.add("down"), 100 + ev.startBeat * 1000),
-        setTimeout(() => key()?.classList.remove("down"), 100 + (ev.startBeat + ev.held) * 1000)
-      );
-    });
+    list.forEach((l) =>
+      l.events.forEach((ev) => {
+        const key = () => playBox?.querySelector(`[data-code="${ev.code}"]`);
+        takeTimers.push(
+          setTimeout(() => key()?.classList.add("down"), 100 + ev.startBeat * 1000),
+          setTimeout(() => key()?.classList.remove("down"), 100 + (ev.startBeat + ev.held) * 1000)
+        );
+      })
+    );
     recPlay.textContent = recPlay.dataset.stop;
-    takeTimers.push(setTimeout(stopTake, 200 + take.meta.totalBeats * 1000));
+    takeTimers.push(setTimeout(stopTake, 200 + Math.max(...list.map((l) => l.end)) * 1000));
   }
 
   async function exportTake(btn, make, ext) {
+    if (!sounding().length) return showToast(recTake.dataset.silent);
     const original = btn.textContent;
     btn.disabled = true;
     if (btn.dataset.working) btn.textContent = btn.dataset.working;
     try {
-      downloadBlob(await make(take), `hakolah-piano-${Date.now()}.${ext}`);
+      downloadBlob(await make(mixPiece()), `hakolah-piano-${Date.now()}.${ext}`);
     } catch {
       showToast(btn.dataset.failed || "");
     } finally {
@@ -1952,9 +2035,9 @@ function initBeepMelodyExperiment() {
     document.getElementById("beepRecMidi").addEventListener("click", (e) => exportTake(e.currentTarget, async (p) => pieceToMidi(p), "mid"));
     document.getElementById("beepRecClear").addEventListener("click", () => {
       stopTake();
-      take = null;
-      recTake.hidden = true;
+      layers = [];
       recTime.textContent = "";
+      renderLayers();
       playClickSound();
     });
   }
