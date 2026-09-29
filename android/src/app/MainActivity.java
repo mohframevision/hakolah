@@ -106,6 +106,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         nearMeButton = findViewById(R.id.nearMeButton);
         sectionTabsScroll = findViewById(R.id.sectionTabsScroll);
         filterChipsScroll = findViewById(R.id.filterChipsScroll);
+        applyLandscape(getResources().getConfiguration());
         // "اختيار اليوم" رأس للقائمة نفسها — يتمرّر معها بدل ما يثبت ويأكل الشاشة.
         // داخل حاوية لأن رأس ListView نفسه ما ينخفي نظيفاً، محتواه ينخفي
         android.widget.FrameLayout headerHolder = new android.widget.FrameLayout(this);
@@ -230,6 +231,21 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         public void onAnimationRepeat(android.animation.Animator animation) {}
     }
     // ------------------------------------------------------------------
+
+    // الأفقي: الشاشة قصيرة، فشريط العنوان ورقائق التصنيف (تبقى بالعمودي) كانت
+    // تأكل كل الارتفاع وتترك القائمة شريطاً رفيعاً. الاتجاه من Configuration
+    // الحدث نفسه لأن getResources() ملفوف بـwrapThemeContext (ثابت وقت الإنشاء).
+    private void applyLandscape(android.content.res.Configuration config) {
+        int v = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE ? View.GONE : View.VISIBLE;
+        headerBar.setVisibility(v);
+        filterChipsScroll.setVisibility(v);
+    }
+
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        applyLandscape(newConfig);
+    }
 
     @Override
     protected void onResume() {
