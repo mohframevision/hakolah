@@ -10,7 +10,7 @@ pageScript: "sounds"
 <div class="breadcrumb"><a href="{{ '/index.html' | url }}">الرئيسية</a> / صوتيات هكوله</div>
 <section class="page-header">
   <h1>🎹 صوتيات هكوله</h1>
-  <p>اعزف على البيانو بلوحة المفاتيح أو بلمس الشاشة، أو دع هكوله يؤلّف لك مقطوعة جديدة، وتعلّم أساسيات الموسيقى وأنت تستمع.</p>
+  <p>اعزف، أو دع هكوله يؤلّف لك، وتعلّم أساسيات الموسيقى.</p>
 </section>
 
 <div class="beep-experiment sounds-tool">
@@ -21,37 +21,41 @@ pageScript: "sounds"
       <input type="search" id="instrumentSearch" class="instrument-search" placeholder="ابحث عن آلة… (غيتار، عود، ناي)" aria-label="ابحث عن آلة" autocomplete="off" enterkeyhint="search" />
       <p class="instrument-none" id="instrumentNone" hidden>لا توجد آلة بهذا الاسم.</p>
       <div class="instrument-picker" id="instrumentPicker">
+        <div class="instrument-recent" id="instrumentRecent" hidden>
+          <p class="instrument-group-title">🕘 آخر ما استخدمت</p>
+          <div class="instrument-group-chips"></div>
+        </div>
         <div class="instrument-group">
           <p class="instrument-group-title">🎹 مفاتيح</p>
           <div class="instrument-group-chips">
             <button type="button" class="filter-chip instrument-btn active" data-instrument="piano" data-keywords="Piano piano">🎹 بيانو</button>
             <button type="button" class="filter-chip instrument-btn" data-instrument="accordion" data-keywords="Accordion accordion اكورديون">🪗 أكورديون</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="epiano" data-keywords="Electric Piano epiano رودز الكتريك كهربائي electric">⚡ بيانو كهربائي</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="organ" data-keywords="Organ organ اورغ اورج ارغن">⛪ أرغن</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="harpsichord" data-keywords="Harpsichord harpsichord">🏰 هاربسيكورد</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="celesta" data-keywords="Celesta celesta">✨ سيليستا</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="melodica" data-keywords="Melodica melodica">🌬️ ميلوديكا</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="epiano" data-new="2026-09-29" data-keywords="Electric Piano epiano رودز الكتريك كهربائي electric">⚡ بيانو كهربائي</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="organ" data-new="2026-09-29" data-keywords="Organ organ اورغ اورج ارغن">⛪ أرغن</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="harpsichord" data-new="2026-09-29" data-keywords="Harpsichord harpsichord">🏰 هاربسيكورد</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="celesta" data-new="2026-09-29" data-keywords="Celesta celesta">✨ سيليستا</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="melodica" data-new="2026-09-29" data-keywords="Melodica melodica">🌬️ ميلوديكا</button>
           </div>
         </div>
         <div class="instrument-group">
           <p class="instrument-group-title">🪕 أوتار منقورة</p>
           <div class="instrument-group-chips">
             <button type="button" class="filter-chip instrument-btn" data-instrument="banjo" data-keywords="Banjo banjo">🪕 بانجو</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="harp" data-keywords="Harp harp قيثاره">🎶 هارب</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="harp" data-new="2026-09-29" data-keywords="Harp harp قيثاره">🎶 هارب</button>
             <button type="button" class="filter-chip instrument-btn" data-instrument="guitar" data-keywords="Guitar guitar جيتار">🎸 غيتار</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="oud" data-keywords="Oud oud اود">🎵 عود</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="qanun" data-keywords="Qanun qanun كانون">📐 قانون</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="santoor" data-keywords="Santoor santoor سنتور">🔨 سنطور</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="kalimba" data-keywords="Kalimba kalimba كاليمبا thumb">🖐️ كاليمبا</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="oud" data-new="2026-09-29" data-keywords="Oud oud اود">🎵 عود</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="qanun" data-new="2026-09-29" data-keywords="Qanun qanun كانون">📐 قانون</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="santoor" data-new="2026-09-29" data-keywords="Santoor santoor سنتور">🔨 سنطور</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="kalimba" data-new="2026-09-29" data-keywords="Kalimba kalimba كاليمبا thumb">🖐️ كاليمبا</button>
           </div>
         </div>
         <div class="instrument-group">
           <p class="instrument-group-title">🎻 أوتار مقوَّسة</p>
           <div class="instrument-group-chips">
             <button type="button" class="filter-chip instrument-btn" data-instrument="violin" data-keywords="Violin violin كمنجه كمان">🎻 كمان</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="cello" data-keywords="Cello cello">🎻 تشيلو</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="strings" data-keywords="String Ensemble strings اوركسترا وتريات">🎼 فرقة أوتار</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="doublebass" data-keywords="Double Bass doublebass باص bass كونترباص">🎻 كونترباص</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="cello" data-new="2026-09-29" data-keywords="Cello cello">🎻 تشيلو</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="strings" data-new="2026-09-29" data-keywords="String Ensemble strings اوركسترا وتريات">🎼 فرقة أوتار</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="doublebass" data-new="2026-09-29" data-keywords="Double Bass doublebass باص bass كونترباص">🎻 كونترباص</button>
           </div>
         </div>
         <div class="instrument-group">
@@ -60,13 +64,13 @@ pageScript: "sounds"
             <button type="button" class="filter-chip instrument-btn" data-instrument="flute" data-keywords="Flute flute شبابه">🪈 فلوت</button>
             <button type="button" class="filter-chip instrument-btn" data-instrument="trumpet" data-keywords="Trumpet trumpet ترمبيت">🎺 بوق</button>
             <button type="button" class="filter-chip instrument-btn" data-instrument="sax" data-keywords="Saxophone sax سكسفون">🎷 ساكسفون</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="nay" data-keywords="Nay (reed flute) nay مزمار شبابه">🪈 ناي</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="clarinet" data-keywords="Clarinet clarinet كلارنيت">🎶 كلارينت</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="oboe" data-keywords="Oboe oboe">🎵 أوبوا</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="horn" data-keywords="French Horn horn بوق فرنش">📯 هورن</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="trombone" data-keywords="Trombone trombone">🎺 ترومبون</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="harmonica" data-keywords="Harmonica harmonica هارمونيكا فم">🎤 هارمونيكا</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="recorder" data-keywords="Recorder recorder ريكوردر">🪈 ناي بلاستيك (ريكوردر)</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="nay" data-new="2026-09-29" data-keywords="Nay (reed flute) nay مزمار شبابه">🪈 ناي</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="clarinet" data-new="2026-09-29" data-keywords="Clarinet clarinet كلارنيت">🎶 كلارينت</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="oboe" data-new="2026-09-29" data-keywords="Oboe oboe">🎵 أوبوا</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="horn" data-new="2026-09-29" data-keywords="French Horn horn بوق فرنش">📯 هورن</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="trombone" data-new="2026-09-29" data-keywords="Trombone trombone">🎺 ترومبون</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="harmonica" data-new="2026-09-29" data-keywords="Harmonica harmonica هارمونيكا فم">🎤 هارمونيكا</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="recorder" data-new="2026-09-29" data-keywords="Recorder recorder ريكوردر ناي بلاستيك">🪈 ريكوردر</button>
           </div>
         </div>
         <div class="instrument-group">
@@ -74,26 +78,26 @@ pageScript: "sounds"
           <div class="instrument-group-chips">
             <button type="button" class="filter-chip instrument-btn" data-instrument="bell" data-keywords="Bell bell اجراس جرس">🔔 جرس</button>
             <button type="button" class="filter-chip instrument-btn" data-instrument="musicbox" data-keywords="Music Box musicbox صندوق موسيقي علبه">🎐 صندوق موسيقى</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="marimba" data-keywords="Marimba marimba ماريمبا">🪵 ماريمبا</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="xylophone" data-keywords="Xylophone xylophone زايلوفون">🔟 زيلوفون</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="vibraphone" data-keywords="Vibraphone vibraphone">〰️ فيبرافون</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="glockenspiel" data-keywords="Glockenspiel glockenspiel">🔔 غلوكنشبيل</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="steelpan" data-keywords="Steelpan steelpan ستيل درم steel drum">🛢️ ستيل بان</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="marimba" data-new="2026-09-29" data-keywords="Marimba marimba ماريمبا">🪵 ماريمبا</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="xylophone" data-new="2026-09-29" data-keywords="Xylophone xylophone زايلوفون">🔟 زيلوفون</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="vibraphone" data-new="2026-09-29" data-keywords="Vibraphone vibraphone">〰️ فيبرافون</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="glockenspiel" data-new="2026-09-29" data-keywords="Glockenspiel glockenspiel">🔔 غلوكنشبيل</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="steelpan" data-new="2026-09-29" data-keywords="Steelpan steelpan ستيل درم steel drum">🛢️ ستيل بان</button>
           </div>
         </div>
         <div class="instrument-group">
           <p class="instrument-group-title">🎛️ إلكترونية وأصوات</p>
           <div class="instrument-group-chips">
-            <button type="button" class="filter-chip instrument-btn" data-instrument="synth" data-keywords="Synth synth سنثسايزر الكتروني">🎛️ سينث</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="chiptune" data-keywords="8-bit chiptune 8bit 8-bit العاب ثماني بت">👾 ٨-بت</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="synthbass" data-keywords="Synth Bass synthbass باص bass">🔊 باص سينث</button>
-            <button type="button" class="filter-chip instrument-btn" data-instrument="choir" data-keywords="Choir choir جوقه كورال ترنيم غناء">🗣️ كورس</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="synth" data-new="2026-09-29" data-keywords="Synth synth سنثسايزر الكتروني">🎛️ سينث</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="chiptune" data-new="2026-09-29" data-keywords="8-bit chiptune 8bit 8-bit العاب ثماني بت">👾 ٨-بت</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="synthbass" data-new="2026-09-29" data-keywords="Synth Bass synthbass باص bass">🔊 باص سينث</button>
+            <button type="button" class="filter-chip instrument-btn" data-instrument="choir" data-new="2026-09-29" data-keywords="Choir choir جوقه كورال ترنيم غناء">🗣️ كورس</button>
             <button type="button" class="filter-chip instrument-btn" data-instrument="custom" data-keywords="Your sound custom">🎙️ صوتك</button>
           </div>
         </div>
       </div>
-      <div class="custom-sound" id="customSound">
-        <p class="beep-param-note">حوّل أي صوت إلى آلة: سجّل ثانيتين أو ثلاثاً (خوار بقرة، صفير، ضحكة…) أو اختر ملفاً صوتياً، ثم اختر «🎙️ صوتك» واعزف به على البيانو.</p>
+      <div class="custom-sound" id="customSound" hidden>
+        <p class="beep-param-note">حوّل أي صوت إلى آلة: سجّل ثانيتين أو ثلاثاً (خوار بقرة، صفير، ضحكة…) أو اختر ملفاً صوتياً، ثم اعزف به على البيانو.</p>
         <div class="instrument-picker">
           <button type="button" class="filter-chip" id="customRecord" data-label="🔴 سجّل صوتاً" data-stop="⏹ أوقف التسجيل">🔴 سجّل صوتاً</button>
           <label class="filter-chip" for="customFile">📁 اختر ملفاً</label>
@@ -120,12 +124,15 @@ pageScript: "sounds"
 
   <section class="sounds-pane" id="panePlay" role="tabpanel">
     <div class="beep-play">
-      <p class="beep-param-note">الصف الأوسط <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> للمفاتيح البيضاء، والصف الذي فوقه <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> للسوداء، و<kbd>Z</kbd> / <kbd>X</kbd> لتغيير الأوكتاف. تعمل أيضاً بلوحة مفاتيح موصولة بالجوال، أو بلمس المفاتيح مباشرة. اختصارات التسجيل: <kbd>R</kbd> بدء/إيقاف، و<kbd>Space</kbd> تشغيل/إيقاف بعد أول تسجيل (تظهر القائمة الكاملة معه).</p>
-      <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="ما يُكتب على المفاتيح">
-        <button type="button" class="filter-chip active" data-labels="keys">⌨️ أحرف الكيبورد</button>
-        <button type="button" class="filter-chip" data-labels="letters">C D E</button>
-        <button type="button" class="filter-chip" data-labels="solfege">Do Re Mi</button>
-      </div>
+      <details class="beep-help">
+        <summary>⌨️ طريقة العزف وأسماء المفاتيح</summary>
+        <p class="beep-param-note">الصف الأوسط <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> للمفاتيح البيضاء، والصف الذي فوقه <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> للسوداء، و<kbd>Z</kbd> / <kbd>X</kbd> لتغيير الأوكتاف. تعمل أيضاً بلوحة مفاتيح موصولة بالجوال، أو بلمس المفاتيح مباشرة. اختصارات التسجيل: <kbd>R</kbd> بدء/إيقاف، و<kbd>Space</kbd> تشغيل/إيقاف بعد أول تسجيل (تظهر القائمة الكاملة معه).</p>
+        <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="ما يُكتب على المفاتيح">
+          <button type="button" class="filter-chip active" data-labels="keys">⌨️ أحرف الكيبورد</button>
+          <button type="button" class="filter-chip" data-labels="letters">C D E</button>
+          <button type="button" class="filter-chip" data-labels="solfege">Do Re Mi</button>
+        </div>
+      </details>
       <div class="beep-play-octave">
         <button type="button" class="filter-chip" id="beepOctDown" aria-label="أوكتاف أخفض">Z ⬇️</button>
         <span id="beepOctLabel" dir="ltr">C4</span>

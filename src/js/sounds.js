@@ -666,18 +666,68 @@ function initBeepMelodyExperiment() {
     });
   }
   const instrumentButtons = document.querySelectorAll("#instrumentPicker .instrument-btn");
+  // شارة "جديد" تختفي لحالها بعد ٣٠ يوماً من data-new (تاريخ إضافة الآلة)
+  instrumentButtons.forEach((b) => {
+    if (b.dataset.new && Date.now() - Date.parse(b.dataset.new) < 30 * 864e5) b.classList.add("is-new");
+  });
+  const customSoundBox = document.getElementById("customSound");
   instrumentButtons.forEach((el) => {
     el.addEventListener("click", () => {
-      if (el.dataset.instrument === "custom" && !customSample) {
+      const id = el.dataset.instrument;
+      // قسم التسجيل يظهر بس مع "صوتك" — كان دائم الظهور ويزحم قائمة الآلات
+      if (customSoundBox) customSoundBox.hidden = id !== "custom";
+      if (id === "custom" && !customSample) {
         setCustomStatus("need");
         return;
       }
-      currentInstrument = el.dataset.instrument;
+      currentInstrument = id;
       instrumentButtons.forEach((b) => b.classList.toggle("active", b === el));
       updateSoundSummary();
-      playClickSound();
+      rememberInstrument(id);
+      // نغمة تجربة بالآلة الجديدة بدل صوت النقرة (والمفتاح ينضغط على البيانو)،
+      // إلا أثناء التسجيل حتى ما تنحفظ بالطبقة
+      if (rec) return playClickSound();
+      keyOn("KeyG");
+      setTimeout(() => keyOff("KeyG"), 350);
     });
   });
+
+  // "آخر ما استخدمت": ثلاث آلات فوق القائمة، كل زر يضغط زر الآلة الأصلي
+  const recentBox = document.getElementById("instrumentRecent");
+  function renderRecent() {
+    if (!recentBox) return;
+    let ids = [];
+    try {
+      ids = JSON.parse(localStorage.getItem("beepRecentInstruments")) || [];
+    } catch {
+      // تخزين ممنوع أو تالف — القائمة تبقى فاضية
+    }
+    const row = recentBox.querySelector(".instrument-group-chips");
+    row.replaceChildren(
+      ...ids.flatMap((id) => {
+        const orig = document.querySelector(`#instrumentPicker .instrument-btn[data-instrument="${id}"]`);
+        if (!orig) return [];
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "filter-chip";
+        b.textContent = orig.textContent;
+        b.addEventListener("click", () => orig.click());
+        return [b];
+      })
+    );
+    recentBox.hidden = !row.children.length;
+  }
+  function rememberInstrument(id) {
+    if (id === "custom") return;
+    try {
+      const ids = JSON.parse(localStorage.getItem("beepRecentInstruments")) || [];
+      localStorage.setItem("beepRecentInstruments", JSON.stringify([id, ...ids.filter((x) => x !== id)].slice(0, 3)));
+    } catch {
+      // لا شيء
+    }
+    renderRecent();
+  }
+  renderRecent();
 
   /* أربعة "أمزجة" — كل وحدة تضبط سرعة النبضة (BPM) ونوع السلّم وأنماط الإيقاع
      المتاحة وقوة الصوت وكمية الصدى:
@@ -2039,6 +2089,7 @@ function initBeepMelodyExperiment() {
       });
       groups.forEach((g) => (g.hidden = !g.querySelector(".instrument-btn:not([hidden])")));
       none.hidden = shown > 0;
+      if (recentBox) recentBox.hidden = words.length > 0 || !recentBox.querySelector("button");
     });
     instrumentSearch.addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;

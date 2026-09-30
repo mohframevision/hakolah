@@ -4101,6 +4101,58 @@ img {
   color: #fff;
 }
 
+/* تفاعل محسوس: الزر يرتفع ويتوهّج تحت الماوس، وينضغط عند النقر. التوهّج بس
+   لأجهزة الماوس (hover: hover) — باللمس كان بيعلق على آخر زر انلمس */
+.beep-experiment .filter-chip,
+.sounds-tab {
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.15s ease;
+}
+
+@media (hover: hover) {
+  .beep-experiment .filter-chip:hover:not(:disabled),
+  .sounds-tab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(63, 164, 128, 0.35);
+  }
+}
+
+.beep-experiment .filter-chip:active:not(:disabled),
+.sounds-tab:active {
+  transform: scale(0.95);
+}
+
+/* تبديل "اعزف / ألّف / تعلّم" بظهور ناعم بدل القفزة */
+.sounds-pane:not([hidden]) {
+  animation: sounds-pane-in 0.25s ease;
+}
+
+@keyframes sounds-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.beep-help {
+  width: 100%;
+  text-align: center;
+}
+
+.beep-help > summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.beep-help[open] > summary {
+  margin-bottom: 8px;
+}
+
 /* زر التشغيل = زر "لف" بالتطبيق: كبسولة بتدرّج أخضر وتوهّج */
 .beep-experiment #beepMelodyPlay {
   background: linear-gradient(90deg, #2a7f60, #35946f);
@@ -4451,7 +4503,7 @@ img {
     border-radius: 18px;
   }
 
-  html.touch .sounds-tool .beep-play > .beep-param-note {
+  html.touch .sounds-tool .beep-help > .beep-param-note {
     display: none;
   }
 
@@ -4609,19 +4661,46 @@ img {
   text-align: start;
 }
 
+/* خانات بعرض واحد بدل كومة رقائق بأعراض مختلفة — كانت تبان "مبعثرة" */
 .instrument-group-chips {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
   gap: 6px;
-  justify-content: flex-start;
 }
 
 .instrument-group-chips .filter-chip {
+  position: relative;
+  padding-inline: 8px;
   white-space: nowrap;
 }
 
+.instrument-recent {
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* شارة "جديد" على الآلات المضافة حديثاً (sounds.js يضع is-new لـ٣٠ يوماً) */
+.instrument-btn.is-new::after {
+  content: "جديد";
+  position: absolute;
+  top: -7px;
+  inset-inline-end: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #1a1a1a;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+html[lang="en"] .instrument-btn.is-new::after {
+  content: "New";
+}
+
+/* width: 100% مع هامش .beep-panel الجانبي (12px) كانت تطلّع المربع برا اللوحة */
 .instrument-search {
-  width: 100%;
+  width: calc(100% - 24px);
   padding: 10px 16px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 999px;
