@@ -4429,6 +4429,20 @@ img {
   font-size: clamp(0.62rem, 1.5vw, 1rem);
 }
 
+/* جوال عمودي: نسبة ١١/٤ تعطي مفاتيح بارتفاع ~١٠٠px فتنزل السوداء فوق حروف
+   البيضاء وتتداخل معها — نطوّلها، ونخفي اسم النغمة بالسوداء لأنها أضيق منه */
+@media (max-width: 600px) and (orientation: portrait) {
+  .sounds-tool .beep-play-keys {
+    aspect-ratio: auto;
+    max-height: none;
+    height: clamp(170px, 45vw, 260px);
+  }
+
+  .sounds-tool .pk-black small {
+    display: none;
+  }
+}
+
 .beep-play-octave #beepFullscreen[hidden] {
   display: none;
 }
