@@ -897,7 +897,8 @@ function initBeepMelodyExperiment() {
   }
   const volumeInput = document.getElementById("beepVolume");
   if (volumeInput) {
-    const paint = () => volumeInput.style.setProperty("--level", volumeLevel * 100 + "%");
+    dressVolume(volumeInput);
+    const paint = () => volumeInput.parentElement.style.setProperty("--level", volumeLevel);
     volumeInput.value = volumeLevel;
     paint();
     volumeInput.addEventListener("input", () => {
@@ -6191,3 +6192,85 @@ function initBeepMelodyExperiment() {
 
 
 document.addEventListener("DOMContentLoaded", initBeepMelodyExperiment);
+
+/* منزلق الصوت: خط ناعم ينتفخ عند المستوى الحالي كقطرة ماء متصلة به (فلتر "لزوجة" يدمج
+   الخط والدائرة بجسم واحد). المنزلق الأصلي يبقى فوقها شفافاً فيبقى اللمس والكيبورد
+   وقارئ الشاشة كما هي. ولما تنزل بالصفحة ويختفي المنزلق تحت الهيدر، يطفو بحبة صغيرة
+   بزاوية الشاشة ويرجع مكانه لما تطلع — بلا قفزة بالمحتوى (مكانه محجوز). */
+function dressVolume(input) {
+  const NS = "http://www.w3.org/2000/svg";
+  const label = input.closest(".beep-volume");
+  const wrap = document.createElement("span");
+  wrap.className = "vol-wrap";
+  const goo = document.createElement("span");
+  goo.className = "vol-goo";
+  goo.setAttribute("aria-hidden", "true");
+  goo.innerHTML = '<span class="vol-track"></span><span class="vol-liquid"><span class="vol-fill"></span><span class="vol-drop"></span></span>';
+  input.replaceWith(wrap);
+  wrap.append(goo, input);
+  if (!document.getElementById("volGoo")) {
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "vol-defs");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML =
+      '<filter id="volGoo" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feColorMatrix in="b" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="g"/><feComposite in="SourceGraphic" in2="g" operator="atop"/></filter>';
+    document.body.append(svg);
+  }
+  label.classList.add("drop-ready");
+
+  const spot = document.createElement("div");
+  spot.className = "beep-volume-spot";
+  label.before(spot);
+  const header = document.querySelector(".site-header");
+  let floating = false;
+  let frame = 0;
+  const check = () => {
+    frame = 0;
+    const top = header ? header.getBoundingClientRect().bottom : 0;
+    const anchor = (floating ? spot : label).getBoundingClientRect();
+    const should = anchor.bottom < top + 4 && document.activeElement !== input;
+    if (should === floating) return;
+    if (should) {
+      spot.style.width = anchor.width + "px";
+      spot.style.height = anchor.height + "px";
+      label.style.setProperty("--float-top", top + 8 + "px");
+    } else {
+      spot.style.width = spot.style.height = "";
+    }
+    floating = should;
+    spot.classList.toggle("holding", should);
+    label.classList.toggle("is-floating", should);
+    fold(should);
+  };
+  // الطافي زرّ سمّاعة صغير ما يغطي شي؛ اللمس (أو مرور الفأرة) يفتحه منزلقاً، ويرجع
+  // يطوي نفسه بعد ثانيتين ونص بلا استخدام
+  let foldTimer = 0;
+  function fold(on) {
+    clearTimeout(foldTimer);
+    label.classList.toggle("is-folded", on);
+  }
+  const unfold = () => {
+    if (!floating) return;
+    fold(false);
+    foldTimer = setTimeout(() => {
+      // تركيز الكيبورد (Tab) يبقيه مفتوحاً؛ تركيز النقر بالفأرة/اللمس لا
+      if (!label.matches(":hover") && !input.matches(":focus-visible")) fold(true);
+    }, 2500);
+  };
+  label.addEventListener("click", (e) => {
+    if (!label.classList.contains("is-folded")) return;
+    e.preventDefault(); // لمسة الفتح ما تغيّر مستوى الصوت
+    unfold();
+  });
+  label.addEventListener("pointerenter", (e) => e.pointerType === "mouse" && unfold());
+  label.addEventListener("pointerleave", () => floating && unfold());
+  // مطويّ يبقى المنزلق قابلاً للتركيز (Tab)، والتركيز يفتحه
+  ["input", "pointerdown", "focus"].forEach((ev) => input.addEventListener(ev, unfold));
+  const onScroll = () => {
+    if (!frame) frame = requestAnimationFrame(check);
+  };
+  addEventListener("scroll", onScroll, { passive: true });
+  addEventListener("resize", onScroll, { passive: true });
+  input.addEventListener("blur", onScroll);
+}
+

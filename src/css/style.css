@@ -3887,7 +3887,8 @@ img {
   border: 1px solid var(--color-border);
 }
 
-/* منزلق الصوت: مسار يمتلئ بالأخضر حتى المستوى الحالي (--level من الجافاسكربت) */
+/* منزلق الصوت: خط رفيع ينتفخ عند المستوى كقطرة ماء متصلة به (sounds.js يبني الشكل
+   ويضع --level من ٠ إلى ١). المنزلق الأصلي فوقه شفاف للمس والكيبورد */
 .beep-volume {
   display: flex;
   align-items: center;
@@ -3900,57 +3901,199 @@ img {
   flex: 1;
   height: 28px;
   margin: 0;
-  background: transparent;
-  appearance: none;
+  accent-color: var(--color-primary);
   cursor: pointer;
 }
 
-.beep-volume input::-webkit-slider-runnable-track {
-  height: 8px;
-  border-radius: 999px;
-  background: linear-gradient(to right, var(--color-primary) var(--level, 80%), var(--color-border) var(--level, 80%));
+.vol-wrap {
+  --drop: 18px;
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
 }
 
-.beep-volume input::-moz-range-track {
-  height: 8px;
+.vol-wrap input {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  background: transparent;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vol-wrap input::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.vol-wrap input::-webkit-slider-thumb {
+  width: var(--drop);
+  height: 28px;
+  background: transparent;
+  appearance: none;
+}
+
+.vol-wrap input::-moz-range-track {
+  background: transparent;
+}
+
+.vol-wrap input::-moz-range-thumb {
+  width: var(--drop);
+  height: 28px;
+  border: 0;
+  background: transparent;
+}
+
+.vol-wrap input:focus-visible {
+  outline: none;
+}
+
+.vol-goo,
+.vol-liquid,
+.vol-track {
+  position: absolute;
+  pointer-events: none;
+}
+
+.vol-goo {
+  inset: 0;
+}
+
+.vol-track {
+  inset-inline: 2px;
+  top: calc(50% - 2px);
+  height: 4px;
   border-radius: 999px;
   background: var(--color-border);
 }
 
-.beep-volume input::-moz-range-progress {
-  height: 8px;
-  border-radius: 999px;
+/* الخط الممتلئ والقطرة داخل فلتر واحد: يذوبان ببعض فيصير الاتصال منحنياً ناعماً */
+.vol-liquid {
+  inset: -6px 0;
+  filter: url(#volGoo);
+}
+
+.vol-fill,
+.vol-drop {
+  position: absolute;
   background: var(--color-primary);
 }
 
-.beep-volume input::-webkit-slider-thumb {
-  appearance: none;
-  width: 22px;
-  height: 22px;
-  margin-top: -7px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  border: 2px solid var(--color-primary);
-  box-shadow: var(--shadow-card);
-  transition: transform 0.12s ease;
-}
-
-.beep-volume input::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  border: 2px solid var(--color-primary);
-}
-
-.beep-volume input:active::-webkit-slider-thumb {
-  transform: scale(1.2);
-}
-
-.beep-volume input:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+.vol-fill {
+  left: 2px;
+  top: calc(50% - 2.5px);
+  width: calc(var(--drop) / 2 + (100% - var(--drop)) * var(--level, 0.8) - 2px);
+  height: 5px;
   border-radius: 999px;
+}
+
+.vol-drop {
+  left: calc((100% - var(--drop)) * var(--level, 0.8));
+  top: calc(50% - var(--drop) / 2);
+  width: var(--drop);
+  height: var(--drop);
+  border-radius: 50%;
+  transition: transform 0.18s ease;
+}
+
+.vol-wrap:active .vol-drop,
+.vol-wrap:has(input:focus-visible) .vol-drop {
+  transform: scale(1.18);
+}
+
+.vol-wrap:has(input:focus-visible) .vol-track {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
+.vol-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* بعد النزول بالصفحة: حبة صغيرة بزاوية الشاشة تحت الهيدر، شبه شفافة لين تلمسها */
+.beep-volume.is-floating {
+  position: fixed;
+  top: var(--float-top, 72px);
+  right: 12px;
+  z-index: 40;
+  width: 190px;
+  padding: 4px 12px;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  font-size: 0.85rem;
+  opacity: 0.88;
+  animation: vol-float-in 0.22s ease;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+html[dir="rtl"] .beep-volume.is-floating {
+  right: auto;
+  left: 12px;
+}
+
+.beep-volume.is-floating:hover,
+.beep-volume.is-floating:focus-within {
+  opacity: 1;
+}
+
+/* مطويّ: دائرة صغيرة بأيقونة السمّاعة فقط */
+.beep-volume.is-floating.is-folded {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+  cursor: pointer;
+}
+
+html.touch .sounds-top .beep-volume.is-floating.is-folded {
+  width: 40px;
+  padding: 0;
+}
+
+.beep-volume.is-folded > span:first-child {
+  display: none;
+}
+
+/* مخفي بصرياً لا display:none — عشان يبقى يوصله الكيبورد وقارئ الشاشة */
+.beep-volume.is-folded .vol-wrap {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+@keyframes vol-float-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beep-volume.is-floating,
+  .vol-drop {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* مكان المنزلق محجوز وهو طافٍ (وإلا قفز المحتوى)، ومخفي غير كذا عشان ما يضيف فجوة */
+.beep-volume-spot {
+  display: none;
+  flex: none;
+}
+
+.beep-volume-spot.holding {
+  display: block;
 }
 
 .beep-panel,
@@ -4507,6 +4650,12 @@ img {
     flex: 1;
     width: auto;
     padding-top: 6px;
+  }
+
+  html.touch .sounds-top .beep-volume.is-floating {
+    flex: none;
+    width: 170px;
+    padding: 4px 12px;
   }
 
   html.touch .sounds-top .beep-panel {
