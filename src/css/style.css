@@ -4678,6 +4678,18 @@ img {
   align-items: stretch;
   flex-wrap: nowrap;
   gap: 4px;
+  /* صندوق بارتفاع ثابت يُمرَّر داخله: اللوحة تبقى صغيرة والبيانو تحتها ظاهر */
+  position: relative;
+  max-height: 264px;
+  margin: 0 12px;
+  padding: 2px 0 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.12);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
 .instrument-group-title {

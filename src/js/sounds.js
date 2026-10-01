@@ -917,6 +917,13 @@ function initBeepMelodyExperiment() {
   instrumentButtons.forEach((b) => {
     if (b.dataset.new && Date.now() - Date.parse(b.dataset.new) < 30 * 864e5) b.classList.add("is-new");
   });
+  // فتح لوحة الآلة: الصندوق يُمرَّر داخلياً، فنظهر الآلة المختارة لو كانت تحت
+  instrumentButtons[0]?.closest("details")?.addEventListener("toggle", (e) => {
+    if (!e.target.open) return;
+    const box = document.getElementById("instrumentPicker");
+    const active = box.querySelector(".instrument-group .instrument-btn.active");
+    if (active && active.offsetTop > box.clientHeight - 40) box.scrollTop = active.offsetTop - box.clientHeight / 2;
+  });
   const customSoundBox = document.getElementById("customSound");
   instrumentButtons.forEach((el) => {
     el.addEventListener("click", () => {
@@ -2380,6 +2387,7 @@ function initBeepMelodyExperiment() {
       groups.forEach((g) => (g.hidden = !g.querySelector(".instrument-btn:not([hidden])")));
       none.hidden = shown > 0;
       if (recentBox) recentBox.hidden = words.length > 0 || !recentBox.querySelector("button");
+      document.getElementById("instrumentPicker").scrollTop = 0; // النتائج تبدأ من أول الصندوق
     });
     instrumentSearch.addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
