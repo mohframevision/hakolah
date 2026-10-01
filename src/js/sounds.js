@@ -2793,8 +2793,11 @@ function initBeepMelodyExperiment() {
   const beatSec = () => 60 / bpm;
   const barSec = () => beatSec() * meter;
   const gridStep = () => (gridDiv ? (beatSec() * 4) / gridDiv : 0);
-  // المحاذاة للشبكة (أو ٥٠م.ث لو الشبكة "حرّة")
+  // المحاذاة للشبكة (أو ٥٠م.ث لو الشبكة "حرّة")، وعلامة قطع قريبة (٨ بكسل) تجذب أقوى
+  // من الشبكة — فالضربة تقع على القطع بالمشهد بالضبط
   const snap = (sec) => {
+    const near = markers.find((m) => Math.abs(m - sec) * pxPerSec < 8);
+    if (near != null) return near;
     const step = gridStep() || 0.05;
     return Math.max(0, Math.round(sec / step) * step);
   };
@@ -3220,9 +3223,14 @@ function initBeepMelodyExperiment() {
   // sec = رقم: الخط يمشي مع التشغيل/التسجيل. null: يرجع لمكان المؤشر الثابت
   function setPlayhead(sec) {
     const idle = sec == null;
-    playhead.hidden = layers.length === 0;
+    playhead.hidden = !studioActive();
     playhead.classList.toggle("idle", idle);
     playhead.style.left = Math.min(Math.max(0, idle ? cursor : sec), timelineSeconds) * pxPerSec + "px";
+    if (idle) videoShow(cursor);
+    else {
+      if (timecodeEl) timecodeEl.textContent = timecode(sec);
+      videoFollow(sec);
+    }
   }
 
   const toolEdit = document.getElementById("beepToolEdit");
@@ -3316,7 +3324,7 @@ function initBeepMelodyExperiment() {
   let history = [];
   let future = [];
   let clipboard = null;
-  const snapshot = () => ({ layers: layers.map((l) => ({ ...l })), tracks: tracks.map(cloneTrack), bpm, meter });
+  const snapshot = () => ({ layers: layers.map((l) => ({ ...l })), tracks: tracks.map(cloneTrack), bpm, meter, markers: [...markers] });
   function pushHistory(before = snapshot()) {
     history.push(before);
     if (history.length > HISTORY_MAX) history.shift();
@@ -3330,6 +3338,7 @@ function initBeepMelodyExperiment() {
     tracks = s.tracks;
     bpm = s.bpm;
     meter = s.meter;
+    markers = s.markers;
     paintProject();
     selected = null;
     closeEditor();
@@ -3570,7 +3579,7 @@ function initBeepMelodyExperiment() {
 
   function renderLayers() {
     ensureTracks();
-    recTake.hidden = layers.length === 0;
+    recTake.hidden = !studioActive();
     if (!rec) {
       recToggle.textContent = idleLabel();
       const total = Math.max(0, ...layers.map(layerEnd));
@@ -3579,8 +3588,8 @@ function initBeepMelodyExperiment() {
 
     const laneW = board.clientWidth;
     const bar = barSec();
-    const total = Math.max(0, ...layers.map(layerEnd));
-    // أربع مازورات على الأقل، ومازورة فاضية بعد الآخر للإسقاط والتسجيل بعده
+    const total = Math.max(0, videoDur(), ...layers.map(layerEnd));
+    // أربع مازورات على الأقل، ومازورة فاضية بعد الآخر (أو بعد نهاية الفيديو) للإسقاط والتسجيل بعده
     timelineSeconds = Math.max(4 * bar, Math.ceil((total + bar * 0.5) / bar) * bar + bar);
     pxPerSec = laneW > 0 ? laneW / timelineSeconds : 30; // مخفي (عرض صفر): نرسم عند ظهوره
     lanes.style.setProperty("--beat", pxPerSec * beatSec() + "px");
@@ -3604,6 +3613,8 @@ function initBeepMelodyExperiment() {
 
     board.replaceChildren(...layers.map(buildClip), ...tracks.flatMap((tr, r) => (tr.auto ? [buildAutoLane(tr, r)] : [])));
     renderGutter();
+    renderFilm();
+    renderMarkers();
     renderMixer();
     updateTools();
     if (!playheadTimer && !rec) setPlayhead(null);
@@ -3653,6 +3664,7 @@ function initBeepMelodyExperiment() {
     scrub(e, board, board);
   });
   ruler.addEventListener("pointerdown", (e) => scrub(e, ruler, ruler));
+  document.getElementById("beepFilm")?.addEventListener("pointerdown", (e) => scrub(e, e.currentTarget, ruler));
   const knob = document.createElement("span");
   knob.className = "beep-playhead-knob";
   playhead.append(knob);
@@ -3720,6 +3732,7 @@ function initBeepMelodyExperiment() {
     transport = { at, from };
     for (let k = 0; k < meter && lead; k++) metroClick(at - lead + k * beatSec(), k === 0); // العدّ
     if (metroOn) startMetronome(at, from);
+    videoStart(at, from);
     rec = {
       kind,
       t0: performance.now() + (at - audioCtx.currentTime) * 1000,
@@ -3870,6 +3883,7 @@ function initBeepMelodyExperiment() {
     stopMetronome();
     stopDrumPreview();
     stopSfxPreview();
+    videoStop();
     setPlayhead(null);
     if (soft) {
       // نهاية طبيعية: نترك ذيل الرنين والصدى يكمل ثم نفك السلاسل
@@ -3896,16 +3910,18 @@ function initBeepMelodyExperiment() {
   // ponytail: نغمة بدأت قبل نقطة البداية ولسا ترنّ لا تُعزف (لا نقص جزئي للنغمة)
   async function playTake(fromStart = false, pos = null) {
     const list = sounding();
-    if (!list.length) return showToast(recTake.dataset.silent);
+    if (!list.length && !videoReady()) return showToast(recTake.dataset.silent);
     if (playing) stopPlayback();
     await ensureContext();
     stopTake();
-    const total = Math.max(...list.map(layerEnd));
+    // مع فيديو: التشغيل يكمل لنهاية المشهد حتى لو الموسيقى أقصر
+    const total = Math.max(0, ...list.map(layerEnd), videoReady() ? videoDur() : 0);
     const from = pos ?? (fromStart || cursor >= total - 0.05 ? 0 : cursor);
     const start = audioCtx.currentTime + 0.1;
     transport = { at: start, from };
     scheduleLayers(liveTarget(), list, start, from);
     if (metroOn) startMetronome(start, from);
+    videoStart(start, from);
     // المفاتيح تنضغط وتنرفع مع الصوت (نفس شكل العزف الحي)
     list.forEach((l) => {
       if (l.kind !== "notes") return;
@@ -4165,6 +4181,9 @@ function initBeepMelodyExperiment() {
       v: 1,
       bpm,
       meter,
+      markers,
+      fps,
+      video: videoMeta,
       tracks: tracks.map(cloneTrack),
       layers: layers
         // المؤثرات تُشارك بإعداداتها (تُرسم من جديد عند الفتح)، والتسجيلات الحقيقية لا
@@ -4187,6 +4206,12 @@ function initBeepMelodyExperiment() {
     if (!p || !Array.isArray(p.layers)) throw new Error("bad project");
     bpm = clamp(Math.round(p.bpm) || 90, 40, 240);
     meter = [2, 3, 4].includes(p.meter) ? p.meter : 4;
+    markers = (Array.isArray(p.markers) ? p.markers : []).filter((m) => Number.isFinite(m) && m >= 0).sort((a, b) => a - b);
+    fps = [24, 25, 30].includes(p.fps) ? p.fps : 25;
+    markFps(fps);
+    // الفيديو نفسه ما يُحفظ: لو المشروع يذكر فيديو وما هو محمَّل الآن نطلب الملف
+    if (p.video?.name && Number.isFinite(p.video.dur) && !videoUrl) videoMeta = { name: String(p.video.name), dur: p.video.dur };
+    paintVideo();
     tracks = (p.tracks || []).map((t) => ({ ...newTrack(), ...t, eq: Array.isArray(t.eq) ? t.eq.slice(0, 3) : [0, 0, 0] }));
     const usable = (l) =>
       (l.kind === "audio" ? l.audio?.data?.length || SFX[l.sfx?.id] : Array.isArray(l.events)) &&
@@ -4222,7 +4247,7 @@ function initBeepMelodyExperiment() {
     paintProject();
   }
   function saveProject() {
-    const action = layers.length ? (st) => st.put(serializeProject(true), "project") : (st) => st.delete("project");
+    const action = studioActive() || markers.length ? (st) => st.put(serializeProject(true), "project") : (st) => st.delete("project");
     sampleStore("readwrite", action).catch(() => {}); // وضع خاص/مساحة ممتلئة: المشروع يبقى بالصفحة فقط
   }
 
@@ -5317,7 +5342,7 @@ function initBeepMelodyExperiment() {
     if (SHORTCUT_KEYCODES[e.keyCode]) return SHORTCUT_KEYCODES[e.keyCode];
     return e.keyCode >= 65 && e.keyCode <= 90 ? "Key" + String.fromCharCode(e.keyCode) : "";
   }
-  const totalSeconds = () => Math.max(0, ...layers.map(layerEnd));
+  const totalSeconds = () => Math.max(0, videoDur(), ...layers.map(layerEnd));
 
   if (recToggle) {
     document.addEventListener("keydown", (e) => {
@@ -5333,7 +5358,7 @@ function initBeepMelodyExperiment() {
       // أثناء التسجيل: لا تعديل على الطبقات (التراجع/اللصق...) — فقط تشغيل/إيقاف
       if (rec && mod) return;
       // بلا طبقات: Space وHome وEnter تبقى للصفحة (تمرير)، مو للمحرّر
-      const hasLayers = layers.length > 0 || rec;
+      const hasLayers = studioActive() || rec;
       const plain = !mod && !e.shiftKey && !e.altKey;
       if (code === "Space" && hasLayers) {
         if (rec) stopRec();
@@ -5351,10 +5376,10 @@ function initBeepMelodyExperiment() {
           edNote = null;
           renderEditor();
         } else select(null);
-      } else if (code === "Enter" && !onButton && layers.length) {
+      } else if (code === "Enter" && !onButton && studioActive()) {
         cursor = 0;
         setPlayhead(null);
-      } else if ((code === "Home" || code === "End") && layers.length) {
+      } else if ((code === "Home" || code === "End") && studioActive()) {
         cursor = code === "Home" ? 0 : snap(totalSeconds());
         setPlayhead(null);
       } else if (mod && code === "KeyZ") {
@@ -5380,7 +5405,11 @@ function initBeepMelodyExperiment() {
         quantizeSelected();
       } else if (code === "KeyM" && e.shiftKey && !mod && selected) {
         toggleMute();
-      } else if ((code === "ArrowLeft" || code === "ArrowRight") && !e.target.closest(".beep-clip") && layers.length) {
+      } else if (code === "KeyM" && plain && studioActive()) {
+        addMarker();
+      } else if ((code === "Comma" || code === "Period") && plain && videoReady()) {
+        stepFrame(code === "Comma" ? -1 : 1);
+      } else if ((code === "ArrowLeft" || code === "ArrowRight") && !e.target.closest(".beep-clip") && studioActive()) {
         cursor = snap(cursor + (code === "ArrowRight" ? 1 : -1) * (e.shiftKey ? barSec() : gridStep() || 0.1));
         setPlayhead(null);
       } else {
@@ -5495,6 +5524,303 @@ function initBeepMelodyExperiment() {
     );
   }
 
+  /* ===== مزامنة الفيديو (لطلاب الأفلام والأنيميشن) =====
+     الطالب يختار مقطعاً من جهازه (لا يُرفع لأي مكان — رابط blob محلي)، فيُعرض فوق
+     الجدول ويمشي مع الخط الأبيض: تحريك الخط يعرض الإطار نفسه، والتشغيل والتسجيل
+     يشغّلانه متزامناً (بعد العدّ إن وُجد). الوقت يُعرض كود زمني بالإطارات
+     (HH:MM:SS:FF) بسرعة الفيديو المختارة، وعلامات القطع تُثبَّت على الجدول وتنجذب
+     إليها المقاطع. الفيديو لا يُحفظ بالمشروع (كبير)، بل اسمه وطوله والعلامات —
+     ولما يرجع المشروع نطلب اختيار الملف نفسه مرة ثانية. */
+  const videoBox = document.getElementById("beepVideoBox");
+  const videoEl = document.getElementById("beepVideo");
+  const videoMissing = document.getElementById("beepVideoMissing");
+  const timecodeEl = document.getElementById("beepTimecode");
+  const film = document.getElementById("beepFilm");
+  const markerLayer = document.getElementById("beepMarkers");
+  const videoAudioBtn = document.getElementById("beepVideoAudio");
+  let videoUrl = null; // رابط الملف المحلي المحمَّل حالياً
+  let videoMeta = null; // { name, dur } — يبقى بالمشروع حتى لو الملف نفسه غير محمَّل
+  let fps = 25;
+  let markers = []; // علامات القطع بالثواني (مرتبة)
+  let videoTimer = null;
+  let videoRunning = false;
+  let filmKey = "";
+  let filmJob = 0;
+  let markFps = () => {};
+
+  const videoReady = () => Boolean(videoUrl && videoEl && videoEl.readyState >= 1 && videoEl.duration > 0);
+  const videoDur = () => (videoMeta ? videoMeta.dur : 0);
+  const studioActive = () => layers.length > 0 || Boolean(videoMeta);
+  function timecode(sec) {
+    const frames = Math.max(0, Math.floor(sec * fps + 1e-6));
+    const f = frames % fps;
+    const s = Math.floor(frames / fps);
+    const pad = (n) => String(n).padStart(2, "0");
+    return pad(Math.floor(s / 3600)) + ":" + pad(Math.floor(s / 60) % 60) + ":" + pad(s % 60) + ":" + pad(f);
+  }
+  // يعرض الإطار عند الموضع (بلا تشغيل) — والكود الزمني دائماً
+  function videoShow(sec) {
+    if (timecodeEl) timecodeEl.textContent = timecode(sec);
+    if (!videoReady() || videoRunning) return;
+    const t = Math.min(sec, videoEl.duration - 0.001);
+    if (Math.abs(videoEl.currentTime - t) > 0.001) videoEl.currentTime = t;
+  }
+  // يبدأ الفيديو عند وقت الصوت at من الموضع from (نفس ساعة الطبقات والمترونوم)
+  function videoStart(at, from) {
+    if (!videoReady()) return;
+    clearTimeout(videoTimer);
+    videoRunning = true;
+    videoEl.pause();
+    if (from >= videoEl.duration) return;
+    videoEl.currentTime = from;
+    const delay = (at - audioCtx.currentTime + (audioCtx.outputLatency || 0)) * 1000;
+    videoTimer = setTimeout(() => videoRunning && videoEl.play().catch(() => {}), Math.max(0, delay));
+  }
+  // تصحيح الانحراف أثناء التشغيل: لو ابتعد الفيديو أكثر من إطارين عن الصوت نرجعه
+  function videoFollow(sec) {
+    if (!videoRunning || !videoReady() || videoEl.paused) return;
+    const expected = sec - (audioCtx.outputLatency || 0);
+    if (expected < videoEl.duration && Math.abs(videoEl.currentTime - expected) > 2 / fps) videoEl.currentTime = expected;
+  }
+  function videoStop() {
+    clearTimeout(videoTimer);
+    if (!videoRunning) return;
+    videoRunning = false;
+    videoEl?.pause();
+    videoShow(cursor);
+  }
+
+  function loadVideoFile(file) {
+    if (!file || !videoEl) return;
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    videoUrl = URL.createObjectURL(file);
+    filmKey = "";
+    videoEl.src = videoUrl;
+    videoEl.onloadedmetadata = () => {
+      const changed = !videoMeta || Math.abs(videoMeta.dur - videoEl.duration) > 0.05;
+      videoMeta = { name: file.name, dur: videoEl.duration };
+      paintVideo();
+      renderLayers();
+      videoShow(cursor);
+      if (changed) videoBox.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      playSound("success");
+    };
+    videoEl.onerror = () => {
+      URL.revokeObjectURL(videoUrl);
+      videoUrl = null;
+      showToast(videoBox.dataset.failed);
+      paintVideo();
+    };
+  }
+  function removeVideo() {
+    videoStop();
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    videoUrl = null;
+    videoMeta = null;
+    videoEl.removeAttribute("src");
+    videoEl.load();
+    filmKey = "";
+    paintVideo();
+    renderLayers();
+  }
+  // صندوق الفيديو: ظاهر لو فيه فيديو محمَّل، أو مشروع يذكر فيديو غير محمَّل (نطلبه)
+  function paintVideo() {
+    if (!videoBox) return;
+    videoBox.hidden = !videoMeta;
+    const missing = Boolean(videoMeta && !videoUrl);
+    videoEl.hidden = missing;
+    videoMissing.hidden = !missing;
+    if (missing) videoMissing.textContent = videoBox.dataset.missing + " " + videoMeta.name;
+    videoBox.querySelectorAll(".beep-video-bar button").forEach((b) => {
+      if (b.id !== "beepVideoRemove") b.disabled = missing && b.id !== "beepMarkerAdd";
+    });
+  }
+
+  // شريط إطارات الفيديو أعلى الجدول — نقرأ الإطارات بفيديو مخفي ثاني (لا نحرّك المعروض)
+  async function renderFilm() {
+    if (!film) return;
+    const show = videoReady();
+    film.hidden = !show;
+    gutter.classList.toggle("has-film", show);
+    if (!show) return;
+    const w = Math.round(videoDur() * pxPerSec);
+    const key = videoUrl + "|" + w;
+    if (key === filmKey || w < 10) return;
+    filmKey = key;
+    const job = ++filmJob;
+    const H = 40;
+    const dpr = window.devicePixelRatio || 1;
+    film.width = Math.round(w * dpr);
+    film.height = H * dpr;
+    film.style.width = w + "px";
+    const g = film.getContext("2d");
+    g.scale(dpr, dpr);
+    g.fillStyle = "#000";
+    g.fillRect(0, 0, w, H);
+    const probe = document.createElement("video");
+    probe.muted = true;
+    probe.preload = "auto";
+    probe.src = videoUrl;
+    await new Promise((r) => (probe.onloadeddata = r));
+    const thumbW = Math.max(20, (H * probe.videoWidth) / (probe.videoHeight || 1));
+    const count = Math.max(1, Math.ceil(w / thumbW));
+    for (let i = 0; i < count; i++) {
+      if (job !== filmJob) return; // تغيّر المقياس أثناء الرسم — نسخة أحدث تكمل
+      probe.currentTime = Math.min(probe.duration - 0.01, ((i + 0.5) * thumbW) / pxPerSec);
+      await new Promise((r) => (probe.onseeked = r));
+      g.drawImage(probe, i * thumbW, 0, thumbW, H);
+    }
+    probe.removeAttribute("src");
+    probe.load();
+  }
+
+  // علامات القطع: خط عمودي عبر الجدول وراية بالمسطرة — النقر يقفز لها، والنقر مرتين يحذفها
+  let lastMarkerTap = null;
+  function renderMarkers() {
+    if (!markerLayer) return;
+    markerLayer.replaceChildren(
+      ...markers.map((m, i) => {
+        const el = document.createElement("div");
+        el.className = "beep-marker";
+        el.style.left = m * pxPerSec + "px";
+        const flag = document.createElement("button");
+        flag.type = "button";
+        flag.className = "beep-marker-flag";
+        flag.textContent = String(i + 1);
+        flag.title = timecode(m);
+        flag.addEventListener("click", () => {
+          const now = performance.now();
+          if (lastMarkerTap && lastMarkerTap.m === m && now - lastMarkerTap.time < 400) {
+            lastMarkerTap = null;
+            pushHistory();
+            markers = markers.filter((x) => x !== m);
+            return renderLayers();
+          }
+          lastMarkerTap = { m, time: now };
+          cursor = m;
+          setPlayhead(null);
+        });
+        el.append(flag);
+        return el;
+      })
+    );
+  }
+  function addMarker() {
+    if (!studioActive()) return;
+    const at = Math.floor(cursor * fps + 1e-6) / fps; // على حدّ الإطار المعروض بالكود الزمني
+    if (markers.some((m) => Math.abs(m - at) < 0.5 / fps)) return;
+    pushHistory();
+    markers = [...markers, at].sort((a, b) => a - b);
+    renderLayers();
+    playClickSound();
+  }
+  function stepFrame(dir) {
+    // من الإطار الحالي (اللي يعرضه الكود الزمني) للتالي/السابق بالضبط، حتى لو الخط بين إطارين
+    cursor = Math.max(0, (Math.floor(cursor * fps + 1e-6) + dir) / fps);
+    setPlayhead(null);
+  }
+
+  /* تصدير الفيديو مع الموسيقى: نجهّز مزيج المشروع بالكامل (بلا اتصال، بطول الفيديو)
+     ثم نشغّل الفيديو بعنصر مخفي ونرسم إطاراته على لوحة ونسجّلها مع الصوت. التسجيل
+     بالزمن الحقيقي (طول الفيديو)، وصوت الفيديو الأصلي يُضاف لو زر صوته مفعّل. */
+  async function exportVideo(btn) {
+    if (!videoReady()) return;
+    if (!pickVideoMime()) return showToast(btn.dataset.failed);
+    stopTake();
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = btn.dataset.working;
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    await ac.resume(); // داخل ضغطة المستخدم — قبل أي انتظار
+    try {
+      const dur = videoDur();
+      const list = sounding();
+      const mix = list.length ? await renderPieceToBuffer({ layers: list, tracks: tracks.map(cloneTrack), meta: { seed: "video", bpm: 60, meter, totalBeats: dur } }) : null;
+      const ev = document.createElement("video");
+      ev.src = videoUrl;
+      ev.playsInline = true;
+      ev.preload = "auto";
+      await new Promise((resolve, reject) => {
+        ev.onloadeddata = resolve;
+        ev.onerror = reject;
+      });
+      const dest = ac.createMediaStreamDestination();
+      if (!videoEl.muted) ac.createMediaElementSource(ev).connect(dest);
+      else ev.muted = true;
+      let src = null;
+      if (mix) {
+        src = ac.createBufferSource();
+        src.buffer = mix;
+        src.connect(dest);
+      }
+      const scale = Math.min(1, 1280 / (ev.videoWidth || 1280));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round((ev.videoWidth || 1280) * scale / 2) * 2;
+      canvas.height = Math.round((ev.videoHeight || 720) * scale / 2) * 2;
+      const g = canvas.getContext("2d");
+      const mimeType = pickVideoMime();
+      const stream = new MediaStream([...canvas.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 6000000 });
+      const chunks = [];
+      recorder.ondataavailable = (e) => e.data?.size && chunks.push(e.data);
+      const stopped = new Promise((r) => (recorder.onstop = r));
+      g.drawImage(ev, 0, 0, canvas.width, canvas.height);
+      recorder.start();
+      await ev.play();
+      src?.start(ac.currentTime);
+      await new Promise((resolve) => {
+        const frame = () => {
+          g.drawImage(ev, 0, 0, canvas.width, canvas.height);
+          btn.textContent = btn.dataset.working + " " + Math.round((ev.currentTime / dur) * 100) + "%";
+          if (ev.ended || ev.currentTime >= dur - 0.01) resolve();
+          else requestAnimationFrame(frame);
+        };
+        frame();
+      });
+      recorder.stop();
+      await stopped;
+      ev.pause();
+      const ext = mimeType.startsWith("video/mp4") ? "mp4" : "webm";
+      downloadBlob(new Blob(chunks, { type: mimeType }), `hakolah-scored-${Date.now()}.${ext}`);
+      playSound("success");
+    } catch {
+      showToast(btn.dataset.failed);
+    } finally {
+      ac.close();
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  if (videoBox) {
+    document.getElementById("beepVideoFile").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      e.target.value = "";
+      loadVideoFile(file);
+    });
+    document.getElementById("beepFramePrev").addEventListener("click", () => stepFrame(-1));
+    document.getElementById("beepFrameNext").addEventListener("click", () => stepFrame(1));
+    document.getElementById("beepMarkerAdd").addEventListener("click", addMarker);
+    document.getElementById("beepVideoRemove").addEventListener("click", () => {
+      removeVideo();
+      playClickSound();
+    });
+    document.getElementById("beepVideoExport").addEventListener("click", (e) => exportVideo(e.currentTarget));
+    videoAudioBtn.addEventListener("click", () => {
+      videoEl.muted = !videoEl.muted;
+      videoAudioBtn.textContent = videoEl.muted ? videoAudioBtn.dataset.off : videoAudioBtn.dataset.on;
+      videoAudioBtn.setAttribute("aria-pressed", String(!videoEl.muted));
+      playClickSound();
+    });
+    markFps = chipGroup(videoBox, "fps", fps, (v) => {
+      fps = Number(v);
+      setPlayhead(null);
+      renderMarkers();
+      scheduleSave();
+    });
+    paintVideo();
+  }
+
   /* ===== فتح المشروع: رابط مشارَك (#studio=) أولاً، وإلا آخر مشروع محفوظ ===== */
   (async () => {
     try {
@@ -5508,7 +5834,7 @@ function initBeepMelodyExperiment() {
         showToast(recTake.dataset.shared);
       } else {
         const saved = await sampleStore("readonly", (st) => st.get("project"));
-        if (saved?.layers?.length && !layers.length) {
+        if ((saved?.layers?.length || saved?.video) && !layers.length) {
           await applyProject(saved);
           renderLayers();
           showToast(recTake.dataset.restored);

@@ -209,6 +209,8 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepAddSfx" aria-expanded="false" aria-controls="beepSfx">💥 SFX</button>
         <label class="filter-chip" for="beepAudioFile">📁 Audio file</label>
         <input type="file" id="beepAudioFile" accept="audio/*" hidden />
+        <label class="filter-chip" for="beepVideoFile">🎬 Video</label>
+        <input type="file" id="beepVideoFile" accept="video/*" hidden />
       </div>
       <div class="beep-drums" id="beepDrums" hidden>
         <p class="beep-setting-label">🪘 Arabic</p>
@@ -276,6 +278,25 @@ pageScript: "sounds"
         </div>
         <p class="beep-param-note">Put the white line on the cut in your scene: risers and reverses end exactly there, the whoosh peaks there, and hits start there. All effects are generated in code and free for any use.</p>
       </div>
+      <div class="beep-video" id="beepVideoBox" hidden data-missing="Choose the same video file again with the “🎬 Video” button:" data-failed="Your browser can't play this video format — try MP4 (H.264) or WebM.">
+        <video id="beepVideo" playsinline preload="auto"></video>
+        <p class="beep-video-missing" id="beepVideoMissing" hidden></p>
+        <div class="beep-video-bar">
+          <span class="beep-timecode" id="beepTimecode" dir="ltr">00:00:00:00</span>
+          <button type="button" class="filter-chip" id="beepFramePrev" aria-label="Previous frame">⏮ Frame</button>
+          <button type="button" class="filter-chip" id="beepFrameNext" aria-label="Next frame">Frame ⏭</button>
+          <button type="button" class="filter-chip" id="beepMarkerAdd">📍 Cut marker</button>
+          <button type="button" class="filter-chip" id="beepVideoAudio" aria-pressed="true" data-on="🔊 Video sound" data-off="🔇 Video sound">🔊 Video sound</button>
+          <div class="instrument-picker" role="group" aria-label="Frames per second">
+            <button type="button" class="filter-chip" data-fps="24" dir="ltr">24 fps</button>
+            <button type="button" class="filter-chip" data-fps="25" dir="ltr">25 fps</button>
+            <button type="button" class="filter-chip" data-fps="30" dir="ltr">30 fps</button>
+          </div>
+          <button type="button" class="filter-chip" id="beepVideoExport" data-working="⏳" data-failed="Couldn't prepare the video in this browser">🎬 Download video with sound</button>
+          <button type="button" class="filter-chip" id="beepVideoRemove">✕ Remove video</button>
+        </div>
+        <p class="beep-param-note">The video stays on your device and is never uploaded. It follows the white line: move the line to see the frame, and press play or record while you watch. Put a “cut marker” (M) at every cut in the scene and clips and effects snap to it. Step frame by frame with the buttons or the , and . keys — then download the video with your music, or the separate stems for your editing software.</p>
+      </div>
       <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-track="Track" data-max="You've reached the limit: 64 clips and 16 tracks" data-silent="All layers are muted" data-restored="🔄 Your last project was restored" data-shared="🔗 Opened the shared project — edit it and share it again">
         <div class="beep-clip-tools" id="beepClipTools">
           <button type="button" class="filter-chip" id="beepToolSplit" disabled data-cut="Select a clip, place the white line inside it by clicking the ruler, then press Split.">✂️ Split</button>
@@ -289,7 +310,9 @@ pageScript: "sounds"
           <div class="beep-gutter" id="beepGutter"></div>
           <div class="beep-lanes" id="beepLanes">
             <div class="beep-ruler" id="beepRuler" title="Ruler in bars: click to place the white line"></div>
+            <canvas class="beep-film" id="beepFilm" hidden></canvas>
             <div class="beep-board" id="beepBoard"></div>
+            <div class="beep-markers" id="beepMarkers"></div>
             <div class="beep-playhead" id="beepPlayhead" hidden></div>
           </div>
         </div>
@@ -355,6 +378,8 @@ pageScript: "sounds"
             <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd> + <kbd>Space</kbd></span><span>Play from the start</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>R</kbd></span><span>Start / stop recording</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd></span><span>Hold it while playing = sustain pedal</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>M</kbd></span><span>Cut marker at the white line</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>,</kbd> · <kbd>.</kbd></span><span>One frame back · forward (with a video)</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>C</kbd></span><span>Metronome on / off</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Esc</kbd></span><span>Stop everything and deselect (back to playing with letters)</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Enter</kbd> · <kbd>Home</kbd> · <kbd>End</kbd></span><span>Move the white line to the start · start · end</span></li>

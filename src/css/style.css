@@ -5778,3 +5778,119 @@ html[lang="en"] .instrument-btn.is-new::after {
     height: max(100px, calc(100dvh - 229px));
   }
 }
+
+/* ===== مزامنة الفيديو ===== */
+.beep-video {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.beep-video[hidden],
+.beep-video video[hidden],
+.beep-video-missing[hidden] {
+  display: none;
+}
+
+.beep-video video {
+  width: 100%;
+  max-height: min(380px, 50vh);
+  border-radius: 10px;
+  background: #000;
+}
+
+.beep-video-missing {
+  margin: 0;
+  padding: 18px 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  text-align: center;
+  color: #f0be46;
+}
+
+.beep-video-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.beep-video-bar .filter-chip {
+  white-space: nowrap;
+}
+
+.beep-timecode {
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #000;
+  color: #6fc8a4;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.beep-video .beep-param-note {
+  margin: 0;
+  max-width: 46em;
+}
+
+/* شريط إطارات الفيديو أعلى المسارات */
+.beep-film {
+  display: block;
+  height: 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.beep-film[hidden] {
+  display: none;
+}
+
+.beep-gutter.has-film {
+  padding-top: 59px; /* المسطرة ١٨ + الإطارات ٤٠ + الحد */
+}
+
+/* علامات القطع: خط ذهبي عبر الجدول وراية مرقّمة بالمسطرة */
+.beep-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.beep-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px solid rgba(240, 190, 70, 0.85);
+}
+
+.beep-marker-flag {
+  position: absolute;
+  top: 0;
+  left: -1px;
+  min-width: 18px;
+  height: 17px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 0 6px 6px 0;
+  background: #f0be46;
+  color: #1a1a1a;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 17px;
+  pointer-events: auto;
+  cursor: pointer;
+}

@@ -208,6 +208,8 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepAddSfx" aria-expanded="false" aria-controls="beepSfx">💥 مؤثرات</button>
         <label class="filter-chip" for="beepAudioFile">📁 ملف صوتي</label>
         <input type="file" id="beepAudioFile" accept="audio/*" hidden />
+        <label class="filter-chip" for="beepVideoFile">🎬 فيديو</label>
+        <input type="file" id="beepVideoFile" accept="video/*" hidden />
       </div>
       <div class="beep-drums" id="beepDrums" hidden>
         <p class="beep-setting-label">🪘 عربية</p>
@@ -275,6 +277,25 @@ pageScript: "sounds"
         </div>
         <p class="beep-param-note">ضع الخط الأبيض على لحظة القطع في المشهد: الصعود والعكسي ينتهيان عنده تماماً، والووش ذروته عنده، والضربات تبدأ عنده. كل المؤثرات مولّدة بالكود، ومجانية لأي استخدام.</p>
       </div>
+      <div class="beep-video" id="beepVideoBox" hidden data-missing="اختر ملف الفيديو نفسه مرة ثانية من زر «🎬 فيديو»:" data-failed="صيغة هذا الفيديو لا يدعمها متصفحك — جرّب MP4 بترميز H.264 أو WebM.">
+        <video id="beepVideo" playsinline preload="auto"></video>
+        <p class="beep-video-missing" id="beepVideoMissing" hidden></p>
+        <div class="beep-video-bar">
+          <span class="beep-timecode" id="beepTimecode" dir="ltr">00:00:00:00</span>
+          <button type="button" class="filter-chip" id="beepFramePrev" aria-label="الإطار السابق">⏮ إطار</button>
+          <button type="button" class="filter-chip" id="beepFrameNext" aria-label="الإطار التالي">إطار ⏭</button>
+          <button type="button" class="filter-chip" id="beepMarkerAdd">📍 علامة قطع</button>
+          <button type="button" class="filter-chip" id="beepVideoAudio" aria-pressed="true" data-on="🔊 صوت الفيديو" data-off="🔇 صوت الفيديو">🔊 صوت الفيديو</button>
+          <div class="instrument-picker" role="group" aria-label="إطارات بالثانية">
+            <button type="button" class="filter-chip" data-fps="24" dir="ltr">24 fps</button>
+            <button type="button" class="filter-chip" data-fps="25" dir="ltr">25 fps</button>
+            <button type="button" class="filter-chip" data-fps="30" dir="ltr">30 fps</button>
+          </div>
+          <button type="button" class="filter-chip" id="beepVideoExport" data-working="⏳" data-failed="تعذّر تجهيز الفيديو في هذا المتصفح">🎬 تحميل الفيديو مع الصوت</button>
+          <button type="button" class="filter-chip" id="beepVideoRemove">✕ أزل الفيديو</button>
+        </div>
+        <p class="beep-param-note">الفيديو يبقى على جهازك ولا يُرفع لأي مكان. يمشي مع الخط الأبيض: حرّك الخط لترى الإطار، واضغط تشغيل أو سجّل وأنت تشاهد. ضع «علامة قطع» (M) عند كل قطع في المشهد، فالمقاطع والمؤثرات تنجذب إليها. والإطار بالإطار بالزرّين أو بمفتاحي , و . — ثم نزّل الفيديو بموسيقاك، أو المسارات منفصلة لبرنامج المونتاج.</p>
+      </div>
       <div class="beep-rec-take" id="beepRecTake" hidden data-layer="طبقة" data-track="مسار" data-max="وصلت الحد الأقصى: ٦٤ مقطعاً و١٦ مساراً" data-silent="كل الطبقات مكتومة" data-restored="🔄 استُعيد مشروعك الأخير" data-shared="🔗 فُتح المشروع المشارَك — عدّل عليه وشاركه من جديد">
         <div class="beep-clip-tools" id="beepClipTools">
           <button type="button" class="filter-chip" id="beepToolSplit" disabled data-cut="اختر مقطعاً، ثم ضع الخط الأبيض داخله بالنقر على المسطرة، ثم اضغط قصّ.">✂️ قصّ</button>
@@ -288,7 +309,9 @@ pageScript: "sounds"
           <div class="beep-gutter" id="beepGutter"></div>
           <div class="beep-lanes" id="beepLanes">
             <div class="beep-ruler" id="beepRuler" title="المسطرة بالمازورات: انقر لوضع الخط الأبيض"></div>
+            <canvas class="beep-film" id="beepFilm" hidden></canvas>
             <div class="beep-board" id="beepBoard"></div>
+            <div class="beep-markers" id="beepMarkers"></div>
             <div class="beep-playhead" id="beepPlayhead" hidden></div>
           </div>
         </div>
@@ -354,6 +377,8 @@ pageScript: "sounds"
             <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd> + <kbd>Space</kbd></span><span>تشغيل من البداية</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>R</kbd></span><span>بدء / إيقاف التسجيل</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd></span><span>أمسكه أثناء العزف = دواسة الاستدامة</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>M</kbd></span><span>علامة قطع عند الخط الأبيض</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>,</kbd> · <kbd>.</kbd></span><span>إطار للخلف · للأمام (مع فيديو)</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>C</kbd></span><span>تشغيل / إيقاف المترونوم</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Esc</kbd></span><span>إيقاف كل شيء وإلغاء التحديد (للعودة إلى عزف الحروف)</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Enter</kbd> · <kbd>Home</kbd> · <kbd>End</kbd></span><span>نقل الخط الأبيض إلى البداية · البداية · النهاية</span></li>
