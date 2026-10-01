@@ -190,7 +190,7 @@ function initBeepMelodyExperiment() {
   /* مسار الخروج — نفس فكرة مسار مؤثرات الموقع: فلتر يليّن الحدّة، صدى غرفة
      حقيقي (يعطي مساحة بدل الصدى القصير الجاف لحاله)، وضاغط ناعم بالآخر
      يمنع التشوّه لما تتجمع النغمات أو تكون الديناميكية "قوي" */
-  function buildOutput(ctx, out) {
+  function buildOutput(ctx, out, preset = masterPreset) {
     const input = ctx.createGain();
     const soften = ctx.createBiquadFilter();
     soften.type = "lowpass";
@@ -227,7 +227,7 @@ function initBeepMelodyExperiment() {
     master.ceiling.attack.value = 0.001;
     master.ceiling.release.value = 0.08;
     comp.connect(master.low).connect(master.high).connect(master.limiter).connect(master.makeup).connect(master.ceiling).connect(out);
-    applyMaster(master, masterPreset, ctx);
+    applyMaster(master, preset, ctx);
 
     const delay = ctx.createDelay();
     delay.delayTime.value = 0.22;
@@ -1496,16 +1496,23 @@ function initBeepMelodyExperiment() {
   /* يعيد عزف القطعة داخل OfflineAudioContext (أسرع من الزمن الحقيقي) بنفس
      دوال التخليق المستخدمة بالتشغيل الحي — فالملف المصدَّر مطابق لما سمعه
      المستخدم، لا نسخة تقريبية */
-  async function renderPieceToBuffer(piece) {
+  function renderPieceToBuffer(piece) {
+    return withFixedRandom(() => renderPieceSync(piece));
+  }
+
+  function renderPieceSync(piece) {
     const mood = MOODS[currentMood];
     const beatDur = 60 / piece.meta.bpm;
     const tail = 3; // ذيل يسع رنين آخر نغمة وصداها
     const seconds = piece.meta.totalBeats * beatDur + tail;
-    // مشروع الاستوديو استيريو (فيه توزيع يمين/يسار لكل مسار)؛ المقطوعة المؤلّفة أحادية
+    // مشروع الاستوديو استيريو (فيه توزيع يمين/يسار لكل مسار) و٤٨ كيلوهرتز — معيار
+    // الفيديو، فيدخل برامج المونتاج بلا تحويل. المقطوعة المؤلّفة أحادية ٤٤٫١
     const channels = piece.layers ? 2 : 1;
-    const ctx = new OfflineAudioContext(channels, Math.ceil(44100 * seconds), 44100);
+    const rate = piece.layers ? 48000 : 44100;
+    const ctx = new OfflineAudioContext(channels, Math.ceil(rate * seconds), rate);
 
-    const bus = buildOutput(ctx, ctx.destination);
+    // piece.master: الملفات المنفصلة (Stems) بلا ماستر — الماستر للمزيج كله لا لكل مسار
+    const bus = buildOutput(ctx, ctx.destination, piece.master);
     bus.feedback.gain.value = mood.delayFeedback;
     bus.wet.gain.value = mood.delayWet;
 
@@ -1513,6 +1520,19 @@ function initBeepMelodyExperiment() {
     if (piece.layers) scheduleLayers(studioTarget(target, piece.tracks), piece.layers, 0.05);
     else scheduleEvents(target, piece, 0.05);
     return ctx.startRendering();
+  }
+
+  /* عشوائية ثابتة أثناء تجهيز التصدير: صدى الغرفة وضجيج الطبول يُولَّدان عشوائياً،
+     فبدون بذرة ثابتة كل ملف منفصل (Stem) يطلع بصدى وضربات مختلفة قليلاً عن المزيج،
+     ومجموع الملفات ما يطابق المزيج. الجدولة متزامنة كلها، فنرجّع Math.random بعدها. */
+  function withFixedRandom(fn) {
+    const original = Math.random;
+    Math.random = createRng(20260929);
+    try {
+      return fn();
+    } finally {
+      Math.random = original;
+    }
   }
 
   async function renderPieceToWav(piece) {
@@ -3925,6 +3945,111 @@ function initBeepMelodyExperiment() {
     playClickSound();
   }
 
+  /* ===== تصدير المسارات منفصلة (Stems) =====
+     ملف ZIP فيه المزيج كاملاً + ملف WAV لكل مسار بمؤثراته وأتمتته. كل الملفات
+     تبدأ من الصفر وبنفس الطول بالضبط، فتنزل ببرنامج المونتاج (Premiere، Resolve،
+     After Effects…) فوق بعض وتتطابق بلا أي محاذاة يدوية. المسارات بلا ماستر (هو
+     للمزيج فقط)، والمسار المكتوم أو المقاطع المكتومة لا تُصدَّر. */
+  const MAX_STEM_SECONDS = 1800; // مجموع الثواني (المسارات × الطول) — حماية ذاكرة الجوال
+  async function exportStems(btn) {
+    const list = layers.filter((l) => !l.muted && !tracks[l.row]?.mute);
+    if (!list.length) return showToast(recTake.dataset.silent);
+    const rows = [...new Set(list.map((l) => l.row))].sort((a, b) => a - b);
+    const total = Math.max(...list.map(layerEnd));
+    if (total * (rows.length + 1) > MAX_STEM_SECONDS) return showToast(btn.dataset.toolong);
+    if (takeTimers.length) stopTake();
+    const original = btn.textContent;
+    btn.disabled = true;
+    const trackList = tracks.map((t) => ({ ...cloneTrack(t), solo: false }));
+    const meta = { seed: "stems", bpm: 60, meter, totalBeats: total };
+    const files = [];
+    const used = new Set();
+    try {
+      for (let i = 0; i <= rows.length; i++) {
+        btn.textContent = btn.dataset.working + " " + i + "/" + rows.length;
+        const mix = i === 0;
+        const own = mix ? list : list.filter((l) => l.row === rows[i - 1]);
+        const piece = { layers: own, tracks: trackList, meta, master: mix ? masterPreset : "none" };
+        const wav = new Uint8Array(await (await renderPieceToWav(piece)).arrayBuffer());
+        // اسم يوصف المسار بالإنجليزي (برامج المونتاج وأنظمة الملفات تتعامل معه بلا مشاكل)
+        let name = mix ? "00-full-mix" : String(i).padStart(2, "0") + "-" + [...new Set(own.map(stemSlug))].join("+");
+        while (used.has(name)) name += "-b";
+        used.add(name);
+        files.push([name + ".wav", wav]);
+      }
+      downloadBlob(zipStore(files), `hakolah-stems-${Date.now()}.zip`);
+      playSound("success");
+    } catch {
+      showToast(btn.dataset.failed);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+  const stemSlug = (l) => (l.kind === "drums" ? "drums-" + l.rhythm : l.kind === "audio" ? "audio" : l.instrument);
+
+  /* ZIP بلا ضغط (Stored) — WAV ما ينضغط بشكل يُذكر أصلاً، وهكذا ما نحتاج مكتبة.
+     البنية: رأس محلي + بيانات لكل ملف، ثم الفهرس المركزي، ثم سجل النهاية. */
+  let crcTable = null;
+  function crc32(bytes) {
+    if (!crcTable) {
+      crcTable = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+        crcTable[n] = c >>> 0;
+      }
+    }
+    let crc = 0xffffffff;
+    for (let i = 0; i < bytes.length; i++) crc = crcTable[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+  function zipStore(files) {
+    const parts = [];
+    const central = [];
+    let offset = 0;
+    const header = (size) => {
+      const view = new DataView(new ArrayBuffer(size));
+      return view;
+    };
+    files.forEach(([name, data]) => {
+      const nameBytes = new TextEncoder().encode(name);
+      const crc = crc32(data);
+      const local = header(30);
+      local.setUint32(0, 0x04034b50, true);
+      local.setUint16(4, 20, true);
+      local.setUint16(6, 0x0800, true); // الأسماء UTF-8
+      local.setUint16(8, 0, true); // بلا ضغط
+      local.setUint16(12, 0x21, true); // التاريخ ١٩٨٠-٠١-٠١
+      local.setUint32(14, crc, true);
+      local.setUint32(18, data.length, true);
+      local.setUint32(22, data.length, true);
+      local.setUint16(26, nameBytes.length, true);
+      parts.push(local, nameBytes, data);
+      const entry = header(46);
+      entry.setUint32(0, 0x02014b50, true);
+      entry.setUint16(4, 20, true);
+      entry.setUint16(6, 20, true);
+      entry.setUint16(8, 0x0800, true);
+      entry.setUint16(14, 0x21, true);
+      entry.setUint32(16, crc, true);
+      entry.setUint32(20, data.length, true);
+      entry.setUint32(24, data.length, true);
+      entry.setUint16(28, nameBytes.length, true);
+      entry.setUint32(42, offset, true);
+      central.push(entry, nameBytes);
+      offset += 30 + nameBytes.length + data.length;
+    });
+    const centralSize = central.reduce((n, p) => n + p.byteLength, 0);
+    const end = header(22);
+    end.setUint32(0, 0x06054b50, true);
+    end.setUint16(8, files.length, true);
+    end.setUint16(10, files.length, true);
+    end.setUint32(12, centralSize, true);
+    end.setUint32(16, offset, true);
+    return new Blob([...parts, ...central, end], { type: "application/zip" });
+  }
+
   /* ===== MIDI متعدد المسارات (النوع ١) =====
      مسار للسرعة والميزان، ثم مسار لكل (مسار بالجدول × آلة) ببرنامج General MIDI
      المقابل لآلته، والإيقاع على القناة ١٠ (قناة الطبول القياسية). أرباع الأصوات
@@ -4839,6 +4964,7 @@ function initBeepMelodyExperiment() {
     document.getElementById("beepRecWav").addEventListener("click", (e) => exportTake(e.currentTarget, renderPieceToWav, "wav"));
     document.getElementById("beepRecMp3").addEventListener("click", (e) => exportTake(e.currentTarget, renderPieceToMp3, "mp3"));
     document.getElementById("beepRecMidi").addEventListener("click", (e) => exportTake(e.currentTarget, async () => studioToMidi(), "mid"));
+    document.getElementById("beepRecStems").addEventListener("click", (e) => exportStems(e.currentTarget));
     document.getElementById("beepRecClear").addEventListener("click", () => {
       stopTake();
       pushHistory();
