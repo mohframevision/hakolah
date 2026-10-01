@@ -1,0 +1,6 @@
+Salamander Grand Piano V3 — Alexander Holm
+Licensed under Creative Commons Attribution 3.0 (CC BY 3.0)
+https://creativecommons.org/licenses/by/3.0/
+
+Samples taken from the Tone.js audio repository (github.com/Tonejs/audio),
+re-encoded for the web (mono, 48 kbps MP3, trimmed with a short fade-out).

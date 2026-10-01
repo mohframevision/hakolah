@@ -11,6 +11,10 @@
    يجيان من data-play-label/data-stop-label بالـ HTML نفسه عشان يشتغل بأي لغة
    بدون تكرار الدالة. */
 
+// مسار السكربت نفسه — منه نبني مسار عيّنات البيانو (assets/audio/piano) بغض النظر
+// عن مسار الموقع الأساسي. currentScript متاح فقط وقت تنفيذ الملف، لا داخل الدوال.
+const SOUNDS_SCRIPT_URL = document.currentScript?.src || location.href;
+
 function initBeepMelodyExperiment() {
   const btn = document.getElementById("beepMelodyPlay");
   if (!btn) return;
@@ -174,6 +178,7 @@ function initBeepMelodyExperiment() {
     volumeGain.gain.value = volumeLevel * volumeLevel;
     volumeGain.connect(audioCtx.destination);
     const bus = buildOutput(audioCtx, volumeGain);
+    liveMaster = bus.master;
     masterInput = bus.input;
     delayNode = bus.delay;
     delayFeedbackGain = bus.feedback;
@@ -202,7 +207,27 @@ function initBeepMelodyExperiment() {
     comp.release.value = 0.25;
     input.connect(soften).connect(comp);
     soften.connect(verb).connect(verbWet).connect(comp);
-    comp.connect(out);
+
+    // الماستر: آخر محطة قبل السماعة/الملف — معادل عريض + محدِّد + رفع، حسب الإعداد المختار
+    const master = {
+      low: ctx.createBiquadFilter(),
+      high: ctx.createBiquadFilter(),
+      limiter: ctx.createDynamicsCompressor(),
+      makeup: ctx.createGain(),
+      ceiling: ctx.createDynamicsCompressor(),
+    };
+    master.low.type = "lowshelf";
+    master.low.frequency.value = 120;
+    master.high.type = "highshelf";
+    master.high.frequency.value = 8000;
+    // سقف أمان أخير (لكل الإعدادات، حتى "بلا"): يمسك القمم قبل ما تتشوّه عند ٠ ديسيبل
+    master.ceiling.threshold.value = -3;
+    master.ceiling.knee.value = 0;
+    master.ceiling.ratio.value = 20;
+    master.ceiling.attack.value = 0.001;
+    master.ceiling.release.value = 0.08;
+    comp.connect(master.low).connect(master.high).connect(master.limiter).connect(master.makeup).connect(master.ceiling).connect(out);
+    applyMaster(master, masterPreset, ctx);
 
     const delay = ctx.createDelay();
     delay.delayTime.value = 0.22;
@@ -210,7 +235,37 @@ function initBeepMelodyExperiment() {
     const wet = ctx.createGain();
     delay.connect(feedback).connect(delay);
     delay.connect(wet).connect(input);
-    return { input, delay, feedback, wet };
+    return { input, delay, feedback, wet, master };
+  }
+
+  /* إعدادات الماستر الجاهزة (مثل BandLab Mastering): "بلا" يمرّر الصوت كما هو.
+     المحدِّد يمنع التشوّه لما نرفع الصوت، فالرفع (makeup) آمن حتى بـ"قوي". */
+  const MASTER_PRESETS = {
+    none: { low: 0, high: 0, threshold: 0, ratio: 1, knee: 0, makeup: 1 },
+    warm: { low: 3, high: -2, threshold: -12, ratio: 2.5, knee: 8, makeup: 1.15 },
+    balanced: { low: 1.5, high: 2, threshold: -14, ratio: 3, knee: 6, makeup: 1.25 },
+    loud: { low: 3, high: 3, threshold: -18, ratio: 8, knee: 4, makeup: 1.7 },
+  };
+  let masterPreset = "none";
+  try {
+    const saved = localStorage.getItem("beepMaster");
+    if (MASTER_PRESETS[saved]) masterPreset = saved;
+  } catch {
+    // التخزين محجوب — بلا ماستر
+  }
+  let liveMaster = null; // عُقد الماستر بالتشغيل الحي — نغيّرها فوراً لما يتغيّر الإعداد
+
+  function applyMaster(master, id, ctx) {
+    const p = MASTER_PRESETS[id] || MASTER_PRESETS.none;
+    const at = ctx.currentTime;
+    master.low.gain.setTargetAtTime(p.low, at, 0.05);
+    master.high.gain.setTargetAtTime(p.high, at, 0.05);
+    master.limiter.threshold.setValueAtTime(p.threshold, at);
+    master.limiter.ratio.setValueAtTime(p.ratio, at);
+    master.limiter.knee.setValueAtTime(p.knee, at);
+    master.limiter.attack.setValueAtTime(0.004, at);
+    master.limiter.release.setValueAtTime(0.2, at);
+    master.makeup.gain.setTargetAtTime(p.makeup, at, 0.05);
   }
 
   /* 10 "آلات" مصنوعة كلها تركيب توافقيات (Harmonics) — نفس الأسلوب، بس بنِسَب
@@ -227,6 +282,7 @@ function initBeepMelodyExperiment() {
        هذا اللي يعطي الطنين المعدني المميز بدل نغمة موسيقية "نظيفة". */
   const INSTRUMENTS = {
     piano: {
+      sampled: true, // بيانو حقيقي مسجّل (Salamander) لما تجهز العيّنات، والتخليق بديل لحين تحميلها
       harmonics: [
         { mult: 1, weight: 1, type: "triangle" },
         { mult: 2, weight: 0.5, type: "sine" },
@@ -637,6 +693,84 @@ function initBeepMelodyExperiment() {
   INSTRUMENTS.custom = { ...INSTRUMENTS.piano, sample: true };
   let customSample = null; // AudioBuffer أحادي، مقصوص ومُطبَّع (انظر prepareSample)
   const SAMPLE_BASE = 261.63; // الصوت المسجّل يُعامل كأنه Do الوسطى (C4)
+
+  /* ===== بيانو حقيقي: عيّنات Salamander Grand Piano (CC BY 3.0 — Alexander Holm) =====
+     ٣٠ تسجيلاً لبيانو كونسيرت، واحد كل ثلاثة أنصاف درجات من La0 إلى Do8؛ النغمات
+     بينها تُعزف بتسريع أقرب عيّنة أو إبطائها (±١٫٥ نصف درجة على الأكثر، لا يُسمع
+     الفرق). تُحمَّل بالخلفية بعد فتح الصفحة (~١ ميجا)، والبيانو المركّب يعزف لحين
+     جاهزيتها. فكّ الترميز بسياق غير متصل عشان ما نحتاج ضغطة مستخدم قبل التحميل. */
+  const PIANO_SAMPLE_NAMES = ["A0"];
+  for (let o = 1; o <= 7; o++) ["C", "Ds", "Fs", "A"].forEach((n) => PIANO_SAMPLE_NAMES.push(n + o));
+  PIANO_SAMPLE_NAMES.push("C8");
+  const SAMPLE_PC = { C: 0, Ds: 3, Fs: 6, A: 9 };
+  let pianoSamples = null; // [{ midi, buffer, skip }] بعد اكتمال التحميل
+  let pianoLoading = null;
+
+  function loadPianoSamples() {
+    if (pianoLoading) return pianoLoading;
+    const base = new URL("../assets/audio/piano/", SOUNDS_SCRIPT_URL);
+    const decoder = new OfflineAudioContext(1, 1, 44100);
+    pianoLoading = Promise.all(
+      PIANO_SAMPLE_NAMES.map(async (name) => {
+        const res = await fetch(new URL(name + ".mp3", base));
+        if (!res.ok) throw new Error(name);
+        const buffer = await decoder.decodeAudioData(await res.arrayBuffer());
+        // مشفّر MP3 يضيف صمتاً قصيراً بأول الملف — نتخطّاه عشان النغمة تطلع لحظة الضغط
+        const data = buffer.getChannelData(0);
+        let peak = 0;
+        for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+        let start = 0;
+        while (start < data.length && Math.abs(data[start]) < peak * 0.02) start++;
+        const midi = 12 * (Number(name.slice(-1)) + 1) + SAMPLE_PC[name.slice(0, -1)];
+        return { midi, buffer, skip: start / buffer.sampleRate, norm: 0.9 / (peak || 1) };
+      })
+    )
+      .then((list) => (pianoSamples = list))
+      .catch(() => {
+        pianoLoading = null; // بلا اتصال مثلاً — نحاول مرة ثانية لاحقاً، والمركّب يغطّي
+      });
+    return pianoLoading;
+  }
+  // بعد ما تهدأ الصفحة: التحميل ما يزاحم رسمها الأول
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 1200)))(() => loadPianoSamples());
+
+  /* نغمة بيانو من العيّنات: أقرب عيّنة بسرعة تشغيل تعدّل النغمة (تشمل أرباع
+     الأصوات بدقة لأن النسبة عشرية). القوة تتحكم بالشدة وبسطوع الصوت معاً — البيانو
+     الحقيقي يلمع أكثر لما تضغط أقوى. duration = مدة الإمساك، وبعدها المخمّد. */
+  function playPianoSample(target, freq, startTime, duration, peakGain, pan) {
+    const { ctx, dry, wet, live } = target;
+    const midiF = 69 + 12 * Math.log2(freq / 440);
+    const s = pianoSamples.reduce((best, x) => (Math.abs(x.midi - midiF) < Math.abs(best.midi - midiF) ? x : best));
+    const rate = 2 ** ((midiF - s.midi) / 12);
+    const src = ctx.createBufferSource();
+    src.buffer = s.buffer;
+    src.playbackRate.value = rate;
+    const available = (s.buffer.duration - s.skip) / rate;
+    const end = Math.min(available, duration + 0.6);
+    const level = Math.max(peakGain * s.norm * 1.5, 0.0001);
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(level, startTime);
+    if (duration < available) env.gain.setTargetAtTime(0.0001, startTime + duration, 0.09); // المخمّد بعد الرفع
+    const tone = ctx.createBiquadFilter();
+    tone.type = "lowpass";
+    tone.frequency.value = clamp(1400 + 9000 * (peakGain / 0.3), 1400, 12000);
+    src.connect(tone).connect(env);
+    let out = env;
+    if (pan && ctx.createStereoPanner) {
+      out = ctx.createStereoPanner();
+      out.pan.value = pan;
+      env.connect(out);
+    }
+    out.connect(dry);
+    if (wet) out.connect(wet);
+    src.start(startTime, s.skip);
+    src.stop(startTime + end + 0.05);
+    if (live) {
+      activeOscillators.push(src);
+      highlightKey(freq, (startTime - ctx.currentTime) * 1000, Math.min(end, duration) * 1000);
+    }
+    return env;
+  }
 
   let currentInstrument = "piano";
 
@@ -1119,6 +1253,7 @@ function initBeepMelodyExperiment() {
     const instrument = INSTRUMENTS[currentInstrument];
     peakGain *= instrument.level || 1; // معايرة شدة كل آلة (تُقاس آلياً)
     if (instrument.sample && customSample) return playSample(target, freq, startTime, duration, peakGain, pan);
+    if (instrument.sampled && pianoSamples) return playPianoSample(target, freq, startTime, duration, peakGain, pan);
 
     // آلة وترية (يسار اللوحة = نغمات واطية بأوتار أطول وأثخن فترن أطول
     // وأغنى، يمينها = نغمات حادة تخفت أسرع وأنحف) — يشتغل بأي مفتاح موسيقي
@@ -1270,8 +1405,9 @@ function initBeepMelodyExperiment() {
         bars.push({ start: barBeat, chord: chordRoot });
         voices = voiceChord(chordRoot, voices);
         // المرافقة تتوزع يمين/يسار حسب حدّتها (مثل أصابع البيانو)، واللحن بالنص
-        const add = (degree, startBeat, durBeats, gain, pan = clamp((degree - BASS_LOW - 3) * 0.1, -0.35, 0.35)) =>
-          events.push({ degree, startBeat, durBeats, gain, pan });
+        // part: "melody" أو "accomp" — يفصلهما "أضف إلى الاستوديو" بمسارين
+        const add = (degree, startBeat, durBeats, gain, pan = clamp((degree - BASS_LOW - 3) * 0.1, -0.35, 0.35), part = "accomp") =>
+          events.push({ degree, startBeat, durBeats, gain, pan, part });
 
         if (accompaniment === "arpeggio") {
           // وتر مكسور: نغمة على كل ضربة — حركة مستمرة تحت اللحن
@@ -1303,7 +1439,7 @@ function initBeepMelodyExperiment() {
           melody.push({ degree: note, length: Math.abs(length), start: barBeat + beat });
           if (note !== null) {
             const gain = mood.gainBase + mood.gainSwell * (beat === 0 ? 1 : 0.55);
-            add(note, barBeat + beat, length * 0.92, gain, 0);
+            add(note, barBeat + beat, length * 0.92, gain, 0, "melody");
           }
           beat += Math.abs(length);
         });
@@ -1365,14 +1501,16 @@ function initBeepMelodyExperiment() {
     const beatDur = 60 / piece.meta.bpm;
     const tail = 3; // ذيل يسع رنين آخر نغمة وصداها
     const seconds = piece.meta.totalBeats * beatDur + tail;
-    const ctx = new OfflineAudioContext(1, Math.ceil(44100 * seconds), 44100);
+    // مشروع الاستوديو استيريو (فيه توزيع يمين/يسار لكل مسار)؛ المقطوعة المؤلّفة أحادية
+    const channels = piece.layers ? 2 : 1;
+    const ctx = new OfflineAudioContext(channels, Math.ceil(44100 * seconds), 44100);
 
     const bus = buildOutput(ctx, ctx.destination);
     bus.feedback.gain.value = mood.delayFeedback;
     bus.wet.gain.value = mood.delayWet;
 
     const target = { ctx, dry: bus.input, wet: bus.delay, live: false };
-    if (piece.layers) scheduleLayers(target, piece.layers, 0.05);
+    if (piece.layers) scheduleLayers(studioTarget(target, piece.tracks), piece.layers, 0.05);
     else scheduleEvents(target, piece, 0.05);
     return ctx.startRendering();
   }
@@ -2299,81 +2437,188 @@ function initBeepMelodyExperiment() {
   // داخل تطبيق هكوله (?app=1): التطبيق عنده شريطه الخاص، فنخفي هيدر الموقع وفوتره
   if (new URLSearchParams(location.search).has("app")) document.documentElement.classList.add("in-app");
 
-  /* ===== اعزف بنفسك: بيانو بالكيبورد (مثل وضع لوحة الكمبيوتر بباندلاب) =====
+  /* ===== اعزف بنفسك: بيانو بالكيبورد والماوس واللمس وكيبورد MIDI =====
      الصف الأوسط = المفاتيح البيضاء، والصف فوقه = السوداء بنفس ترتيب البيانو.
      نقرأ e.code (المفتاح الفعلي) لا e.key، فيشتغل حتى لو الكيبورد عربي.
-     الصوت = الآلة المختارة بلوحة "الآلة والطابع" ونفس مسار الخروج. */
+     كل نغمة لها "معرّف مصدر": حرف الكيبورد (KeyA)، أو إصبع/ماوس على مفتاح (p:60)،
+     أو كيبورد MIDI (m:60) — فنفس النغمة من مصدرين ما يطفّي أحدهما الآخر. */
   const playBox = document.getElementById("beepPlayKeys");
+  const keysWrap = document.getElementById("beepKeysWrap");
   const KEY_MAP = {
     KeyA: 0, KeyW: 1, KeyS: 2, KeyE: 3, KeyD: 4, KeyF: 5, KeyT: 6, KeyG: 7, KeyY: 8, KeyH: 9,
     KeyU: 10, KeyJ: 11, KeyK: 12, KeyO: 13, KeyL: 14, KeyP: 15, Semicolon: 16, Quote: 17,
   };
   const KEY_LABEL = { Semicolon: ";", Quote: "'" };
+  const CODE_AT = {}; // نصف الدرجة داخل نافذة الكيبورد → حرفه
+  Object.entries(KEY_MAP).forEach(([code, semi]) => (CODE_AT[semi] = code));
   const CHROMA = {
     letters: ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"],
     solfege: ["Do", "Do♯", "Re", "Re♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si"],
   };
+
+  // localStorage قد يكون محجوباً (وضع خاص/إعدادات) — كل قراءة وكتابة محمية
+  const store = {
+    get(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    },
+    set(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        // التخزين محجوب — الإعداد يبقى لهذي الزيارة فقط
+      }
+    },
+  };
+
   let playOctave = 4;
   // ما يُكتب على المفاتيح المرسومة: أحرف الكيبورد (الافتراضي) أو أسماء النغمات
   // القياسية C D E أو Do Re Mi — للتعلّم. التحكم نفسه بالحالات الثلاث لا يتغيّر.
-  let labelMode = "keys";
-  try {
-    const saved = localStorage.getItem("beepLabels");
-    if (saved === "letters" || saved === "solfege") labelMode = saved;
-  } catch {
-    // التخزين محجوب — الافتراضي
+  let labelMode = ["letters", "solfege"].includes(store.get("beepLabels")) ? store.get("beepLabels") : "keys";
+  // "compact": ١٨ مفتاحاً = نافذة الكيبورد، "full": بيانو كامل ٨٨ مفتاحاً (La0–Do8)
+  let boardMode = store.get("beepBoard") === "full" ? "full" : "compact";
+
+  /* ===== المقامات العربية بأرباع الأصوات =====
+     كل مقام = درجاته السبع بتهجئتها الصحيحة (الحرف + العلامة)، ومنها نشتق كل شي:
+     فئات النغمات (للمفاتيح الباهتة خارج المقام)، والقرار (أول درجة)، وإزاحة ربع
+     الصوت (½♭ = -50 سنت). فبالراست مثلاً مفتاح Mi الأبيض يعزف "Mi نصف بيمول" بكل
+     الأوكتافات، والأسود بجانبه يبقى Mi♭ كاملاً. والتهجئة نفسها تُكتب على المفاتيح
+     (Si♭ بالبياتي لا La♯). القرارات التقليدية: راست ونهاوند على Do، بياتي وصبا
+     وحجاز وكرد على Re، سيكاه على Mi½♭، وعجم على Si♭. */
+  const MAQAM_SPELLING = {
+    rast: "0 1 2½ 3 4 5 6½",
+    bayati: "1 2½ 3 4 5 6b 0",
+    sikah: "2½ 3 4 5 6½ 0 1",
+    saba: "1 2½ 3 4b 5 6b 0",
+    hijaz: "1 2b 3# 4 5 6b 0",
+    nahawand: "0 1 2b 3 4 5b 6",
+    kurd: "1 2b 3 4 5 6b 0",
+    ajam: "6b 0 1 2b 3 4 5",
+  };
+  const NATURAL_PC = [0, 2, 4, 5, 7, 9, 11];
+  const ACCIDENTAL = { "": ["", 0], b: ["♭", -1], "#": ["♯", 1], "½": ["½♭", 0] };
+  const MAQAMS = { none: { tonic: 0, scale: null, cents: {}, spell: {} } };
+  Object.entries(MAQAM_SPELLING).forEach(([id, spec]) => {
+    const m = { scale: [], cents: {}, spell: {} };
+    spec.split(" ").forEach((deg) => {
+      const letter = Number(deg[0]);
+      const [mark, shift] = ACCIDENTAL[deg.slice(1)];
+      const pc = (NATURAL_PC[letter] + shift + 12) % 12;
+      m.scale.push(pc);
+      m.spell[pc] = [letter, mark];
+      if (mark === "½♭") m.cents[pc] = -50;
+    });
+    m.tonic = m.scale[0];
+    MAQAMS[id] = m;
+  });
+  let maqam = MAQAMS[store.get("beepMaqam")] ? store.get("beepMaqam") : "none";
+  const pcOf = (midi) => ((midi % 12) + 12) % 12;
+  const centsOf = (midi) => MAQAMS[maqam].cents[pcOf(midi)] || 0;
+  const freqOf = (midi, cents = 0) => 440 * 2 ** ((midi - 69 + cents / 100) / 12);
+  const pseudoDegree = (midi) => clamp(Math.round(((midi - 48) * 7) / 12), 0, 21); // لرنين الواطي الأطول والحاد الأقصر
+  const windowBase = () => 60 + 12 * (playOctave - 4);
+  const octaveOf = (midi) => Math.floor(midi / 12) - 1;
+  // اسم النغمة بتهجئة المقام الحالي لو كانت من درجاته، وإلا بالاسم المعتاد (بالدييز)
+  function noteName(midi, style) {
+    const spelled = MAQAMS[maqam].spell[pcOf(midi)];
+    return spelled ? NOTE_NAMES[style][spelled[0]] + spelled[1] : CHROMA[style][pcOf(midi)];
   }
-  const held = new Map(); // المفتاح الممسوك → غلاف صوته (نخمده لما ينرفع)
+  // النغمة (بلا ربع الصوت) وربعها من أي حدث — الأحداث القديمة فيها التردد فقط
+  function evMidi(ev) {
+    if (ev.midi != null) return ev.midi;
+    return Math.round(69 + 12 * Math.log2(ev.freq / 440));
+  }
+  function evCents(ev) {
+    if (ev.midi != null) return ev.cents || 0;
+    return Math.round((69 + 12 * Math.log2(ev.freq / 440) - evMidi(ev)) * 100);
+  }
+
+  /* القوة (Velocity ١–١٢٧) → شدة النغمة. ٩٦ = نفس شدة البيانو قبل إضافة القوة.
+     المنحنى أُسّي لأن الأذن تسمع الفرق بين الهادئ والمتوسط أكبر من بين القوي والأقوى */
+  const velGain = (v) => 0.2 * (clamp(v, 1, 127) / 96) ** 1.5;
+  const gainVel = (g) => Math.round(clamp(96 * (g / 0.2) ** (1 / 1.5), 1, 127));
+  function makeNoteEvent(midi, cents, startBeat, held, durBeats, gain) {
+    return { midi, cents, freq: freqOf(midi, cents), degree: pseudoDegree(midi), startBeat, held, durBeats, gain, velocity: gainVel(gain), pan: 0 };
+  }
 
   function renderPlayKeys() {
     if (!playBox) return;
-    const codes = Object.keys(KEY_MAP);
-    const whites = codes.filter((c) => ![1, 3, 6, 8, 10, 13, 15].includes(KEY_MAP[c]));
+    const full = boardMode === "full";
+    const base = windowBase();
+    const lo = full ? 21 : base;
+    const hi = full ? 108 : base + 17;
+    const isBlack = (m) => [1, 3, 6, 8, 10].includes(pcOf(m));
+    const all = [];
+    for (let m = lo; m <= hi; m++) all.push(m);
+    const whites = all.filter((m) => !isBlack(m));
+    const { scale, tonic } = MAQAMS[maqam];
+    const asNotes = labelMode !== "keys";
     playBox.style.setProperty("--whites", whites.length);
     playBox.dataset.labels = labelMode;
-    playBox.innerHTML = codes
-      .map((code) => {
-        const semi = KEY_MAP[code];
-        const black = !whites.includes(code);
+    playBox.classList.toggle("full", full);
+    keysWrap?.classList.toggle("full", full);
+    playBox.innerHTML = all
+      .map((m) => {
+        const black = isBlack(m);
         // السوداء تقع على الحد بين البيضاء اللي قبلها واللي بعدها
-        const pos = black ? whites.filter((c) => KEY_MAP[c] < semi).length : whites.indexOf(code);
-        const letter = KEY_LABEL[code] || code.slice(3);
-        const asNotes = labelMode !== "keys";
-        const name = CHROMA[asNotes ? labelMode : noteStyle][semi % 12];
-        return `<button type="button" class="${black ? "pk-black" : "pk-white"}" data-code="${code}" style="--i:${pos}" aria-label="${name}"><b>${asNotes ? name : letter}</b>${asNotes ? "" : `<small>${name}</small>`}</button>`;
+        const pos = black ? whites.filter((w) => w < m).length : whites.indexOf(m);
+        const code = m - base >= 0 && m - base <= 17 ? CODE_AT[m - base] : null;
+        const letter = code ? KEY_LABEL[code] || code.slice(3) : "";
+        const name = noteName(m, asNotes ? labelMode : noteStyle);
+        let main;
+        let small = "";
+        if (full) {
+          // ٥٢ مفتاحاً أبيض ما يتسع لكل الأسماء: الحرف على نافذة الكيبورد، واسم Do مع رقم أوكتافه
+          const cName = pcOf(m) === 0 ? name + octaveOf(m) : "";
+          main = asNotes ? cName : letter;
+          if (!asNotes) small = cName;
+        } else {
+          main = asNotes ? name : letter;
+          if (!asNotes) small = name;
+        }
+        const cls = [black ? "pk-black" : "pk-white"];
+        if (scale && !scale.includes(pcOf(m))) cls.push("off");
+        if (scale && pcOf(m) === tonic) cls.push("tonic");
+        if (full && code) cls.push("reach");
+        if (downCount.has(m)) cls.push("down");
+        return `<button type="button" class="${cls.join(" ")}" data-midi="${m}"${code ? ` data-code="${code}"` : ""} style="--i:${pos}" tabindex="-1" aria-label="${noteName(m, noteStyle)}${octaveOf(m)}"><b>${main}</b>${small ? `<small>${small}</small>` : ""}</button>`;
       })
       .join("");
     document.getElementById("beepOctLabel").textContent = "C" + playOctave;
+    if (full) scrollToReach();
   }
 
-  async function keyOn(code) {
-    if (held.has(code)) return;
-    held.set(code, null); // نحجزه قبل await عشان التكرار ما يعزفه مرتين
-    const pressedAt = performance.now(); // وقت الضغط الفعلي، قبل انتظار تجهيز الصوت
-    await ensureContext();
-    const semi = KEY_MAP[code] + 12 * (playOctave - 4);
-    const midi = 60 + semi;
-    const freq = 261.63 * 2 ** (semi / 12);
-    // درجة تقريبية على سلّم المولّد — بس لرنين الواطي الأطول والحاد الأقصر
-    const pseudoIndex = clamp(Math.round(((midi - 48) * 7) / 12), 0, 21);
-    if (rec) {
-      const ev = { code, degree: pseudoIndex, freq, startBeat: (pressedAt - rec.t0) / 1000, durBeats: 0, held: 0, gain: 0.2, pan: 0 };
-      rec.open.set(code, ev);
-      rec.events.push(ev);
-    }
-    const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: false };
-    const env = playNote(target, pseudoIndex, audioCtx.currentTime + 0.005, holdSeconds(currentInstrument), 0.2, 0, 0, freq);
-    if (!held.has(code)) {
-      noteEnd(code); // انرفع قبل ما يجهز الصوت
-      return keyRelease(env);
-    }
-    held.set(code, env);
-    playBox?.querySelector(`[data-code="${code}"]`)?.classList.add("down");
+  // اللوحة الكاملة أعرض من الشاشة: نمرّرها لتظهر نافذة الكيبورد (بعد تغيير الأوكتاف)
+  function scrollToReach() {
+    const reach = playBox.querySelectorAll(".pk-white.reach");
+    if (!reach.length || !keysWrap || keysWrap.scrollWidth <= keysWrap.clientWidth) return;
+    const first = reach[0].offsetLeft;
+    const last = reach[reach.length - 1].offsetLeft + reach[reach.length - 1].offsetWidth;
+    keysWrap.scrollTo({ left: (first + last) / 2 - keysWrap.clientWidth / 2, behavior: "smooth" });
+  }
+
+  const held = new Map(); // المصدر الممسوك → { env, midi } (env فاضي لحين يجهز الصوت)
+  const sustained = new Map(); // انرفع والدواسة نازلة: يرنّ لحين ترتفع الدواسة
+  const downCount = new Map(); // النغمة → كم مصدراً ضاغطها (للإضاءة)
+  let pedalLatch = false; // زر الدواسة (ثابت)
+  let pedalKey = false; // Shift ممسوك
+  let midiPedal = false; // دواسة كيبورد MIDI (CC64)
+  const pedalDown = () => pedalLatch || pedalKey || midiPedal;
+
+  function markKey(midi, on) {
+    const n = (downCount.get(midi) || 0) + (on ? 1 : -1);
+    if (n > 0) downCount.set(midi, n);
+    else downCount.delete(midi);
+    playBox?.querySelector(`[data-midi="${midi}"]`)?.classList.toggle("down", n > 0);
   }
 
   // آلة ممدودة (أرغن، كورس، وتريات...) تستمر ما دام المفتاح مضغوطاً؛ المقروعة تخفت
   // طبيعياً. الرفع يخمّد الاثنين (keyRelease)، فالمدة الطويلة ما تكلّف شي بعد الرفع.
-  const holdSeconds = (id) => (INSTRUMENTS[id].sustainRatio > 0 ? 12 : 2.4);
+  // البيانو الحقيقي يرنّ بطول عيّنته (حتى ٧ ثوانٍ) ما دام ممسوكاً أو الدواسة نازلة.
+  const holdSeconds = (id) => (INSTRUMENTS[id].sampled && pianoSamples ? 30 : INSTRUMENTS[id].sustainRatio > 0 ? 12 : 2.4);
 
   function keyRelease(env) {
     if (!env) return;
@@ -2382,74 +2627,530 @@ function initBeepMelodyExperiment() {
     env.gain.setTargetAtTime(0.0001, now, 0.09); // مخمّد البيانو: ذيل قصير ناعم مو قطع
   }
 
-  function keyOff(code) {
-    if (!held.has(code)) return;
-    keyRelease(held.get(code));
-    held.delete(code);
-    noteEnd(code);
-    playBox?.querySelector(`[data-code="${code}"]`)?.classList.remove("down");
+  function releaseSustained(id) {
+    const s = sustained.get(id);
+    if (!s) return;
+    sustained.delete(id);
+    keyRelease(s.env);
+    noteEnd(id);
   }
 
-  /* ===== تسجيل العزف بطبقات =====
-     كل تسجيل "طبقة": قائمة نغمات (الوقت، النغمة، مدة الضغط) بنفس شكل أحداث المولّد
-     مع آلتها — فمصدّرات WAV وMP3 وMIDI تشتغل عليها كما هي. نبضة القطعة ٦٠ (الضربة =
-     ثانية) عشان الأوقات الحقيقية تنطبق على الضربات مباشرة. الطبقة الجديدة تُسجَّل
-     وباقي الطبقات تُعزف معها على خط زمن واحد (الطبقة الأولى فقط تُقصّ من صمتها
-     الأول). التسجيل قائمة نغمات لا صوت ملتقط: كل طبقة تُعزف وتُصدَّر بآلتها. */
-  const MAX_TAKE_SECONDS = 300;
-  const MAX_LAYERS = 8;
-  let rec = null; // تسجيل جارٍ: { t0, open: Map(code→حدث), events, timer, instrument, base }
-  let layers = []; // [{ events, instrument, muted, end }]
-  let takeTimers = [];
+  async function noteOn(id, midi, velocity = 96) {
+    if (held.has(id)) return;
+    const entry = { env: null, midi };
+    held.set(id, entry);
+    const pressedAt = performance.now(); // وقت الضغط الفعلي، قبل انتظار تجهيز الصوت
+    markKey(midi, true);
+    // نفس المصدر أو نفس النغمة ترنّ بالدواسة: الضربة الجديدة تخمد القديمة (مثل البيانو)
+    releaseSustained(id);
+    sustained.forEach((s, other) => s.midi === midi && releaseSustained(other));
+    await ensureContext();
+    const cents = centsOf(midi);
+    const freq = freqOf(midi, cents);
+    const gain = velGain(velocity);
+    if (rec?.kind === "notes") {
+      const ev = { ...makeNoteEvent(midi, cents, (pressedAt - rec.t0) / 1000, 0, 0, gain), id, velocity };
+      rec.open.set(id, ev);
+      rec.events.push(ev);
+    }
+    const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: false };
+    entry.env = playNote(target, pseudoDegree(midi), audioCtx.currentTime + 0.005, holdSeconds(currentInstrument), gain, 0, 0, freq);
+    if (held.get(id) !== entry) {
+      // انرفع قبل ما يجهز الصوت
+      if (pedalDown()) sustained.set(id, entry);
+      else {
+        keyRelease(entry.env);
+        noteEnd(id);
+      }
+    }
+  }
 
-  const recToggle = document.getElementById("beepRecToggle");
-  const recTime = document.getElementById("beepRecTime");
-  const recTake = document.getElementById("beepRecTake");
-  const recPlay = document.getElementById("beepRecPlay");
+  function noteOff(id) {
+    const entry = held.get(id);
+    if (!entry) return;
+    held.delete(id);
+    markKey(entry.midi, false);
+    if (!entry.env) return; // الصوت لسا ما جهز — noteOn يكمل الباقي
+    if (pedalDown()) sustained.set(id, entry);
+    else {
+      keyRelease(entry.env);
+      noteEnd(id);
+    }
+  }
 
-  const sounding = () => layers.filter((l) => !l.muted);
-  const instrumentLabel = (id) => document.querySelector(`.instrument-btn[data-instrument="${id}"]`)?.textContent.trim() || id;
-  const clock = (sec) => Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0");
-  const idleLabel = () => (layers.length ? recToggle.dataset.more : recToggle.dataset.label);
+  // الدواسة ارتفعت (من كل مصادرها): كل النغمات المعلّقة تخمد
+  function releasePedal() {
+    paintPedal();
+    if (pedalDown()) return;
+    [...sustained.keys()].forEach(releaseSustained);
+  }
+
+  const keyOn = (code) => noteOn(code, windowBase() + KEY_MAP[code]);
+  const keyOff = noteOff;
+
+  const pedalBtn = document.getElementById("beepPedal");
+  function paintPedal() {
+    if (!pedalBtn) return;
+    pedalBtn.classList.toggle("active", pedalDown());
+    pedalBtn.setAttribute("aria-pressed", String(pedalLatch));
+  }
+  pedalBtn?.addEventListener("click", () => {
+    pedalLatch = !pedalLatch;
+    releasePedal();
+    playClickSound();
+  });
+
+  /* ===== كيبورد MIDI حقيقي (Web MIDI) =====
+     كروم وإيدج وفايرفوكس الحديث. نطلب الإذن بضغطة الزر فقط، ولو سبق وسمح
+     المستخدم نوصل تلقائياً بلا سؤال. القوة من الكيبورد نفسه، والدواسة CC64. */
+  const midiConnectBtn = document.getElementById("beepMidi");
+  // "رمز نص": النص بعنصر مستقل يُخفى بالجوال الأفقي ويبقى الرمز (مثل الدواسة والمترونوم)
+  function setChipLabel(btn, text) {
+    const [icon, ...rest] = text.trim().split(" ");
+    const span = document.createElement("span");
+    span.className = "qb-text";
+    span.textContent = rest.join(" ");
+    btn.replaceChildren(icon + " ", span);
+  }
+  let midiAccess = null;
+  function onMidiMessage(e) {
+    const [status, d1 = 0, d2 = 0] = e.data;
+    const cmd = status & 0xf0;
+    if (cmd === 0x90 && d2 > 0) noteOn("m:" + d1, d1, d2);
+    else if (cmd === 0x80 || cmd === 0x90) noteOff("m:" + d1);
+    else if (cmd === 0xb0 && d1 === 64) {
+      midiPedal = d2 >= 64;
+      releasePedal();
+    } else if (cmd === 0xb0 && (d1 === 120 || d1 === 123)) {
+      [...held.keys()].filter((k) => k.startsWith("m:")).forEach(noteOff); // All Notes Off
+    }
+  }
+  function bindMidiInputs() {
+    const names = [];
+    midiAccess.inputs.forEach((input) => {
+      input.onmidimessage = onMidiMessage;
+      names.push(input.name);
+    });
+    setChipLabel(midiConnectBtn, names.length ? midiConnectBtn.dataset.on + names[0] : midiConnectBtn.dataset.label);
+    midiConnectBtn.title = names.join("، ");
+    midiConnectBtn.classList.toggle("active", names.length > 0);
+    return names.length;
+  }
+  async function connectMidi(quiet) {
+    try {
+      midiAccess = midiAccess || (await navigator.requestMIDIAccess());
+      midiAccess.onstatechange = bindMidiInputs; // وُصل أو فُصل كيبورد أثناء الاستخدام
+      if (!bindMidiInputs() && !quiet) showToast(midiConnectBtn.dataset.none);
+    } catch {
+      if (!quiet) showToast(midiConnectBtn.dataset.denied);
+    }
+  }
+  if (midiConnectBtn) {
+    if (!navigator.requestMIDIAccess) {
+      midiConnectBtn.hidden = true; // سفاري (آيفون) ما يدعم MIDI بالمتصفح — لا نعرض زراً لا يعمل
+    } else {
+      midiConnectBtn.addEventListener("click", () => {
+        connectMidi(false);
+        playClickSound();
+      });
+      navigator.permissions
+        ?.query({ name: "midi" })
+        .then((p) => p.state === "granted" && connectMidi(true))
+        .catch(() => {});
+    }
+  }
+
+  /* ===== مشروع الاستوديو: السرعة والميزان والشبكة =====
+     الأزمنة كلها بالثواني (كما كانت)؛ السرعة تحدد طول الضربة للمسطرة والمترونوم
+     والشبكة والإيقاعات. تغيير السرعة يمطّ مقاطع النغمات والإيقاعات لتبقى على
+     نفس الضربات (مثل باند لاب)، والمقاطع الصوتية تنتقل بمكانها بلا مطّ. */
+  let bpm = 90;
+  let meter = 4;
+  const savedGrid = store.get("beepGrid");
+  let gridDiv = savedGrid !== null && [0, 4, 8, 16].includes(Number(savedGrid)) ? Number(savedGrid) : 8;
+  let metroOn = store.get("beepMetro") === "1";
+  let countIn = store.get("beepCountIn") === "1";
+  const beatSec = () => 60 / bpm;
+  const barSec = () => beatSec() * meter;
+  const gridStep = () => (gridDiv ? (beatSec() * 4) / gridDiv : 0);
+  // المحاذاة للشبكة (أو ٥٠م.ث لو الشبكة "حرّة")
+  const snap = (sec) => {
+    const step = gridStep() || 0.05;
+    return Math.max(0, Math.round(sec / step) * step);
+  };
+
+  /* ===== الإيقاعات: طبلة (دربكة) ورق، وطقم غربي — كلها تخليق لا عيّنات =====
+     دُم = ضربة وسط الطبلة الغليظة، تك = حافتها الحادة، كا = تك خفيفة باليد الأخرى،
+     رق = صنوج الدف. الأنماط بخطوات ربع الضربة (١٦ خطوة لمازورة ٤/٤)؛ "x" = ضربة.
+     أنماط المقسوم والبلدي والصعيدي والملفوف والأيوب والسماعي الثقيل بصيغها
+     الأساسية المتداولة بتعليم الإيقاع العربي، والزخارف (كا) خفيفة. */
+  const DRUM_KITS = { arabic: ["doum", "tak", "ka", "riq"], western: ["kick", "snare", "hat", "clap"] };
+  const RIQ = "x.x.x.x.x.x.x.x.";
+  const RHYTHMS = {
+    maqsum: { kit: "arabic", beats: 4, lanes: { doum: "x.......x.......", tak: "..x...x.....x...", ka: "....x.....x...x.", riq: RIQ } },
+    baladi: { kit: "arabic", beats: 4, lanes: { doum: "x.x.....x.......", tak: "......x.....x...", ka: "....x.....x...x.", riq: RIQ } },
+    saidi: { kit: "arabic", beats: 4, lanes: { doum: "x.....x.x.......", tak: "..x.........x...", ka: "....x.....x...x.", riq: RIQ } },
+    malfuf: { kit: "arabic", beats: 4, lanes: { doum: "x.......x.......", tak: "...x..x....x..x.", ka: "", riq: RIQ } },
+    ayyub: { kit: "arabic", beats: 4, lanes: { doum: "x...x...x...x...", tak: "......x.......x.", ka: "...x.......x....", riq: RIQ } },
+    // السماعي الثقيل ١٠/٨ = خمس ضربات (عشرون خطوة): دُم - - تك - دُم دُم تك - -
+    samai: { kit: "arabic", beats: 5, lanes: { doum: "x.........x.x.......", tak: "......x.......x.....", ka: "..x.....x.......x.x.", riq: "x...x...x...x...x..." } },
+    rock: { kit: "western", beats: 4, lanes: { kick: "x.......x.x.....", snare: "....x.......x...", hat: RIQ, clap: "" } },
+    pop: { kit: "western", beats: 4, lanes: { kick: "x.....x.x.......", snare: "....x.......x...", hat: RIQ, clap: "............x..." } },
+    hiphop: { kit: "western", beats: 4, lanes: { kick: "x......x..x.....", snare: "....x.......x...", hat: "x.xxx.x.x.xxx.x.", clap: "" } },
+  };
+  // القوة الافتراضية لكل صوت (١–١٢٧): الدُم والجهير أقوى، والرق والهاي هات خلفية
+  const DRUM_VEL = { doum: 118, tak: 100, ka: 62, riq: 46, kick: 118, snare: 104, hat: 58, clap: 92 };
+  // ‏ "ميدي" قياسي (General MIDI) — الطبلة العربية أقرب ما لها الكونغا، والرق الدف
+  const GM_DRUM = { kick: 36, snare: 38, hat: 42, clap: 39, doum: 64, tak: 63, ka: 62, riq: 54 };
+  const drumGain = (v) => 0.55 * (clamp(v, 1, 127) / 100) ** 1.3;
+
+  const noiseBuffers = new WeakMap();
+  function noiseOf(ctx) {
+    let buf = noiseBuffers.get(ctx);
+    if (!buf) {
+      buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      noiseBuffers.set(ctx, buf);
+    }
+    return buf;
+  }
+
+  function playDrum(target, type, t, gain) {
+    const { ctx, dry, live } = target;
+    const out = ctx.createGain();
+    out.gain.value = gain;
+    out.connect(dry);
+    const keep = (node) => live && activeOscillators.push(node);
+    // نغمة تهبط بسرعة (جلد الطبلة) — f0 → f1
+    const tone = (f0, f1, dur, vol, type2 = "sine") => {
+      const o = ctx.createOscillator();
+      o.type = type2;
+      o.frequency.setValueAtTime(f0, t);
+      o.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.6);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(out);
+      o.start(t);
+      o.stop(t + dur + 0.02);
+      keep(o);
+    };
+    // ضجيج مفلتر (الطقّة، الصنوج، التصفيق)
+    const noise = (filterType, freq, q, dur, vol, at = t) => {
+      const src = ctx.createBufferSource();
+      src.buffer = noiseOf(ctx);
+      const f = ctx.createBiquadFilter();
+      f.type = filterType;
+      f.frequency.value = freq;
+      f.Q.value = q;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol, at);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      src.connect(f).connect(g).connect(out);
+      src.start(at, Math.random() * 0.5);
+      src.stop(at + dur + 0.02);
+      keep(src);
+    };
+    switch (type) {
+      case "doum":
+        tone(118, 74, 0.5, 1);
+        noise("lowpass", 420, 0.7, 0.05, 0.35);
+        break;
+      case "tak":
+        noise("bandpass", 2600, 1.8, 0.07, 1.1);
+        tone(840, 600, 0.05, 0.3);
+        break;
+      case "ka":
+        noise("bandpass", 2200, 1.5, 0.05, 0.7);
+        tone(700, 520, 0.04, 0.18);
+        break;
+      case "riq":
+        noise("bandpass", 9000, 3, 0.13, 0.7);
+        noise("highpass", 6500, 0.7, 0.08, 0.35, t + 0.012); // رنّة الصنوج بعد الضربة
+        break;
+      case "kick":
+        tone(150, 42, 0.45, 1.1);
+        break;
+      case "snare":
+        tone(200, 160, 0.12, 0.45, "triangle");
+        noise("bandpass", 1800, 0.8, 0.2, 0.9);
+        break;
+      case "hat":
+        noise("highpass", 7500, 0.7, 0.06, 0.6);
+        break;
+      case "clap":
+        [0, 0.012, 0.024].forEach((d) => noise("bandpass", 1400, 1.2, 0.03, 0.8, t + d));
+        noise("bandpass", 1400, 1, 0.16, 0.5, t + 0.03);
+        break;
+    }
+  }
+
+  // أحداث نمط إيقاع لعدد مازورات بسرعة المشروع الحالية (الثواني من بداية المقطع)
+  function rhythmEvents(id, bars) {
+    const r = RHYTHMS[id];
+    const steps = r.beats * 4;
+    const stepSec = beatSec() / 4;
+    const events = [];
+    for (let b = 0; b < bars; b++) {
+      Object.entries(r.lanes).forEach(([drum, pattern]) => {
+        [...pattern].forEach((ch, i) => {
+          if (ch !== "x") return;
+          // الضربة الأولى بالمازورة أقوى قليلاً، والرق يتناوب قوي/خفيف
+          const accent = i === 0 ? 1.08 : drum === "riq" || drum === "hat" ? (i % 4 === 0 ? 1 : 0.8) : 1;
+          const velocity = Math.round(clamp(DRUM_VEL[drum] * accent, 1, 127));
+          events.push({ drum, startBeat: (b * steps + i) * stepSec, held: stepSec * 0.9, durBeats: 0.3, velocity, gain: drumGain(velocity) });
+        });
+      });
+    }
+    return { events, end: bars * steps * stepSec };
+  }
+
+  /* ===== المترونوم =====
+     جدولة مسبقة (Lookahead): مؤقّت كل ٢٥م.ث يجدول النقرات اللي تقع بالـ١٥٠م.ث
+     الجاية على ساعة الصوت نفسها — فالنقرات دقيقة حتى لو تأخّر المؤقّت. الضربة
+     الأولى بالمازورة أحدّ. النقرات تمر على منزلق الصوت لا على المؤثرات ولا تُصدَّر. */
+  const metroBtn = document.getElementById("beepMetro");
+  let metroTimer = null;
+  function metroClick(t, accent) {
+    const o = audioCtx.createOscillator();
+    o.frequency.value = accent ? 1760 : 1175;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(accent ? 0.4 : 0.25, t + 0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.connect(g).connect(volumeGain);
+    o.start(t);
+    o.stop(t + 0.06);
+    activeOscillators.push(o);
+  }
+  // at = وقت الصوت اللي يُعزف فيه الموضع fromSec من الجدول
+  function startMetronome(at, fromSec) {
+    stopMetronome();
+    const beat = beatSec();
+    let n = Math.ceil(fromSec / beat - 1e-6);
+    const tick = () => {
+      const horizon = audioCtx.currentTime + 0.15;
+      for (;;) {
+        const t = at + n * beat - fromSec;
+        if (t > horizon) break;
+        if (t > audioCtx.currentTime - 0.02) metroClick(t, ((n % meter) + meter) % meter === 0);
+        n++;
+      }
+    };
+    tick();
+    metroTimer = setInterval(tick, 25);
+  }
+  function stopMetronome() {
+    clearInterval(metroTimer);
+    metroTimer = null;
+  }
+  function paintMetro() {
+    metroBtn?.classList.toggle("active", metroOn);
+    metroBtn?.setAttribute("aria-pressed", String(metroOn));
+  }
+  function toggleMetro() {
+    metroOn = !metroOn;
+    store.set("beepMetro", metroOn ? "1" : "0");
+    paintMetro();
+    // أثناء التشغيل/التسجيل يبدأ أو يقف فوراً على نفس الضربات
+    if (transport && (takeTimers.length || rec)) {
+      if (metroOn) startMetronome(transport.at, transport.from);
+      else stopMetronome();
+    }
+    playClickSound();
+  }
+  metroBtn?.addEventListener("click", toggleMetro);
+  paintMetro();
+
+  /* ===== المسارات: الخلاط والمؤثرات لكل مسار =====
+     كل مسار (صف بالجدول) سلسلة: معادل ٣ نطاقات → ضاغط (اختياري) → أتمتة → مستوى →
+     توزيع يمين/يسار → الخروج، ومنه إرسالان: صدى المكان (مشترك) وترديد بطول نصف ضربة.
+     نفس السلسلة تُبنى بالتشغيل الحي وبالتصدير، فالملف يطابق ما تسمعه. */
+  const newTrack = () => ({ vol: 1, pan: 0, mute: false, solo: false, eq: [0, 0, 0], reverb: 0, echo: 0, comp: false, auto: null });
+  const cloneTrack = (t) => ({ ...t, eq: [...t.eq], auto: t.auto ? t.auto.map((p) => ({ ...p })) : null });
+
+  function buildTrackChain(ctx, dest, reverb, tr) {
+    const input = ctx.createGain();
+    const eq = [
+      ["lowshelf", 250],
+      ["peaking", 1200],
+      ["highshelf", 4500],
+    ].map(([type, f], i) => {
+      const b = ctx.createBiquadFilter();
+      b.type = type;
+      b.frequency.value = f;
+      if (type === "peaking") b.Q.value = 0.8;
+      b.gain.value = tr.eq[i];
+      return b;
+    });
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -24;
+    comp.ratio.value = 4;
+    comp.attack.value = 0.005;
+    comp.release.value = 0.2;
+    const compMakeup = ctx.createGain();
+    compMakeup.gain.value = 1.5;
+    // الضاغط مسار موازٍ لمسار مباشر، والتبديل بينهما بالمستوى — يتغيّر أثناء العزف بلا انقطاع
+    const compIn = ctx.createGain();
+    compIn.gain.value = tr.comp ? 1 : 0;
+    const bypass = ctx.createGain();
+    bypass.gain.value = tr.comp ? 0 : 1;
+    const auto = ctx.createGain();
+    const vol = ctx.createGain();
+    vol.gain.value = tr.vol;
+    const pan = ctx.createStereoPanner();
+    pan.pan.value = tr.pan;
+    input.connect(eq[0]).connect(eq[1]).connect(eq[2]);
+    eq[2].connect(compIn).connect(comp).connect(compMakeup).connect(auto);
+    eq[2].connect(bypass).connect(auto);
+    auto.connect(vol).connect(pan).connect(dest);
+    const rev = ctx.createGain();
+    rev.gain.value = tr.reverb;
+    pan.connect(rev).connect(reverb);
+    const delay = ctx.createDelay(2);
+    delay.delayTime.value = Math.min(1.9, beatSec() / 2);
+    const feedback = ctx.createGain();
+    feedback.gain.value = 0.35;
+    const echo = ctx.createGain();
+    echo.gain.value = tr.echo * 0.6;
+    pan.connect(echo).connect(delay);
+    delay.connect(feedback).connect(delay);
+    delay.connect(dest);
+    return { input, eq, compIn, bypass, auto, vol, pan, rev, echo, delay };
+  }
+
+  // يجهّز سلاسل كل المسارات داخل سياق صوتي (حي أو تصدير) فوق وجهة الخروج المعطاة
+  function studioTarget(target, trackList = tracks) {
+    const { ctx } = target;
+    const reverb = ctx.createConvolver();
+    reverb.buffer = makeRoomImpulse(ctx, 2.4);
+    reverb.connect(target.dry);
+    const chains = trackList.map((tr) => buildTrackChain(ctx, target.dry, reverb, tr));
+    return { ...target, chains, trackList, reverb };
+  }
+
+  // قيمة الأتمتة عند لحظة: خط مستقيم بين النقاط، وثابتة قبل أولها وبعد آخرها
+  function autoValueAt(points, t) {
+    if (!points.length) return 1;
+    if (t <= points[0].t) return points[0].v;
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1];
+      const b = points[i];
+      if (t <= b.t) return a.v + ((b.v - a.v) * (t - a.t)) / (b.t - a.t || 1);
+    }
+    return points[points.length - 1].v;
+  }
+  function automate(target, start, from) {
+    target.chains.forEach((c, row) => {
+      const pts = target.trackList[row]?.auto;
+      if (!pts?.length) return;
+      const g = c.auto.gain;
+      g.setValueAtTime(autoValueAt(pts, from), start);
+      pts.filter((p) => p.t > from).forEach((p) => g.linearRampToValueAtTime(p.v, start + p.t - from));
+    });
+  }
+
+  // مقطع صوتي (ميكروفون أو ملف): يُعزف الجزء الظاهر [t0,t1] من التسجيل
+  function scheduleAudio(target, l, start, from) {
+    const end = layerEnd(l);
+    if (end <= from) return;
+    const { ctx, dry, live } = target;
+    const skip = Math.max(0, from - l.offset);
+    const when = start + Math.max(0, l.offset - from);
+    const len = layerLen(l) - skip;
+    const src = ctx.createBufferSource();
+    src.buffer = l.buffer;
+    const g = ctx.createGain();
+    // تلاشٍ ٥م.ث بالحافتين: القص بنص موجة يطقّ بدونه
+    g.gain.setValueAtTime(0, when);
+    g.gain.linearRampToValueAtTime(1, when + 0.005);
+    g.gain.setValueAtTime(1, when + Math.max(0.006, len - 0.005));
+    g.gain.linearRampToValueAtTime(0, when + len);
+    src.connect(g).connect(dry);
+    src.start(when, l.t0 + skip, len);
+    if (live) activeOscillators.push(src);
+  }
 
   // كل طبقة بآلتها: نبدّل الآلة العامة أثناء الجدولة فقط (playNote يقرأها لحظتها)
   function scheduleLayers(target, list, start, from = 0) {
     const saved = currentInstrument;
     list.forEach((l) => {
-      currentInstrument = l.instrument;
+      const t = target.chains ? { ...target, dry: target.chains[l.row]?.input || target.dry } : target;
+      if (l.kind === "audio") return scheduleAudio(t, l, start, from);
       const all = clipEvents(l);
       const events = from ? all.filter((e) => e.startBeat + l.offset >= from) : all;
-      scheduleEvents(target, { events, meta: { bpm: 60 } }, start + l.offset - from);
+      const at = start + l.offset - from;
+      if (l.kind === "drums") return events.forEach((e) => playDrum(t, e.drum, at + e.startBeat, e.gain));
+      currentInstrument = l.instrument;
+      scheduleEvents(t, { events, meta: { bpm: 60 } }, at);
     });
     currentInstrument = saved;
+    if (target.chains) automate(target, start, from);
   }
 
-  // "قطعة" كاملة من الطبقات غير المكتومة — تمرّ على نفس مصدّرات المولّد
+  /* ===== تسجيل العزف بطبقات =====
+     كل تسجيل "طبقة" (مقطع): نغمات (الوقت، النغمة، مدة الضغط، القوة) مع آلتها، أو
+     ضربات إيقاع، أو صوت مسجّل من الميكروفون/ملف. يبدأ التسجيل عند الخط الأبيض
+     والطبقات الأخرى تُعزف معك؛ وأول تسجيل بلا مترونوم يُقصّ صمته الأول (للعزف
+     العفوي). أزمنة النغمات بالثواني ("الضربة" = ثانية بالمصدّرات). */
+  const MAX_TAKE_SECONDS = 300;
+  const MAX_LAYERS = 64;
+  const MAX_TRACKS = 16;
+  let rec = null; // تسجيل جارٍ: { kind, t0, at, from, open: Map(مصدر→حدث), events, timer, instrument, trim }
+  let layers = []; // [{ kind: "notes"|"drums"|"audio", events|buffer, instrument, muted, end, t0, t1, offset, row }]
+  let tracks = []; // إعدادات الخلاط لكل مسار (صف)
+  let takeTimers = [];
+  let transport = null; // { at, from }: أي موضع بالجدول يُعزف عند أي وقت صوت
+
+  const recToggle = document.getElementById("beepRecToggle");
+  const recTime = document.getElementById("beepRecTime");
+  const recTake = document.getElementById("beepRecTake");
+  const recPlay = document.getElementById("beepRecPlay");
+  const micBtn = document.getElementById("beepMicRec");
+
+  const anySolo = () => tracks.some((t) => t.solo);
+  // يُسمع؟ المقطع غير مكتوم، ومساره غير مكتوم، ولو فيه "منفرد" فمساره منفرد
+  const audible = (l) => {
+    const tr = tracks[l.row] || {};
+    return !l.muted && !tr.mute && (!anySolo() || tr.solo);
+  };
+  const sounding = () => layers.filter(audible);
+  const instrumentLabel = (id) => document.querySelector(`.instrument-btn[data-instrument="${id}"]`)?.textContent.trim() || id;
+  const rhythmLabel = (id) => document.querySelector(`[data-rhythm="${id}"]`)?.textContent.trim() || id;
+  const clipLabel = (l) => (l.kind === "drums" ? rhythmLabel(l.rhythm) : l.kind === "audio" ? l.name || micBtn?.dataset.label || "🎤" : instrumentLabel(l.instrument));
+  const clipIcon = (l) => (l.kind === "drums" ? "🥁" : l.kind === "audio" ? "🎤" : instrumentLabel(l.instrument).split(" ")[0]);
+  const clock = (sec) => Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0");
+  const idleLabel = () => (layers.length ? recToggle.dataset.more : recToggle.dataset.label);
+
+  // "قطعة" كاملة من الطبقات المسموعة — تمرّ على نفس مصدّرات المولّد
   function mixPiece() {
     const live = sounding();
     return {
       layers: live,
-      events: live.flatMap((l) => clipEvents(l).map((e) => ({ ...e, startBeat: e.startBeat + l.offset }))), // MIDI: مسار واحد (الآلات ما تُحفظ فيه)
-      meta: { seed: "piano", bpm: 60, meter: 4, totalBeats: Math.max(...live.map(layerEnd)) },
+      tracks: tracks.map(cloneTrack),
+      meta: { seed: "studio", bpm: 60, meter, totalBeats: Math.max(...live.map(layerEnd)) },
     };
   }
 
-  function noteEnd(code) {
-    const ev = rec?.open.get(code);
+  function noteEnd(id) {
+    const ev = rec?.open.get(id);
     if (!ev) return;
-    rec.open.delete(code);
+    rec.open.delete(id);
     ev.held = Math.max(0.05, (performance.now() - rec.t0) / 1000 - ev.startBeat);
     // مدة الرنين = مدة الضغط + ذيل قصير (المخمّد الحي يقطع الرنين بعد الرفع بنحو ٠٫٤ث)
     ev.durBeats = Math.min(holdSeconds(rec.instrument), ev.held + 0.4);
   }
 
   /* ===== لوحة المسارات (مثل باند لاب) =====
-     كل طبقة "مقطع" (clip) له آلته ونغماته، يقف بمسار (row) وزمن (offset بالثواني).
-     يُسحب بحرية: يميناً ويساراً بالزمن، وفوق وتحت بين المسارات (السحب لتحت آخر
-     مسار يفتح مساراً جديداً، والمسارات الفارغة تُطوى). المؤشر الأبيض الثابت يوضع
-     بالنقر/السحب على المسطرة، وعنده يُقصّ المقطع المحدد. المقاطع تُعزف كلها معاً
-     مهما كان مسارها؛ المسار للترتيب البصري فقط. */
+     كل طبقة "مقطع" (clip) يقف بمسار (row) وزمن (offset بالثواني). يُسحب بحرية:
+     يميناً ويساراً بالزمن (على الشبكة)، وفوق وتحت بين المسارات (السحب لتحت آخر
+     مسار يفتح مساراً جديداً، والمسارات الفارغة تُطوى). المسطرة بالمازورات. الخط
+     الأبيض الثابت يوضع بالنقر/السحب على المسطرة، وعنده يُقصّ المقطع المحدد ويبدأ
+     التسجيل. يسار كل مسار رقمه — النقر عليه يفتح خلاطه. */
   const timeline = document.getElementById("beepTimeline");
+  const lanes = document.getElementById("beepLanes");
+  const gutter = document.getElementById("beepGutter");
   const ruler = document.getElementById("beepRuler");
   const playhead = document.getElementById("beepPlayhead");
   const board = document.getElementById("beepBoard");
@@ -2458,10 +3159,9 @@ function initBeepMelodyExperiment() {
   let pxPerSec = 30;
   let timelineSeconds = 10;
   let playheadTimer = null;
-  let cursor = 0; // موضع المؤشر الأبيض الثابت (ثوانٍ) — نقطة القص
+  let cursor = 0; // موضع المؤشر الأبيض الثابت (ثوانٍ) — نقطة القص وبداية التسجيل
   let selected = null; // المقطع المحدد
 
-  const snap = (sec) => Math.max(0, Math.round(sec * 20) / 20); // خطوة ٥٠م.ث
   /* الموقع يكبّر الصفحة كلها بـzoom على الشاشات العريضة (theme-init.js، حتى ١٫٨×).
      الماوس وgetBoundingClientRect بوحدات الشاشة، بينما left/width للمقاطع والخط
      بوحدات الصفحة قبل التكبير — فبدون القسمة على المعامل يبتعد الخط عن الماوس
@@ -2472,6 +3172,7 @@ function initBeepMelodyExperiment() {
   // النغمات الظاهرة داخل نافذة المقطع [t0,t1] بأوقات نسبية لبدايته؛ النغمة التي تعبر
   // النهاية تُقصّر. التقصير لا يمسح شيئاً (l.events كما سُجّلت)، فالتطويل يرجّعها.
   function clipEvents(l) {
+    if (l.kind === "audio") return [];
     const out = [];
     l.events.forEach((ev) => {
       if (ev.startBeat < l.t0 - 1e-6 || ev.startBeat >= l.t1) return;
@@ -2480,12 +3181,20 @@ function initBeepMelodyExperiment() {
     });
     return out;
   }
+  const hasContent = (l) => (l.kind === "audio" ? layerLen(l) > 0.05 : clipEvents(l).length > 0);
   const rowCount = () => (layers.length ? Math.max(...layers.map((l) => l.row)) + 1 : 0);
 
-  // مسار فاضي بالنص ما له معنى: نرقّم المسارات المستعملة من جديد بلا فراغات
+  // مسار فاضي بالنص ما له معنى: نرقّم المسارات المستعملة من جديد بلا فراغات،
+  // وإعدادات خلاط كل مسار تنتقل معه
   function compactRows() {
     const used = [...new Set(layers.map((l) => l.row))].sort((a, b) => a - b);
+    tracks = used.map((r) => tracks[r] || newTrack());
     layers.forEach((l) => (l.row = used.indexOf(l.row)));
+  }
+  function ensureTracks() {
+    const n = rowCount();
+    while (tracks.length < n) tracks.push(newTrack());
+    tracks.length = n;
   }
 
   // sec = رقم: الخط يمشي مع التشغيل/التسجيل. null: يرجع لمكان المؤشر الثابت
@@ -2496,16 +3205,45 @@ function initBeepMelodyExperiment() {
     playhead.style.left = Math.min(Math.max(0, idle ? cursor : sec), timelineSeconds) * pxPerSec + "px";
   }
 
+  const toolEdit = document.getElementById("beepToolEdit");
+  const toolQuant = document.getElementById("beepToolQuant");
   function updateTools() {
     tools.querySelectorAll("button").forEach((b) => (b.disabled = !selected));
+    // التحرير نغمةً نغمة والضبط على الشبكة للنغمات والإيقاعات فقط، لا للصوت المسجّل
+    if (selected?.kind === "audio") {
+      toolEdit.disabled = true;
+      toolQuant.disabled = true;
+    }
+    if (selected?.kind === "drums") toolQuant.disabled = true; // الإيقاع على الشبكة أصلاً
     const mute = document.getElementById("beepToolMute");
     mute.textContent = selected?.muted ? mute.dataset.unmute : mute.dataset.mute;
   }
 
   function select(l) {
     selected = l;
-    board.querySelectorAll(".beep-clip").forEach((c) => c.classList.toggle("selected", layers[+c.dataset.i] === l));
+    board.querySelectorAll(".beep-clip").forEach((c) => {
+      const on = layers[+c.dataset.i] === l;
+      c.classList.toggle("selected", on);
+      c.setAttribute("aria-pressed", String(on));
+    });
     updateTools();
+  }
+
+  // ذروة الموجة لكل جزء صغير من التسجيل — تُحسب مرة لكل تسجيل وتُرسم بأي تكبير
+  const peaksCache = new WeakMap();
+  function peaksOf(buffer) {
+    let p = peaksCache.get(buffer);
+    if (p) return p;
+    const data = buffer.getChannelData(0);
+    const per = Math.max(1, Math.floor(buffer.sampleRate / 200)); // ٢٠٠ قيمة بالثانية
+    p = new Float32Array(Math.ceil(data.length / per));
+    for (let i = 0; i < p.length; i++) {
+      let m = 0;
+      for (let j = i * per, end = Math.min(data.length, j + per); j < end; j++) m = Math.max(m, Math.abs(data[j]));
+      p[i] = m;
+    }
+    peaksCache.set(buffer, p);
+    return p;
   }
 
   function drawClip(canvas, l, w, h) {
@@ -2514,26 +3252,51 @@ function initBeepMelodyExperiment() {
     canvas.height = Math.round(h * dpr);
     const g = canvas.getContext("2d");
     g.scale(dpr, dpr);
+    g.fillStyle = "rgba(255,255,255,0.92)";
+    if (l.kind === "audio") {
+      const peaks = peaksOf(l.buffer);
+      const top = 12;
+      const mid = top + (h - top) / 2;
+      for (let x = 0; x < w; x++) {
+        const i = Math.floor((l.t0 + x / pxPerSec) * 200);
+        const a = Math.min(1, (peaks[i] || 0) * 1.4) * ((h - top) / 2 - 1);
+        g.fillRect(x, mid - a, 1, Math.max(1, a * 2));
+      }
+      return;
+    }
     const evs = clipEvents(l);
+    if (l.kind === "drums") {
+      const lanesOf = DRUM_KITS[l.kit];
+      const laneH = (h - 12) / lanesOf.length;
+      evs.forEach((ev) => {
+        const lane = lanesOf.indexOf(ev.drum);
+        g.globalAlpha = 0.45 + 0.55 * (ev.velocity / 127);
+        g.fillRect(ev.startBeat * pxPerSec, 12 + lane * laneH + 1, Math.max(2, pxPerSec * 0.06), Math.max(2, laneH - 2));
+      });
+      g.globalAlpha = 1;
+      return;
+    }
     const ms = evs.map((ev) => 69 + 12 * Math.log2(ev.freq / 440));
     const lo = Math.min(...ms);
     const hi = Math.max(...ms);
-    g.fillStyle = "rgba(255,255,255,0.92)";
     evs.forEach((ev, i) => {
       const y = hi === lo ? h / 2 - 1.5 : 12 + (1 - (ms[i] - lo) / (hi - lo)) * (h - 18); // النغمة الأحد أعلى
+      g.globalAlpha = 0.5 + 0.5 * Math.min(1, (ev.velocity || 96) / 110);
       g.fillRect(ev.startBeat * pxPerSec, y, Math.max(2, ev.held * pxPerSec), 3);
     });
+    g.globalAlpha = 1;
   }
 
   const focusLayer = (l) => board.querySelector('[data-i="' + layers.indexOf(l) + '"]')?.focus({ preventScroll: true }); // بلا قفز للصفحة على الجوال
 
-  /* تراجع/إعادة: لقطة سطحية من قائمة الطبقات قبل كل تعديل. مصفوفات النغمات تُشارَك
-     بين اللقطات لأنها لا تتغيّر بعد التسجيل (القص ينشئ نسخاً جديدة). */
+  /* تراجع/إعادة: لقطة من الطبقات والمسارات والسرعة قبل كل تعديل. مصفوفات النغمات
+     تُشارَك بين اللقطات: أي تعديل على نغمات مقطع ينسخ مصفوفته أولاً (لا يعدّل
+     القديمة)، فاللقطات القديمة تبقى سليمة. */
   const HISTORY_MAX = 60;
   let history = [];
   let future = [];
   let clipboard = null;
-  const snapshot = () => layers.map((l) => ({ ...l }));
+  const snapshot = () => ({ layers: layers.map((l) => ({ ...l })), tracks: tracks.map(cloneTrack), bpm, meter });
   function pushHistory(before = snapshot()) {
     history.push(before);
     if (history.length > HISTORY_MAX) history.shift();
@@ -2542,8 +3305,14 @@ function initBeepMelodyExperiment() {
   function restoreFrom(from, to) {
     if (!from.length) return;
     to.push(snapshot());
-    layers = from.pop();
+    const s = from.pop();
+    layers = s.layers;
+    tracks = s.tracks;
+    bpm = s.bpm;
+    meter = s.meter;
+    paintProject();
     selected = null;
+    closeEditor();
     renderLayers();
   }
   const undo = () => restoreFrom(history, future);
@@ -2556,7 +3325,7 @@ function initBeepMelodyExperiment() {
     renderLayers();
   }
 
-  const cloneLayer = (l) => ({ ...l, events: l.events.map((e) => ({ ...e })), lastTap: 0 });
+  const cloneLayer = (l) => ({ ...l, events: l.events?.map((e) => ({ ...e })), lastTap: 0 });
   function copyToClipboard() {
     if (selected) clipboard = cloneLayer(selected);
   }
@@ -2567,6 +3336,7 @@ function initBeepMelodyExperiment() {
   // اللصق عند المؤشر الأبيض (مثل باند لاب: عند الـplayhead)
   function pasteClipboard() {
     if (!clipboard) return;
+    if (layers.length >= MAX_LAYERS) return showToast(recTake.dataset.max);
     pushHistory();
     const c = { ...cloneLayer(clipboard), offset: cursor };
     layers.push(c);
@@ -2588,15 +3358,16 @@ function initBeepMelodyExperiment() {
 
   function copySelected() {
     if (!selected) return;
+    if (layers.length >= MAX_LAYERS) return showToast(recTake.dataset.max);
     pushHistory();
-    const copy = { ...selected, events: selected.events.map((e) => ({ ...e })), offset: selected.offset + layerLen(selected), lastTap: 0 };
+    const copy = { ...cloneLayer(selected), offset: selected.offset + layerLen(selected) };
     layers.splice(layers.indexOf(selected) + 1, 0, copy);
     selected = copy;
     renderLayers();
   }
 
   // قص المقطع المحدد عند المؤشر الأبيض. القص غير مدمّر: نقسم "نافذة" المقطع [t0,t1]
-  // إلى نافذتين على نفس النغمات — فيبقى تطويل الحافة لاحقاً يرجّع كل شي. نغمة تعبر
+  // إلى نافذتين على نفس المحتوى — فيبقى تطويل الحافة لاحقاً يرجّع كل شي. نغمة تعبر
   // نقطة القص تُقصّر يسارها ولا تُكمَل يمينها. ponytail: مثل قص MIDI بسيط
   function splitSelected() {
     const l = selected;
@@ -2605,16 +3376,32 @@ function initBeepMelodyExperiment() {
     const a = { ...l, t1: t };
     const b = { ...l, t0: t, offset: l.offset + (t - l.t0), lastTap: 0 };
     const inside = t > l.t0 + 0.05 && t < l.t1 - 0.05;
-    if (!inside || !clipEvents(a).length || !clipEvents(b).length) return showToast(document.getElementById("beepToolSplit").dataset.cut);
+    if (!inside || !hasContent(a) || !hasContent(b)) return showToast(document.getElementById("beepToolSplit").dataset.cut);
     pushHistory();
     layers.splice(layers.indexOf(l), 1, a, b);
     selected = b;
     renderLayers();
   }
 
+  // ضبط الإيقاع (Quantize): بداية كل نغمة تنتقل لأقرب خط بالشبكة على الجدول نفسه
+  function quantizeSelected() {
+    const l = selected;
+    if (!l) return;
+    if (l.kind !== "notes") return showToast(toolQuant.dataset.audio);
+    const step = gridStep() || beatSec() / 4;
+    pushHistory();
+    l.events = l.events.map((e) => {
+      if (e.startBeat < l.t0 || e.startBeat >= l.t1) return { ...e };
+      const abs = l.offset + e.startBeat - l.t0;
+      return { ...e, startBeat: Math.max(l.t0, Math.round(abs / step) * step - l.offset + l.t0) };
+    });
+    renderLayers();
+    showToast(toolQuant.dataset.done);
+  }
+
   /* تقصير/تطويل المقطع بسحب حافته (بلا قص): الحافة اليمنى تغيّر t1، واليسرى تغيّر
      t0 وتحرّك offset بنفس المقدار فيبقى المحتوى مكانه. غير مدمّر: التطويل يرجّع
-     النغمات المخفية، لحد طول التسجيل الأصلي. */
+     النغمات المخفية، لحد طول التسجيل الأصلي. الحافة تقع على الشبكة. */
   const TRIM_MIN = 0.1;
   function startTrim(e, handle, clip, l, side) {
     if (e.button) return;
@@ -2632,11 +3419,13 @@ function initBeepMelodyExperiment() {
     const move = (ev) => {
       const d = (ev.clientX - x0) / zoomOf() / pxPerSec;
       if (side === "right") {
-        l.t1 = Math.min(l.end, Math.max(l.t0 + TRIM_MIN, Math.round((t1a + d) * 20) / 20));
+        const endAbs = snap(offa + (t1a - t0a) + d);
+        l.t1 = Math.min(l.end, Math.max(l.t0 + TRIM_MIN, endAbs - offa + t0a));
       } else {
         const lowest = Math.max(0, t0a - offa); // لا يتجاوز بداية المحتوى ولا بداية الجدول
-        const nt0 = Math.min(l.t1 - TRIM_MIN, Math.max(lowest, Math.round((t0a + d) * 20) / 20));
-        l.offset = snap(offa + (nt0 - t0a));
+        const startAbs = snap(offa + d);
+        const nt0 = Math.min(l.t1 - TRIM_MIN, Math.max(lowest, t0a + (startAbs - offa)));
+        l.offset = offa + (nt0 - t0a);
         l.t0 = nt0;
       }
       const w = Math.max(8, layerLen(l) * pxPerSec);
@@ -2659,14 +3448,14 @@ function initBeepMelodyExperiment() {
 
   function buildClip(l, i) {
     const clip = document.createElement("div");
-    clip.className = "beep-clip" + (l.muted ? " muted" : "") + (l === selected ? " selected" : "");
+    clip.className = "beep-clip" + (l.muted ? " muted" : "") + (l === selected ? " selected" : "") + (l.kind !== "notes" ? " " + l.kind : "");
     clip.dataset.i = String(i);
-    clip.style.setProperty("--h", String((i * 53 + 150) % 360));
+    clip.style.setProperty("--h", String(l.kind === "drums" ? 28 : l.kind === "audio" ? 200 : (i * 53 + 150) % 360));
     clip.tabIndex = 0;
     clip.setAttribute("role", "button");
     clip.setAttribute("aria-pressed", String(l === selected));
-    clip.title = instrumentLabel(l.instrument);
-    clip.setAttribute("aria-label", recTake.dataset.layer + " " + (i + 1) + " · " + instrumentLabel(l.instrument));
+    clip.title = clipLabel(l);
+    clip.setAttribute("aria-label", recTake.dataset.layer + " " + (i + 1) + " · " + clipLabel(l));
     const w = Math.max(8, layerLen(l) * pxPerSec);
     clip.style.left = l.offset * pxPerSec + "px";
     clip.style.top = l.row * ROW_H + 3 + "px";
@@ -2674,7 +3463,7 @@ function initBeepMelodyExperiment() {
     clip.style.height = ROW_H - 6 + "px";
     const label = document.createElement("span");
     label.className = "beep-clip-label";
-    label.textContent = instrumentLabel(l.instrument).split(" ")[0]; // الرمز فقط: الاسم لا يتسع بمقطع قصير
+    label.textContent = clipIcon(l); // الرمز فقط: الاسم لا يتسع بمقطع قصير
     const canvas = document.createElement("canvas");
     clip.append(canvas, label);
     ["left", "right"].forEach((side) => {
@@ -2700,7 +3489,7 @@ function initBeepMelodyExperiment() {
       const off0 = l.offset;
       const row0 = l.row;
       const before = snapshot(); // للتراجع
-      const maxRow = rowCount(); // آخر خانة = مسار جديد تحت الكل
+      const maxRow = Math.min(rowCount(), MAX_TRACKS - 1); // آخر خانة = مسار جديد تحت الكل
       let moved = false;
       const move = (ev) => {
         l.offset = snap(off0 + (ev.clientX - x0) / zoomOf() / pxPerSec);
@@ -2717,12 +3506,13 @@ function initBeepMelodyExperiment() {
           compactRows();
           pushHistory(before);
         } else {
-          // نقرتان سريعتان بلا سحب = رجوع لبداية الزمن. dblclick الأصلي ما يصلح:
-          // renderLayers تستبدل العنصر بين النقرتين فلا يوصله الحدث
+          // نقرتان سريعتان بلا سحب = افتح محرّر النغمات (مثل باند لاب). dblclick
+          // الأصلي ما يصلح: renderLayers تستبدل العنصر بين النقرتين فلا يوصله الحدث
           const now = performance.now();
-          if (now - (l.lastTap || 0) < 350 && l.offset !== 0) {
-            pushHistory(before);
-            l.offset = 0;
+          if (now - (l.lastTap || 0) < 350) {
+            l.lastTap = 0;
+            renderLayers();
+            return openEditor(l);
           }
           l.lastTap = now;
         }
@@ -2736,13 +3526,13 @@ function initBeepMelodyExperiment() {
 
     clip.addEventListener("focus", () => select(l)); // التنقل بـTab يحدّد الطبقة، فDelete ما يحذف غيرها
     clip.addEventListener("keydown", (e) => {
-      const step = e.shiftKey ? 1 : 0.1;
+      const step = e.shiftKey ? barSec() : gridStep() || 0.1;
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
         pushHistory();
         l.offset = snap(l.offset + (e.key === "ArrowRight" ? 1 : -1) * step);
       } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
         pushHistory();
-        l.row = Math.min(rowCount(), Math.max(0, l.row + (e.key === "ArrowDown" ? 1 : -1)));
+        l.row = Math.min(rowCount(), MAX_TRACKS - 1, Math.max(0, l.row + (e.key === "ArrowDown" ? 1 : -1)));
         compactRows();
       } else if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
@@ -2759,31 +3549,61 @@ function initBeepMelodyExperiment() {
   }
 
   function renderLayers() {
+    ensureTracks();
     recTake.hidden = layers.length === 0;
-    if (!rec) recToggle.textContent = idleLabel();
+    if (!rec) {
+      recToggle.textContent = idleLabel();
+      const total = Math.max(0, ...layers.map(layerEnd));
+      recTime.textContent = layers.length ? clock(total) + " · " + layers.length + " ▤" : "";
+    }
 
     const laneW = board.clientWidth;
-    timelineSeconds = Math.max(6, Math.ceil(Math.max(0, ...layers.map(layerEnd))) + 2); // تسجيلة قصيرة تظهر عريضة
+    const bar = barSec();
+    const total = Math.max(0, ...layers.map(layerEnd));
+    // أربع مازورات على الأقل، ومازورة فاضية بعد الآخر للإسقاط والتسجيل بعده
+    timelineSeconds = Math.max(4 * bar, Math.ceil((total + bar * 0.5) / bar) * bar + bar);
     pxPerSec = laneW > 0 ? laneW / timelineSeconds : 30; // مخفي (عرض صفر): نرسم عند ظهوره
-    timeline.style.setProperty("--px", pxPerSec + "px");
+    lanes.style.setProperty("--beat", pxPerSec * beatSec() + "px");
+    lanes.style.setProperty("--bar", pxPerSec * bar + "px");
     board.style.setProperty("--rowh", ROW_H + "px");
     board.style.height = (rowCount() + 1) * ROW_H + "px"; // + مسار فاضي للإسقاط فيه
 
-    // المسطرة: علامة كل ١/٥/١٠ ثوانٍ حسب الطول
-    const step = timelineSeconds > 40 ? 10 : timelineSeconds > 20 ? 5 : 1;
-    ruler.replaceChildren(
-      ...Array.from({ length: Math.floor(timelineSeconds / step) + 1 }, (_, k) => {
-        const tick = document.createElement("span");
-        tick.className = "beep-tick";
-        tick.style.left = k * step * pxPerSec + "px";
-        tick.textContent = k * step < 60 ? String(k * step) : clock(k * step); // ثوانٍ فقط: "0:01" تزاحم بعضها
-        return tick;
+    // المسطرة: رقم كل مازورة (أو كل ٢ أو ٤ لو ضاقت المسافة)
+    const barPx = pxPerSec * bar;
+    const every = barPx < 18 ? 4 : barPx < 34 ? 2 : 1;
+    const bars = Math.round(timelineSeconds / bar);
+    const ticks = [];
+    for (let k = 0; k < bars; k += every) {
+      const tick = document.createElement("span");
+      tick.className = "beep-tick";
+      tick.style.left = k * barPx + "px";
+      tick.textContent = String(k + 1);
+      ticks.push(tick);
+    }
+    ruler.replaceChildren(...ticks);
+
+    board.replaceChildren(...layers.map(buildClip), ...tracks.flatMap((tr, r) => (tr.auto ? [buildAutoLane(tr, r)] : [])));
+    renderGutter();
+    renderMixer();
+    updateTools();
+    if (!playheadTimer && !rec) setPlayhead(null);
+    if (edLayer) renderEditor();
+    scheduleSave();
+  }
+
+  function renderGutter() {
+    gutter.replaceChildren(
+      ...tracks.map((tr, r) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "beep-gutter-row" + (tr.mute ? " muted" : "") + (tr.solo ? " solo" : "");
+        b.style.height = ROW_H + "px";
+        b.textContent = String(r + 1);
+        b.title = recTake.dataset.track + " " + (r + 1);
+        b.addEventListener("click", () => openStrip(r));
+        return b;
       })
     );
-
-    board.replaceChildren(...layers.map(buildClip));
-    updateTools();
-    if (!playheadTimer) setPlayhead(null);
   }
 
   /* تحريك المؤشر الأبيض بالسحب من أي مكان: اللوحة الفاضية، المسطرة، أو مقبضه
@@ -2816,13 +3636,15 @@ function initBeepMelodyExperiment() {
   const knob = document.createElement("span");
   knob.className = "beep-playhead-knob";
   playhead.append(knob);
-  knob.addEventListener("pointerdown", (e) => scrub(e, knob, timeline));
+  knob.addEventListener("pointerdown", (e) => scrub(e, knob, lanes));
 
   [
     ["beepToolSplit", splitSelected],
     ["beepToolCopy", copySelected],
     ["beepToolMute", toggleMute],
     ["beepToolDelete", deleteSelected],
+    ["beepToolEdit", () => openEditor(selected)],
+    ["beepToolQuant", quantizeSelected],
   ].forEach(([id, fn]) =>
     document.getElementById(id).addEventListener("click", () => {
       fn();
@@ -2834,102 +3656,257 @@ function initBeepMelodyExperiment() {
   let resizeTimer = null;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => layers.length && renderLayers(), 150);
+    resizeTimer = setTimeout(() => {
+      if (layers.length) renderLayers();
+      if (boardMode === "full") scrollToReach();
+    }, 150);
   });
 
-  async function startRec() {
-    if (layers.length >= MAX_LAYERS) return showToast(recTake.dataset.max);
+  /* ===== التسجيل والتشغيل =====
+     التسجيل يبدأ عند الخط الأبيض: الطبقات الموجودة تُعزف من هناك معك، ولو
+     "العدّ قبل التسجيل" مفعّل يسبقه مازورة نقرات. at = وقت الصوت اللي يقابل
+     الخط الأبيض، وt0 نفس اللحظة بساعة performance (أوقات الضغط تُقاس بها). */
+  let liveGraph = null; // سلاسل المسارات بالتشغيل الحي — الخلاط يعدّلها مباشرة
+  function liveTarget() {
+    liveGraph = studioTarget({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true });
+    return liveGraph;
+  }
+  function dropLiveGraph(graph = liveGraph) {
+    if (!graph) return;
+    graph.chains.forEach((c) => {
+      c.pan.disconnect();
+      c.delay.disconnect();
+    });
+    graph.reverb.disconnect();
+    if (graph === liveGraph) liveGraph = null;
+  }
+
+  async function startRec(kind = "notes") {
+    if (layers.length >= MAX_LAYERS || rowCount() >= MAX_TRACKS) return showToast(recTake.dataset.max);
     if (playing) stopPlayback(); // مولّد المقطوعات ما يتزامن مع التسجيل
     await ensureContext();
     if (rec) return; // ضغطتين سريعتين
     stopTake();
-    const base = layers.length === 0;
-    const start = audioCtx.currentTime + 0.1;
-    if (!base) scheduleLayers({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, sounding(), start);
-    // الطبقات القديمة تبدأ بعد ٠٫١ث: زمن التسجيل يتأخر بنفس المقدار عشان يتطابقان
-    rec = { t0: performance.now() + (base ? 0 : 100), open: new Map(), events: [], timer: null, instrument: currentInstrument, base };
-    recToggle.textContent = recToggle.dataset.stop;
-    recToggle.classList.add("recording");
-    recTime.textContent = "0:00";
+    let mic = null;
+    if (kind === "audio") {
+      mic = await openMic();
+      if (!mic || rec) return mic?.getTracks().forEach((t) => t.stop());
+    }
+    const from = cursor;
+    const lead = countIn ? barSec() : 0;
+    const at = audioCtx.currentTime + 0.12 + lead;
+    const list = sounding();
+    if (list.length) scheduleLayers(liveTarget(), list, at, from);
+    transport = { at, from };
+    for (let k = 0; k < meter && lead; k++) metroClick(at - lead + k * beatSec(), k === 0); // العدّ
+    if (metroOn) startMetronome(at, from);
+    rec = {
+      kind,
+      t0: performance.now() + (at - audioCtx.currentTime) * 1000,
+      at,
+      from,
+      open: new Map(),
+      events: [],
+      timer: null,
+      instrument: currentInstrument,
+      trim: kind === "notes" && !lead && !metroOn && !layers.length,
+      mic,
+    };
+    if (mic) startMicCapture(rec);
+    const btn = kind === "audio" ? micBtn : recToggle;
+    btn.textContent = btn.dataset.stop;
+    btn.classList.add("recording");
+    (kind === "audio" ? recToggle : micBtn).disabled = true;
+    recTime.textContent = lead ? "" : "0:00";
     rec.timer = setInterval(() => {
-      const sec = Math.max(0, (performance.now() - rec.t0) / 1000);
-      recTime.textContent = clock(sec);
-      if (layers.length) setPlayhead(sec); // خط التشغيل يمشي فوق الطبقات اللي تُعزف معك
+      const sec = (performance.now() - rec.t0) / 1000;
+      // قبل البداية: عدّ تنازلي بالضربات الباقية
+      recTime.textContent = sec < 0 ? "⏱️ " + Math.ceil(-sec / beatSec() - 0.01) : clock(sec);
+      if (layers.length) setPlayhead(from + Math.max(0, sec)); // الخط يمشي فوق الطبقات اللي تُعزف معك
       if (sec >= MAX_TAKE_SECONDS) stopRec();
     }, 100);
   }
 
   function stopRec() {
-    clearInterval(rec.timer);
-    stopTake(); // أوقف الطبقات اللي كانت تُعزف مع التسجيل
-    [...rec.open.keys()].forEach(noteEnd);
-    const { events, instrument, base } = rec;
+    const r = rec;
+    if (!r) return;
+    clearInterval(r.timer);
+    [...r.open.keys()].forEach(noteEnd); // نغمات ممسوكة أو معلّقة بالدواسة لحظة الإيقاف
     rec = null;
-    recToggle.classList.remove("recording");
+    stopTake();
+    const btn = r.kind === "audio" ? micBtn : recToggle;
+    btn.classList.remove("recording");
+    micBtn.textContent = micBtn.dataset.label;
+    recToggle.disabled = false;
+    micBtn.disabled = false;
+    if (r.kind === "audio") return finishAudioTake(r);
+    // نغمات العدّ (قبل البداية بأكثر من لحظة) ما تُحسب، والقريبة تنضبط على البداية
+    const events = r.events.filter((e) => e.startBeat > -0.15);
+    events.forEach((e) => (e.startBeat = Math.max(0, e.startBeat)));
     if (!events.length) {
-      recToggle.textContent = idleLabel();
-      recTime.textContent = "";
+      renderLayers();
       showToast(recToggle.dataset.empty);
       return;
     }
-    // الطبقة الأولى تبدأ بأول نغمة (نقصّ الصمت)؛ اللاحقة تحافظ على توقيتها مع الأولى
-    const first = base ? Math.min(...events.map((e) => e.startBeat)) : 0;
-    events.forEach((e) => (e.startBeat = Math.max(0, e.startBeat - first)));
+    // أول تسجيل عفوي يبدأ بأول نغمة (نقصّ الصمت)؛ الباقي يحافظ على توقيته مع الجدول
+    const first = r.trim ? Math.min(...events.map((e) => e.startBeat)) : 0;
+    events.forEach((e) => (e.startBeat -= first));
     const end = Math.max(...events.map((e) => e.startBeat + e.durBeats));
     pushHistory();
-    layers.push({ events, instrument, muted: false, end, t0: 0, t1: end, offset: 0, row: rowCount() }); // مسار جديد تحت الباقي
-    recTime.textContent = clock(Math.max(...layers.map(layerEnd)) - 0.4) + " · " + layers.length + " ▤";
+    layers.push({ kind: "notes", events, instrument: r.instrument, muted: false, end, t0: 0, t1: end, offset: r.from, row: rowCount() }); // مسار جديد تحت الباقي
     renderLayers();
   }
 
-  function stopTake() {
+  /* ===== تسجيل صوتك (ميكروفون) كمسار =====
+     نلتقط العيّنات الخام بساعة الصوت نفسها (لا MediaRecorder) عشان التسجيل يقع
+     على الجدول بدقة مع اللي تسمعه. نطرح تأخير السماعة والميكروفون التقريبي:
+     أنت تعزف على ما تسمعه متأخراً، والميكروفون يلتقطك متأخراً. التسجيل نقي بلا
+     إلغاء صدى أو تنقية ضجيج (تشوّه الآلات). يُفضَّل استخدام السماعات. */
+  async function openMic() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showToast(micBtn.dataset.failed);
+      return null;
+    }
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    } catch {
+      showToast(micBtn.dataset.denied);
+      return null;
+    }
+  }
+  function startMicCapture(r) {
+    const source = audioCtx.createMediaStreamSource(r.mic);
+    const proc = audioCtx.createScriptProcessor(4096, 1, 1);
+    const silent = audioCtx.createGain();
+    silent.gain.value = 0;
+    const latency = (audioCtx.baseLatency || 0) + (audioCtx.outputLatency || 0);
+    r.chunks = [];
+    proc.onaudioprocess = (e) => {
+      const data = e.inputBuffer.getChannelData(0);
+      r.chunks.push({ t: audioCtx.currentTime - data.length / audioCtx.sampleRate - latency, data: new Float32Array(data) });
+    };
+    source.connect(proc).connect(silent).connect(audioCtx.destination); // المعالج ما يشتغل بلا وجهة
+    r.capture = { source, proc, silent };
+  }
+  function finishAudioTake(r) {
+    r.capture.proc.onaudioprocess = null;
+    r.capture.source.disconnect();
+    r.capture.proc.disconnect();
+    r.mic.getTracks().forEach((t) => t.stop());
+    const sr = audioCtx.sampleRate;
+    const chunks = r.chunks;
+    if (!chunks.length) return showToast(micBtn.dataset.silent);
+    const all = new Float32Array(chunks.reduce((n, c) => n + c.data.length, 0));
+    let pos = 0;
+    chunks.forEach((c) => {
+      all.set(c.data, pos);
+      pos += c.data.length;
+    });
+    const first = chunks[0].t;
+    const skip = Math.max(0, Math.round((r.at - first) * sr)); // العدّ وما قبله ما يدخل التسجيل
+    const data = all.subarray(skip);
+    addAudioLayer(data, sr, r.from + Math.max(0, first - r.at), micBtn.dataset.label);
+  }
+
+  function addAudioLayer(data, sampleRate, offset, name) {
+    let peak = 0;
+    for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+    if (data.length < sampleRate * 0.1 || peak < 0.003) return showToast(micBtn.dataset.silent);
+    if (layers.length >= MAX_LAYERS || rowCount() >= MAX_TRACKS) return showToast(recTake.dataset.max);
+    const buffer = new AudioBuffer({ length: data.length, numberOfChannels: 1, sampleRate });
+    buffer.copyToChannel(data, 0);
+    pushHistory();
+    layers.push({ kind: "audio", buffer, name, muted: false, end: buffer.duration, t0: 0, t1: buffer.duration, offset, row: rowCount() });
+    renderLayers();
+  }
+
+  // ملف صوتي من الجهاز → مسار جديد عند الخط الأبيض (أحادي، حتى ١٠ دقائق)
+  const audioFile = document.getElementById("beepAudioFile");
+  audioFile?.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      await ensureContext();
+      const decoded = await audioCtx.decodeAudioData(await file.arrayBuffer());
+      const len = Math.min(decoded.length, decoded.sampleRate * 600);
+      const mono = new Float32Array(len);
+      for (let c = 0; c < decoded.numberOfChannels; c++) {
+        const ch = decoded.getChannelData(c);
+        for (let i = 0; i < len; i++) mono[i] += ch[i] / decoded.numberOfChannels;
+      }
+      addAudioLayer(mono, decoded.sampleRate, cursor, "📁 " + file.name.replace(/\.[^.]+$/, ""));
+      playSound("success");
+    } catch {
+      showToast(micBtn.dataset.failed);
+    }
+  });
+
+  function stopTake(soft = false) {
     takeTimers.forEach(clearTimeout);
     takeTimers = [];
     clearInterval(playheadTimer);
     playheadTimer = null;
+    stopMetronome();
+    stopDrumPreview();
     setPlayhead(null);
-    activeOscillators.forEach((osc) => {
-      try {
-        osc.stop();
-      } catch {
-        // خلص وقته أصلاً
-      }
-    });
-    activeOscillators = [];
-    playBox?.querySelectorAll(".down").forEach((k) => k.classList.remove("down"));
+    if (soft) {
+      // نهاية طبيعية: نترك ذيل الرنين والصدى يكمل ثم نفك السلاسل
+      const graph = liveGraph;
+      liveGraph = null;
+      setTimeout(() => dropLiveGraph(graph), 3000);
+    } else {
+      activeOscillators.forEach((osc) => {
+        try {
+          osc.stop();
+        } catch {
+          // خلص وقته أصلاً
+        }
+      });
+      activeOscillators = [];
+      dropLiveGraph();
+    }
+    playBox?.querySelectorAll(".down").forEach((k) => !downCount.has(+k.dataset.midi) && k.classList.remove("down"));
     if (recPlay) recPlay.textContent = recPlay.dataset.play;
   }
 
-  const ctx0 = () => audioCtx.currentTime;
-
   // fromStart=false: يبدأ من المؤشر الأبيض (مثل Space بباند لاب)، وإن كان المؤشر
-  // عند النهاية أو بعدها يبدأ من الصفر. ponytail: نغمة بدأت قبل نقطة البداية ولسا
-  // ترنّ لا تُعزف (لا نقص جزئي للنغمة)
-  async function playTake(fromStart = false) {
+  // عند النهاية أو بعدها يبدأ من الصفر. pos: موضع محدد (إعادة التشغيل بعد كتم مسار).
+  // ponytail: نغمة بدأت قبل نقطة البداية ولسا ترنّ لا تُعزف (لا نقص جزئي للنغمة)
+  async function playTake(fromStart = false, pos = null) {
     const list = sounding();
     if (!list.length) return showToast(recTake.dataset.silent);
     if (playing) stopPlayback();
     await ensureContext();
     stopTake();
     const total = Math.max(...list.map(layerEnd));
-    const from = fromStart || cursor >= total - 0.05 ? 0 : cursor;
+    const from = pos ?? (fromStart || cursor >= total - 0.05 ? 0 : cursor);
     const start = audioCtx.currentTime + 0.1;
-    scheduleLayers({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: true }, list, start, from);
+    transport = { at: start, from };
+    scheduleLayers(liveTarget(), list, start, from);
+    if (metroOn) startMetronome(start, from);
     // المفاتيح تنضغط وتنرفع مع الصوت (نفس شكل العزف الحي)
-    list.forEach((l) =>
+    list.forEach((l) => {
+      if (l.kind !== "notes") return;
       clipEvents(l).forEach((ev) => {
         const at = ev.startBeat + l.offset - from;
         if (at < 0) return;
-        const key = () => playBox?.querySelector(`[data-code="${ev.code}"]`);
+        const key = () => playBox?.querySelector(`[data-midi="${evMidi(ev)}"]`);
         takeTimers.push(
           setTimeout(() => key()?.classList.add("down"), 100 + at * 1000),
-          setTimeout(() => key()?.classList.remove("down"), 100 + (at + ev.held) * 1000)
+          setTimeout(() => !downCount.has(evMidi(ev)) && key()?.classList.remove("down"), 100 + (at + ev.held) * 1000)
         );
-      })
-    );
+      });
+    });
     recPlay.textContent = recPlay.dataset.stop;
-    takeTimers.push(setTimeout(stopTake, 200 + (total - from) * 1000));
-    playheadTimer = setInterval(() => setPlayhead(from + ctx0() - start), 50);
+    takeTimers.push(setTimeout(() => stopTake(true), 200 + (total - from) * 1000));
+    playheadTimer = setInterval(() => setPlayhead(from + audioCtx.currentTime - start), 50);
+  }
+
+  // كتم/منفرد أثناء التشغيل: نكمل من نفس الموضع بالتشكيلة الجديدة
+  function restartTake() {
+    if (!takeTimers.length || rec || !transport) return;
+    playTake(false, Math.max(0, transport.from + audioCtx.currentTime - transport.at));
   }
 
   async function exportTake(btn, make, ext) {
@@ -2938,7 +3915,7 @@ function initBeepMelodyExperiment() {
     btn.disabled = true;
     if (btn.dataset.working) btn.textContent = btn.dataset.working;
     try {
-      downloadBlob(await make(mixPiece()), `hakolah-piano-${Date.now()}.${ext}`);
+      downloadBlob(await make(mixPiece()), `hakolah-studio-${Date.now()}.${ext}`);
     } catch {
       showToast(btn.dataset.failed || "");
     } finally {
@@ -2948,22 +3925,927 @@ function initBeepMelodyExperiment() {
     playClickSound();
   }
 
+  /* ===== MIDI متعدد المسارات (النوع ١) =====
+     مسار للسرعة والميزان، ثم مسار لكل (مسار بالجدول × آلة) ببرنامج General MIDI
+     المقابل لآلته، والإيقاع على القناة ١٠ (قناة الطبول القياسية). أرباع الأصوات
+     تُكتب Pitch Bend قبل النغمة (مدى ±٢ نصف درجة الافتراضي) — دقيق للحن المفرد،
+     وبالأوتار المتزامنة يأخذ الكل ربع الصوت نفسه (حد معروف بـMIDI ١.٠). */
+  const GM_PROGRAM = {
+    piano: 0, epiano: 4, harpsichord: 6, celesta: 8, glockenspiel: 9, musicbox: 10, vibraphone: 11, marimba: 12,
+    xylophone: 13, bell: 14, santoor: 15, organ: 19, accordion: 21, harmonica: 22, melodica: 22, guitar: 24,
+    doublebass: 32, synthbass: 38, violin: 40, cello: 42, harp: 46, strings: 48, choir: 52, trumpet: 56,
+    trombone: 57, horn: 60, sax: 65, oboe: 68, clarinet: 71, flute: 73, recorder: 74, nay: 77, chiptune: 80,
+    synth: 81, banjo: 105, oud: 106, qanun: 107, kalimba: 108, steelpan: 114, custom: 0,
+  };
+  function studioToMidi() {
+    const PPQ = 480;
+    const tick = (sec) => Math.max(0, Math.round(((sec * bpm) / 60) * PPQ));
+    const vlq = (out, value) => {
+      const stack = [value & 0x7f];
+      for (let v = value >> 7; v > 0; v >>= 7) stack.unshift((v & 0x7f) | 0x80);
+      out.push(...stack);
+    };
+    const chunk = (bytes) => [0x4d, 0x54, 0x72, 0x6b, (bytes.length >>> 24) & 0xff, (bytes.length >> 16) & 0xff, (bytes.length >> 8) & 0xff, bytes.length & 0xff, ...bytes];
+    const text = (out, type, str) => {
+      const b = [...str].map((ch) => (ch.charCodeAt(0) < 128 ? ch.charCodeAt(0) : 63));
+      vlq(out, 0);
+      out.push(0xff, type);
+      vlq(out, b.length);
+      out.push(...b);
+    };
+
+    const usPerBeat = Math.round(60000000 / bpm);
+    const conductor = [];
+    text(conductor, 0x03, "Hakolah Studio");
+    vlq(conductor, 0);
+    conductor.push(0xff, 0x51, 0x03, (usPerBeat >> 16) & 0xff, (usPerBeat >> 8) & 0xff, usPerBeat & 0xff);
+    vlq(conductor, 0);
+    conductor.push(0xff, 0x58, 0x04, meter, 2, 24, 8);
+    vlq(conductor, 0);
+    conductor.push(0xff, 0x2f, 0x00);
+
+    const groups = new Map();
+    sounding().forEach((l) => {
+      if (l.kind === "audio") return;
+      const key = l.row + "|" + (l.kind === "drums" ? "drums" : l.instrument);
+      if (!groups.has(key)) groups.set(key, { drums: l.kind === "drums", instrument: l.instrument, row: l.row, events: [] });
+      clipEvents(l).forEach((e) => groups.get(key).events.push({ ...e, abs: l.offset + e.startBeat }));
+    });
+
+    const trackChunks = [];
+    let nextChannel = 0;
+    [...groups.values()]
+      .sort((a, b) => a.row - b.row)
+      .forEach((g) => {
+        let channel = 9;
+        if (!g.drums) {
+          if (nextChannel === 9) nextChannel++;
+          channel = nextChannel % 16;
+          nextChannel++;
+        }
+        const points = [];
+        g.events.forEach((e) => {
+          const note = g.drums ? GM_DRUM[e.drum] : evMidi(e);
+          if (note == null || note < 0 || note > 127) return;
+          const velocity = clamp(Math.round(e.velocity || gainVel(e.gain)), 1, 127);
+          points.push({ t: tick(e.abs), on: true, note, velocity, cents: g.drums ? 0 : evCents(e) });
+          points.push({ t: tick(e.abs + (g.drums ? 0.1 : e.held || e.durBeats)), on: false, note, velocity: 0 });
+        });
+        points.sort((a, b) => a.t - b.t || Number(a.on) - Number(b.on));
+        const bytes = [];
+        text(bytes, 0x03, g.drums ? "Drums" : g.instrument);
+        if (!g.drums) {
+          vlq(bytes, 0);
+          bytes.push(0xc0 | channel, GM_PROGRAM[g.instrument] ?? 0);
+        }
+        let prev = 0;
+        let bend = 0;
+        points.forEach((p) => {
+          if (p.on && p.cents !== bend) {
+            const value = clamp(8192 + Math.round((p.cents / 200) * 8192), 0, 16383);
+            vlq(bytes, p.t - prev);
+            prev = p.t;
+            bytes.push(0xe0 | channel, value & 0x7f, (value >> 7) & 0x7f);
+            bend = p.cents;
+          }
+          vlq(bytes, p.t - prev);
+          prev = p.t;
+          bytes.push((p.on ? 0x90 : 0x80) | channel, p.note, p.velocity);
+        });
+        vlq(bytes, 0);
+        bytes.push(0xff, 0x2f, 0x00);
+        trackChunks.push(chunk(bytes));
+      });
+
+    const ntrks = 1 + trackChunks.length;
+    const header = [0x4d, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, (ntrks >> 8) & 0xff, ntrks & 0xff, (PPQ >> 8) & 0xff, PPQ & 0xff];
+    return new Blob([new Uint8Array(header), new Uint8Array(chunk(conductor)), ...trackChunks.map((c) => new Uint8Array(c))], { type: "audio/midi" });
+  }
+
+  /* ===== الحفظ التلقائي والمشاركة =====
+     المشروع (الطبقات والمسارات والسرعة، والتسجيلات الصوتية نفسها) يُحفظ بالمتصفح
+     (IndexedDB) بعد كل تعديل، ويرجع لما تفتح الصفحة مرة ثانية. رابط المشاركة يضغط
+     المشروع (بلا التسجيلات الصوتية — كبيرة على رابط) بداخل الرابط نفسه بعد #،
+     فما يمر على أي خادم: اللي يفتحه يكمل عليه ويشاركه من جديد. */
+  let saveTimer = null;
+  let loadingProject = true; // لا نحفظ مشروعاً فاضياً فوق المحفوظ قبل ما نقرأه
+  function scheduleSave() {
+    if (loadingProject) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveProject, 700);
+  }
+  function serializeProject(withAudio) {
+    return {
+      v: 1,
+      bpm,
+      meter,
+      tracks: tracks.map(cloneTrack),
+      layers: layers
+        .filter((l) => withAudio || l.kind !== "audio")
+        .map((l) => {
+          const out = { kind: l.kind, instrument: l.instrument, kit: l.kit, rhythm: l.rhythm, name: l.name, muted: l.muted, end: l.end, t0: l.t0, t1: l.t1, offset: l.offset, row: l.row };
+          if (l.kind === "audio") out.audio = { data: l.buffer.getChannelData(0), sampleRate: l.buffer.sampleRate };
+          else out.events = l.events.map(packEvent);
+          return out;
+        }),
+    };
+  }
+  const r3 = (x) => Math.round(x * 1000) / 1000;
+  const packEvent = (e) => (e.drum ? [r3(e.startBeat), e.drum, e.velocity] : [r3(e.startBeat), r3(e.held), r3(e.durBeats), evMidi(e), evCents(e), r3(e.gain)]);
+  function unpackEvent(a) {
+    if (typeof a[1] === "string") return { drum: a[1], startBeat: a[0], held: 0.1, durBeats: 0.3, velocity: a[2], gain: drumGain(a[2]) };
+    return makeNoteEvent(a[3], a[4], a[0], a[1], a[2], a[5]);
+  }
+  function applyProject(p) {
+    if (!p || !Array.isArray(p.layers)) throw new Error("bad project");
+    bpm = clamp(Math.round(p.bpm) || 90, 40, 240);
+    meter = [2, 3, 4].includes(p.meter) ? p.meter : 4;
+    tracks = (p.tracks || []).map((t) => ({ ...newTrack(), ...t, eq: Array.isArray(t.eq) ? t.eq.slice(0, 3) : [0, 0, 0] }));
+    layers = p.layers
+      .filter((l) => (l.kind === "audio" ? l.audio?.data?.length : Array.isArray(l.events)) && (l.kind !== "notes" || INSTRUMENTS[l.instrument]) && (l.kind !== "drums" || DRUM_KITS[l.kit]))
+      .slice(0, MAX_LAYERS)
+      .map((l) => {
+        const out = { ...l };
+        delete out.audio;
+        if (l.kind === "audio") {
+          out.buffer = new AudioBuffer({ length: l.audio.data.length, numberOfChannels: 1, sampleRate: l.audio.sampleRate });
+          out.buffer.copyToChannel(l.audio.data, 0);
+        } else {
+          out.events = l.events.map(unpackEvent);
+        }
+        out.row = clamp(Math.round(l.row) || 0, 0, MAX_TRACKS - 1);
+        return out;
+      });
+    history = [];
+    future = [];
+    selected = null;
+    compactRows();
+    paintProject();
+  }
+  function saveProject() {
+    const action = layers.length ? (st) => st.put(serializeProject(true), "project") : (st) => st.delete("project");
+    sampleStore("readwrite", action).catch(() => {}); // وضع خاص/مساحة ممتلئة: المشروع يبقى بالصفحة فقط
+  }
+
+  const b64url = (bytes) => {
+    let s = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  };
+  const unb64url = (str) => Uint8Array.from(atob(str.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+  async function encodeShare() {
+    const json = new TextEncoder().encode(JSON.stringify(serializeProject(false)));
+    if (!window.CompressionStream) return "u" + b64url(json);
+    const zipped = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer();
+    return "z" + b64url(new Uint8Array(zipped));
+  }
+  async function decodeShare(code) {
+    const bytes = unb64url(code.slice(1));
+    const json =
+      code[0] === "z"
+        ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text()
+        : new TextDecoder().decode(bytes);
+    return JSON.parse(json);
+  }
+
+  const shareBtn = document.getElementById("beepShare");
+  shareBtn?.addEventListener("click", async () => {
+    if (!layers.length) return;
+    const url = location.origin + location.pathname + "#studio=" + (await encodeShare());
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast(layers.some((l) => l.kind === "audio") ? shareBtn.dataset.audio : shareBtn.dataset.copied);
+    } catch {
+      showToast(url);
+    }
+    playSound("copy");
+  });
+
+  /* ===== الخلاط (Mixer) =====
+     شريط لكل مسار من قالب بالصفحة (<template> — النصوص بلغة الصفحة): كتم، منفرد،
+     مستوى، توزيع، ومؤثرات (معادل، صدى مكان، ترديد، ضاغط، أتمتة الصوت). التغيير
+     يُسمع فوراً أثناء التشغيل لأننا نعدّل نفس السلاسل الحية. */
+  const mixer = document.getElementById("beepMixer");
+  const stripsBox = document.getElementById("beepMixStrips");
+  const stripTpl = document.getElementById("beepStripTpl");
+  const openFx = new Set(); // أشرطة مؤثراتها مفتوحة — تبقى مفتوحة بعد إعادة الرسم
+  let autoEdit = -1; // المسار اللي أتمتته قيد التحرير على الجدول
+
+  function liveChain(r) {
+    return liveGraph?.chains[r] || null;
+  }
+  function renderMixer() {
+    if (!stripsBox || !stripTpl) return;
+    stripsBox.replaceChildren(...tracks.map(buildStrip));
+  }
+  function buildStrip(tr, r) {
+    const el = stripTpl.content.firstElementChild.cloneNode(true);
+    el.dataset.row = String(r);
+    el.querySelector(".mix-num").textContent = String(r + 1);
+    el.querySelector(".mix-name").textContent = [...new Set(layers.filter((l) => l.row === r).map(clipIcon))].join(" ");
+    const now = () => audioCtx?.currentTime || 0;
+
+    const toggle = (sel, key) => {
+      const b = el.querySelector(sel);
+      b.classList.toggle("active", tr[key]);
+      b.setAttribute("aria-pressed", String(tr[key]));
+      b.addEventListener("click", () => {
+        tr[key] = !tr[key];
+        playClickSound();
+        renderLayers();
+        restartTake();
+      });
+    };
+    toggle(".mix-mute", "mute");
+    toggle(".mix-solo", "solo");
+
+    const slider = (input, get, set, apply) => {
+      input.value = get();
+      input.addEventListener("input", () => {
+        set(Number(input.value));
+        apply(liveChain(r));
+        scheduleSave();
+      });
+    };
+    slider(el.querySelector(".mix-vol"), () => tr.vol, (v) => (tr.vol = v), (c) => c?.vol.gain.setTargetAtTime(tr.vol, now(), 0.03));
+    slider(el.querySelector(".mix-pan"), () => tr.pan, (v) => (tr.pan = v), (c) => c?.pan.pan.setTargetAtTime(tr.pan, now(), 0.03));
+    el.querySelectorAll(".mix-eq").forEach((input) => {
+      const band = Number(input.dataset.band);
+      slider(input, () => tr.eq[band], (v) => (tr.eq[band] = v), (c) => c?.eq[band].gain.setTargetAtTime(tr.eq[band], now(), 0.03));
+    });
+    slider(el.querySelector(".mix-reverb"), () => tr.reverb, (v) => (tr.reverb = v), (c) => c?.rev.gain.setTargetAtTime(tr.reverb, now(), 0.03));
+    slider(el.querySelector(".mix-echo"), () => tr.echo, (v) => (tr.echo = v), (c) => c?.echo.gain.setTargetAtTime(tr.echo * 0.6, now(), 0.03));
+
+    const comp = el.querySelector(".mix-comp");
+    comp.classList.toggle("active", tr.comp);
+    comp.setAttribute("aria-pressed", String(tr.comp));
+    comp.addEventListener("click", () => {
+      tr.comp = !tr.comp;
+      comp.classList.toggle("active", tr.comp);
+      comp.setAttribute("aria-pressed", String(tr.comp));
+      const c = liveChain(r);
+      if (c) {
+        c.compIn.gain.setValueAtTime(tr.comp ? 1 : 0, now());
+        c.bypass.gain.setValueAtTime(tr.comp ? 0 : 1, now());
+      }
+      scheduleSave();
+      playClickSound();
+    });
+
+    const autoBtn = el.querySelector(".mix-auto");
+    const editing = autoEdit === r;
+    autoBtn.classList.toggle("active", editing);
+    autoBtn.setAttribute("aria-pressed", String(editing));
+    if (editing) autoBtn.textContent = autoBtn.dataset.on;
+    autoBtn.addEventListener("click", () => {
+      autoEdit = editing ? -1 : r;
+      if (!tr.auto) tr.auto = [];
+      playClickSound();
+      renderLayers();
+      if (autoEdit === r) timeline.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+    const autoClear = el.querySelector(".mix-auto-clear");
+    autoClear.disabled = !tr.auto;
+    autoClear.addEventListener("click", () => {
+      tr.auto = null;
+      if (autoEdit === r) autoEdit = -1;
+      playClickSound();
+      renderLayers();
+    });
+
+    const fx = el.querySelector(".mix-fx");
+    fx.open = openFx.has(r);
+    fx.addEventListener("toggle", () => (fx.open ? openFx.add(r) : openFx.delete(r)));
+    return el;
+  }
+
+  // النقر على رقم المسار: يفتح الخلاط ويوصل لشريطه
+  function openStrip(r) {
+    if (!mixer) return;
+    mixer.open = true;
+    const strip = stripsBox.querySelector(`[data-row="${r}"]`);
+    if (!strip) return;
+    strip.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    strip.classList.remove("flash");
+    void strip.offsetWidth; // يعيد تشغيل الوميض لو ضُغط مرتين
+    strip.classList.add("flash");
+    playClickSound();
+  }
+
+  /* ===== أتمتة الصوت على الجدول =====
+     خط فوق المسار: ١ = المستوى كما هو، فوقه أعلى وتحته أخفض (حتى الصمت). وأنت
+     تحرّر: انقر مكاناً فارغاً لإضافة نقطة، واسحب النقطة لتحريكها، وانقرها مرتين
+     لحذفها. خارج التحرير الخط للعرض فقط ولا يعيق سحب المقاطع. */
+  const AUTO_MAX = 1.5;
+  let lastAutoTap = null;
+  function buildAutoLane(tr, r) {
+    const NS = "http://www.w3.org/2000/svg";
+    const w = board.clientWidth || timelineSeconds * pxPerSec;
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "beep-auto" + (autoEdit === r ? " editing" : ""));
+    svg.setAttribute("width", String(w));
+    svg.setAttribute("height", String(ROW_H));
+    svg.style.top = r * ROW_H + "px";
+    const yOf = (v) => 5 + (1 - v / AUTO_MAX) * (ROW_H - 10);
+    const pts = tr.auto;
+    const line = [[0, autoValueAt(pts, 0)], ...pts.map((p) => [p.t * pxPerSec, p.v]), [w, autoValueAt(pts, timelineSeconds)]];
+    const poly = document.createElementNS(NS, "polyline");
+    poly.setAttribute("points", line.map(([x, v]) => x + "," + yOf(v)).join(" "));
+    svg.append(poly);
+    pts.forEach((p, i) => {
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", String(p.t * pxPerSec));
+      c.setAttribute("cy", String(yOf(p.v)));
+      c.setAttribute("r", autoEdit === r ? "7" : "4"); // أكبر وقت التحرير: أسهل للإصبع
+      c.dataset.i = String(i);
+      svg.append(c);
+    });
+    if (autoEdit !== r) return svg;
+
+    svg.addEventListener("pointerdown", (e) => {
+      if (e.button) return;
+      e.preventDefault();
+      e.stopPropagation();
+      svg.setPointerCapture(e.pointerId);
+      const before = snapshot();
+      tr.auto = tr.auto.map((p) => ({ ...p })); // اللقطة القديمة تبقى سليمة
+      const at = (ev) => {
+        const rect = svg.getBoundingClientRect();
+        const z = zoomOf();
+        const t = snap((ev.clientX - rect.left) / z / pxPerSec);
+        const v = clamp(Math.round((1 - ((ev.clientY - rect.top) / z - 5) / (ROW_H - 10)) * AUTO_MAX * 100) / 100, 0, AUTO_MAX);
+        return { t, v };
+      };
+      let point;
+      const hit = e.target.closest("circle");
+      if (hit) {
+        point = tr.auto[+hit.dataset.i];
+        // نقرتان على نفس النقطة = حذفها
+        const now = performance.now();
+        if (lastAutoTap && lastAutoTap.r === r && Math.abs(lastAutoTap.t - point.t) < 1e-6 && now - lastAutoTap.time < 400) {
+          tr.auto.splice(tr.auto.indexOf(point), 1);
+          lastAutoTap = null;
+          pushHistory(before);
+          return renderLayers();
+        }
+        lastAutoTap = { r, t: point.t, time: now };
+      } else {
+        point = at(e);
+        tr.auto.push(point);
+        lastAutoTap = null;
+      }
+      const move = (ev) => {
+        Object.assign(point, at(ev));
+        tr.auto.sort((a, b) => a.t - b.t);
+        const i = tr.auto.indexOf(point);
+        const c = svg.querySelector(`circle[data-i="${hit ? hit.dataset.i : ""}"]`);
+        if (c) {
+          c.setAttribute("cx", String(point.t * pxPerSec));
+          c.setAttribute("cy", String(yOf(point.v)));
+        }
+        const l2 = [[0, autoValueAt(tr.auto, 0)], ...tr.auto.map((p) => [p.t * pxPerSec, p.v]), [w, autoValueAt(tr.auto, timelineSeconds)]];
+        poly.setAttribute("points", l2.map(([x, v]) => x + "," + yOf(v)).join(" "));
+        if (i >= 0 && lastAutoTap) lastAutoTap.t = point.t;
+      };
+      const up = () => {
+        svg.removeEventListener("pointermove", move);
+        svg.removeEventListener("pointerup", up);
+        svg.removeEventListener("pointercancel", up);
+        tr.auto.sort((a, b) => a.t - b.t);
+        // نقطتان بنفس اللحظة تكسران الخط — نبقي الأحدث
+        tr.auto = tr.auto.filter((p, i, a) => i === a.length - 1 || Math.abs(a[i + 1].t - p.t) > 1e-6 || p === point);
+        pushHistory(before);
+        renderLayers();
+      };
+      svg.addEventListener("pointermove", move);
+      svg.addEventListener("pointerup", up);
+      svg.addEventListener("pointercancel", up);
+    });
+    return svg;
+  }
+
+  /* ===== محرّر النغمات (Piano Roll) والضربات (Drum Machine) =====
+     يفتح بالنقر المزدوج على مقطع أو زر "حرّر". الصفوف = النغمات (الأحد فوق)، أو
+     أصوات الطقم للإيقاع؛ والأعمدة = الزمن بخطوط الضربات والمازورات نفسها على
+     الجدول. انقر مكاناً فارغاً لإضافة نغمة (واسحب لتطويلها)، واسحب النغمة
+     لتحريكها، وحافتها اليمنى لتغيير طولها، وانقرها مرتين لحذفها. */
+  const editor = document.getElementById("beepEditor");
+  const edGrid = document.getElementById("beepEditorGrid");
+  const edScroll = document.getElementById("beepEditorScroll");
+  const edTitle = document.getElementById("beepEditorTitle");
+  const edVel = document.getElementById("beepEdVel");
+  const ED_KEYS_W = 46;
+  let edLayer = null;
+  let edNote = null; // النغمة المحددة داخل المحرّر (كائن داخل edLayer.events)
+  let edPx = 80;
+  let edRowsCache = [];
+  let lastNoteTap = null;
+
+  function openEditor(l) {
+    if (!l || !editor) return;
+    if (l.kind === "audio") return showToast(toolEdit.dataset.audio);
+    edLayer = l;
+    edNote = null;
+    editor.hidden = false;
+    edPx = clamp((edScroll.clientWidth - ED_KEYS_W) / Math.max(barSec(), layerLen(l) + barSec() * 0.5), 30, 260);
+    renderEditor();
+    // نبدأ عند أول نغمة (المقطع قد يكون طويلاً والنغمات فوق/تحت)
+    const first = edGrid.querySelector(".ed-note");
+    if (first) edScroll.scrollTop = Math.max(0, first.offsetTop - edScroll.clientHeight / 2);
+    editor.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  function closeEditor() {
+    edLayer = null;
+    edNote = null;
+    if (editor) editor.hidden = true;
+  }
+
+  function edRows(l) {
+    if (l.kind === "drums") return DRUM_KITS[l.kit].map((d) => ({ drum: d }));
+    const ms = l.events.map(evMidi);
+    let lo = Math.min(60, ...ms) - 4;
+    let hi = Math.max(72, ...ms) + 4;
+    lo = clamp(lo, 21, 108);
+    hi = clamp(hi, 21, 108);
+    const rows = [];
+    for (let m = hi; m >= lo; m--) rows.push({ midi: m });
+    return rows;
+  }
+  const edRowH = (l) => (l.kind === "drums" ? 30 : 16);
+
+  function renderEditor() {
+    if (!edLayer) return;
+    if (!layers.includes(edLayer)) return closeEditor();
+    const l = edLayer;
+    const drums = l.kind === "drums";
+    const rows = (edRowsCache = edRows(l));
+    const rowH = edRowH(l);
+    const span = Math.max(layerLen(l) + barSec(), 2 * barSec()); // ثوانٍ معروضة من بداية المقطع
+    const w = span * edPx;
+    edGrid.style.width = ED_KEYS_W + w + "px";
+    edGrid.style.height = rows.length * rowH + "px";
+    edGrid.classList.toggle("drums", drums);
+    edTitle.textContent = clipLabel(l) + " · " + recTake.dataset.track + " " + (l.row + 1);
+    const out = [];
+    // الصفوف وأسماؤها (العمود الأيسر ثابت عند التمرير الأفقي)
+    rows.forEach((row, i) => {
+      const black = !drums && [1, 3, 6, 8, 10].includes(pcOf(row.midi));
+      const label = drums ? editor.dataset[row.drum] : noteName(row.midi, noteStyle) + (pcOf(row.midi) === 0 ? octaveOf(row.midi) : "");
+      out.push(`<div class="ed-row${black ? " black" : ""}" style="top:${i * rowH}px;height:${rowH}px"></div>`);
+      // الأسماء بالتدفق العادي (لا absolute) عشان sticky يثبّتها يسار عند التمرير الأفقي
+      out.push(`<div class="ed-key${black ? " black" : ""}" style="height:${rowH}px" data-row="${i}">${label}</div>`);
+    });
+    // خطوط الشبكة على الضربات الحقيقية بالجدول (المقطع قد يبدأ بنص ضربة)
+    const beat = beatSec();
+    const step = gridStep() || beat / 4;
+    const firstAbs = l.offset;
+    for (let k = Math.ceil(firstAbs / step - 1e-6); k * step <= firstAbs + span; k++) {
+      const abs = k * step;
+      const x = ED_KEYS_W + (abs - firstAbs) * edPx;
+      const onBar = Math.abs(abs / barSec() - Math.round(abs / barSec())) < 1e-6;
+      const onBeat = Math.abs(abs / beat - Math.round(abs / beat)) < 1e-6;
+      out.push(`<div class="ed-line${onBar ? " bar" : onBeat ? " beat" : ""}" style="left:${x}px"></div>`);
+    }
+    // نهاية المقطع: بعدها مساحة لإضافة نغمات تطوّل المقطع
+    out.push(`<div class="ed-end" style="left:${ED_KEYS_W + layerLen(l) * edPx}px"></div>`);
+    l.events.forEach((ev, i) => {
+      if (ev.startBeat < l.t0 - 1e-6 || ev.startBeat >= l.t0 + span) return;
+      const r = drums ? rows.findIndex((x) => x.drum === ev.drum) : rows.findIndex((x) => x.midi === evMidi(ev));
+      if (r < 0) return;
+      const x = ED_KEYS_W + (ev.startBeat - l.t0) * edPx;
+      const width = drums ? Math.max(8, (beat / 4) * edPx * 0.85) : Math.max(6, ev.held * edPx);
+      const outside = ev.startBeat >= l.t1;
+      const alpha = 0.45 + 0.55 * ((ev.velocity || 96) / 127);
+      out.push(`<div class="ed-note${ev === edNote ? " sel" : ""}${outside ? " outside" : ""}" data-i="${i}" style="left:${x}px;top:${r * rowH + 1}px;width:${width}px;height:${rowH - 2}px;--a:${alpha.toFixed(2)}"></div>`);
+    });
+    edGrid.innerHTML = out.join("");
+    edVel.disabled = !edNote;
+    document.getElementById("beepEdDelete").disabled = !edNote;
+    if (edNote) edVel.value = edNote.velocity || 96;
+  }
+
+  // يسمع النغمة/الضربة لما تُضاف أو تتحرك — بنفس آلة المقطع
+  async function audition(l, ev) {
+    await ensureContext();
+    const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: false };
+    if (l.kind === "drums") return playDrum(target, ev.drum, audioCtx.currentTime + 0.01, ev.gain);
+    const saved = currentInstrument;
+    currentInstrument = l.instrument;
+    playNote(target, ev.degree, audioCtx.currentTime + 0.01, 0.35, ev.gain, 0, 0, ev.freq);
+    currentInstrument = saved;
+  }
+
+  // نسخة جديدة من مصفوفة النغمات قبل أي تعديل (اللقطات القديمة للتراجع تبقى سليمة)
+  function edCow() {
+    const i = edNote ? edLayer.events.indexOf(edNote) : -1;
+    edLayer.events = edLayer.events.map((e) => ({ ...e }));
+    edNote = i >= 0 ? edLayer.events[i] : null;
+  }
+  // آخر نقطة يصلها المحتوى: نطوّل المقطع لو أُضيفت نغمة بعد نهايته
+  function edGrow(l) {
+    const last = Math.max(...l.events.map((e) => e.startBeat + (l.kind === "drums" ? 0.1 : e.held)));
+    if (last > l.t1) l.t1 = last;
+    l.end = Math.max(l.end, l.t1, ...l.events.map((e) => e.startBeat + e.durBeats));
+  }
+  function edDeleteNote() {
+    if (!edNote || !edLayer) return;
+    pushHistory();
+    edCow();
+    edLayer.events.splice(edLayer.events.indexOf(edNote), 1);
+    edNote = null;
+    // مقطع بلا نغمات ما له معنى: نحذفه كله
+    if (!edLayer.events.some((e) => e.startBeat >= edLayer.t0 && e.startBeat < edLayer.t1)) {
+      layers.splice(layers.indexOf(edLayer), 1);
+      if (selected === edLayer) selected = null;
+      compactRows();
+      closeEditor();
+    }
+    renderLayers();
+  }
+
+  if (editor) {
+    edGrid.addEventListener("pointerdown", (e) => {
+      if (e.button || !edLayer) return;
+      const l = edLayer;
+      const drums = l.kind === "drums";
+      const rowH = edRowH(l);
+      const rect = edGrid.getBoundingClientRect();
+      const z = rect.width / edGrid.offsetWidth || 1;
+      const xOf = (ev) => (ev.clientX - rect.left) / z - ED_KEYS_W;
+      const rowOf = (ev) => clamp(Math.floor((ev.clientY - rect.top) / z / rowH), 0, edRowsCache.length - 1);
+      const keyCell = e.target.closest(".ed-key");
+      if (keyCell) {
+        // عمود الأسماء: يسمّعك النغمة فقط
+        const row = edRowsCache[+keyCell.dataset.row];
+        const ev = drums ? { drum: row.drum, gain: drumGain(DRUM_VEL[row.drum]) } : makeNoteEvent(row.midi, centsOf(row.midi), 0, 0.3, 0.3, velGain(96));
+        return audition(l, ev);
+      }
+      e.preventDefault();
+      edGrid.setPointerCapture(e.pointerId);
+      const step = gridStep() || beatSec() / 4;
+      const snapRel = (rel) => {
+        const abs = l.offset + rel;
+        const s = gridStep() ? Math.round(abs / step) * step : Math.round(abs * 100) / 100;
+        return Math.max(l.t0, s - l.offset + l.t0);
+      };
+      const before = snapshot();
+      edCow();
+      const noteEl = e.target.closest(".ed-note");
+      let mode;
+      let created = false;
+      if (noteEl) {
+        edNote = edLayer.events[+noteEl.dataset.i];
+        const r = noteEl.getBoundingClientRect();
+        mode = !drums && e.clientX > r.right - 8 * z ? "resize" : "move";
+        // نقرتان على نفس النغمة = حذفها
+        const now = performance.now();
+        if (lastNoteTap && lastNoteTap.i === +noteEl.dataset.i && now - lastNoteTap.time < 380) {
+          lastNoteTap = null;
+          history.push(before);
+          future = [];
+          edLayer.events.splice(edLayer.events.indexOf(edNote), 1);
+          edNote = null;
+          return renderLayers();
+        }
+        lastNoteTap = { i: +noteEl.dataset.i, time: now };
+      } else {
+        const row = edRowsCache[rowOf(e)];
+        const s = snapRel(xOf(e) / edPx - (gridStep() ? step / 2 : 0));
+        edNote = drums
+          ? { drum: row.drum, startBeat: s, held: 0.1, durBeats: 0.3, velocity: DRUM_VEL[row.drum], gain: drumGain(DRUM_VEL[row.drum]) }
+          : { ...makeNoteEvent(row.midi, centsOf(row.midi), s, step, step + 0.4, velGain(96)), velocity: 96 };
+        edLayer.events.push(edNote);
+        created = true;
+        mode = drums ? "move" : "resize";
+        lastNoteTap = null;
+        audition(l, edNote);
+      }
+      const ev0 = { ...edNote };
+      const x0 = xOf(e);
+      const row0 = rowOf(e);
+      let changed = created;
+      const el = () => edGrid.querySelector(".ed-note.sel") || edGrid.querySelector(`.ed-note[data-i="${edLayer.events.indexOf(edNote)}"]`);
+      renderEditor();
+      const move = (ev) => {
+        const dx = (xOf(ev) - x0) / edPx;
+        if (mode === "resize") {
+          const end = snapRel(ev0.startBeat - l.t0 + ev0.held + dx);
+          edNote.held = Math.max(gridStep() ? step : 0.05, end - edNote.startBeat);
+          edNote.durBeats = edNote.held + 0.4;
+        } else {
+          edNote.startBeat = snapRel(ev0.startBeat - l.t0 + dx);
+          const row = edRowsCache[clamp(edRowsCache.findIndex((x) => (drums ? x.drum === ev0.drum : x.midi === evMidi(ev0))) + rowOf(ev) - row0, 0, edRowsCache.length - 1)];
+          if (drums && row.drum !== edNote.drum) {
+            edNote.drum = row.drum;
+            audition(l, edNote);
+          } else if (!drums && row.midi !== evMidi(edNote)) {
+            Object.assign(edNote, makeNoteEvent(row.midi, centsOf(row.midi), edNote.startBeat, edNote.held, edNote.durBeats, edNote.gain), { velocity: edNote.velocity });
+            audition(l, edNote);
+          }
+        }
+        changed = changed || edNote.startBeat !== ev0.startBeat || edNote.held !== ev0.held || evMidi(edNote) !== evMidi(ev0) || edNote.drum !== ev0.drum;
+        const node = el();
+        if (node) {
+          const r = drums ? edRowsCache.findIndex((x) => x.drum === edNote.drum) : edRowsCache.findIndex((x) => x.midi === evMidi(edNote));
+          node.style.left = ED_KEYS_W + (edNote.startBeat - l.t0) * edPx + "px";
+          node.style.top = r * rowH + 1 + "px";
+          if (!drums) node.style.width = Math.max(6, edNote.held * edPx) + "px";
+        }
+      };
+      const up = () => {
+        edGrid.removeEventListener("pointermove", move);
+        edGrid.removeEventListener("pointerup", up);
+        edGrid.removeEventListener("pointercancel", up);
+        if (changed) {
+          history.push(before);
+          if (history.length > HISTORY_MAX) history.shift();
+          future = [];
+          edGrow(edLayer);
+        }
+        renderLayers();
+      };
+      edGrid.addEventListener("pointermove", move);
+      edGrid.addEventListener("pointerup", up);
+      edGrid.addEventListener("pointercancel", up);
+    });
+
+    let velBefore = null;
+    edVel.addEventListener("pointerdown", () => {
+      if (!edNote) return;
+      velBefore = snapshot();
+      edCow();
+    });
+    edVel.addEventListener("input", () => {
+      if (!edNote) return;
+      if (!velBefore) {
+        velBefore = snapshot(); // تغيير بالكيبورد (أسهم) بلا ضغطة ماوس
+        edCow();
+      }
+      edNote.velocity = Number(edVel.value);
+      edNote.gain = edLayer.kind === "drums" ? drumGain(edNote.velocity) : velGain(edNote.velocity);
+      const node = edGrid.querySelector(".ed-note.sel");
+      if (node) node.style.setProperty("--a", (0.45 + 0.55 * (edNote.velocity / 127)).toFixed(2));
+    });
+    edVel.addEventListener("change", () => {
+      if (!velBefore) return;
+      pushHistory(velBefore);
+      velBefore = null;
+      audition(edLayer, edNote);
+      renderLayers();
+    });
+    document.getElementById("beepEdDelete").addEventListener("click", () => {
+      edDeleteNote();
+      playClickSound();
+    });
+    document.getElementById("beepEdClose").addEventListener("click", () => {
+      closeEditor();
+      playClickSound();
+    });
+    document.getElementById("beepEdZoomIn").addEventListener("click", () => {
+      edPx = Math.min(400, edPx * 1.3);
+      renderEditor();
+    });
+    document.getElementById("beepEdZoomOut").addEventListener("click", () => {
+      edPx = Math.max(20, edPx / 1.3);
+      renderEditor();
+    });
+  }
+
+  /* ===== الإيقاعات: اختيار النمط، التجربة، والإضافة كمسار ===== */
+  const drumsBox = document.getElementById("beepDrums");
+  const drumsBtn = document.getElementById("beepAddDrums");
+  const drumPreviewBtn = document.getElementById("beepDrumPreview");
+  let rhythm = RHYTHMS[store.get("beepRhythm")] ? store.get("beepRhythm") : "maqsum";
+  let drumBars = 4;
+  let previewTimer = null;
+  function stopDrumPreview() {
+    if (!previewTimer) return;
+    clearInterval(previewTimer);
+    previewTimer = null;
+    if (drumPreviewBtn) drumPreviewBtn.textContent = drumPreviewBtn.dataset.play;
+  }
+  async function startDrumPreview() {
+    if (playing) stopPlayback();
+    await ensureContext();
+    stopTake();
+    const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: true };
+    let barStart = audioCtx.currentTime + 0.08;
+    let { events, end } = rhythmEvents(rhythm, 1);
+    let current = rhythm;
+    const tick = () => {
+      // تغيير النمط أثناء التجربة: المازورة الجاية بالنمط الجديد
+      if (current !== rhythm) ({ events, end } = rhythmEvents((current = rhythm), 1));
+      while (barStart < audioCtx.currentTime + 0.3) {
+        events.forEach((e) => playDrum(target, e.drum, barStart + e.startBeat, e.gain));
+        barStart += end;
+      }
+    };
+    tick();
+    previewTimer = setInterval(tick, 50);
+    drumPreviewBtn.textContent = drumPreviewBtn.dataset.stop;
+  }
+  if (drumsBox) {
+    drumsBtn.addEventListener("click", () => {
+      drumsBox.hidden = !drumsBox.hidden;
+      drumsBtn.classList.toggle("active", !drumsBox.hidden);
+      drumsBtn.setAttribute("aria-expanded", String(!drumsBox.hidden));
+      if (drumsBox.hidden) stopDrumPreview();
+      playClickSound();
+    });
+    chipGroup(drumsBox, "rhythm", rhythm, (v) => {
+      rhythm = v;
+      store.set("beepRhythm", v);
+    });
+    chipGroup(drumsBox, "bars", drumBars, (v) => (drumBars = Number(v)));
+    drumPreviewBtn.addEventListener("click", () => {
+      if (previewTimer) stopDrumPreview();
+      else startDrumPreview();
+    });
+    document.getElementById("beepDrumAdd").addEventListener("click", () => {
+      if (layers.length >= MAX_LAYERS || rowCount() >= MAX_TRACKS) return showToast(recTake.dataset.max);
+      stopDrumPreview();
+      const { events, end } = rhythmEvents(rhythm, drumBars);
+      pushHistory();
+      // يقع على أقرب بداية مازورة للخط الأبيض
+      const offset = Math.round(cursor / barSec()) * barSec();
+      const l = { kind: "drums", kit: RHYTHMS[rhythm].kit, rhythm, events, muted: false, end, t0: 0, t1: end, offset, row: rowCount() };
+      layers.push(l);
+      selected = l;
+      renderLayers();
+      playSound("success");
+      timeline.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }
+
+  /* ===== الإعدادات: المقام، اللوحة، الميزان، الشبكة، العدّ ===== */
+  // مجموعة أزرار تختار واحداً منها (data-<attr>)، والمختار يتلوّن
+  function chipGroup(boxOrId, attr, current, onPick) {
+    const box = typeof boxOrId === "string" ? document.getElementById(boxOrId) : boxOrId;
+    if (!box) return () => {};
+    const chips = box.querySelectorAll(`[data-${attr}]`);
+    const mark = (v) =>
+      chips.forEach((c) => {
+        c.classList.toggle("active", c.dataset[attr] === String(v));
+        c.setAttribute("aria-pressed", String(c.dataset[attr] === String(v)));
+      });
+    mark(current);
+    chips.forEach((c) =>
+      c.addEventListener("click", () => {
+        onPick(c.dataset[attr]);
+        mark(c.dataset[attr]);
+        playClickSound();
+      })
+    );
+    return mark;
+  }
+
+  const maqamNote = document.getElementById("beepMaqamNote");
+  function renderMaqamNote() {
+    if (!maqamNote) return;
+    const m = MAQAMS[maqam];
+    if (!m.scale) {
+      maqamNote.textContent = maqamNote.dataset.none;
+      return;
+    }
+    const chip = document.querySelector(`#beepMaqam [data-maqam="${maqam}"]`);
+    const names = m.scale.map((pc) => noteName(pc + 60, noteStyle));
+    maqamNote.textContent = chip.textContent.trim() + ": ⁦" + names.join(" · ") + "⁩" + (Object.keys(m.cents).length ? " — " + maqamNote.dataset.quarter : "");
+  }
+  chipGroup("beepMaqam", "maqam", maqam, (v) => {
+    maqam = v;
+    store.set("beepMaqam", v);
+    renderPlayKeys();
+    renderMaqamNote();
+    if (edLayer) renderEditor();
+  });
+  renderMaqamNote();
+  chipGroup("beepBoardSize", "board", boardMode, (v) => {
+    boardMode = v;
+    store.set("beepBoard", v);
+    renderPlayKeys();
+  });
+  const markMeter = chipGroup("beepMeter", "meter", meter, (v) => {
+    pushHistory();
+    meter = Number(v);
+    renderLayers();
+  });
+  chipGroup("beepGrid", "grid", gridDiv, (v) => {
+    gridDiv = Number(v);
+    store.set("beepGrid", v);
+    if (edLayer) renderEditor();
+  });
+  const countBtn = document.getElementById("beepCountIn");
+  const paintCount = () => {
+    countBtn?.classList.toggle("active", countIn);
+    countBtn?.setAttribute("aria-pressed", String(countIn));
+  };
+  paintCount();
+  countBtn?.addEventListener("click", () => {
+    countIn = !countIn;
+    store.set("beepCountIn", countIn ? "1" : "0");
+    paintCount();
+    playClickSound();
+  });
+  chipGroup("beepMaster", "master", masterPreset, (v) => {
+    masterPreset = v;
+    store.set("beepMaster", v);
+    if (liveMaster) applyMaster(liveMaster, v, audioCtx);
+  });
+
+  /* ===== السرعة (BPM) ===== */
+  const tempoInput = document.getElementById("beepTempo");
+  function paintProject() {
+    if (tempoInput) tempoInput.value = String(bpm);
+    markMeter(meter);
+  }
+  function setTempo(next) {
+    next = clamp(Math.round(Number(next)) || bpm, 40, 240);
+    if (next === bpm) return paintProject();
+    if (takeTimers.length) stopTake();
+    if (layers.length) pushHistory();
+    const r = bpm / next;
+    layers.forEach((l) => {
+      if (l.kind !== "audio") {
+        l.events = l.events.map((e) => ({ ...e, startBeat: e.startBeat * r, held: e.held * r, durBeats: e.durBeats * r }));
+        l.t0 *= r;
+        l.t1 *= r;
+        l.end *= r;
+      }
+      l.offset *= r;
+    });
+    tracks.forEach((t) => t.auto && (t.auto = t.auto.map((p) => ({ t: p.t * r, v: p.v }))));
+    cursor *= r;
+    bpm = next;
+    paintProject();
+    renderLayers();
+  }
+  if (tempoInput) {
+    tempoInput.addEventListener("change", () => setTempo(tempoInput.value));
+    tempoInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        tempoInput.blur(); // change يطبّق القيمة، والكيبورد يرجع للعزف
+      }
+    });
+    document.getElementById("beepTempoDown").addEventListener("click", () => setTempo(bpm - 1));
+    document.getElementById("beepTempoUp").addEventListener("click", () => setTempo(bpm + 1));
+    paintProject();
+  }
+
+  /* ===== "أضف إلى الاستوديو": المقطوعة المؤلّفة تصير مسارين (لحن + مرافقة) =====
+     الاستوديو فاضي؟ ياخذ سرعة المقطوعة وميزانها فتقع على الشبكة كما هي. وإلا
+     تُكتب بسرعة المشروع الحالية (نفس الضربات) عند أقرب مازورة للخط الأبيض. */
+  const toStudioBtn = document.getElementById("beepToStudio");
+  toStudioBtn?.addEventListener("click", () => {
+    const piece = ensurePiece();
+    if (playing) stopPlayback();
+    if (layers.length + 2 > MAX_LAYERS || rowCount() + 2 > MAX_TRACKS) return showToast(recTake.dataset.max);
+    pushHistory();
+    if (!layers.length) {
+      bpm = clamp(piece.meta.bpm, 40, 240);
+      meter = piece.meta.meter;
+      paintProject();
+    }
+    const sec = beatSec();
+    const start = Math.round(cursor / barSec()) * barSec();
+    const parts = { melody: [], accomp: [] };
+    piece.events.forEach((ev) => {
+      const midi = Math.round(69 + 12 * Math.log2((NOTES[ev.degree] * 2 ** octaveShift) / 440));
+      parts[ev.part === "melody" ? "melody" : "accomp"].push(makeNoteEvent(midi, 0, ev.startBeat * sec, ev.durBeats * sec, ev.durBeats * sec + 0.4, ev.gain));
+    });
+    Object.values(parts).forEach((events) => {
+      if (!events.length) return;
+      const end = Math.max(...events.map((e) => e.startBeat + e.durBeats));
+      layers.push({ kind: "notes", events, instrument: currentInstrument, muted: false, end, t0: 0, t1: end, offset: start, row: rowCount() });
+    });
+    showPane("panePlay");
+    renderLayers();
+    showToast(toStudioBtn.dataset.done);
+    playSound("success");
+  });
+
   if (recToggle) {
     recToggle.addEventListener("click", () => {
       if (rec) stopRec();
-      else startRec();
+      else startRec("notes");
+      playClickSound();
+    });
+    micBtn?.addEventListener("click", () => {
+      if (rec) stopRec();
+      else startRec("audio");
       playClickSound();
     });
     recPlay.addEventListener("click", () => (takeTimers.length ? stopTake() : playTake()));
     document.getElementById("beepRecWav").addEventListener("click", (e) => exportTake(e.currentTarget, renderPieceToWav, "wav"));
     document.getElementById("beepRecMp3").addEventListener("click", (e) => exportTake(e.currentTarget, renderPieceToMp3, "mp3"));
-    document.getElementById("beepRecMidi").addEventListener("click", (e) => exportTake(e.currentTarget, async (p) => pieceToMidi(p), "mid"));
+    document.getElementById("beepRecMidi").addEventListener("click", (e) => exportTake(e.currentTarget, async () => studioToMidi(), "mid"));
     document.getElementById("beepRecClear").addEventListener("click", () => {
       stopTake();
       pushHistory();
       layers = [];
       selected = null;
-      recTime.textContent = "";
+      autoEdit = -1;
+      closeEditor();
       renderLayers();
       playClickSound();
     });
@@ -2971,8 +4853,9 @@ function initBeepMelodyExperiment() {
 
   /* ===== اختصارات لوحة المفاتيح (على خريطة باند لاب ستوديو) =====
      Space تشغيل/إيقاف من الخط الأبيض · Shift+Space من البداية · R تسجيل · Esc إيقاف ·
-     S قص · Delete حذف · Ctrl+C/X/V نسخ/قص/لصق · Ctrl+D تكرار · Shift+M كتم ·
-     Ctrl+Z تراجع · Enter/Home/End تنقّل المؤشر · Ctrl+/ قائمة الاختصارات.
+     S قص · Q ضبط الإيقاع · C المترونوم · Delete حذف · Ctrl+C/X/V نسخ/قص/لصق ·
+     Ctrl+D تكرار · Shift+M كتم · Ctrl+Z تراجع · Enter/Home/End تنقّل المؤشر ·
+     Ctrl+/ قائمة الاختصارات · Shift ممسوكاً = الدواسة.
      تعارض واحد: S نغمة بيانو أيضاً، فتقصّ فقط لما تكون طبقة محددة (وضع التحرير)؛
      Esc يلغي التحديد فيرجع S نغمة. مفاتيح البيانو الباقية لا تُلمس. */
   const shortcutsBox = document.getElementById("beepShortcuts");
@@ -2999,16 +4882,23 @@ function initBeepMelodyExperiment() {
       if (rec && mod) return;
       // بلا طبقات: Space وHome وEnter تبقى للصفحة (تمرير)، مو للمحرّر
       const hasLayers = layers.length > 0 || rec;
+      const plain = !mod && !e.shiftKey && !e.altKey;
       if (code === "Space" && hasLayers) {
         if (rec) stopRec();
         else if (takeTimers.length) stopTake();
         else playTake(e.shiftKey);
-      } else if (code === "KeyR" && !mod && !e.shiftKey && !e.altKey) {
-        recToggle.click();
+      } else if (code === "KeyR" && plain) {
+        if (rec) stopRec();
+        else startRec("notes");
+      } else if (code === "KeyC" && plain) {
+        toggleMetro();
       } else if (code === "Escape") {
         if (rec) stopRec();
         stopTake();
-        select(null);
+        if (edNote) {
+          edNote = null;
+          renderEditor();
+        } else select(null);
       } else if (code === "Enter" && !onButton && layers.length) {
         cursor = 0;
         setPlayhead(null);
@@ -3028,14 +4918,18 @@ function initBeepMelodyExperiment() {
         else copySelected();
       } else if (mod && code === "KeyV" && clipboard) {
         pasteClipboard();
+      } else if ((code === "Delete" || code === "Backspace") && edNote && edLayer) {
+        edDeleteNote(); // نغمة محددة بالمحرّر تُحذف قبل المقطع كله
       } else if ((code === "Delete" || code === "Backspace") && selected) {
         deleteSelected();
-      } else if (code === "KeyS" && !mod && !e.shiftKey && selected) {
+      } else if (code === "KeyS" && plain && selected) {
         splitSelected();
+      } else if (code === "KeyQ" && plain && selected) {
+        quantizeSelected();
       } else if (code === "KeyM" && e.shiftKey && !mod && selected) {
         toggleMute();
       } else if ((code === "ArrowLeft" || code === "ArrowRight") && !e.target.closest(".beep-clip") && layers.length) {
-        cursor = snap(cursor + (code === "ArrowRight" ? 1 : -1) * (e.shiftKey ? 1 : 0.1));
+        cursor = snap(cursor + (code === "ArrowRight" ? 1 : -1) * (e.shiftKey ? barSec() : gridStep() || 0.1));
         setPlayhead(null);
       } else {
         handled = false;
@@ -3045,25 +4939,25 @@ function initBeepMelodyExperiment() {
   }
 
   function shiftOctave(step) {
-    playOctave = clamp(playOctave + step, 2, 6);
+    playOctave = clamp(playOctave + step, 1, 7);
     renderPlayKeys();
     playClickSound();
   }
 
   if (playBox) {
     renderPlayKeys();
-    noteNameToggle?.addEventListener("click", renderPlayKeys);
+    noteNameToggle?.addEventListener("click", () => {
+      renderPlayKeys();
+      renderMaqamNote();
+      if (edLayer) renderEditor();
+    });
     const labelChips = document.querySelectorAll("#beepPlayLabels [data-labels]");
     const markLabels = () => labelChips.forEach((c) => c.classList.toggle("active", c.dataset.labels === labelMode));
     markLabels();
     labelChips.forEach((chip) =>
       chip.addEventListener("click", () => {
         labelMode = chip.dataset.labels;
-        try {
-          localStorage.setItem("beepLabels", labelMode);
-        } catch {
-          // لا شيء
-        }
+        store.set("beepLabels", labelMode);
         markLabels();
         renderPlayKeys();
         playClickSound();
@@ -3091,9 +4985,15 @@ function initBeepMelodyExperiment() {
       if (e.keyCode >= 65 && e.keyCode <= 90) return "Key" + String.fromCharCode(e.keyCode);
       return { 186: "Semicolon", 59: "Semicolon", 222: "Quote" }[e.keyCode] || "";
     };
+    const typing = (e) => e.target.closest("input, textarea, select, [contenteditable]");
     document.addEventListener("keydown", (e) => {
+      // Shift ممسوك = دواسة الاستدامة (حتى مع حرف: Shift+A تعزف A بالدواسة)
+      if (e.key === "Shift" && !e.repeat && !typing(e) && !document.getElementById("panePlay").hidden) {
+        pedalKey = true;
+        return paintPedal();
+      }
       if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return; // defaultPrevented: اختصار محرّر أخذ المفتاح
-      if (e.target.closest("input, textarea, select, [contenteditable]")) return;
+      if (typing(e)) return;
       // البيانو للتبويب "اعزف" فقط — بغيره (تأليف/تعلّم) الحروف ما تعزف نغمات مفاجئة
       if (document.getElementById("panePlay").hidden) return;
       const code = physicalCode(e);
@@ -3104,25 +5004,70 @@ function initBeepMelodyExperiment() {
         keyOn(code);
       }
     });
-    document.addEventListener("keyup", (e) => keyOff(physicalCode(e)));
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Shift" && pedalKey) {
+        pedalKey = false;
+        releasePedal();
+      }
+      keyOff(physicalCode(e));
+    });
     // الصفحة فقدت التركيز والمفتاح ممسوك: ما بيوصلنا keyup، نسكّت الكل
-    window.addEventListener("blur", () => [...held.keys()].forEach(keyOff));
+    window.addEventListener("blur", () => {
+      [...held.keys()].forEach(keyOff);
+      if (pedalKey) {
+        pedalKey = false;
+        releasePedal();
+      }
+    });
 
-    // اللمس بالجوال: كل إصبع مفتاح مستقل
+    /* اللمس والماوس: كل إصبع مفتاح مستقل، والقوة من موضع الضغطة على المفتاح —
+       أعلاه هادئ وأسفله قوي (نفس فكرة GarageBand) */
     playBox.addEventListener("pointerdown", (e) => {
-      const key = e.target.closest("[data-code]");
+      const key = e.target.closest("[data-midi]");
       if (!key) return;
       e.preventDefault();
       key.releasePointerCapture?.(e.pointerId);
-      keyOn(key.dataset.code);
+      const r = key.getBoundingClientRect();
+      const velocity = Math.round(38 + clamp((e.clientY - r.top) / (r.height || 1), 0, 1) * 89);
+      noteOn("p:" + key.dataset.midi, Number(key.dataset.midi), velocity);
     });
     ["pointerup", "pointerleave", "pointercancel"].forEach((type) =>
-      playBox.addEventListener(type, (e) => {
-        const key = e.target.closest("[data-code]");
-        if (key) keyOff(key.dataset.code);
-      }, true)
+      playBox.addEventListener(
+        type,
+        (e) => {
+          const key = e.target.closest("[data-midi]");
+          if (key) noteOff("p:" + key.dataset.midi);
+        },
+        true
+      )
     );
   }
+
+  /* ===== فتح المشروع: رابط مشارَك (#studio=) أولاً، وإلا آخر مشروع محفوظ ===== */
+  (async () => {
+    try {
+      const shared = location.hash.startsWith("#studio=") ? location.hash.slice(8) : "";
+      if (shared) {
+        applyProject(await decodeShare(shared));
+        // نشيل المشروع من العنوان: تحديث الصفحة بعد التعديل يفتح المحفوظ لا الأصل
+        window.history.replaceState(null, "", location.pathname + location.search);
+        showPane("panePlay");
+        renderLayers();
+        showToast(recTake.dataset.shared);
+      } else {
+        const saved = await sampleStore("readonly", (st) => st.get("project"));
+        if (saved?.layers?.length && !layers.length) {
+          applyProject(saved);
+          renderLayers();
+          showToast(recTake.dataset.restored);
+        }
+      }
+    } catch {
+      // رابط تالف أو تخزين محجوب — نبدأ مشروعاً فاضياً
+    } finally {
+      loadingProject = false;
+    }
+  })();
 
   function stopPlayback() {
     stopRequested = true;

@@ -126,7 +126,7 @@ pageScript: "sounds"
     <div class="beep-play">
       <details class="beep-help">
         <summary>⌨️ طريقة العزف وأسماء المفاتيح</summary>
-        <p class="beep-param-note">الصف الأوسط <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> للمفاتيح البيضاء، والصف الذي فوقه <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> للسوداء، و<kbd>Z</kbd> / <kbd>X</kbd> لتغيير الأوكتاف. تعمل أيضاً بلوحة مفاتيح موصولة بالجوال، أو بلمس المفاتيح مباشرة. اختصارات التسجيل: <kbd>R</kbd> بدء/إيقاف، و<kbd>Space</kbd> تشغيل/إيقاف بعد أول تسجيل (تظهر القائمة الكاملة معه).</p>
+        <p class="beep-param-note">الصف الأوسط <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> للمفاتيح البيضاء، والصف الذي فوقه <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> للسوداء، و<kbd>Z</kbd> / <kbd>X</kbd> لتغيير الأوكتاف، وأمسك <kbd>Shift</kbd> للدواسة. تعمل أيضاً بلوحة مفاتيح موصولة بالجوال، أو بكيبورد MIDI حقيقي، أو بلمس المفاتيح مباشرة: اضغط أعلى المفتاح لنغمة هادئة وأسفله لنغمة قوية. اختصارات التسجيل: <kbd>R</kbd> بدء/إيقاف، و<kbd>Space</kbd> تشغيل/إيقاف بعد أول تسجيل (تظهر القائمة الكاملة معه).</p>
         <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="ما يُكتب على المفاتيح">
           <button type="button" class="filter-chip active" data-labels="keys">⌨️ أحرف الكيبورد</button>
           <button type="button" class="filter-chip" data-labels="letters">C D E</button>
@@ -141,31 +141,189 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepOctUp" aria-label="أوكتاف أعلى">X ⬆️</button>
         <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="ملء الشاشة">⛶</button>
       </div>
-      <div class="beep-play-keys" id="beepPlayKeys"></div>
-      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="طبقة" data-max="الحد الأقصى ٨ طبقات" data-silent="كل الطبقات مكتومة">
+      <div class="beep-quickbar">
+        <button type="button" class="filter-chip" id="beepPedal" aria-pressed="false" title="دواسة الاستدامة: النغمات تستمر بعد رفع إصبعك (أو أمسك Shift)">🦶 <span class="qb-text">الدواسة</span></button>
+        <button type="button" class="filter-chip" id="beepMetro" aria-pressed="false" title="المترونوم: نقرات على الضربات أثناء التسجيل والتشغيل (C)">⏱️ <span class="qb-text">المترونوم</span></button>
+        <div class="beep-tempo" role="group" aria-label="السرعة" dir="ltr">
+          <button type="button" class="filter-chip" id="beepTempoDown" aria-label="أبطأ">−</button>
+          <label class="beep-tempo-value"><input type="number" id="beepTempo" min="40" max="240" step="1" value="90" inputmode="numeric" aria-label="السرعة بالنبضة في الدقيقة" /><span dir="ltr">BPM</span></label>
+          <button type="button" class="filter-chip" id="beepTempoUp" aria-label="أسرع">+</button>
+        </div>
+        <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 وصّل MIDI" data-on="🎹 " data-none="لم يُعثر على كيبورد MIDI — وصّله بالجهاز ثم اضغط مرة أخرى." data-denied="لم يُسمح باستخدام MIDI.">🎹 <span class="qb-text">وصّل MIDI</span></button>
+      </div>
+      <details class="beep-help beep-settings" id="beepSettings">
+        <summary>⚙️ المقام والميزان واللوحة</summary>
+        <div class="beep-setting">
+          <span class="beep-setting-label">🕌 المقام</span>
+          <div class="instrument-picker" id="beepMaqam" role="group" aria-label="المقام">
+            <button type="button" class="filter-chip" data-maqam="none">غربي</button>
+            <button type="button" class="filter-chip" data-maqam="rast">راست</button>
+            <button type="button" class="filter-chip" data-maqam="bayati">بياتي</button>
+            <button type="button" class="filter-chip" data-maqam="sikah">سيكاه</button>
+            <button type="button" class="filter-chip" data-maqam="saba">صبا</button>
+            <button type="button" class="filter-chip" data-maqam="hijaz">حجاز</button>
+            <button type="button" class="filter-chip" data-maqam="nahawand">نهاوند</button>
+            <button type="button" class="filter-chip" data-maqam="kurd">كرد</button>
+            <button type="button" class="filter-chip" data-maqam="ajam">عجم</button>
+          </div>
+        </div>
+        <p class="beep-param-note" id="beepMaqamNote" data-none="السلّم الغربي المعتاد. اختر مقاماً لتعزف بأرباع الأصوات: المفاتيح خارج المقام تبهت، ونقطة صغيرة تعلّم القرار." data-quarter="½♭ = نصف بيمول (ربع صوت)، يُعزف بالمفتاح الأبيض نفسه."></p>
+        <div class="beep-setting">
+          <span class="beep-setting-label">🎹 اللوحة</span>
+          <div class="instrument-picker" id="beepBoardSize" role="group" aria-label="حجم اللوحة">
+            <button type="button" class="filter-chip" data-board="compact">مختصرة</button>
+            <button type="button" class="filter-chip" data-board="full">كاملة ٨٨ مفتاحاً</button>
+          </div>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">🎼 الميزان</span>
+          <div class="instrument-picker" id="beepMeter" role="group" aria-label="الميزان">
+            <button type="button" class="filter-chip" data-meter="2" dir="ltr">2/4</button>
+            <button type="button" class="filter-chip" data-meter="3" dir="ltr">3/4</button>
+            <button type="button" class="filter-chip" data-meter="4" dir="ltr">4/4</button>
+          </div>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">🧲 الشبكة</span>
+          <div class="instrument-picker" id="beepGrid" role="group" aria-label="الشبكة">
+            <button type="button" class="filter-chip" data-grid="0">حرّة</button>
+            <button type="button" class="filter-chip" data-grid="4" dir="ltr">1/4</button>
+            <button type="button" class="filter-chip" data-grid="8" dir="ltr">1/8</button>
+            <button type="button" class="filter-chip" data-grid="16" dir="ltr">1/16</button>
+          </div>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">⏱️ قبل التسجيل</span>
+          <div class="instrument-picker">
+            <button type="button" class="filter-chip" id="beepCountIn" aria-pressed="false">عُدّ مازورة</button>
+          </div>
+        </div>
+      </details>
+      <div class="beep-keys-wrap" id="beepKeysWrap">
+        <div class="beep-play-keys" id="beepPlayKeys"></div>
+      </div>
+      <div class="beep-add-row">
+        <button type="button" class="filter-chip" id="beepAddDrums" aria-expanded="false" aria-controls="beepDrums">🥁 إيقاع</button>
+        <button type="button" class="filter-chip" id="beepMicRec" data-label="🎤 سجّل صوتك" data-stop="⏹ أوقف" data-denied="لم يُسمح باستخدام الميكروفون." data-failed="تعذّر تسجيل الصوت أو قراءته." data-silent="لم يُلتقط أي صوت.">🎤 سجّل صوتك</button>
+        <label class="filter-chip" for="beepAudioFile">📁 ملف صوتي</label>
+        <input type="file" id="beepAudioFile" accept="audio/*" hidden />
+      </div>
+      <div class="beep-drums" id="beepDrums" hidden>
+        <p class="beep-setting-label">🪘 عربية</p>
+        <div class="instrument-picker" role="group" aria-label="إيقاعات عربية">
+          <button type="button" class="filter-chip" data-rhythm="maqsum">مقسوم</button>
+          <button type="button" class="filter-chip" data-rhythm="baladi">بلدي</button>
+          <button type="button" class="filter-chip" data-rhythm="saidi">صعيدي</button>
+          <button type="button" class="filter-chip" data-rhythm="malfuf">ملفوف</button>
+          <button type="button" class="filter-chip" data-rhythm="ayyub">أيوب</button>
+          <button type="button" class="filter-chip" data-rhythm="samai"><span>سماعي ثقيل</span> <span dir="ltr">10/8</span></button>
+        </div>
+        <p class="beep-setting-label">🥁 غربية</p>
+        <div class="instrument-picker" role="group" aria-label="إيقاعات غربية">
+          <button type="button" class="filter-chip" data-rhythm="rock">روك</button>
+          <button type="button" class="filter-chip" data-rhythm="pop">بوب</button>
+          <button type="button" class="filter-chip" data-rhythm="hiphop">هيب هوب</button>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">الطول</span>
+          <div class="instrument-picker" role="group" aria-label="عدد المازورات">
+            <button type="button" class="filter-chip" data-bars="2">٢ مازورة</button>
+            <button type="button" class="filter-chip" data-bars="4">٤ مازورات</button>
+            <button type="button" class="filter-chip" data-bars="8">٨ مازورات</button>
+          </div>
+        </div>
+        <div class="instrument-picker">
+          <button type="button" class="filter-chip" id="beepDrumPreview" data-play="▶️ جرّب" data-stop="⏹ أوقف">▶️ جرّب</button>
+          <button type="button" class="filter-chip" id="beepDrumAdd">➕ أضفه مساراً</button>
+        </div>
+        <p class="beep-param-note">يُضاف عند الخط الأبيض بسرعة المشروع، وتقدر تعدّل ضرباته بزر «حرّر».</p>
+      </div>
+      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="طبقة" data-track="مسار" data-max="وصلت الحد الأقصى: ٦٤ مقطعاً و١٦ مساراً" data-silent="كل الطبقات مكتومة" data-restored="🔄 استُعيد مشروعك الأخير" data-shared="🔗 فُتح المشروع المشارَك — عدّل عليه وشاركه من جديد">
         <div class="beep-clip-tools" id="beepClipTools">
           <button type="button" class="filter-chip" id="beepToolSplit" disabled data-cut="اختر مقطعاً، ثم ضع الخط الأبيض داخله بالنقر على المسطرة، ثم اضغط قصّ.">✂️ قصّ</button>
           <button type="button" class="filter-chip" id="beepToolCopy" disabled>⧉ نسخ</button>
           <button type="button" class="filter-chip" id="beepToolMute" disabled data-mute="🔇 كتم" data-unmute="🔊 إلغاء الكتم">🔇 كتم</button>
+          <button type="button" class="filter-chip" id="beepToolEdit" disabled data-audio="الصوت المسجّل لا يُحرَّر نغمةً نغمة — قصّه أو اسحب حافته.">✏️ حرّر</button>
+          <button type="button" class="filter-chip" id="beepToolQuant" disabled data-done="🧲 ضُبطت النغمات على الشبكة" data-audio="الضبط على الشبكة لمقاطع النغمات فقط.">🧲 اضبط الإيقاع</button>
           <button type="button" class="filter-chip" id="beepToolDelete" disabled>🗑️ حذف</button>
         </div>
         <div class="beep-timeline" id="beepTimeline">
-          <div class="beep-ruler" id="beepRuler" title="المسطرة: انقر لوضع نقطة القص"></div>
-          <div class="beep-board" id="beepBoard"></div>
-          <div class="beep-playhead" id="beepPlayhead" hidden></div>
+          <div class="beep-gutter" id="beepGutter"></div>
+          <div class="beep-lanes" id="beepLanes">
+            <div class="beep-ruler" id="beepRuler" title="المسطرة بالمازورات: انقر لوضع الخط الأبيض"></div>
+            <div class="beep-board" id="beepBoard"></div>
+            <div class="beep-playhead" id="beepPlayhead" hidden></div>
+          </div>
         </div>
-        <p class="beep-param-note" id="beepTimelineHint">↔️↕️ اسحب أي طبقة بحرية: يميناً ويساراً في الزمن، وإلى أعلى وأسفل بين المسارات (أنزلها تحت آخر مسار لتبدأ مساراً جديداً). اسحب حافة الطبقة (اليمنى أو اليسرى) لتقصيرها أو تطويلها بدون قصّ: لا يُمسح شي، والتطويل يرجّع النغمات المخفية. لوضع الخط الأبيض انقر أو اسحب على المسطرة أو على أي مكان فارغ، أو امسك دائرته العلوية؛ ثم حدّد طبقة واضغط «قصّ» ليقصّها عنده. مفتاح Delete يحذفها، والأسهم تحرّكها، والنقر المزدوج يعيدها إلى بداية الزمن. الطبقات كلها تُعزف معاً مهما كان مسارها.</p>
+        <div class="beep-editor" id="beepEditor" hidden data-doum="دُم" data-tak="تك" data-ka="كا" data-riq="رق" data-kick="جهير" data-snare="سنير" data-hat="هاي هات" data-clap="تصفيق">
+          <div class="beep-editor-bar">
+            <strong id="beepEditorTitle"></strong>
+            <button type="button" class="filter-chip" id="beepEdZoomOut" aria-label="تصغير">➖</button>
+            <button type="button" class="filter-chip" id="beepEdZoomIn" aria-label="تكبير">➕</button>
+            <label class="beep-ed-vel"><span>💪 القوة</span><input type="range" id="beepEdVel" min="1" max="127" step="1" value="96" disabled /></label>
+            <button type="button" class="filter-chip" id="beepEdDelete" disabled>🗑️ احذف النغمة</button>
+            <button type="button" class="filter-chip" id="beepEdClose">✓ تم</button>
+          </div>
+          <div class="beep-editor-scroll" id="beepEditorScroll">
+            <div class="beep-editor-grid" id="beepEditorGrid"></div>
+          </div>
+          <p class="beep-param-note">انقر مكاناً فارغاً لإضافة نغمة (واسحب لتطويلها)، واسحب النغمة لتحريكها أو حافتها اليمنى لتغيير طولها، وانقرها مرتين لحذفها. النقر على اسم النغمة يسمّعها.</p>
+        </div>
+        <p class="beep-param-note" id="beepTimelineHint">↔️↕️ اسحب أي طبقة بحرية: يميناً ويساراً في الزمن (على الشبكة)، وإلى أعلى وأسفل بين المسارات (أنزلها تحت آخر مسار لتبدأ مساراً جديداً). اسحب حافة الطبقة لتقصيرها أو تطويلها بدون قصّ: لا يُمسح شيء، والتطويل يرجّع المخفي. لوضع الخط الأبيض انقر أو اسحب على المسطرة أو على أي مكان فارغ؛ عنده يبدأ التسجيل ويُقصّ المقطع المحدد. انقر الطبقة مرتين لتحرير نغماتها، ورقم المسار يفتح خلاطه.</p>
+        <details class="beep-help beep-mixer" id="beepMixer">
+          <summary>🎚️ الخلاط والمؤثرات والماستر</summary>
+          <div class="beep-mix-strips" id="beepMixStrips"></div>
+          <div class="beep-setting beep-master">
+            <span class="beep-setting-label">🎛️ الماستر</span>
+            <div class="instrument-picker" id="beepMaster" role="group" aria-label="الماستر">
+              <button type="button" class="filter-chip" data-master="none">بلا</button>
+              <button type="button" class="filter-chip" data-master="warm">دافئ</button>
+              <button type="button" class="filter-chip" data-master="balanced">متوازن</button>
+              <button type="button" class="filter-chip" data-master="loud">قوي</button>
+            </div>
+          </div>
+          <p class="beep-param-note">الماستر يلمّع المزيج كله (معادل ومحدِّد) في التشغيل والتحميل.</p>
+        </details>
+        <template id="beepStripTpl">
+          <div class="mix-strip">
+            <div class="mix-head">
+              <span class="mix-num"></span>
+              <span class="mix-name"></span>
+              <button type="button" class="filter-chip mix-mute" aria-pressed="false" title="كتم المسار">🔇</button>
+              <button type="button" class="filter-chip mix-solo" aria-pressed="false" title="منفرد: اسمع هذا المسار وحده">🎧</button>
+            </div>
+            <label class="mix-row"><span>🔊 المستوى</span><input type="range" class="mix-vol" min="0" max="1.5" step="0.01" /></label>
+            <label class="mix-row"><span>↔️ يسار / يمين</span><input type="range" class="mix-pan" min="-1" max="1" step="0.05" /></label>
+            <details class="mix-fx">
+              <summary>✨ المؤثرات والأتمتة</summary>
+              <label class="mix-row"><span>جهير</span><input type="range" class="mix-eq" data-band="0" min="-12" max="12" step="1" /></label>
+              <label class="mix-row"><span>وسط</span><input type="range" class="mix-eq" data-band="1" min="-12" max="12" step="1" /></label>
+              <label class="mix-row"><span>حدّة</span><input type="range" class="mix-eq" data-band="2" min="-12" max="12" step="1" /></label>
+              <label class="mix-row"><span>🏛️ صدى المكان</span><input type="range" class="mix-reverb" min="0" max="1" step="0.01" /></label>
+              <label class="mix-row"><span>🔁 ترديد</span><input type="range" class="mix-echo" min="0" max="1" step="0.01" /></label>
+              <div class="instrument-picker">
+                <button type="button" class="filter-chip mix-comp" aria-pressed="false">🗜️ ضاغط</button>
+                <button type="button" class="filter-chip mix-auto" aria-pressed="false" data-on="✓ أنهِ رسم الأتمتة">📈 ارسم أتمتة الصوت</button>
+                <button type="button" class="filter-chip mix-auto-clear">↺ امسح الأتمتة</button>
+              </div>
+              <p class="beep-param-note">الأتمتة خط فوق المسار يرفع الصوت ويخفضه مع الزمن: انقر لإضافة نقطة، واسحبها، وانقرها مرتين لحذفها.</p>
+            </details>
+          </div>
+        </template>
         <details class="beep-shortcuts" id="beepShortcuts">
           <summary>⌨️ اختصارات لوحة المفاتيح <span dir="ltr">(Ctrl+/)</span></summary>
           <ul class="beep-shortcut-list">
             <li><span class="beep-key-combo" dir="ltr"><kbd>Space</kbd></span><span>تشغيل من الخط الأبيض / إيقاف</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd> + <kbd>Space</kbd></span><span>تشغيل من البداية</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>R</kbd></span><span>بدء / إيقاف التسجيل</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd></span><span>أمسكه أثناء العزف = دواسة الاستدامة</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>C</kbd></span><span>تشغيل / إيقاف المترونوم</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Esc</kbd></span><span>إيقاف كل شيء وإلغاء التحديد (للعودة إلى عزف الحروف)</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Enter</kbd> · <kbd>Home</kbd> · <kbd>End</kbd></span><span>نقل الخط الأبيض إلى البداية · البداية · النهاية</span></li>
-            <li><span class="beep-key-combo" dir="ltr"><kbd>← →</kbd></span><span>تحريك الطبقة المركّزة (أو الخط الأبيض إن لم تكن طبقة مركّزة)، ومع Shift ثانية كاملة؛ ↑ ↓ بين المسارات</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>← →</kbd></span><span>تحريك الطبقة المركّزة (أو الخط الأبيض) خطوة على الشبكة، ومع Shift مازورة كاملة؛ ↑ ↓ بين المسارات</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>S</kbd></span><span>قصّ الطبقة المحددة عند الخط الأبيض — يعمل فقط أثناء تحديد طبقة، وبدونها تعزف S نغمة بيانو</span></li>
-            <li><span class="beep-key-combo" dir="ltr"><kbd>Delete</kbd> · <kbd>Backspace</kbd></span><span>حذف الطبقة</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Q</kbd></span><span>ضبط نغمات الطبقة المحددة على الشبكة</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Delete</kbd> · <kbd>Backspace</kbd></span><span>حذف النغمة المحددة بالمحرّر، أو الطبقة</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>C</kbd> · <kbd>X</kbd> · <kbd>V</kbd></span><span>نسخ · قصّ · لصق عند الخط الأبيض</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>D</kbd></span><span>تكرار الطبقة</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd> + <kbd>M</kbd></span><span>كتم / إلغاء كتم الطبقة</span></li>
@@ -173,12 +331,17 @@ pageScript: "sounds"
           </ul>
           <p class="beep-param-note">على ماك استخدم ⌘ بدل Ctrl. مفاتيح البيانو الأخرى (A…' وW…P وZ وX) تبقى للعزف.</p>
         </details>
-        <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ شغّل الطبقات" data-stop="⏹ أوقف">▶️ شغّل الطبقات</button>
-        <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ WAV</button>
-        <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ MP3</button>
-        <button type="button" class="filter-chip" id="beepRecMidi">🎼 MIDI</button>
-        <button type="button" class="filter-chip" id="beepRecClear" aria-label="احذف كل الطبقات" title="احذف كل الطبقات">🗑️</button>
+        <div class="beep-transport">
+          <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ شغّل الطبقات" data-stop="⏹ أوقف">▶️ شغّل الطبقات</button>
+          <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ WAV</button>
+          <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ MP3</button>
+          <button type="button" class="filter-chip" id="beepRecMidi">🎼 MIDI</button>
+          <button type="button" class="filter-chip" id="beepShare" data-copied="✅ نُسخ رابط المشروع" data-audio="✅ نُسخ الرابط — التسجيلات الصوتية لا تُشارك بالرابط، نزّلها WAV">🔗 شارك</button>
+          <button type="button" class="filter-chip" id="beepRecClear" aria-label="احذف كل الطبقات" title="احذف كل الطبقات">🗑️</button>
+        </div>
+        <p class="beep-param-note">💾 مشروعك يُحفظ تلقائياً في متصفحك ويرجع لما تفتح الصفحة مرة ثانية.</p>
       </div>
+      <p class="beep-credit">صوت البيانو: <span dir="ltr">Salamander Grand Piano — Alexander Holm (CC BY 3.0)</span></p>
     </div>
   </section>
 
@@ -188,6 +351,7 @@ pageScript: "sounds"
         <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ ألّف وشغّل" data-stop-label="⏹ إيقاف">▶️ ألّف وشغّل</button>
         <button type="button" id="beepMelodyPrev" class="btn secondary">⏮️ السابقة</button>
         <button type="button" id="beepMelodyNext" class="btn secondary">⏭️ مقطوعة جديدة</button>
+        <button type="button" id="beepToStudio" class="btn secondary" data-done="➕ أُضيفت إلى الاستوديو في مسارين: اللحن والمرافقة">➕ أضف إلى الاستوديو</button>
       </div>
       <div class="instrument-picker" id="moodPicker">
         <button type="button" class="filter-chip mood-btn active" data-mood="calm">😌 هادئ</button>

@@ -127,7 +127,7 @@ pageScript: "sounds"
     <div class="beep-play">
       <details class="beep-help">
         <summary>⌨️ How to play & key labels</summary>
-        <p class="beep-param-note">Middle row <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> for the white keys, the row above <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> for the black keys, and <kbd>Z</kbd> / <kbd>X</kbd> to shift the octave. It also works with a keyboard plugged into your phone, or by touching the keys directly. Recording shortcuts: <kbd>R</kbd> start/stop, and <kbd>Space</kbd> play/stop after your first recording (the full list appears with it).</p>
+        <p class="beep-param-note">Middle row <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> for the white keys, the row above <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> for the black keys, <kbd>Z</kbd> / <kbd>X</kbd> to shift the octave, and hold <kbd>Shift</kbd> for the sustain pedal. It also works with a keyboard plugged into your phone, a real MIDI keyboard, or by touching the keys directly: press near the top of a key for a soft note and near the bottom for a strong one. Recording shortcuts: <kbd>R</kbd> start/stop, and <kbd>Space</kbd> play/stop after your first recording (the full list appears with it).</p>
         <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="What is written on the keys">
           <button type="button" class="filter-chip active" data-labels="keys">⌨️ Keyboard letters</button>
           <button type="button" class="filter-chip" data-labels="letters">C D E</button>
@@ -142,31 +142,189 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepOctUp" aria-label="Octave up">X ⬆️</button>
         <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="Fullscreen">⛶</button>
       </div>
-      <div class="beep-play-keys" id="beepPlayKeys"></div>
-      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-max="Maximum 8 layers" data-silent="All layers are muted">
+      <div class="beep-quickbar">
+        <button type="button" class="filter-chip" id="beepPedal" aria-pressed="false" title="Sustain pedal: notes keep ringing after you lift your finger (or hold Shift)">🦶 <span class="qb-text">Pedal</span></button>
+        <button type="button" class="filter-chip" id="beepMetro" aria-pressed="false" title="Metronome: clicks on the beats while recording and playing (C)">⏱️ <span class="qb-text">Metronome</span></button>
+        <div class="beep-tempo" role="group" aria-label="Tempo" dir="ltr">
+          <button type="button" class="filter-chip" id="beepTempoDown" aria-label="Slower">−</button>
+          <label class="beep-tempo-value"><input type="number" id="beepTempo" min="40" max="240" step="1" value="90" inputmode="numeric" aria-label="Tempo in beats per minute" /><span dir="ltr">BPM</span></label>
+          <button type="button" class="filter-chip" id="beepTempoUp" aria-label="Faster">+</button>
+        </div>
+        <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 Connect MIDI" data-on="🎹 " data-none="No MIDI keyboard found — plug it in, then press again." data-denied="MIDI access wasn't allowed.">🎹 <span class="qb-text">Connect MIDI</span></button>
+      </div>
+      <details class="beep-help beep-settings" id="beepSettings">
+        <summary>⚙️ Maqam, time signature & keyboard</summary>
+        <div class="beep-setting">
+          <span class="beep-setting-label">🕌 Maqam</span>
+          <div class="instrument-picker" id="beepMaqam" role="group" aria-label="Maqam">
+            <button type="button" class="filter-chip" data-maqam="none">Western</button>
+            <button type="button" class="filter-chip" data-maqam="rast">Rast</button>
+            <button type="button" class="filter-chip" data-maqam="bayati">Bayati</button>
+            <button type="button" class="filter-chip" data-maqam="sikah">Sikah</button>
+            <button type="button" class="filter-chip" data-maqam="saba">Saba</button>
+            <button type="button" class="filter-chip" data-maqam="hijaz">Hijaz</button>
+            <button type="button" class="filter-chip" data-maqam="nahawand">Nahawand</button>
+            <button type="button" class="filter-chip" data-maqam="kurd">Kurd</button>
+            <button type="button" class="filter-chip" data-maqam="ajam">Ajam</button>
+          </div>
+        </div>
+        <p class="beep-param-note" id="beepMaqamNote" data-none="The usual Western scale. Pick a maqam to play with quarter tones: keys outside the maqam fade, and a small dot marks the tonic." data-quarter="½♭ = half-flat (a quarter tone), played on the same white key."></p>
+        <div class="beep-setting">
+          <span class="beep-setting-label">🎹 Keyboard</span>
+          <div class="instrument-picker" id="beepBoardSize" role="group" aria-label="Keyboard size">
+            <button type="button" class="filter-chip" data-board="compact">Compact</button>
+            <button type="button" class="filter-chip" data-board="full">Full 88 keys</button>
+          </div>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">🎼 Time signature</span>
+          <div class="instrument-picker" id="beepMeter" role="group" aria-label="Time signature">
+            <button type="button" class="filter-chip" data-meter="2" dir="ltr">2/4</button>
+            <button type="button" class="filter-chip" data-meter="3" dir="ltr">3/4</button>
+            <button type="button" class="filter-chip" data-meter="4" dir="ltr">4/4</button>
+          </div>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">🧲 Grid</span>
+          <div class="instrument-picker" id="beepGrid" role="group" aria-label="Grid">
+            <button type="button" class="filter-chip" data-grid="0">Free</button>
+            <button type="button" class="filter-chip" data-grid="4" dir="ltr">1/4</button>
+            <button type="button" class="filter-chip" data-grid="8" dir="ltr">1/8</button>
+            <button type="button" class="filter-chip" data-grid="16" dir="ltr">1/16</button>
+          </div>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">⏱️ Before recording</span>
+          <div class="instrument-picker">
+            <button type="button" class="filter-chip" id="beepCountIn" aria-pressed="false">Count in one bar</button>
+          </div>
+        </div>
+      </details>
+      <div class="beep-keys-wrap" id="beepKeysWrap">
+        <div class="beep-play-keys" id="beepPlayKeys"></div>
+      </div>
+      <div class="beep-add-row">
+        <button type="button" class="filter-chip" id="beepAddDrums" aria-expanded="false" aria-controls="beepDrums">🥁 Rhythm</button>
+        <button type="button" class="filter-chip" id="beepMicRec" data-label="🎤 Record your voice" data-stop="⏹ Stop" data-denied="Microphone access wasn't allowed." data-failed="Couldn't record or read the audio." data-silent="No sound was picked up.">🎤 Record your voice</button>
+        <label class="filter-chip" for="beepAudioFile">📁 Audio file</label>
+        <input type="file" id="beepAudioFile" accept="audio/*" hidden />
+      </div>
+      <div class="beep-drums" id="beepDrums" hidden>
+        <p class="beep-setting-label">🪘 Arabic</p>
+        <div class="instrument-picker" role="group" aria-label="Arabic rhythms">
+          <button type="button" class="filter-chip" data-rhythm="maqsum">Maqsum</button>
+          <button type="button" class="filter-chip" data-rhythm="baladi">Baladi</button>
+          <button type="button" class="filter-chip" data-rhythm="saidi">Saidi</button>
+          <button type="button" class="filter-chip" data-rhythm="malfuf">Malfuf</button>
+          <button type="button" class="filter-chip" data-rhythm="ayyub">Ayyub</button>
+          <button type="button" class="filter-chip" data-rhythm="samai"><span>Samai Thaqil</span> <span dir="ltr">10/8</span></button>
+        </div>
+        <p class="beep-setting-label">🥁 Western</p>
+        <div class="instrument-picker" role="group" aria-label="Western rhythms">
+          <button type="button" class="filter-chip" data-rhythm="rock">Rock</button>
+          <button type="button" class="filter-chip" data-rhythm="pop">Pop</button>
+          <button type="button" class="filter-chip" data-rhythm="hiphop">Hip-hop</button>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">Length</span>
+          <div class="instrument-picker" role="group" aria-label="Number of bars">
+            <button type="button" class="filter-chip" data-bars="2">2 bars</button>
+            <button type="button" class="filter-chip" data-bars="4">4 bars</button>
+            <button type="button" class="filter-chip" data-bars="8">8 bars</button>
+          </div>
+        </div>
+        <div class="instrument-picker">
+          <button type="button" class="filter-chip" id="beepDrumPreview" data-play="▶️ Try it" data-stop="⏹ Stop">▶️ Try it</button>
+          <button type="button" class="filter-chip" id="beepDrumAdd">➕ Add as a track</button>
+        </div>
+        <p class="beep-param-note">It's added at the white line at the project tempo, and you can change its hits with the Edit button.</p>
+      </div>
+      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-track="Track" data-max="You've reached the limit: 64 clips and 16 tracks" data-silent="All layers are muted" data-restored="🔄 Your last project was restored" data-shared="🔗 Opened the shared project — edit it and share it again">
         <div class="beep-clip-tools" id="beepClipTools">
           <button type="button" class="filter-chip" id="beepToolSplit" disabled data-cut="Select a clip, place the white line inside it by clicking the ruler, then press Split.">✂️ Split</button>
           <button type="button" class="filter-chip" id="beepToolCopy" disabled>⧉ Duplicate</button>
           <button type="button" class="filter-chip" id="beepToolMute" disabled data-mute="🔇 Mute" data-unmute="🔊 Unmute">🔇 Mute</button>
+          <button type="button" class="filter-chip" id="beepToolEdit" disabled data-audio="Recorded audio can't be edited note by note — split it or drag its edge.">✏️ Edit</button>
+          <button type="button" class="filter-chip" id="beepToolQuant" disabled data-done="🧲 Notes snapped to the grid" data-audio="Quantize works on note clips only.">🧲 Quantize</button>
           <button type="button" class="filter-chip" id="beepToolDelete" disabled>🗑️ Delete</button>
         </div>
         <div class="beep-timeline" id="beepTimeline">
-          <div class="beep-ruler" id="beepRuler" title="Ruler: click to set the split point"></div>
-          <div class="beep-board" id="beepBoard"></div>
-          <div class="beep-playhead" id="beepPlayhead" hidden></div>
+          <div class="beep-gutter" id="beepGutter"></div>
+          <div class="beep-lanes" id="beepLanes">
+            <div class="beep-ruler" id="beepRuler" title="Ruler in bars: click to place the white line"></div>
+            <div class="beep-board" id="beepBoard"></div>
+            <div class="beep-playhead" id="beepPlayhead" hidden></div>
+          </div>
         </div>
-        <p class="beep-param-note" id="beepTimelineHint">↔️↕️ Drag any layer freely: left and right in time, up and down between tracks (drop it below the last track to start a new one). Drag a layer's left or right edge to shorten or lengthen it without cutting: nothing is deleted, and lengthening brings the hidden notes back. To place the white line, click or drag on the ruler or any empty space, or grab the circle at its top; then select a layer and press Split to cut it there. The Delete key removes it, the arrow keys move it, and a double-click sends it back to the start. All layers play together whichever track they're on.</p>
+        <div class="beep-editor" id="beepEditor" hidden data-doum="Doum" data-tak="Tak" data-ka="Ka" data-riq="Riq" data-kick="Kick" data-snare="Snare" data-hat="Hi-hat" data-clap="Clap">
+          <div class="beep-editor-bar">
+            <strong id="beepEditorTitle"></strong>
+            <button type="button" class="filter-chip" id="beepEdZoomOut" aria-label="Zoom out">➖</button>
+            <button type="button" class="filter-chip" id="beepEdZoomIn" aria-label="Zoom in">➕</button>
+            <label class="beep-ed-vel"><span>💪 Velocity</span><input type="range" id="beepEdVel" min="1" max="127" step="1" value="96" disabled /></label>
+            <button type="button" class="filter-chip" id="beepEdDelete" disabled>🗑️ Delete note</button>
+            <button type="button" class="filter-chip" id="beepEdClose">✓ Done</button>
+          </div>
+          <div class="beep-editor-scroll" id="beepEditorScroll">
+            <div class="beep-editor-grid" id="beepEditorGrid"></div>
+          </div>
+          <p class="beep-param-note">Click an empty spot to add a note (drag to lengthen it), drag a note to move it or its right edge to change its length, and double-click it to delete it. Clicking a note name plays it.</p>
+        </div>
+        <p class="beep-param-note" id="beepTimelineHint">↔️↕️ Drag any layer freely: left and right in time (on the grid), and up and down between tracks (drop it below the last track to start a new one). Drag a layer's edge to shorten or lengthen it without cutting: nothing is deleted, and lengthening brings back what was hidden. To place the white line, click or drag on the ruler or any empty space; recording starts there and the selected clip is split there. Double-click a layer to edit its notes, and click a track number to open its mixer.</p>
+        <details class="beep-help beep-mixer" id="beepMixer">
+          <summary>🎚️ Mixer, effects & mastering</summary>
+          <div class="beep-mix-strips" id="beepMixStrips"></div>
+          <div class="beep-setting beep-master">
+            <span class="beep-setting-label">🎛️ Mastering</span>
+            <div class="instrument-picker" id="beepMaster" role="group" aria-label="Mastering">
+              <button type="button" class="filter-chip" data-master="none">Off</button>
+              <button type="button" class="filter-chip" data-master="warm">Warm</button>
+              <button type="button" class="filter-chip" data-master="balanced">Balanced</button>
+              <button type="button" class="filter-chip" data-master="loud">Loud</button>
+            </div>
+          </div>
+          <p class="beep-param-note">Mastering polishes the whole mix (EQ and limiter) for playback and downloads.</p>
+        </details>
+        <template id="beepStripTpl">
+          <div class="mix-strip">
+            <div class="mix-head">
+              <span class="mix-num"></span>
+              <span class="mix-name"></span>
+              <button type="button" class="filter-chip mix-mute" aria-pressed="false" title="Mute track">🔇</button>
+              <button type="button" class="filter-chip mix-solo" aria-pressed="false" title="Solo: hear this track alone">🎧</button>
+            </div>
+            <label class="mix-row"><span>🔊 Level</span><input type="range" class="mix-vol" min="0" max="1.5" step="0.01" /></label>
+            <label class="mix-row"><span>↔️ Left / right</span><input type="range" class="mix-pan" min="-1" max="1" step="0.05" /></label>
+            <details class="mix-fx">
+              <summary>✨ Effects & automation</summary>
+              <label class="mix-row"><span>Bass</span><input type="range" class="mix-eq" data-band="0" min="-12" max="12" step="1" /></label>
+              <label class="mix-row"><span>Mid</span><input type="range" class="mix-eq" data-band="1" min="-12" max="12" step="1" /></label>
+              <label class="mix-row"><span>Treble</span><input type="range" class="mix-eq" data-band="2" min="-12" max="12" step="1" /></label>
+              <label class="mix-row"><span>🏛️ Reverb</span><input type="range" class="mix-reverb" min="0" max="1" step="0.01" /></label>
+              <label class="mix-row"><span>🔁 Echo</span><input type="range" class="mix-echo" min="0" max="1" step="0.01" /></label>
+              <div class="instrument-picker">
+                <button type="button" class="filter-chip mix-comp" aria-pressed="false">🗜️ Compressor</button>
+                <button type="button" class="filter-chip mix-auto" aria-pressed="false" data-on="✓ Finish drawing">📈 Draw volume automation</button>
+                <button type="button" class="filter-chip mix-auto-clear">↺ Clear automation</button>
+              </div>
+              <p class="beep-param-note">Automation is a line over the track that raises and lowers the volume over time: click to add a point, drag it, and double-click it to delete it.</p>
+            </details>
+          </div>
+        </template>
         <details class="beep-shortcuts" id="beepShortcuts">
           <summary>⌨️ Keyboard shortcuts <span dir="ltr">(Ctrl+/)</span></summary>
           <ul class="beep-shortcut-list">
             <li><span class="beep-key-combo" dir="ltr"><kbd>Space</kbd></span><span>Play from the white line / stop</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd> + <kbd>Space</kbd></span><span>Play from the start</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>R</kbd></span><span>Start / stop recording</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd></span><span>Hold it while playing = sustain pedal</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>C</kbd></span><span>Metronome on / off</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Esc</kbd></span><span>Stop everything and deselect (back to playing with letters)</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Enter</kbd> · <kbd>Home</kbd> · <kbd>End</kbd></span><span>Move the white line to the start · start · end</span></li>
-            <li><span class="beep-key-combo" dir="ltr"><kbd>← →</kbd></span><span>Move the focused layer (or the white line if no layer is focused); Shift = one second; ↑ ↓ between tracks</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>← →</kbd></span><span>Move the focused layer (or the white line) one grid step, with Shift a whole bar; ↑ ↓ between tracks</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>S</kbd></span><span>Split the selected layer at the white line — only while a layer is selected; otherwise S plays a piano note</span></li>
-            <li><span class="beep-key-combo" dir="ltr"><kbd>Delete</kbd> · <kbd>Backspace</kbd></span><span>Delete the layer</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Q</kbd></span><span>Snap the selected layer's notes to the grid</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Delete</kbd> · <kbd>Backspace</kbd></span><span>Delete the note selected in the editor, or the layer</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>C</kbd> · <kbd>X</kbd> · <kbd>V</kbd></span><span>Copy · cut · paste at the white line</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>D</kbd></span><span>Duplicate the layer</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd> + <kbd>M</kbd></span><span>Mute / unmute the layer</span></li>
@@ -174,12 +332,17 @@ pageScript: "sounds"
           </ul>
           <p class="beep-param-note">On a Mac use ⌘ instead of Ctrl. The other piano keys (A…' W…P Z X) stay for playing.</p>
         </details>
-        <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ Play layers" data-stop="⏹ Stop">▶️ Play layers</button>
-        <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ WAV</button>
-        <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ MP3</button>
-        <button type="button" class="filter-chip" id="beepRecMidi">🎼 MIDI</button>
-        <button type="button" class="filter-chip" id="beepRecClear" aria-label="Delete all layers" title="Delete all layers">🗑️</button>
+        <div class="beep-transport">
+          <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ Play layers" data-stop="⏹ Stop">▶️ Play layers</button>
+          <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ WAV</button>
+          <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ MP3</button>
+          <button type="button" class="filter-chip" id="beepRecMidi">🎼 MIDI</button>
+          <button type="button" class="filter-chip" id="beepShare" data-copied="✅ Project link copied" data-audio="✅ Link copied — audio recordings aren't shared by link, download them as WAV">🔗 Share</button>
+          <button type="button" class="filter-chip" id="beepRecClear" aria-label="Delete all layers" title="Delete all layers">🗑️</button>
+        </div>
+        <p class="beep-param-note">💾 Your project is saved automatically in your browser and comes back when you open the page again.</p>
       </div>
+      <p class="beep-credit">Piano sound: <span dir="ltr">Salamander Grand Piano — Alexander Holm (CC BY 3.0)</span></p>
     </div>
   </section>
 
@@ -189,6 +352,7 @@ pageScript: "sounds"
         <button type="button" id="beepMelodyPlay" class="btn" data-play-label="▶️ Compose &amp; play" data-stop-label="⏹ Stop">▶️ Compose &amp; play</button>
         <button type="button" id="beepMelodyPrev" class="btn secondary">⏮️ Previous</button>
         <button type="button" id="beepMelodyNext" class="btn secondary">⏭️ New piece</button>
+        <button type="button" id="beepToStudio" class="btn secondary" data-done="➕ Added to the studio as two tracks: melody and accompaniment">➕ Add to studio</button>
       </div>
       <div class="instrument-picker" id="moodPicker">
         <button type="button" class="filter-chip mood-btn active" data-mood="calm">😌 Calm</button>

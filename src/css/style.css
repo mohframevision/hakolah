@@ -4597,7 +4597,7 @@ img {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.beep-experiment #beepRecToggle.recording {
+.beep-experiment .filter-chip.recording {
   background: rgba(200, 55, 55, 0.9);
   border-color: #f3a3a3;
   color: #fff;
@@ -4611,7 +4611,7 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .beep-experiment #beepRecToggle.recording {
+  .beep-experiment .filter-chip.recording {
     animation: none;
   }
 }
@@ -4828,11 +4828,25 @@ html[lang="en"] .instrument-btn.is-new::after {
 }
 
 /* ===== الجدول الزمني للطبقات ===== */
+/* عمود أرقام المسارات يسار المسارات، والمسطرة والمقاطع والخط الأبيض داخل "الممرات".
+   خطوط الشبكة: خفيفة كل ضربة، وأوضح كل مازورة */
 .beep-timeline {
   position: relative;
   width: 100%;
-  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
-  background-size: var(--px, 30px) 100%;
+  display: flex;
+  direction: ltr;
+}
+
+.beep-lanes {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.16) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size:
+    var(--bar, 120px) 100%,
+    var(--beat, 30px) 100%;
 }
 
 .beep-ruler {
@@ -5092,4 +5106,675 @@ html[lang="en"] .instrument-btn.is-new::after {
   pointer-events: auto;
   cursor: ew-resize;
   touch-action: none;
+}
+
+/* ===== الاستوديو: شريط سريع (دواسة، مترونوم، سرعة، MIDI) ===== */
+.beep-quickbar,
+.beep-add-row,
+.beep-transport {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.beep-quickbar .filter-chip,
+.beep-add-row .filter-chip,
+.beep-transport .filter-chip {
+  white-space: nowrap;
+}
+
+.beep-add-row label.filter-chip {
+  cursor: pointer;
+}
+
+#beepMidi {
+  max-width: 14em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.beep-tempo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.beep-tempo .filter-chip {
+  min-width: 2.2em;
+  padding-inline: 0;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.beep-tempo-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.beep-tempo-value input {
+  width: 3.4em;
+  padding: 5px 2px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.beep-tempo-value input::-webkit-outer-spin-button,
+.beep-tempo-value input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.beep-tempo-value input:focus-visible {
+  outline: 2px solid #6fc8a4;
+  outline-offset: 1px;
+}
+
+/* ===== الإعدادات (المقام، اللوحة، الميزان، الشبكة) وإيقاعات الطبلة ===== */
+.beep-settings[open],
+.beep-drums {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.beep-drums {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.beep-drums[hidden] {
+  display: none;
+}
+
+.beep-setting {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.beep-setting-label {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.beep-settings .beep-param-note,
+.beep-drums .beep-param-note {
+  margin: 0;
+  max-width: 46em;
+}
+
+/* ===== المفاتيح: المقام (خارج المقام باهت + نقطة القرار) واللوحة الكاملة ===== */
+.beep-keys-wrap {
+  width: 100%;
+  direction: ltr; /* التمرير الأفقي يبدأ من اليسار (La0) حتى بالصفحة العربية */
+}
+
+.pk-white.off {
+  background: linear-gradient(180deg, #b9c4bf, #c9d2ce 70%, #aeb9b4);
+  color: rgba(26, 26, 26, 0.55);
+}
+
+.pk-black.off {
+  background: linear-gradient(180deg, #4a524f, #3a413e);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pk-white.tonic::before,
+.pk-black.tonic::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  background: #3fa480;
+  box-shadow: 0 0 6px rgba(111, 200, 164, 0.9);
+}
+
+/* بيانو كامل: ٥٢ مفتاحاً أبيض بعرض أدنى ٢٢px، وأوسع من الشاشة يتمرّر أفقياً.
+   نافذة الكيبورد (الحروف) معلّمة بخط أخضر فوقها */
+.beep-keys-wrap.full {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-color: #3fa480 rgba(255, 255, 255, 0.1);
+  padding-bottom: 6px;
+}
+
+.beep-keys-wrap.full::-webkit-scrollbar {
+  height: 10px;
+}
+
+.beep-keys-wrap.full::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.beep-keys-wrap.full::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #3fa480;
+}
+
+.sounds-tool .beep-play-keys.full {
+  min-width: calc(52 * 22px);
+  aspect-ratio: auto;
+  height: 170px;
+  max-height: none;
+}
+
+.beep-play-keys.full .pk-white,
+.beep-play-keys.full .pk-black {
+  padding-bottom: 5px;
+}
+
+.beep-play-keys.full .pk-white {
+  margin: 0 0.5px;
+  border-radius: 0 0 5px 5px;
+}
+
+.beep-play-keys.full .pk-white b,
+.beep-play-keys.full .pk-black b {
+  font-size: 0.68rem;
+}
+
+.beep-play-keys.full .pk-white small {
+  font-size: 0.55rem;
+}
+
+.beep-play-keys.full .pk-white.reach {
+  box-shadow:
+    inset 0 4px 0 #3fa480,
+    inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+}
+
+.beep-play-keys.full .pk-black.reach {
+  box-shadow:
+    inset 0 3px 0 #6fc8a4,
+    inset 0 -3px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* ===== عمود أرقام المسارات ===== */
+.beep-gutter {
+  flex: none;
+  width: 30px;
+  padding-top: 18px; /* بارتفاع المسطرة */
+  display: flex;
+  flex-direction: column;
+}
+
+.beep-gutter-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 255, 255, 0.8);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.beep-gutter-row:first-child {
+  border-top-left-radius: 8px;
+}
+
+.beep-gutter-row:hover,
+.beep-gutter-row:focus-visible {
+  background: rgba(63, 164, 128, 0.35);
+  outline: none;
+}
+
+.beep-gutter-row.muted {
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: line-through;
+}
+
+.beep-gutter-row.solo {
+  background: rgba(240, 190, 70, 0.35);
+}
+
+/* مقاطع الإيقاع والصوت بلون ثابت يميّزها عن مقاطع النغمات */
+.beep-clip.drums canvas,
+.beep-clip.audio canvas {
+  opacity: 0.85;
+}
+
+/* ===== أتمتة الصوت: خط فوق المسار ===== */
+.beep-auto {
+  position: absolute;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.beep-auto polyline {
+  fill: none;
+  stroke: #f0be46;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+.beep-auto circle {
+  fill: #f0be46;
+  stroke: #1a1a1a;
+  stroke-width: 1;
+}
+
+.beep-auto.editing {
+  z-index: 4;
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+  background: rgba(240, 190, 70, 0.1);
+  outline: 1px dashed rgba(240, 190, 70, 0.7);
+}
+
+.beep-auto.editing circle {
+  cursor: grab;
+}
+
+/* ===== محرّر النغمات ===== */
+/* عناصر الاستوديو العريضة (محرّر بشبكة طويلة، جدول، خلاط) لا تمدّ الصندوق خارج الشاشة:
+   عنصر flex حدّه الأدنى عرض محتواه افتراضياً، والتمرير يصير داخلها هي */
+.beep-rec-take > *,
+.beep-play > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.beep-editor {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.beep-editor[hidden] {
+  display: none;
+}
+
+.beep-editor-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 8px;
+}
+
+.beep-editor-bar strong {
+  flex: 1 1 100%;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.beep-ed-vel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.beep-editor-scroll {
+  max-height: 300px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  direction: ltr;
+}
+
+.beep-editor-grid {
+  position: relative;
+  min-width: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: crosshair;
+}
+
+.ed-row {
+  position: absolute;
+  left: 46px;
+  right: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ed-row.black {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.ed-key {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  width: 46px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding-inline-start: 5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  background: #e9eeec;
+  color: #1a1a1a;
+  font-size: 0.62rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.ed-key.black {
+  background: #2a2f2d;
+  color: #e9eeec;
+}
+
+.beep-editor-grid.drums .ed-key {
+  background: #1f3d33;
+  color: #fff;
+  font-size: 0.72rem;
+}
+
+.ed-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.ed-line.beat {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ed-line.bar {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ed-end {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.28);
+  border-left: 2px dashed rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+.ed-note {
+  position: absolute;
+  z-index: 2;
+  border-radius: 4px;
+  background: rgba(111, 200, 164, var(--a, 0.9));
+  border: 1px solid #c9f0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  cursor: grab;
+}
+
+.ed-note::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  right: 1px;
+  width: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: ew-resize;
+}
+
+.beep-editor-grid.drums .ed-note::after {
+  display: none;
+}
+
+.ed-note.sel {
+  background: rgba(240, 190, 70, var(--a, 0.9));
+  border-color: #fff;
+  z-index: 3;
+}
+
+.ed-note.outside {
+  opacity: 0.35;
+}
+
+/* ===== الخلاط ===== */
+.beep-mixer[open] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.beep-mix-strips {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 300px));
+  justify-content: center;
+  align-items: start; /* فتح مؤثرات شريط ما يمطّ جيرانه */
+  gap: 8px;
+}
+
+.mix-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.22);
+  text-align: start;
+}
+
+.mix-strip.flash {
+  animation: mix-flash 1s ease;
+}
+
+@keyframes mix-flash {
+  20% {
+    border-color: #6fc8a4;
+    box-shadow: 0 0 16px rgba(111, 200, 164, 0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mix-strip.flash {
+    animation: none;
+  }
+}
+
+.mix-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mix-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.8em;
+  height: 1.8em;
+  border-radius: 8px;
+  background: rgba(63, 164, 128, 0.45);
+  font-weight: 800;
+}
+
+.mix-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mix-head .filter-chip {
+  padding: 4px 9px;
+}
+
+.mix-solo.active {
+  background: rgba(200, 150, 40, 0.85) !important;
+  border-color: #f0be46 !important;
+}
+
+.mix-row {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.mix-fx > summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.mix-fx[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mix-fx .instrument-picker {
+  justify-content: center;
+}
+
+.mix-fx .beep-param-note {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+/* منزلقات الخلاط والمحرّر: نفس شكل منزلق الصوت بالأعلى بحجم أصغر */
+.mix-strip input[type="range"],
+.beep-ed-vel input[type="range"] {
+  direction: ltr; /* الأقل يسار والأكثر يمين حتى بالعربي — مثل منزلق الصوت بالأعلى */
+  width: 100%;
+  min-width: 90px;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+}
+
+.mix-strip input[type="range"]::-webkit-slider-runnable-track,
+.beep-ed-vel input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mix-strip input[type="range"]::-moz-range-track,
+.beep-ed-vel input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mix-strip input[type="range"]::-webkit-slider-thumb,
+.beep-ed-vel input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #3fa480;
+  border: 2px solid #c9f0e0;
+}
+
+.mix-strip input[type="range"]::-moz-range-thumb,
+.beep-ed-vel input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3fa480;
+  border: 2px solid #c9f0e0;
+}
+
+.beep-ed-vel input[type="range"]:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mix-strip input[type="range"]:focus-visible,
+.beep-ed-vel input[type="range"]:focus-visible {
+  outline: 2px solid #6fc8a4;
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+.beep-master {
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.beep-credit {
+  margin: 4px 0 0;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+/* أفقي بالجوال: الشريط السريع رموز فقط، وعنوانا "طريقة العزف" و"الإعدادات" بسطر
+   واحد — عشان المفاتيح تبقى كاملة بالشاشة بلا تمرير مثل قبل */
+@media (orientation: landscape) and (max-height: 520px) {
+  html.touch .beep-quickbar .qb-text {
+    display: none;
+  }
+
+  /* صف إضافي فوق المفاتيح (الشريط السريع) = ٢٤px أقل من الحساب الأصلي */
+  html.touch .sounds-tool .beep-play-keys {
+    height: max(110px, calc(100dvh - 172px));
+  }
+
+  html.touch .beep-play:has(.beep-rec-take:not([hidden])) .beep-play-keys {
+    height: max(90px, calc(100dvh - 229px));
+  }
+
+  html.touch .sounds-tool .beep-help:not([open]) {
+    width: auto;
+  }
+
+  html.touch .sounds-tool .beep-quickbar {
+    gap: 6px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 720px) {
+  html.touch .sounds-tool .beep-play-keys {
+    height: max(100px, calc(100dvh - 229px));
+  }
 }
