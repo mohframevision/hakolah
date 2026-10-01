@@ -981,6 +981,19 @@ img {
   max-width: 900px;
 }
 
+/* تنبيه أقسام الأكل: الموقع ليس موقع تقييمات — سطر هادئ تحت الوصف مع رابط السياسة */
+.page-header p.review-note {
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+.review-note a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .article-share-btn {
   margin-top: 4px;
 }
@@ -5893,4 +5906,9 @@ html[lang="en"] .instrument-btn.is-new::after {
   line-height: 17px;
   pointer-events: auto;
   cursor: pointer;
+}
+
+/* روابط داخل الصفحة (#reviews مثلاً): العنوان ينزل تحت الهيدر الثابت بدل ما يختفي خلفه */
+.prose [id] {
+  scroll-margin-top: calc(var(--header-h, 64px) + 16px);
 }
