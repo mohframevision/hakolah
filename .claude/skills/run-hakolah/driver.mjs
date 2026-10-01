@@ -19,7 +19,10 @@ const consoleErrors = [];
 const COMMANDS = {
   async launch() {
     if (browser) return console.log("already launched");
-    browser = await chromium.launch({ args: ["--no-sandbox"] });
+    // بيئات Claude Code السحابية فيها Chromium جاهز بمسار ثابت (بلا "playwright install")
+    const preinstalled = "/opt/pw-browsers/chromium";
+    const executablePath = process.env.CHROMIUM_PATH || (fs.existsSync(preinstalled) ? preinstalled : undefined);
+    browser = await chromium.launch({ executablePath, args: ["--no-sandbox"] });
     page = await (await browser.newContext()).newPage();
     page.on("console", (msg) => {
       if (msg.type() === "error") consoleErrors.push(msg.text());

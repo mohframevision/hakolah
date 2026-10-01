@@ -124,9 +124,14 @@ clean (verified this session: `npm run lint` → no output/errors,
 
 ## Gotchas
 
-- **Everything is under `/hakolah/`, not `/`.** GitHub Pages project-site
-  base path — `http://localhost:8080/` 404s; the real root is
-  `http://localhost:8080/`.
+- **The site is served from the root (`pathPrefix: "/"` in `.eleventy.js`).**
+  Pages live at `http://localhost:8080/sounds.html`, `/en/index.html`, etc.
+  (`scripts/check-ux.js` still serves under `/hakolah/` internally — that's
+  its own test server, not the real path.)
+- **Cloud sessions:** Chromium is preinstalled at `/opt/pw-browsers/chromium`;
+  the driver uses it automatically (or set `CHROMIUM_PATH`). Don't run
+  `playwright install`. For `npm run check:ux` set
+  `CHROME_PATH=/opt/pw-browsers/chromium`.
 - **Never run `npm run build` / `npm run check:i18n` while `npm start` is
   running.** Both write `_site/` concurrently; hit this directly —
   `npm run build` crashed with `ENOENT ... _site\js\bootstrap.js` because
