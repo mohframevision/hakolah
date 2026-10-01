@@ -4681,24 +4681,97 @@ img {
 }
 
 .instrument-group-title {
-  margin: 8px 0 4px;
+  margin: 8px 8px 2px;
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-text-muted);
   text-align: start;
 }
 
-/* خانات بعرض واحد بدل كومة رقائق بأعراض مختلفة — كانت تبان "مبعثرة" */
+/* قائمة نصية مدمجة بدل المربعات: الأسماء متتالية كسطر نص ينكسر حسب العرض، والمختارة
+   خضراء. كانت المربعات تأخذ مساحة كبيرة وتزحم العين (ملاحظة مستخدم) */
 .instrument-group-chips {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2px;
 }
 
-.instrument-group-chips .filter-chip {
+.instrument-btn {
   position: relative;
-  padding-inline: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  text-align: start;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .instrument-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+}
+
+.instrument-btn:focus-visible {
+  outline: 2px solid #6fc8a4;
+  outline-offset: -2px;
+}
+
+@media (max-width: 520px) {
+  .instrument-btn {
+    padding: 4px 6px;
+    font-size: 0.86rem;
+  }
+}
+
+/* اللمس: سطر أطول شوي عشان الإصبع ما يضغط الآلة المجاورة */
+@media (pointer: coarse) {
+  .instrument-btn {
+    padding-block: 7px;
+  }
+}
+
+/* أول اختيار لآلة مسجّلة: تحميل تسجيلاتها (ثانية تقريباً) */
+.instrument-btn.loading {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.instrument-btn.active {
+  background: rgba(63, 164, 128, 0.22);
+  color: #8fe0be;
+  font-weight: 700;
+}
+
+/* نقطة صغيرة = صوت آلة حقيقية مسجّلة (نفس رمز سطر الشرح فوق القائمة) */
+.instrument-btn[data-real]::before,
+.real-dot {
+  content: "";
+  display: inline-block;
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6fc8a4;
+}
+
+.instrument-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }
 
 .instrument-recent {
@@ -4706,19 +4779,12 @@ img {
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* شارة "جديد" على الآلات المضافة حديثاً (sounds.js يضع is-new لـ٣٠ يوماً) */
+/* شارة "جديد": كلمة صغيرة بجانب الاسم (sounds.js يضع is-new لـ٣٠ يوماً) */
 .instrument-btn.is-new::after {
   content: "جديد";
-  position: absolute;
-  top: -7px;
-  inset-inline-end: 6px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: #f59e0b;
-  color: #1a1a1a;
+  color: #fbbf24;
   font-size: 0.62rem;
   font-weight: 800;
-  line-height: 1.5;
 }
 
 html[lang="en"] .instrument-btn.is-new::after {

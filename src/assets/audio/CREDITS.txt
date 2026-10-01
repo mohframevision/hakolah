@@ -1,0 +1,19 @@
+Recorded instrument samples used by the music page (sounds.html)
+
+piano/  Salamander Grand Piano — Alexander Holm — CC BY 3.0
+        https://archive.org/details/SalamanderGrandPianoV3
+
+upright organ harmonium harp guitar guitar_ac guitar_el ebass violin cello
+doublebass flute clarinet bassoon sax horn trumpet trombone tuba xylophone/
+        tonejs-instruments — Nicholaus Brosowsky — CC BY 3.0
+        https://github.com/nbrosowsky/tonejs-instruments
+        (compiled from VSCO 2 by Sam Gossner, Karoryfer Samples, the University
+        of Iowa Musical Instrument Samples, and Freesound users flcellogrl,
+        quartertone and donyaquick)
+
+strings oboe marimba glockenspiel/
+        VSCO 2 Community Edition — Sam Gossner / Versilian Studios — CC0
+        https://github.com/sgossner/VSCO-2-CE
+
+Changes: converted to mono MP3, trimmed to 2.5–6 s, faded out, peak-normalized,
+and a subset of notes kept (about one every 2–4 semitones).

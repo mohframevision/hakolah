@@ -282,7 +282,7 @@ function initBeepMelodyExperiment() {
        هذا اللي يعطي الطنين المعدني المميز بدل نغمة موسيقية "نظيفة". */
   const INSTRUMENTS = {
     piano: {
-      sampled: true, // بيانو حقيقي مسجّل (Salamander) لما تجهز العيّنات، والتخليق بديل لحين تحميلها
+      sampled: "piano", // بيانو حقيقي مسجّل (Salamander) لما تجهز العيّنات، والتخليق بديل لحين تحميلها
       harmonics: [
         { mult: 1, weight: 1, type: "triangle" },
         { mult: 2, weight: 0.5, type: "sine" },
@@ -689,71 +689,184 @@ function initBeepMelodyExperiment() {
   Object.entries({ accordion: 0.35, banjo: 1.81, violin: 0.59, flute: 0.54, trumpet: 0.51, sax: 0.48, bell: 0.66 }).forEach(([id, level]) => (INSTRUMENTS[id].level = level));
   /* INSTRUMENT-LEVELS-END */
 
+  /* آلات أُضيفت مع العيّنات الحقيقية: تخليقها (لحين التحميل) مستعار من أقرب آلة */
+  Object.assign(INSTRUMENTS, {
+    upright: { ...INSTRUMENTS.piano },
+    felt: { ...INSTRUMENTS.piano, felt: true, filterBrightMult: 3 },
+    guitar_ac: { ...INSTRUMENTS.guitar },
+    guitar_el: { ...INSTRUMENTS.guitar, ringScale: 1.2 },
+    ebass: { ...INSTRUMENTS.synthbass },
+    harmonium: { ...INSTRUMENTS.accordion },
+    bassoon: { ...INSTRUMENTS.clarinet, filterBrightMult: 3 },
+    tuba: { ...INSTRUMENTS.trombone, filterBrightMult: 3 },
+  });
+
   // "صوتك": أي صوت يسجّله الزائر أو يختاره يصير آلة — نفس البيانو لين يوجد صوت
   INSTRUMENTS.custom = { ...INSTRUMENTS.piano, sample: true };
   let customSample = null; // AudioBuffer أحادي، مقصوص ومُطبَّع (انظر prepareSample)
   const SAMPLE_BASE = 261.63; // الصوت المسجّل يُعامل كأنه Do الوسطى (C4)
 
-  /* ===== بيانو حقيقي: عيّنات Salamander Grand Piano (CC BY 3.0 — Alexander Holm) =====
-     ٣٠ تسجيلاً لبيانو كونسيرت، واحد كل ثلاثة أنصاف درجات من La0 إلى Do8؛ النغمات
-     بينها تُعزف بتسريع أقرب عيّنة أو إبطائها (±١٫٥ نصف درجة على الأكثر، لا يُسمع
-     الفرق). تُحمَّل بالخلفية بعد فتح الصفحة (~١ ميجا)، والبيانو المركّب يعزف لحين
-     جاهزيتها. فكّ الترميز بسياق غير متصل عشان ما نحتاج ضغطة مستخدم قبل التحميل. */
+  /* ===== آلات حقيقية: عيّنات مسجّلة لكل نغمة كم نصف درجة =====
+     البيانو الكبير: Salamander Grand Piano (CC BY 3.0 — Alexander Holm).
+     البقية: مكتبة tonejs-instruments (CC BY 3.0 — Nicholaus Brosowsky، عن VSCO 2
+     وKaroryfer وIowa وFreesound) وVSCO 2 CE (CC0 — Sam Gossner). التفاصيل بـ
+     assets/audio/CREDITS.txt. النغمات بين العيّنات تُعزف بتسريع أقرب عيّنة أو إبطائها
+     (تشمل أرباع الأصوات بدقة لأن النسبة عشرية). كل آلة تُحمَّل أول ما تُختار فقط
+     (٢٠٠–٦٠٠ كيلو)، والتخليق القديم يعزف لحين جاهزيتها أو لو انقطع الاتصال.
+     فكّ الترميز بسياق غير متصل عشان ما نحتاج ضغطة مستخدم قبل التحميل. */
   const PIANO_SAMPLE_NAMES = ["A0"];
   for (let o = 1; o <= 7; o++) ["C", "Ds", "Fs", "A"].forEach((n) => PIANO_SAMPLE_NAMES.push(n + o));
   PIANO_SAMPLE_NAMES.push("C8");
-  const SAMPLE_PC = { C: 0, Ds: 3, Fs: 6, A: 9 };
-  let pianoSamples = null; // [{ midi, buffer, skip }] بعد اكتمال التحميل
-  let pianoLoading = null;
+  const SAMPLE_SETS = {
+    piano: PIANO_SAMPLE_NAMES.join(" "),
+    upright: "C1 Ds1 Fs1 A1 C2 Ds2 Fs2 A2 C3 Ds3 Fs3 A3 C4 Ds4 Fs4 A4 C5 Ds5 Fs5 A5 C6 Ds6 Fs6 A6 C7 Ds7 Fs7 A7 C8",
+    organ: "C1 Ds1 Fs1 A1 C2 Ds2 Fs2 A2 C3 Ds3 Fs3 A3 C4 Ds4 Fs4 A4 C5 Ds5 Fs5 A5 C6",
+    harmonium: "C2 Ds2 Fs2 A2 C3 Ds3 Fs3 A3 C4 Ds4 F4 Gs4 B4 D5",
+    harp: "E1 G1 B1 D2 F2 A2 C3 E3 G3 B3 D4 F4 A4 C5 E5 G5 B5 D6 F6 A6 B6 D7 F7",
+    guitar: "B1 D2 E2 Fs2 A2 B2 D3 E3 G3 A3 B3 Cs4 E4 Fs4 A4 B4 D5 E5 G5 As5",
+    guitar_ac: "D2 F2 Gs2 B2 D3 F3 Gs3 B3 D4 F4 Gs4 B4 D5",
+    guitar_el: "Cs2 E2 Fs2 A2 C3 Ds3 Fs3 A3 C4 Ds4 Fs4 A4 C5 Ds5 Fs5 A5 C6",
+    ebass: "Cs1 E1 G1 As1 Cs2 E2 G2 As2 Cs3 E3 G3 As3 Cs4 E4 G4 As4 Cs5",
+    violin: "G3 A3 C4 E4 G4 A4 C5 E5 G5 A5 C6 E6 G6 A6 C7",
+    cello: "C2 Ds2 F2 Gs2 B2 D3 F3 Gs3 B3 D4 F4 Gs4 B4 C5",
+    doublebass: "Fs1 G1 As1 C2 D2 E2 Fs2 A2 Cs3 E3 Gs3 B3",
+    strings: "C2 E2 G2 B2 D3 F3 G3 A3 C4 D4 E4 G4 A4 C5 D5 F5 G5 B5 D6",
+    flute: "C4 E4 A4 C5 E5 A5 C6 E6 A6 C7",
+    clarinet: "D3 F3 As3 D4 F4 As4 D5 F5 As5 D6 F6",
+    oboe: "As3 D4 F4 As4 D5 F5 As5 D6 F6",
+    bassoon: "G2 A2 C3 G3 A3 C4 E4 G4 A4 C5",
+    sax: "Cs3 E3 G3 As3 Cs4 E4 G4 As4 Cs5 E5 G5 A5",
+    horn: "A1 C2 Ds2 G2 D3 F3 A3 C4 D5 F5",
+    trumpet: "F3 A3 C4 Ds4 F4 G4 As4 D5 F5 A5 C6",
+    trombone: "As1 Cs2 Ds2 F2 Gs2 As2 C3 Ds3 F3 Gs3 As3 Cs4 Ds4 F4",
+    tuba: "F1 As1 Ds2 F2 As2 D3 F3 As3 D4",
+    marimba: "F2 C3 G3 B3 F4 C5 G5 B5 F6 C7",
+    xylophone: "G4 C5 G5 C6 G6 C7 G7 C8",
+    glockenspiel: "G5 C6 G6 C7 G7 C8",
+  };
+  // كل آلة لها تسجيلات تعزف منها (البيانو الهادئ = البيانو الكبير بفلتر لباد)
+  Object.keys(SAMPLE_SETS).forEach((id) => (INSTRUMENTS[id].sampled = id));
+  INSTRUMENTS.felt.sampled = "piano";
+  // آلات النفَس والقوس: العيّنة ٤ ثوانٍ، فنكرّر وسطها (بتداخل ناعم) ما دامت النغمة ممسوكة
+  const LOOPED_SETS = new Set("organ harmonium violin cello doublebass strings flute clarinet oboe bassoon sax horn trumpet trombone tuba".split(" "));
+  // ذيل الرفع (ثابت زمني بالثواني): البيانو يخمده المخمّد، الهارب والجلوكن يرنّان بعد الترك
+  const SAMPLE_RELEASE = { harp: 0.5, glockenspiel: 0.6, marimba: 0.25, xylophone: 0.2, guitar: 0.15, guitar_ac: 0.15, guitar_el: 0.12, ebass: 0.07, organ: 0.06 };
+  const NOTE_PC = { C: 0, Cs: 1, D: 2, Ds: 3, E: 4, F: 5, Fs: 6, G: 7, Gs: 8, A: 9, As: 10, B: 11 };
+  const sampleBank = {}; // المجموعة → [{ midi, buffer, skip, norm, loop }] بعد اكتمال تحميلها
+  const sampleLoading = {};
 
-  function loadPianoSamples() {
-    if (pianoLoading) return pianoLoading;
-    const base = new URL("../assets/audio/piano/", SOUNDS_SCRIPT_URL);
+  function loadSampleSet(set) {
+    if (!set || !SAMPLE_SETS[set]) return Promise.resolve();
+    if (sampleLoading[set]) return sampleLoading[set];
+    const base = new URL(`../assets/audio/${set}/`, SOUNDS_SCRIPT_URL);
     const decoder = new OfflineAudioContext(1, 1, 44100);
-    pianoLoading = Promise.all(
-      PIANO_SAMPLE_NAMES.map(async (name) => {
+    sampleLoading[set] = Promise.all(
+      SAMPLE_SETS[set].split(" ").map(async (name) => {
         const res = await fetch(new URL(name + ".mp3", base));
         if (!res.ok) throw new Error(name);
         const buffer = await decoder.decodeAudioData(await res.arrayBuffer());
         // مشفّر MP3 يضيف صمتاً قصيراً بأول الملف — نتخطّاه عشان النغمة تطلع لحظة الضغط
         const data = buffer.getChannelData(0);
+        const sr = buffer.sampleRate;
         let peak = 0;
         for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
         let start = 0;
         while (start < data.length && Math.abs(data[start]) < peak * 0.02) start++;
-        const midi = 12 * (Number(name.slice(-1)) + 1) + SAMPLE_PC[name.slice(0, -1)];
-        return { midi, buffer, skip: start / buffer.sampleRate, norm: 0.9 / (peak || 1) };
+        const midi = 12 * (Number(name.slice(-1)) + 1) + NOTE_PC[name.slice(0, -1)];
+        // شدة متقاربة بين الآلات: البيانو بمعايرته الأصلية، والبقية بطاقة أعلى نصف ثانية
+        // بأول ثانيتين ونص (الممدودة أعلى طاقة من المقروعة بنفس الذروة، والوتريات تتصاعد
+        // ببطء) بسقف يمنع تضخيم الضربات القصيرة. الممدودة أخفض شوي لأنها ما تخفت
+        let norm = 0.9 / (peak || 1);
+        if (set !== "piano") {
+          const n = Math.min(data.length - start, Math.round(0.5 * sr));
+          let loud = 0;
+          for (let a = start; a + n <= Math.min(data.length, start + 2.5 * sr); a += Math.round(0.1 * sr)) {
+            let sum = 0;
+            for (let i = a; i < a + n; i++) sum += data[i] * data[i];
+            loud = Math.max(loud, Math.sqrt(sum / (n || 1)));
+          }
+          norm = Math.min((LOOPED_SETS.has(set) ? 0.16 : 0.2) / (loud || 1), 1.5 / (peak || 1));
+        }
+        return { midi, buffer, skip: start / sr, norm, loop: LOOPED_SETS.has(set) ? makeLoop(data, sr, start) : null };
       })
     )
-      .then((list) => (pianoSamples = list))
+      .then((list) => (sampleBank[set] = list))
       .catch(() => {
-        pianoLoading = null; // بلا اتصال مثلاً — نحاول مرة ثانية لاحقاً، والمركّب يغطّي
+        sampleLoading[set] = null; // بلا اتصال مثلاً — نحاول مرة ثانية لاحقاً، والمركّب يغطّي
       });
-    return pianoLoading;
+    return sampleLoading[set];
   }
-  // بعد ما تهدأ الصفحة: التحميل ما يزاحم رسمها الأول
-  (window.requestIdleCallback || ((fn) => setTimeout(fn, 1200)))(() => loadPianoSamples());
 
-  /* نغمة بيانو من العيّنات: أقرب عيّنة بسرعة تشغيل تعدّل النغمة (تشمل أرباع
-     الأصوات بدقة لأن النسبة عشرية). القوة تتحكم بالشدة وبسطوع الصوت معاً — البيانو
-     الحقيقي يلمع أكثر لما تضغط أقوى. duration = مدة الإمساك، وبعدها المخمّد. */
-  function playPianoSample(target, freq, startTime, duration, peakGain, pan) {
+  /* حلقة تكرار بلا نقرة: نمزج آخر ٠٫٢ ثانية قبل نهاية الحلقة مع ما يسبق بدايتها، فلما
+     يقفز التشغيل من النهاية للبداية يكمل الموج من حيث وصل. النهاية قبل التلاشي المخبوز
+     بآخر الملف، والبداية بعد هجمة النفَس/القوس. */
+  function makeLoop(data, sr, start) {
+    const xf = Math.round(0.2 * sr);
+    const to = data.length - Math.round(0.4 * sr);
+    const rms = (a) => {
+      let sum = 0;
+      const n = Math.round(0.1 * sr);
+      for (let i = a; i < a + n; i++) sum += data[i] * data[i];
+      return Math.sqrt(sum / n) || 1e-6;
+    };
+    // البداية بعد ما تكتمل الهجمة: الوتريات الجماعية تتصاعد ببطء (ثانيتين أحياناً)،
+    // فنبدأ الحلقة لما يوصل الصوت ٧٠٪ من أعلى مستواه، لا وسط التصاعد
+    const step = Math.round(0.05 * sr);
+    let top = 0;
+    for (let i = start; i < to - step * 2; i += step) top = Math.max(top, rms(i));
+    let from = start + Math.round(0.6 * sr);
+    while (from < to - xf - 0.8 * sr && rms(from) < top * 0.7) from += step;
+    if (to - from < xf + 0.4 * sr) return null;
+    // النغمة المسجّلة تخفت شوي مع الوقت (حتى ٦ ديسيبل): نسوّي مستواها داخل الحلقة
+    // حتى ما ينبض الصوت كل ما رجعت للبداية
+    const ratio = clamp(rms(from) / rms(to - Math.round(0.1 * sr)), 0.4, 2.5);
+    for (let i = from; i < to; i++) data[i] *= 1 + ((ratio - 1) * (i - from)) / (to - from);
+    for (let i = 0; i < xf; i++) {
+      const t = (i / xf) * (Math.PI / 2);
+      data[to - xf + i] = data[to - xf + i] * Math.cos(t) + data[from - xf + i] * Math.sin(t);
+    }
+    return { start: from / sr, end: to / sr };
+  }
+
+  // يجهّز آلات قبل تشغيل/تصدير (بحدّ أقصى للانتظار: بلا اتصال يكمل بالتخليق)
+  function ensureSamples(ids) {
+    const sets = [...new Set(ids.map((id) => INSTRUMENTS[id]?.sampled).filter((s) => s && !sampleBank[s]))];
+    if (!sets.length) return Promise.resolve();
+    return Promise.race([Promise.all(sets.map(loadSampleSet)), new Promise((r) => setTimeout(r, 8000))]);
+  }
+
+  /* نغمة من العيّنات: أقرب عيّنة بسرعة تشغيل تعدّل النغمة. القوة تتحكم بالشدة وبسطوع
+     الصوت معاً — الآلة الحقيقية تلمع أكثر لما تضغط/تنفخ أقوى. duration = مدة الإمساك،
+     وبعدها الرفع. يرجّع null لو النغمة أبعد من مدى الآلة بكثير (التخليق يعزفها). */
+  function playSampled(target, instrument, freq, startTime, duration, peakGain, pan) {
     const { ctx, dry, wet, live } = target;
+    const set = instrument.sampled;
+    const list = sampleBank[set];
     const midiF = 69 + 12 * Math.log2(freq / 440);
-    const s = pianoSamples.reduce((best, x) => (Math.abs(x.midi - midiF) < Math.abs(best.midi - midiF) ? x : best));
+    const s = list.reduce((best, x) => (Math.abs(x.midi - midiF) < Math.abs(best.midi - midiF) ? x : best));
+    if (Math.abs(s.midi - midiF) > 19) return null;
     const rate = 2 ** ((midiF - s.midi) / 12);
+    const tau = SAMPLE_RELEASE[set] || (s.loop ? 0.12 : 0.09);
     const src = ctx.createBufferSource();
     src.buffer = s.buffer;
     src.playbackRate.value = rate;
-    const available = (s.buffer.duration - s.skip) / rate;
-    const end = Math.min(available, duration + 0.6);
-    const level = Math.max(peakGain * s.norm * 1.5, 0.0001);
+    if (s.loop) {
+      src.loop = true;
+      src.loopStart = s.loop.start;
+      src.loopEnd = s.loop.end;
+    }
+    const available = s.loop ? Infinity : (s.buffer.duration - s.skip) / rate;
+    const end = Math.min(available, duration + tau * 7);
+    // البيانو الهادئ (Felt): نفس البيانو الكبير بلباد على المطارق — أعتم وأنعم بكثير
+    const felt = instrument.felt;
+    const level = Math.max(peakGain * s.norm * 1.5 * (felt ? 0.8 : 1), 0.0001);
     const env = ctx.createGain();
+    env._tau = tau;
     env.gain.setValueAtTime(level, startTime);
-    if (duration < available) env.gain.setTargetAtTime(0.0001, startTime + duration, 0.09); // المخمّد بعد الرفع
+    if (duration < available) env.gain.setTargetAtTime(0.0001, startTime + duration, tau);
     const tone = ctx.createBiquadFilter();
     tone.type = "lowpass";
-    tone.frequency.value = clamp(1400 + 9000 * (peakGain / 0.3), 1400, 12000);
+    tone.frequency.value = felt ? clamp(500 + 2200 * (peakGain / 0.3), 500, 2800) : clamp(1400 + 9000 * (peakGain / 0.3), 1400, 12000);
     src.connect(tone).connect(env);
     let out = env;
     if (pan && ctx.createStereoPanner) {
@@ -821,10 +934,22 @@ function initBeepMelodyExperiment() {
       // نغمة تجربة بالآلة الجديدة بدل صوت النقرة (والمفتاح ينضغط على البيانو)،
       // إلا أثناء التسجيل حتى ما تنحفظ بالطبقة
       if (rec) return playClickSound();
-      keyOn("KeyG");
-      setTimeout(() => keyOff("KeyG"), 350);
+      // الآلة المسجّلة تتحمّل أول مرة (ثانية تقريباً): النغمة التجريبية تنتظرها حتى
+      // يُسمع صوتها الحقيقي لا المركّب، إلا لو تأخرت كثيراً أو انتقل لآلة غيرها
+      const set = INSTRUMENTS[id].sampled;
+      const preview = () => {
+        el.classList.remove("loading");
+        if (currentInstrument !== id || rec) return;
+        keyOn("KeyG");
+        setTimeout(() => keyOff("KeyG"), 350);
+      };
+      if (!set || sampleBank[set]) return preview();
+      el.classList.add("loading");
+      Promise.race([loadSampleSet(set), new Promise((r) => setTimeout(r, 2500))]).then(preview);
     });
   });
+  // بعد ما تهدأ الصفحة: آلة البداية (أو المحفوظة) تتحمّل بلا ما تزاحم الرسم الأول
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 1200)))(() => loadSampleSet(INSTRUMENTS[currentInstrument]?.sampled || "piano"));
 
   // "آخر ما استخدمت": ثلاث آلات فوق القائمة، كل زر يضغط زر الآلة الأصلي
   const recentBox = document.getElementById("instrumentRecent");
@@ -843,8 +968,10 @@ function initBeepMelodyExperiment() {
         if (!orig) return [];
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "filter-chip";
+        b.className = "instrument-btn";
         b.textContent = orig.textContent;
+        b.dataset.icon = orig.dataset.icon;
+        if (orig.hasAttribute("data-real")) b.dataset.real = "";
         b.addEventListener("click", () => orig.click());
         return [b];
       })
@@ -1030,8 +1157,8 @@ function initBeepMelodyExperiment() {
   function updateSoundSummary() {
     const now = document.getElementById("beepSoundNow");
     if (!now) return;
-    const pick = (sel) => document.querySelector(sel + " .active")?.textContent.trim() || "";
-    now.textContent = pick("#instrumentPicker");
+    const active = document.querySelector("#instrumentPicker .instrument-btn.active");
+    now.textContent = active ? `${active.dataset.icon || ""} ${active.textContent.trim()}`.trim() : "";
   }
 
   // مفتاح التبديل بين اللوحة المبسطة (أوكتافة) والكاملة (٤ أوكتافات)
@@ -1251,9 +1378,12 @@ function initBeepMelodyExperiment() {
     const freq = exactFreq || NOTES[noteIndex] * 2 ** octaveShift;
     peakGain *= dynamicsGain;
     const instrument = INSTRUMENTS[currentInstrument];
-    peakGain *= instrument.level || 1; // معايرة شدة كل آلة (تُقاس آلياً)
     if (instrument.sample && customSample) return playSample(target, freq, startTime, duration, peakGain, pan);
-    if (instrument.sampled && pianoSamples) return playPianoSample(target, freq, startTime, duration, peakGain, pan);
+    if (sampleBank[instrument.sampled]) {
+      const env = playSampled(target, instrument, freq, startTime, duration, peakGain, pan);
+      if (env) return env;
+    }
+    peakGain *= instrument.level || 1; // معايرة شدة كل آلة مركّبة (تُقاس آلياً)
 
     // آلة وترية (يسار اللوحة = نغمات واطية بأوتار أطول وأثخن فترن أطول
     // وأغنى، يمينها = نغمات حادة تخفت أسرع وأنحف) — يشتغل بأي مفتاح موسيقي
@@ -1496,7 +1626,8 @@ function initBeepMelodyExperiment() {
   /* يعيد عزف القطعة داخل OfflineAudioContext (أسرع من الزمن الحقيقي) بنفس
      دوال التخليق المستخدمة بالتشغيل الحي — فالملف المصدَّر مطابق لما سمعه
      المستخدم، لا نسخة تقريبية */
-  function renderPieceToBuffer(piece) {
+  async function renderPieceToBuffer(piece) {
+    await ensureSamples(piece.layers ? piece.layers.map((l) => l.instrument).filter(Boolean) : [currentInstrument]);
     return withFixedRandom(() => renderPieceSync(piece));
   }
 
@@ -1813,6 +1944,7 @@ function initBeepMelodyExperiment() {
 
   async function playSequence() {
     await ensureContext();
+    await ensureSamples([currentInstrument]);
 
     const mood = MOODS[currentMood];
     delayFeedbackGain.gain.value = mood.delayFeedback;
@@ -2293,6 +2425,7 @@ function initBeepMelodyExperiment() {
     async function piperPlay() {
       if (playing) stopPlayback();
       await ensureContext();
+      await ensureSamples(["clarinet", "strings", "cello", "marimba"]);
       piperStop();
       const ctx = audioCtx;
       const t0 = ctx.currentTime + 0.15;
@@ -2637,14 +2770,14 @@ function initBeepMelodyExperiment() {
 
   // آلة ممدودة (أرغن، كورس، وتريات...) تستمر ما دام المفتاح مضغوطاً؛ المقروعة تخفت
   // طبيعياً. الرفع يخمّد الاثنين (keyRelease)، فالمدة الطويلة ما تكلّف شي بعد الرفع.
-  // البيانو الحقيقي يرنّ بطول عيّنته (حتى ٧ ثوانٍ) ما دام ممسوكاً أو الدواسة نازلة.
-  const holdSeconds = (id) => (INSTRUMENTS[id].sampled && pianoSamples ? 30 : INSTRUMENTS[id].sustainRatio > 0 ? 12 : 2.4);
+  // الآلة المسجّلة ترنّ بطول عيّنتها (والممدودة تتكرر) ما دامت ممسوكة أو الدواسة نازلة.
+  const holdSeconds = (id) => (sampleBank[INSTRUMENTS[id].sampled] ? 30 : INSTRUMENTS[id].sustainRatio > 0 ? 12 : 2.4);
 
   function keyRelease(env) {
     if (!env) return;
     const now = audioCtx.currentTime;
     env.gain.cancelScheduledValues(now);
-    env.gain.setTargetAtTime(0.0001, now, 0.09); // مخمّد البيانو: ذيل قصير ناعم مو قطع
+    env.gain.setTargetAtTime(0.0001, now, env._tau || 0.09); // مخمّد البيانو: ذيل قصير ناعم مو قطع (الهارب يرنّ أطول)
   }
 
   function releaseSustained(id) {
@@ -3139,10 +3272,11 @@ function initBeepMelodyExperiment() {
     return !l.muted && !tr.mute && (!anySolo() || tr.solo);
   };
   const sounding = () => layers.filter(audible);
-  const instrumentLabel = (id) => document.querySelector(`.instrument-btn[data-instrument="${id}"]`)?.textContent.trim() || id;
+  const instrumentBtn = (id) => document.querySelector(`.instrument-btn[data-instrument="${id}"]`);
+  const instrumentLabel = (id) => instrumentBtn(id)?.textContent.trim() || id;
   const rhythmLabel = (id) => document.querySelector(`[data-rhythm="${id}"]`)?.textContent.trim() || id;
   const clipLabel = (l) => (l.kind === "drums" ? rhythmLabel(l.rhythm) : l.kind === "audio" ? l.name || micBtn?.dataset.label || "🎤" : instrumentLabel(l.instrument));
-  const clipIcon = (l) => (l.kind === "drums" ? "🥁" : l.kind === "audio" ? (l.name || "🎤").split(" ")[0] : instrumentLabel(l.instrument).split(" ")[0]);
+  const clipIcon = (l) => (l.kind === "drums" ? "🥁" : l.kind === "audio" ? (l.name || "🎤").split(" ")[0] : instrumentBtn(l.instrument)?.dataset.icon || "🎵");
   const clock = (sec) => Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0");
   const idleLabel = () => (layers.length ? recToggle.dataset.more : recToggle.dataset.label);
 
@@ -3913,6 +4047,7 @@ function initBeepMelodyExperiment() {
     if (!list.length && !videoReady()) return showToast(recTake.dataset.silent);
     if (playing) stopPlayback();
     await ensureContext();
+    await ensureSamples(list.map((l) => l.instrument).filter(Boolean));
     stopTake();
     // مع فيديو: التشغيل يكمل لنهاية المشهد حتى لو الموسيقى أقصر
     const total = Math.max(0, ...list.map(layerEnd), videoReady() ? videoDur() : 0);
@@ -4073,10 +4208,10 @@ function initBeepMelodyExperiment() {
      تُكتب Pitch Bend قبل النغمة (مدى ±٢ نصف درجة الافتراضي) — دقيق للحن المفرد،
      وبالأوتار المتزامنة يأخذ الكل ربع الصوت نفسه (حد معروف بـMIDI ١.٠). */
   const GM_PROGRAM = {
-    piano: 0, epiano: 4, harpsichord: 6, celesta: 8, glockenspiel: 9, musicbox: 10, vibraphone: 11, marimba: 12,
-    xylophone: 13, bell: 14, santoor: 15, organ: 19, accordion: 21, harmonica: 22, melodica: 22, guitar: 24,
+    piano: 0, upright: 0, felt: 0, epiano: 4, harpsichord: 6, celesta: 8, glockenspiel: 9, musicbox: 10, vibraphone: 11, marimba: 12,
+    xylophone: 13, bell: 14, santoor: 15, organ: 19, accordion: 21, harmonium: 20, harmonica: 22, melodica: 22, guitar: 24, guitar_ac: 25, guitar_el: 27, ebass: 33,
     doublebass: 32, synthbass: 38, violin: 40, cello: 42, harp: 46, strings: 48, choir: 52, trumpet: 56,
-    trombone: 57, horn: 60, sax: 65, oboe: 68, clarinet: 71, flute: 73, recorder: 74, nay: 77, chiptune: 80,
+    trombone: 57, tuba: 58, horn: 60, sax: 65, oboe: 68, bassoon: 70, clarinet: 71, flute: 73, recorder: 74, nay: 77, chiptune: 80,
     synth: 81, banjo: 105, oud: 106, qanun: 107, kalimba: 108, steelpan: 114, custom: 0,
   };
   function studioToMidi() {
