@@ -160,9 +160,9 @@
 </head>
 <body>
 
-  <a href="#main-content" class="skip-link">{{ t.skip_to_content }}</a>
+  <a href="#main-content" class="skip-link" data-nosnippet>{{ t.skip_to_content }}</a>
 
-  <header class="site-header">
+  <header class="site-header" data-nosnippet>
     <div class="header-inner">
       <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}" class="logo"><span class="dot">●</span>{% if lang == "en" %}<span class="logo-word">Hako<span class="logo-tail">lah</span></span>{% else %}<span class="logo-word">هكو<span class="logo-tail">له</span></span>{% endif %}</a>
       <nav class="main-nav" id="main-nav">
@@ -216,7 +216,7 @@
 
   {# شريط سفلي بستايل التطبيقات — يظهر بنفس نقطة الكسر اللي يتحول فيها الهيدر
      لقائمة همبرغر (1200px)، ويكرر نفس وجهات أيقونات الهيدر (لا صفحات جديدة) #}
-  <nav class="bottom-nav" aria-label="{{ t.nav_home }}">
+  <nav class="bottom-nav" data-nosnippet aria-label="{{ t.nav_home }}">
     <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}"{% if navActive == "home" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("home", 22) }}</span><span>{{ t.nav_home }}</span>
     </a>
