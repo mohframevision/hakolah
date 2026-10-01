@@ -205,6 +205,7 @@ pageScript: "sounds"
       <div class="beep-add-row">
         <button type="button" class="filter-chip" id="beepAddDrums" aria-expanded="false" aria-controls="beepDrums">🥁 إيقاع</button>
         <button type="button" class="filter-chip" id="beepMicRec" data-label="🎤 سجّل صوتك" data-stop="⏹ أوقف" data-denied="لم يُسمح باستخدام الميكروفون." data-failed="تعذّر تسجيل الصوت أو قراءته." data-silent="لم يُلتقط أي صوت.">🎤 سجّل صوتك</button>
+        <button type="button" class="filter-chip" id="beepAddSfx" aria-expanded="false" aria-controls="beepSfx">💥 مؤثرات</button>
         <label class="filter-chip" for="beepAudioFile">📁 ملف صوتي</label>
         <input type="file" id="beepAudioFile" accept="audio/*" hidden />
       </div>
@@ -237,6 +238,42 @@ pageScript: "sounds"
           <button type="button" class="filter-chip" id="beepDrumAdd">➕ أضفه مساراً</button>
         </div>
         <p class="beep-param-note">يُضاف عند الخط الأبيض بسرعة المشروع، وتقدر تعدّل ضرباته بزر «حرّر».</p>
+      </div>
+      <div class="beep-drums" id="beepSfx" hidden>
+        <p class="beep-setting-label">💥 ضربات</p>
+        <div class="instrument-picker" role="group" aria-label="مؤثرات سينمائية">
+          <button type="button" class="filter-chip" data-sfx="impact">💥 ضربة</button>
+          <button type="button" class="filter-chip" data-sfx="subdrop">🔻 سقوط جهير</button>
+          <button type="button" class="filter-chip" data-sfx="braam">📯 براام</button>
+        </div>
+        <p class="beep-setting-label">↗️ انتقالات</p>
+        <div class="instrument-picker" role="group" aria-label="مؤثرات سينمائية">
+          <button type="button" class="filter-chip" data-sfx="riser">↗️ صعود</button>
+          <button type="button" class="filter-chip" data-sfx="downlifter">↘️ هبوط</button>
+          <button type="button" class="filter-chip" data-sfx="whoosh">💨 ووش</button>
+          <button type="button" class="filter-chip" data-sfx="reverse">⏪ عكسي</button>
+        </div>
+        <p class="beep-setting-label">🎬 أجواء</p>
+        <div class="instrument-picker" role="group" aria-label="مؤثرات سينمائية">
+          <button type="button" class="filter-chip" data-sfx="drone">🌫️ توتر</button>
+          <button type="button" class="filter-chip" data-sfx="shimmer">✨ لمعان</button>
+          <button type="button" class="filter-chip" data-sfx="heartbeat">💓 نبض قلب</button>
+          <button type="button" class="filter-chip" data-sfx="tick">⏱️ ساعة</button>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">الطول</span>
+          <div class="instrument-picker" role="group" aria-label="طول المؤثر">
+            <button type="button" class="filter-chip" data-dur="1">ثانية</button>
+            <button type="button" class="filter-chip" data-dur="2">ثانيتان</button>
+            <button type="button" class="filter-chip" data-dur="4">٤ ثوانٍ</button>
+            <button type="button" class="filter-chip" data-dur="8">٨ ثوانٍ</button>
+          </div>
+        </div>
+        <div class="instrument-picker">
+          <button type="button" class="filter-chip" id="beepSfxPreview">▶️ جرّب</button>
+          <button type="button" class="filter-chip" id="beepSfxAdd">➕ أضفه مساراً</button>
+        </div>
+        <p class="beep-param-note">ضع الخط الأبيض على لحظة القطع في المشهد: الصعود والعكسي ينتهيان عنده تماماً، والووش ذروته عنده، والضربات تبدأ عنده. كل المؤثرات مولّدة بالكود، ومجانية لأي استخدام.</p>
       </div>
       <div class="beep-rec-take" id="beepRecTake" hidden data-layer="طبقة" data-track="مسار" data-max="وصلت الحد الأقصى: ٦٤ مقطعاً و١٦ مساراً" data-silent="كل الطبقات مكتومة" data-restored="🔄 استُعيد مشروعك الأخير" data-shared="🔗 فُتح المشروع المشارَك — عدّل عليه وشاركه من جديد">
         <div class="beep-clip-tools" id="beepClipTools">

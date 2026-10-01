@@ -206,6 +206,7 @@ pageScript: "sounds"
       <div class="beep-add-row">
         <button type="button" class="filter-chip" id="beepAddDrums" aria-expanded="false" aria-controls="beepDrums">🥁 Rhythm</button>
         <button type="button" class="filter-chip" id="beepMicRec" data-label="🎤 Record your voice" data-stop="⏹ Stop" data-denied="Microphone access wasn't allowed." data-failed="Couldn't record or read the audio." data-silent="No sound was picked up.">🎤 Record your voice</button>
+        <button type="button" class="filter-chip" id="beepAddSfx" aria-expanded="false" aria-controls="beepSfx">💥 SFX</button>
         <label class="filter-chip" for="beepAudioFile">📁 Audio file</label>
         <input type="file" id="beepAudioFile" accept="audio/*" hidden />
       </div>
@@ -238,6 +239,42 @@ pageScript: "sounds"
           <button type="button" class="filter-chip" id="beepDrumAdd">➕ Add as a track</button>
         </div>
         <p class="beep-param-note">It's added at the white line at the project tempo, and you can change its hits with the Edit button.</p>
+      </div>
+      <div class="beep-drums" id="beepSfx" hidden>
+        <p class="beep-setting-label">💥 Hits</p>
+        <div class="instrument-picker" role="group" aria-label="Cinematic sound effects">
+          <button type="button" class="filter-chip" data-sfx="impact">💥 Impact</button>
+          <button type="button" class="filter-chip" data-sfx="subdrop">🔻 Sub drop</button>
+          <button type="button" class="filter-chip" data-sfx="braam">📯 Braam</button>
+        </div>
+        <p class="beep-setting-label">↗️ Transitions</p>
+        <div class="instrument-picker" role="group" aria-label="Cinematic sound effects">
+          <button type="button" class="filter-chip" data-sfx="riser">↗️ Riser</button>
+          <button type="button" class="filter-chip" data-sfx="downlifter">↘️ Downlifter</button>
+          <button type="button" class="filter-chip" data-sfx="whoosh">💨 Whoosh</button>
+          <button type="button" class="filter-chip" data-sfx="reverse">⏪ Reverse</button>
+        </div>
+        <p class="beep-setting-label">🎬 Atmosphere</p>
+        <div class="instrument-picker" role="group" aria-label="Cinematic sound effects">
+          <button type="button" class="filter-chip" data-sfx="drone">🌫️ Tension</button>
+          <button type="button" class="filter-chip" data-sfx="shimmer">✨ Shimmer</button>
+          <button type="button" class="filter-chip" data-sfx="heartbeat">💓 Heartbeat</button>
+          <button type="button" class="filter-chip" data-sfx="tick">⏱️ Clock</button>
+        </div>
+        <div class="beep-setting">
+          <span class="beep-setting-label">Length</span>
+          <div class="instrument-picker" role="group" aria-label="Effect length">
+            <button type="button" class="filter-chip" data-dur="1">1s</button>
+            <button type="button" class="filter-chip" data-dur="2">2s</button>
+            <button type="button" class="filter-chip" data-dur="4">4s</button>
+            <button type="button" class="filter-chip" data-dur="8">8s</button>
+          </div>
+        </div>
+        <div class="instrument-picker">
+          <button type="button" class="filter-chip" id="beepSfxPreview">▶️ Try it</button>
+          <button type="button" class="filter-chip" id="beepSfxAdd">➕ Add as a track</button>
+        </div>
+        <p class="beep-param-note">Put the white line on the cut in your scene: risers and reverses end exactly there, the whoosh peaks there, and hits start there. All effects are generated in code and free for any use.</p>
       </div>
       <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-track="Track" data-max="You've reached the limit: 64 clips and 16 tracks" data-silent="All layers are muted" data-restored="🔄 Your last project was restored" data-shared="🔗 Opened the shared project — edit it and share it again">
         <div class="beep-clip-tools" id="beepClipTools">

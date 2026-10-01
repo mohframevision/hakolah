@@ -3139,7 +3139,7 @@ function initBeepMelodyExperiment() {
   const instrumentLabel = (id) => document.querySelector(`.instrument-btn[data-instrument="${id}"]`)?.textContent.trim() || id;
   const rhythmLabel = (id) => document.querySelector(`[data-rhythm="${id}"]`)?.textContent.trim() || id;
   const clipLabel = (l) => (l.kind === "drums" ? rhythmLabel(l.rhythm) : l.kind === "audio" ? l.name || micBtn?.dataset.label || "🎤" : instrumentLabel(l.instrument));
-  const clipIcon = (l) => (l.kind === "drums" ? "🥁" : l.kind === "audio" ? "🎤" : instrumentLabel(l.instrument).split(" ")[0]);
+  const clipIcon = (l) => (l.kind === "drums" ? "🥁" : l.kind === "audio" ? (l.name || "🎤").split(" ")[0] : instrumentLabel(l.instrument).split(" ")[0]);
   const clock = (sec) => Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0");
   const idleLabel = () => (layers.length ? recToggle.dataset.more : recToggle.dataset.label);
 
@@ -3869,6 +3869,7 @@ function initBeepMelodyExperiment() {
     playheadTimer = null;
     stopMetronome();
     stopDrumPreview();
+    stopSfxPreview();
     setPlayhead(null);
     if (soft) {
       // نهاية طبيعية: نترك ذيل الرنين والصدى يكمل ثم نفك السلاسل
@@ -3986,7 +3987,7 @@ function initBeepMelodyExperiment() {
       btn.textContent = original;
     }
   }
-  const stemSlug = (l) => (l.kind === "drums" ? "drums-" + l.rhythm : l.kind === "audio" ? "audio" : l.instrument);
+  const stemSlug = (l) => (l.kind === "drums" ? "drums-" + l.rhythm : l.sfx ? "sfx-" + l.sfx.id : l.kind === "audio" ? "audio" : l.instrument);
 
   /* ZIP بلا ضغط (Stored) — WAV ما ينضغط بشكل يُذكر أصلاً، وهكذا ما نحتاج مكتبة.
      البنية: رأس محلي + بيانات لكل ملف، ثم الفهرس المركزي، ثم سجل النهاية. */
@@ -4166,11 +4167,12 @@ function initBeepMelodyExperiment() {
       meter,
       tracks: tracks.map(cloneTrack),
       layers: layers
-        .filter((l) => withAudio || l.kind !== "audio")
+        // المؤثرات تُشارك بإعداداتها (تُرسم من جديد عند الفتح)، والتسجيلات الحقيقية لا
+        .filter((l) => withAudio || l.kind !== "audio" || l.sfx)
         .map((l) => {
-          const out = { kind: l.kind, instrument: l.instrument, kit: l.kit, rhythm: l.rhythm, name: l.name, muted: l.muted, end: l.end, t0: l.t0, t1: l.t1, offset: l.offset, row: l.row };
-          if (l.kind === "audio") out.audio = { data: l.buffer.getChannelData(0), sampleRate: l.buffer.sampleRate };
-          else out.events = l.events.map(packEvent);
+          const out = { kind: l.kind, instrument: l.instrument, kit: l.kit, rhythm: l.rhythm, name: l.name, sfx: l.sfx, muted: l.muted, end: l.end, t0: l.t0, t1: l.t1, offset: l.offset, row: l.row };
+          if (l.kind !== "audio") out.events = l.events.map(packEvent);
+          else if (withAudio) out.audio = { data: l.buffer.getChannelData(0), sampleRate: l.buffer.sampleRate };
           return out;
         }),
     };
@@ -4181,26 +4183,38 @@ function initBeepMelodyExperiment() {
     if (typeof a[1] === "string") return { drum: a[1], startBeat: a[0], held: 0.1, durBeats: 0.3, velocity: a[2], gain: drumGain(a[2]) };
     return makeNoteEvent(a[3], a[4], a[0], a[1], a[2], a[5]);
   }
-  function applyProject(p) {
+  async function applyProject(p) {
     if (!p || !Array.isArray(p.layers)) throw new Error("bad project");
     bpm = clamp(Math.round(p.bpm) || 90, 40, 240);
     meter = [2, 3, 4].includes(p.meter) ? p.meter : 4;
     tracks = (p.tracks || []).map((t) => ({ ...newTrack(), ...t, eq: Array.isArray(t.eq) ? t.eq.slice(0, 3) : [0, 0, 0] }));
-    layers = p.layers
-      .filter((l) => (l.kind === "audio" ? l.audio?.data?.length : Array.isArray(l.events)) && (l.kind !== "notes" || INSTRUMENTS[l.instrument]) && (l.kind !== "drums" || DRUM_KITS[l.kit]))
-      .slice(0, MAX_LAYERS)
-      .map((l) => {
-        const out = { ...l };
-        delete out.audio;
-        if (l.kind === "audio") {
-          out.buffer = new AudioBuffer({ length: l.audio.data.length, numberOfChannels: 1, sampleRate: l.audio.sampleRate });
-          out.buffer.copyToChannel(l.audio.data, 0);
-        } else {
-          out.events = l.events.map(unpackEvent);
-        }
-        out.row = clamp(Math.round(l.row) || 0, 0, MAX_TRACKS - 1);
-        return out;
-      });
+    const usable = (l) =>
+      (l.kind === "audio" ? l.audio?.data?.length || SFX[l.sfx?.id] : Array.isArray(l.events)) &&
+      (l.kind !== "notes" || INSTRUMENTS[l.instrument]) &&
+      (l.kind !== "drums" || DRUM_KITS[l.kit]);
+    const loaded = await Promise.all(
+      p.layers
+        .filter(usable)
+        .slice(0, MAX_LAYERS)
+        .map(async (l) => {
+          const out = { ...l };
+          delete out.audio;
+          if (l.kind === "audio" && l.audio?.data?.length) {
+            out.buffer = new AudioBuffer({ length: l.audio.data.length, numberOfChannels: 1, sampleRate: l.audio.sampleRate });
+            out.buffer.copyToChannel(l.audio.data, 0);
+          } else if (l.kind === "audio") {
+            out.buffer = (await renderSfx(l.sfx.id, clamp(Number(l.sfx.dur) || 2, 1, 8))).buffer; // مؤثر من رابط: نرسمه من جديد
+            out.end = out.buffer.duration;
+            out.t1 = Math.min(out.t1, out.end);
+            out.t0 = Math.min(out.t0, out.t1 - 0.05);
+          } else {
+            out.events = l.events.map(unpackEvent);
+          }
+          out.row = clamp(Math.round(l.row) || 0, 0, MAX_TRACKS - 1);
+          return out;
+        })
+    );
+    layers = loaded;
     history = [];
     future = [];
     selected = null;
@@ -4239,7 +4253,7 @@ function initBeepMelodyExperiment() {
     const url = location.origin + location.pathname + "#studio=" + (await encodeShare());
     try {
       await navigator.clipboard.writeText(url);
-      showToast(layers.some((l) => l.kind === "audio") ? shareBtn.dataset.audio : shareBtn.dataset.copied);
+      showToast(layers.some((l) => l.kind === "audio" && !l.sfx) ? shareBtn.dataset.audio : shareBtn.dataset.copied);
     } catch {
       showToast(url);
     }
@@ -4736,6 +4750,324 @@ function initBeepMelodyExperiment() {
     });
   }
 
+  /* ===== مكتبة المؤثرات السينمائية (SFX) =====
+     كلها تخليق بالكود (لا ملفات ولا رخص)، وتُحفظ بالمشروع كمقطع صوتي عادي: تُسحب
+     وتُقص وتُخلط وتُصدَّر مثل أي تسجيل. الطول قابل للتغيير (عدا الضربة)، والمكان
+     بالنسبة للخط الأبيض (نقطة القطع بالمشهد) حسب طبيعة المؤثر:
+       - "end": التمهيدية (الصعود والعكسي) تنتهي عند الخط بالضبط — تصل للقطع.
+       - "center": الووش ذروته عند الخط.
+       - "start": الضربات والباقي تبدأ عنده.
+     كل مؤثر = build(ctx, out, D) يرسم الصوت داخل سياق غير متصل بطول D ثانية. */
+  const SFX_RATE = 48000;
+  const SFX = {
+    impact: {
+      fixed: 1,
+      anchor: "start",
+      tail: 3,
+      build(ctx, out) {
+        sfxTone(ctx, out, 0, 70, 32, 2.6, 1, "sine");
+        sfxTone(ctx, out, 0, 140, 50, 0.5, 0.5, "triangle");
+        sfxNoise(ctx, out, 0, 0.45, 0.9, "lowpass", [2400, 180], 0.7);
+        sfxNoise(ctx, out, 0, 0.03, 0.8, "highpass", [3000, 3000], 0.7); // طقّة البداية
+        sfxReverb(ctx, out, 0.35, 3);
+      },
+    },
+    subdrop: {
+      anchor: "start",
+      tail: 0.2,
+      build(ctx, out, D) {
+        sfxTone(ctx, out, 0, 95, 26, D, 1, "sine");
+      },
+    },
+    braam: {
+      anchor: "start",
+      tail: 1.5,
+      build(ctx, out, D) {
+        // نحاس سينمائي ضخم: أوتار منشارية غليظة متباعدة قليلاً، وفلتر ينفتح ثم ينغلق
+        const f = ctx.createBiquadFilter();
+        f.type = "lowpass";
+        f.Q.value = 2;
+        f.frequency.setValueAtTime(180, 0);
+        f.frequency.exponentialRampToValueAtTime(1400, Math.min(0.6, D * 0.3));
+        f.frequency.exponentialRampToValueAtTime(260, D);
+        const shaper = ctx.createWaveShaper();
+        const curve = new Float32Array(1024);
+        for (let i = 0; i < curve.length; i++) curve[i] = Math.tanh(((i / 1023) * 2 - 1) * 2.2);
+        shaper.curve = curve;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, 0);
+        g.gain.exponentialRampToValueAtTime(0.5, 0.08);
+        g.gain.setValueAtTime(0.5, D * 0.6);
+        g.gain.exponentialRampToValueAtTime(0.0001, D + 1.2);
+        f.connect(shaper).connect(g).connect(out);
+        [55, 55.4, 110, 82.4, 164.8].forEach((hz) => {
+          const o = ctx.createOscillator();
+          o.type = "sawtooth";
+          o.frequency.value = hz;
+          o.connect(f);
+          o.start(0);
+          o.stop(D + 1.3);
+        });
+        sfxReverb(ctx, g, 0.3, 2.5, out);
+      },
+    },
+    riser: {
+      anchor: "end",
+      tail: 0,
+      build(ctx, out, D) {
+        // ضجيج يصعد تردده وقوته معاً + نغمة تصعد — ويقف فجأة عند النهاية (القطع)
+        sfxNoise(ctx, out, 0, D, 0.9, "bandpass", [300, 7000], 2.5, "rise");
+        sfxTone(ctx, out, 0, 180, 1400, D, 0.35, "sawtooth", "rise");
+      },
+    },
+    downlifter: {
+      anchor: "start",
+      tail: 0.1,
+      build(ctx, out, D) {
+        sfxNoise(ctx, out, 0, D, 0.9, "bandpass", [7000, 200], 2, "fall");
+        sfxTone(ctx, out, 0, 900, 70, D, 0.35, "sawtooth", "fall");
+      },
+    },
+    whoosh: {
+      anchor: "center",
+      tail: 0,
+      build(ctx, out, D) {
+        // جرس صوتي: يعلو للمنتصف ثم يهبط، والتردد يمر من الواطي للحاد ويرجع
+        const src = ctx.createBufferSource();
+        src.buffer = noiseOf(ctx);
+        src.loop = true;
+        const f = ctx.createBiquadFilter();
+        f.type = "bandpass";
+        f.Q.value = 1.6;
+        f.frequency.setValueAtTime(350, 0);
+        f.frequency.exponentialRampToValueAtTime(3200, D / 2);
+        f.frequency.exponentialRampToValueAtTime(400, D);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, 0);
+        g.gain.exponentialRampToValueAtTime(1.2, D / 2);
+        g.gain.exponentialRampToValueAtTime(0.0001, D);
+        src.connect(f).connect(g).connect(out);
+        src.start(0);
+        src.stop(D);
+      },
+    },
+    reverse: {
+      anchor: "end",
+      tail: 0,
+      reversed: true, // يُرسم صنج يخفت ثم يُقلب: يتضخم ويقف عند الخط
+      build(ctx, out, D) {
+        sfxNoise(ctx, out, 0, D, 0.8, "highpass", [5000, 5000], 0.7, "decay");
+        sfxNoise(ctx, out, 0, D, 0.5, "bandpass", [9000, 9000], 3, "decay");
+      },
+    },
+    drone: {
+      anchor: "start",
+      tail: 0,
+      build(ctx, out, D) {
+        // توتر قاتم: نغمتان غليظتان بينهما نصف درجة، وفلتر يتنفّس ببطء
+        const f = ctx.createBiquadFilter();
+        f.type = "lowpass";
+        f.Q.value = 4;
+        f.frequency.value = 320;
+        const lfo = ctx.createOscillator();
+        lfo.frequency.value = 0.15;
+        const depth = ctx.createGain();
+        depth.gain.value = 180;
+        lfo.connect(depth).connect(f.frequency);
+        lfo.start(0);
+        lfo.stop(D);
+        const g = ctx.createGain();
+        const fade = Math.min(1.5, D / 3);
+        g.gain.setValueAtTime(0.0001, 0);
+        g.gain.exponentialRampToValueAtTime(0.4, fade);
+        g.gain.setValueAtTime(0.4, D - fade);
+        g.gain.exponentialRampToValueAtTime(0.0001, D);
+        f.connect(g).connect(out);
+        [55, 58.27, 110.4].forEach((hz) => {
+          const o = ctx.createOscillator();
+          o.type = "sawtooth";
+          o.frequency.value = hz;
+          o.connect(f);
+          o.start(0);
+          o.stop(D);
+        });
+      },
+    },
+    shimmer: {
+      anchor: "start",
+      tail: 2,
+      build(ctx, out, D) {
+        // نجوم صغيرة: نغمات حادة قصيرة متناثرة، تكثر بالبداية وتقل
+        const bus = ctx.createGain();
+        bus.connect(out);
+        const count = Math.round(14 + D * 6);
+        for (let i = 0; i < count; i++) {
+          const t = D * Math.random() ** 1.6;
+          sfxTone(ctx, bus, t, 2000 + Math.random() * 4500, 0, 0.5, 0.12, "sine");
+        }
+        sfxReverb(ctx, bus, 0.5, 2.5, out);
+      },
+    },
+    heartbeat: {
+      anchor: "start",
+      tail: 0.3,
+      build(ctx, out, D) {
+        // "لَب-دَب" بسرعة ٧٠ نبضة بالدقيقة
+        for (let t = 0; t < D; t += 60 / 70) {
+          sfxTone(ctx, out, t, 70, 40, 0.18, 1, "sine");
+          sfxTone(ctx, out, t + 0.22, 62, 36, 0.16, 0.7, "sine");
+        }
+      },
+    },
+    tick: {
+      anchor: "start",
+      tail: 0.1,
+      build(ctx, out, D) {
+        // ساعة تدق (تك-توك) كل نصف ثانية — للتشويق والعدّ التنازلي
+        for (let t = 0, k = 0; t < D; t += 0.5, k++) {
+          sfxNoise(ctx, out, t, 0.03, 0.7, "bandpass", k % 2 ? [2400, 2400] : [3400, 3400], 6);
+        }
+      },
+    },
+  };
+
+  // نغمة تنزلق من f0 إلى f1. shape: "decay" (تخفت) أو "rise" (تعلو للنهاية) أو "fall" (تخفت من البداية)
+  function sfxTone(ctx, out, t, f0, f1, dur, vol, type, shape = "decay") {
+    const o = ctx.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    if (f1 > 0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    const g = ctx.createGain();
+    sfxEnvelope(g.gain, t, dur, vol, shape);
+    o.connect(g).connect(out);
+    o.start(t);
+    o.stop(t + dur + 0.02);
+  }
+  function sfxNoise(ctx, out, t, dur, vol, filterType, [f0, f1], q, shape = "decay") {
+    const src = ctx.createBufferSource();
+    src.buffer = noiseOf(ctx);
+    src.loop = true;
+    const f = ctx.createBiquadFilter();
+    f.type = filterType;
+    f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t);
+    if (f1 !== f0) f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    const g = ctx.createGain();
+    sfxEnvelope(g.gain, t, dur, vol, shape);
+    src.connect(f).connect(g).connect(out);
+    src.start(t, Math.random() * 0.5);
+    src.stop(t + dur + 0.02);
+  }
+  function sfxEnvelope(param, t, dur, vol, shape) {
+    if (shape === "rise") {
+      param.setValueAtTime(0.0001, t);
+      param.exponentialRampToValueAtTime(vol, t + dur - 0.01);
+      param.linearRampToValueAtTime(0, t + dur); // قطع نظيف بلا طقّة
+    } else {
+      param.setValueAtTime(0.0001, t);
+      param.exponentialRampToValueAtTime(vol, t + 0.004);
+      param.exponentialRampToValueAtTime(0.0001, t + dur);
+    }
+  }
+  function sfxReverb(ctx, from, amount, seconds, to = from) {
+    const verb = ctx.createConvolver();
+    verb.buffer = makeRoomImpulse(ctx, seconds);
+    const wet = ctx.createGain();
+    wet.gain.value = amount;
+    from.connect(verb).connect(wet).connect(to === from ? ctx.destination : to);
+  }
+
+  // يرسم المؤثر لملف صوتي (أحادي ٤٨ كيلوهرتز) — نفس البذرة دائماً، فالمؤثر نفسه
+  // يرجع مطابقاً لما يُعاد بناؤه من رابط مشاركة
+  async function renderSfx(id, dur) {
+    const def = SFX[id];
+    const D = def.fixed || dur;
+    const seconds = D + def.tail;
+    const ctx = new OfflineAudioContext(1, Math.ceil(SFX_RATE * seconds), SFX_RATE);
+    const out = ctx.createGain();
+    out.connect(ctx.destination);
+    withFixedRandom(() => def.build(ctx, out, D));
+    const buffer = await ctx.startRendering();
+    const data = buffer.getChannelData(0);
+    if (def.reversed) data.reverse();
+    // تطبيع لذروة ثابتة (−٣ ديسيبل تقريباً): كل المؤثرات بمستوى متقارب
+    let peak = 0;
+    for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+    if (peak > 0) for (let i = 0; i < data.length; i++) data[i] *= 0.7 / peak;
+    return { buffer, D };
+  }
+  // موضع "اللحظة المهمة" داخل المؤثر (تُوضع عند الخط الأبيض)
+  const sfxAnchor = (id, D) => ({ end: D, center: D / 2, start: 0 })[SFX[id].anchor];
+
+  /* ===== المؤثرات: الاختيار والتجربة والإضافة كمسار ===== */
+  const sfxBox = document.getElementById("beepSfx");
+  const sfxBtn = document.getElementById("beepAddSfx");
+  let sfxId = "riser";
+  let sfxDur = 2;
+  let sfxPreview = null;
+  const sfxLabel = (id) => sfxBox?.querySelector(`[data-sfx="${id}"]`)?.textContent.trim() || id;
+  function paintSfxDur() {
+    // الضربة طولها ثابت (رنينها طبيعي) — أزرار الطول تتعطّل معها
+    sfxBox.querySelectorAll("[data-dur]").forEach((c) => (c.disabled = Boolean(SFX[sfxId].fixed)));
+  }
+  function stopSfxPreview() {
+    try {
+      sfxPreview?.stop();
+    } catch {
+      // انتهى أصلاً
+    }
+    sfxPreview = null;
+  }
+  // فتح لوحة الإيقاع أو المؤثرات يقفل الثانية — لوحة وحدة مفتوحة تحت المفاتيح
+  function togglePanel(box, btn, other, otherBtn) {
+    box.hidden = !box.hidden;
+    btn.classList.toggle("active", !box.hidden);
+    btn.setAttribute("aria-expanded", String(!box.hidden));
+    if (!box.hidden && other && !other.hidden) {
+      other.hidden = true;
+      otherBtn.classList.remove("active");
+      otherBtn.setAttribute("aria-expanded", "false");
+    }
+    stopDrumPreview();
+    stopSfxPreview();
+    playClickSound();
+  }
+  if (sfxBox) {
+    sfxBtn.addEventListener("click", () => togglePanel(sfxBox, sfxBtn, document.getElementById("beepDrums"), document.getElementById("beepAddDrums")));
+    chipGroup(sfxBox, "sfx", sfxId, (v) => {
+      sfxId = v;
+      paintSfxDur();
+    });
+    chipGroup(sfxBox, "dur", sfxDur, (v) => (sfxDur = Number(v)));
+    paintSfxDur();
+    document.getElementById("beepSfxPreview").addEventListener("click", async () => {
+      if (playing) stopPlayback();
+      await ensureContext();
+      stopTake();
+      stopSfxPreview();
+      const { buffer } = await renderSfx(sfxId, sfxDur);
+      sfxPreview = audioCtx.createBufferSource();
+      sfxPreview.buffer = buffer;
+      sfxPreview.connect(masterInput);
+      sfxPreview.start();
+    });
+    document.getElementById("beepSfxAdd").addEventListener("click", async () => {
+      if (layers.length >= MAX_LAYERS || rowCount() >= MAX_TRACKS) return showToast(recTake.dataset.max);
+      stopSfxPreview();
+      const { buffer, D } = await renderSfx(sfxId, sfxDur);
+      // اللحظة المهمة عند الخط الأبيض؛ لو الخط قريب من البداية يُقص أول المؤثر
+      const at = cursor - sfxAnchor(sfxId, D);
+      const t0 = Math.min(Math.max(0, -at), buffer.duration - 0.05);
+      pushHistory();
+      const l = { kind: "audio", buffer, name: sfxLabel(sfxId), sfx: { id: sfxId, dur: sfxDur }, muted: false, end: buffer.duration, t0, t1: buffer.duration, offset: Math.max(0, at), row: rowCount() };
+      layers.push(l);
+      selected = l;
+      renderLayers();
+      playSound("success");
+      timeline.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }
+
   /* ===== الإيقاعات: اختيار النمط، التجربة، والإضافة كمسار ===== */
   const drumsBox = document.getElementById("beepDrums");
   const drumsBtn = document.getElementById("beepAddDrums");
@@ -4770,13 +5102,7 @@ function initBeepMelodyExperiment() {
     drumPreviewBtn.textContent = drumPreviewBtn.dataset.stop;
   }
   if (drumsBox) {
-    drumsBtn.addEventListener("click", () => {
-      drumsBox.hidden = !drumsBox.hidden;
-      drumsBtn.classList.toggle("active", !drumsBox.hidden);
-      drumsBtn.setAttribute("aria-expanded", String(!drumsBox.hidden));
-      if (drumsBox.hidden) stopDrumPreview();
-      playClickSound();
-    });
+    drumsBtn.addEventListener("click", () => togglePanel(drumsBox, drumsBtn, sfxBox, sfxBtn));
     chipGroup(drumsBox, "rhythm", rhythm, (v) => {
       rhythm = v;
       store.set("beepRhythm", v);
@@ -5174,7 +5500,7 @@ function initBeepMelodyExperiment() {
     try {
       const shared = location.hash.startsWith("#studio=") ? location.hash.slice(8) : "";
       if (shared) {
-        applyProject(await decodeShare(shared));
+        await applyProject(await decodeShare(shared));
         // نشيل المشروع من العنوان: تحديث الصفحة بعد التعديل يفتح المحفوظ لا الأصل
         window.history.replaceState(null, "", location.pathname + location.search);
         showPane("panePlay");
@@ -5183,7 +5509,7 @@ function initBeepMelodyExperiment() {
       } else {
         const saved = await sampleStore("readonly", (st) => st.get("project"));
         if (saved?.layers?.length && !layers.length) {
-          applyProject(saved);
+          await applyProject(saved);
           renderLayers();
           showToast(recTake.dataset.restored);
         }
