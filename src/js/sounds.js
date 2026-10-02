@@ -6231,9 +6231,11 @@ function dressVolume(input) {
     const should = anchor.bottom < top + 4 && document.activeElement !== input;
     if (should === floating) return;
     if (should) {
-      spot.style.width = anchor.width + "px";
-      spot.style.height = anchor.height + "px";
-      label.style.setProperty("--float-top", top + 8 + "px");
+      // الشاشات العريضة تكبّر الصفحة بـzoom: القياسات مكبّرة، وCSS يكبّر مرة ثانية
+      const zoom = parseFloat(document.documentElement.style.zoom) || 1;
+      spot.style.width = anchor.width / zoom + "px";
+      spot.style.height = anchor.height / zoom + "px";
+      label.style.setProperty("--float-top", top / zoom + 8 + "px");
     } else {
       spot.style.width = spot.style.height = "";
     }
