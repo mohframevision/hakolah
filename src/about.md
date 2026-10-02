@@ -6,6 +6,33 @@ description: تعرّف على موقع هكوله وهدفه من جمع الر
 langSwitchUrl: "/en/about.html"
 ---
 
+<section class="about-hero" aria-label="هكوله">
+  <p class="about-hero-note about-hero-lead">دليل بحريني يجمع المطاعم والمتاجر والأماكن والأدوات المفيدة في مكان واحد.</p>
+  <p class="about-hero-note about-hero-side">يُحدَّث بشكل دوري، بالعربي والإنجليزي.</p>
+  <div class="about-badge" id="aboutBadge" data-drag-hint="اسحب البطاقة">
+    <div class="about-badge-strap" aria-hidden="true"></div>
+    <div class="about-badge-clip" aria-hidden="true"></div>
+    <div class="about-badge-holder">
+      <span class="about-badge-hole" aria-hidden="true"></span>
+      <div class="about-badge-card">
+        <p class="about-badge-name">هكوله</p>
+        <p class="about-badge-other" lang="en" dir="ltr">Hakolah</p>
+        <dl class="about-badge-facts">
+          <dt>يجمع</dt>
+          <dd>مطاعم · متاجر · أماكن · أدوات</dd>
+          <dt>الشارات</dt>
+          <dd class="about-badge-chips">
+            <a class="about-chip about-chip-visited" href="#visited">✅ زُرته شخصياً</a>
+            <a class="about-chip about-chip-liked" href="#liked">👍 أعجبني</a>
+            <a class="about-chip about-chip-reviews" href="#reviews">ليس موقع تقييمات</a>
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="about-marquee" aria-hidden="true"><div class="about-marquee-track"><span>هكوله</span><span class="about-marquee-dot">·</span><span>Hakolah</span><span class="about-marquee-dot">·</span><span>هكوله</span><span class="about-marquee-dot">·</span><span>Hakolah</span><span class="about-marquee-dot">·</span><span>هكوله</span><span class="about-marquee-dot">·</span><span>Hakolah</span><span class="about-marquee-dot">·</span></div><div class="about-marquee-track"><span>هكوله</span><span class="about-marquee-dot">·</span><span>Hakolah</span><span class="about-marquee-dot">·</span><span>هكوله</span><span class="about-marquee-dot">·</span><span>Hakolah</span><span class="about-marquee-dot">·</span><span>هكوله</span><span class="about-marquee-dot">·</span><span>Hakolah</span><span class="about-marquee-dot">·</span></div></div>
+</section>
+
 <article class="prose">
 
 # عن موقع هكوله
@@ -18,11 +45,11 @@ langSwitchUrl: "/en/about.html"
 
 حالياً يمكنك حفظ العناصر في "المفضلة" دون تسجيل دخول، وتُحفظ هذه القائمة في متصفحك فقط. لاحقاً سنضيف نظام تسجيل دخول اختياري لمزامنة مفضلتك بين أجهزتك المختلفة.
 
-## شارة "✅ زُرته شخصياً"
+<h2 id="visited">شارة "✅ زُرته شخصياً"</h2>
 
 بعض البطاقات تحمل شارة "✅ زُرته شخصياً" — هذه الشارة تعني إن صاحب موقع هكوله زار هذا المكان بنفسه فعلياً، مو مجرد معلومة منقولة من الإنترنت. نضيفها تدريجياً كل ما زرنا مكاناً جديداً.
 
-## شارة "👍 أعجبني"
+<h2 id="liked">شارة "👍 أعجبني"</h2>
 
 شارة توصية شخصية من صاحب الموقع — تظهر بس على الأماكن اللي عجبته فعلاً بعد ما جربها. عدم وجود الشارة ما يعني إن المكان سيئ، فقط يعني إنه ما وصلنا رأي شخصي عنه بعد.
 

@@ -6139,3 +6139,286 @@ html[lang="en"] .instrument-btn.is-new::after {
 .prose [id] {
   scroll-margin-top: calc(var(--header-h, 64px) + 16px);
 }
+
+/* ===== عن الموقع: بطاقة تعريف معلّقة تتأرجح + اسم ضخم متحرك =====
+   البطاقة "هوية" هكوله، فمكانها الطبيعي صفحة التعريف. تتأرجح كبندول حقيقي
+   (main.js initAboutBadge): تسحبها فتلحق إصبعك، تتركها فتتأرجح وتهدأ، وتهتز
+   خفيفاً مع التمرير. الورقة داخلها فاتحة دائماً (شيء مادي، ما يتبع الثيم). */
+.about-hero {
+  --card-w: 228px;
+  --strap: 150px;
+  position: relative;
+  min-height: clamp(500px, 64vh, 640px);
+  margin: 8px 0 36px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 28px;
+  background: var(--color-surface);
+  isolation: isolate;
+}
+
+.about-hero-note {
+  position: absolute;
+  top: 28px;
+  z-index: 2;
+  max-width: 220px;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.about-hero-lead {
+  inset-inline-start: 30px;
+}
+
+.about-hero-side {
+  inset-inline-end: 30px;
+  text-align: end;
+  color: var(--color-text-muted, var(--color-text));
+}
+
+.about-badge {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  z-index: 3;
+  width: var(--card-w);
+  margin-left: calc(var(--card-w) / -2);
+  transform: rotate(var(--swing, 0rad));
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+
+.about-badge-strap {
+  width: 16px;
+  height: var(--strap);
+  margin: 0 auto;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, #121212, #2c2c2c 45%, #161616);
+}
+
+.about-badge-clip {
+  width: 18px;
+  height: 26px;
+  margin: -4px auto -6px;
+  border: 3px solid #9a9a9a;
+  border-radius: 9px 9px 6px 6px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.about-badge-holder {
+  position: relative;
+  padding: 26px 12px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 34px 46px -22px rgba(0, 0, 0, 0.38);
+  transform: rotate(var(--twist, 0rad));
+  transform-origin: 50% 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+.about-badge-holder.grabbing {
+  cursor: grabbing;
+}
+
+.about-badge-hole {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  width: 46px;
+  height: 7px;
+  margin-left: -23px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.about-badge-card {
+  padding: 18px 16px 16px;
+  border-radius: 8px;
+  background: #f7f6f1;
+  color: #141414;
+  text-align: start;
+}
+
+.about-badge-name {
+  margin: 0;
+  font-size: 2.7rem;
+  font-weight: 800;
+  line-height: 1.05;
+  color: #1b4d3e;
+}
+
+.about-badge-other {
+  margin: 0 0 22px;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: #141414;
+}
+
+.about-badge-other:lang(en) {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+}
+
+.about-badge-facts {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.about-badge-facts dt {
+  font-size: 0.62rem;
+  color: #6b6b6b;
+}
+
+.about-badge-facts dd {
+  margin: 0 0 8px;
+}
+
+.about-badge-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.about-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.6;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.about-chip:focus-visible {
+  outline: 2px solid #141414;
+  outline-offset: 2px;
+}
+
+.about-chip-visited {
+  background: #1b4d3e;
+}
+
+.about-chip-liked {
+  background: #d9412b;
+}
+
+.about-chip-reviews {
+  background: #3b3fd1;
+}
+
+@media (hover: hover) {
+  .about-chip:hover {
+    filter: brightness(1.15);
+  }
+}
+
+/* الاسم الضخم: شريطان متطابقان يتحركان معاً، فلما يخلص الأول يكون الثاني مكانه */
+.about-marquee {
+  position: absolute;
+  bottom: -0.2em;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  width: max-content;
+  direction: ltr;
+  font-size: clamp(96px, 16vw, 230px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-text);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: about-marquee 46s linear infinite;
+}
+
+.about-marquee-track {
+  display: flex;
+  gap: 0.3em;
+  padding-inline-end: 0.3em;
+}
+
+.about-marquee-dot {
+  color: var(--color-primary);
+}
+
+@keyframes about-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 600px) {
+  .about-hero {
+    --card-w: 188px;
+    --strap: 96px;
+    min-height: 590px;
+    border-radius: 22px;
+  }
+
+  .about-hero-note {
+    top: auto;
+    bottom: 108px;
+    max-width: 46%;
+    font-size: 0.74rem;
+  }
+
+  .about-hero-lead {
+    inset-inline-start: 16px;
+  }
+
+  .about-hero-side {
+    inset-inline-end: 16px;
+  }
+
+  .about-badge-name {
+    font-size: 2.2rem;
+  }
+
+  .about-badge-other {
+    margin-bottom: 14px;
+  }
+}
+
+/* الداكن: البلاستيك الشفاف فوق خلفية داكنة يطلع رمادي؛ نخفّف بياضه، والحزام أفتح شوي */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .about-badge-strap {
+    background: linear-gradient(90deg, #2a2a2a, #474747 45%, #2e2e2e);
+  }
+
+  :root:not([data-theme="light"]) .about-badge-holder {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 34px 46px -22px rgba(0, 0, 0, 0.7);
+  }
+}
+
+:root[data-theme="dark"] .about-badge-strap {
+  background: linear-gradient(90deg, #2a2a2a, #474747 45%, #2e2e2e);
+}
+
+:root[data-theme="dark"] .about-badge-holder {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 34px 46px -22px rgba(0, 0, 0, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-marquee {
+    animation: none;
+  }
+}
