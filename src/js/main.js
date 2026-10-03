@@ -3646,11 +3646,17 @@ async function initPushNotifications() {
         applicationServerKey: urlBase64ToUint8Array(config.vapidPublicKey),
       });
 
-      await fetch(`${config.workerUrl}/subscribe`, {
+      const res = await fetch(`${config.workerUrl}/subscribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(subscription),
       });
+      // الخادم رفض الحفظ (429/403/400): الزائر كان يشوف "تم التفعيل" وما يوصله شي أبداً
+      if (!res.ok) {
+        await subscription.unsubscribe().catch(() => {});
+        subscription = null;
+        throw new Error(`subscribe ${res.status}`);
+      }
 
       apply(true);
       showToast(t("push_enabled"));
