@@ -52,10 +52,11 @@ function storageCall(area, method, ...args) {
   }
 }
 const lsGet = (key) => storageCall("localStorage", "getItem", key);
-const lsSet = (key, value) => storageCall("localStorage", "setItem", key, value);
+// الكتابة ترجّع true لو نجحت فعلاً — حاسبة المصروفات تنبّه المستخدم لو بياناته ما انحفظت
+const lsSet = (key, value) => storageCall("localStorage", "setItem", key, value) !== null;
 const lsRemove = (key) => storageCall("localStorage", "removeItem", key);
 const ssGet = (key) => storageCall("sessionStorage", "getItem", key);
-const ssSet = (key, value) => storageCall("sessionStorage", "setItem", key, value);
+const ssSet = (key, value) => storageCall("sessionStorage", "setItem", key, value) !== null;
 
 /* ===== بحث ذكي متسامح مع الأخطاء الإملائية ===== */
 function levenshtein(a, b) {
@@ -1745,8 +1746,7 @@ function initExpenseCalculator() {
   let saveFailed = false;
   function saveEntries() {
     try {
-      lsSet(STORAGE_KEY, JSON.stringify(entries));
-      saveFailed = false;
+      saveFailed = !lsSet(STORAGE_KEY, JSON.stringify(entries));
     } catch {
       // خزنة ممتلئة أو وضع تصفّح خاص — نبلّغ المستخدم بدل فشل صامت لبيانات
       // يهمّه ضياعها
@@ -1804,7 +1804,7 @@ function initExpenseCalculator() {
   }
   function setSkippedRecurring(list) {
     try {
-      lsSet(SKIP_KEY, JSON.stringify(list));
+      if (!lsSet(SKIP_KEY, JSON.stringify(list))) saveFailed = true;
     } catch {
       saveFailed = true;
     }
@@ -1830,7 +1830,7 @@ function initExpenseCalculator() {
   let settings = loadSettings();
   function saveSettings() {
     try {
-      lsSet(SETTINGS_KEY, JSON.stringify(settings));
+      if (!lsSet(SETTINGS_KEY, JSON.stringify(settings))) saveFailed = true;
     } catch {
       saveFailed = true;
     }
