@@ -40,6 +40,23 @@ function sectionLabel(section) {
   return window.SITE_LANG === "en" ? meta.title_en || meta.title : meta.title;
 }
 
+/* ===== تخزين آمن: Safari بوضع "منع كل الكوكيز" وبعض أوضاع الخصوصية ترمي استثناء
+   بمجرد لمس localStorage. بدون هذا الغلاف كان الاستثناء يوقف تهيئة الموقع كلها
+   (القائمة ما تنفتح، والرئيسية بلا بطاقات). القراءة الفاشلة = null، والكتابة
+   الفاشلة (محجوب أو ممتلئ) تُتجاهل بصمت فيكمل الموقع بلا حفظ. ===== */
+function storageCall(area, method, ...args) {
+  try {
+    return window[area][method](...args);
+  } catch {
+    return null;
+  }
+}
+const lsGet = (key) => storageCall("localStorage", "getItem", key);
+const lsSet = (key, value) => storageCall("localStorage", "setItem", key, value);
+const lsRemove = (key) => storageCall("localStorage", "removeItem", key);
+const ssGet = (key) => storageCall("sessionStorage", "getItem", key);
+const ssSet = (key, value) => storageCall("sessionStorage", "setItem", key, value);
+
 /* ===== بحث ذكي متسامح مع الأخطاء الإملائية ===== */
 function levenshtein(a, b) {
   const m = a.length;
@@ -249,7 +266,7 @@ let noiseBuffer = null;
 const NOTE = { D3: 146.83, D4: 293.66, A4: 440, D5: 587.33, "F#5": 739.99, A5: 880, D6: 1174.66 };
 
 function isSoundEnabled() {
-  return localStorage.getItem(SOUND_KEY) === "on";
+  return lsGet(SOUND_KEY) === "on";
 }
 
 function getAudioContext() {
@@ -420,7 +437,7 @@ function initSoundToggle() {
 
   btn.addEventListener("click", () => {
     const next = !isSoundEnabled();
-    localStorage.setItem(SOUND_KEY, next ? "on" : "off");
+    lsSet(SOUND_KEY, next ? "on" : "off");
     apply(next);
     if (next) playSound("on");
   });
@@ -470,7 +487,7 @@ function initThemeToggle() {
   const NEXT = { auto: "light", light: "dark", dark: "auto" };
 
   function getPref() {
-    const stored = localStorage.getItem(KEY);
+    const stored = lsGet(KEY);
     return stored === "light" || stored === "dark" ? stored : "auto";
   }
 
@@ -492,9 +509,9 @@ function initThemeToggle() {
   btn.addEventListener("click", () => {
     const next = NEXT[getPref()];
     if (next === "auto") {
-      localStorage.removeItem(KEY);
+      lsRemove(KEY);
     } else {
-      localStorage.setItem(KEY, next);
+      lsSet(KEY, next);
     }
     apply(next);
     playClickSound();
@@ -508,12 +525,12 @@ function initCookieConsent() {
   const acceptBtn = document.getElementById("cookie-accept");
   if (!banner || !acceptBtn) return;
 
-  if (!localStorage.getItem(KEY)) {
+  if (!lsGet(KEY)) {
     banner.classList.add("open");
   }
 
   acceptBtn.addEventListener("click", () => {
-    localStorage.setItem(KEY, "accepted");
+    lsSet(KEY, "accepted");
     banner.classList.remove("open");
   });
 }
@@ -529,25 +546,25 @@ function initDailyPickReminder() {
 
   if (document.getElementById("homeCarousel")) {
     // إذا الزائر بالصفحة الرئيسية أصلاً، يعتبر اختيار اليوم "مشاهَد"
-    localStorage.setItem(SEEN_KEY, today);
+    lsSet(SEEN_KEY, today);
     return;
   }
 
-  if (localStorage.getItem(SEEN_KEY) === today) return;
-  if (sessionStorage.getItem(DISMISSED_KEY)) return;
+  if (lsGet(SEEN_KEY) === today) return;
+  if (ssGet(DISMISSED_KEY)) return;
   // مرة وحدة باليوم (أول صفحة فرعية فقط) — كانت تطلع بكل صفحة وتغطي البطاقات
   const SHOWN_KEY = "daily_pick_reminder_shown";
-  if (localStorage.getItem(SHOWN_KEY) === today) return;
+  if (lsGet(SHOWN_KEY) === today) return;
 
   const banner = document.getElementById("dailyPickReminder");
   const closeBtn = document.getElementById("dailyPickReminderClose");
   if (!banner || !closeBtn) return;
 
-  localStorage.setItem(SHOWN_KEY, today);
+  lsSet(SHOWN_KEY, today);
   banner.classList.add("open");
 
   closeBtn.addEventListener("click", () => {
-    sessionStorage.setItem(DISMISSED_KEY, "1");
+    ssSet(DISMISSED_KEY, "1");
     banner.classList.remove("open");
   });
 }
@@ -659,13 +676,13 @@ function initAutoUpdateCheck() {
       const res = await fetch(`/version.json?_=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
-      const seen = sessionStorage.getItem(SEEN_KEY);
+      const seen = ssGet(SEEN_KEY);
       if (seen && data.version && seen !== data.version) {
-        sessionStorage.setItem(SEEN_KEY, data.version);
+        ssSet(SEEN_KEY, data.version);
         location.reload();
         return;
       }
-      if (data.version) sessionStorage.setItem(SEEN_KEY, data.version);
+      if (data.version) ssSet(SEEN_KEY, data.version);
     } catch {
       /* تجاهل أي خطأ شبكة، نحاول مرة ثانية بالفحص القادم */
     }
@@ -683,14 +700,14 @@ const FAVORITES_KEY = "site_favorites_v1";
 
 function getFavorites() {
   try {
-    return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || {};
+    return JSON.parse(lsGet(FAVORITES_KEY)) || {};
   } catch {
     return {};
   }
 }
 
 function saveFavorites(favs) {
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+  lsSet(FAVORITES_KEY, JSON.stringify(favs));
 }
 
 function isFavorite(section, id) {
@@ -706,14 +723,14 @@ let LIKE_COUNTS = {};
 
 function getLikedItems() {
   try {
-    return JSON.parse(localStorage.getItem(LIKES_KEY)) || {};
+    return JSON.parse(lsGet(LIKES_KEY)) || {};
   } catch {
     return {};
   }
 }
 
 function saveLikedItems(liked) {
-  localStorage.setItem(LIKES_KEY, JSON.stringify(liked));
+  lsSet(LIKES_KEY, JSON.stringify(liked));
 }
 
 function isLikedByMe(section, id) {
@@ -1716,7 +1733,7 @@ function initExpenseCalculator() {
 
   function loadEntries() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = lsGet(STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed) ? parsed : [];
     } catch {
@@ -1728,7 +1745,7 @@ function initExpenseCalculator() {
   let saveFailed = false;
   function saveEntries() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      lsSet(STORAGE_KEY, JSON.stringify(entries));
       saveFailed = false;
     } catch {
       // خزنة ممتلئة أو وضع تصفّح خاص — نبلّغ المستخدم بدل فشل صامت لبيانات
@@ -1778,7 +1795,7 @@ function initExpenseCalculator() {
   const SKIP_KEY = "hakolah-expense-skipped-v1";
   function skippedRecurring() {
     try {
-      const raw = localStorage.getItem(SKIP_KEY);
+      const raw = lsGet(SKIP_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed) ? parsed : [];
     } catch {
@@ -1787,7 +1804,7 @@ function initExpenseCalculator() {
   }
   function setSkippedRecurring(list) {
     try {
-      localStorage.setItem(SKIP_KEY, JSON.stringify(list));
+      lsSet(SKIP_KEY, JSON.stringify(list));
     } catch {
       saveFailed = true;
     }
@@ -1797,7 +1814,7 @@ function initExpenseCalculator() {
   const SETTINGS_KEY = "hakolah-expense-settings-v1";
   function loadSettings() {
     try {
-      const raw = localStorage.getItem(SETTINGS_KEY);
+      const raw = lsGet(SETTINGS_KEY);
       const parsed = raw ? JSON.parse(raw) : {};
       return {
         opening: typeof parsed.opening === "number" ? parsed.opening : 0,
@@ -1813,7 +1830,7 @@ function initExpenseCalculator() {
   let settings = loadSettings();
   function saveSettings() {
     try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      lsSet(SETTINGS_KEY, JSON.stringify(settings));
     } catch {
       saveFailed = true;
     }
@@ -2516,7 +2533,7 @@ function initTypingTest() {
 
   function loadLevel() {
     try {
-      const saved = localStorage.getItem(LEVEL_KEY);
+      const saved = lsGet(LEVEL_KEY);
       return saved && LEVELS[saved] ? saved : "medium";
     } catch {
       return "medium";
@@ -2527,7 +2544,7 @@ function initTypingTest() {
      معنى — الجمل مختلفة الطول والكثافة تماماً */
   function loadBest() {
     try {
-      const value = Number(localStorage.getItem(`${BEST_KEY}-${level}`));
+      const value = Number(lsGet(`${BEST_KEY}-${level}`));
       return Number.isFinite(value) && value > 0 ? value : 0;
     } catch {
       return 0;
@@ -2536,7 +2553,7 @@ function initTypingTest() {
 
   function saveBest(wpm) {
     try {
-      localStorage.setItem(`${BEST_KEY}-${level}`, String(wpm));
+      lsSet(`${BEST_KEY}-${level}`, String(wpm));
     } catch {
       // تصفّح خاص أو خزنة ممتلئة — الاختبار يشتغل، بس بلا حفظ أفضل نتيجة
     }
@@ -2628,7 +2645,7 @@ function initTypingTest() {
     btn.addEventListener("click", () => {
       level = btn.dataset.level;
       try {
-        localStorage.setItem(LEVEL_KEY, level);
+        lsSet(LEVEL_KEY, level);
       } catch {
         // بلا حفظ التفضيل — الاختبار يشتغل عادي
       }
@@ -3085,7 +3102,7 @@ const EXPLORED_KEY = "site_explored_sections_v1";
 
 function getExploredSections() {
   try {
-    return JSON.parse(localStorage.getItem(EXPLORED_KEY)) || {};
+    return JSON.parse(lsGet(EXPLORED_KEY)) || {};
   } catch {
     return {};
   }
@@ -3095,7 +3112,7 @@ function markSectionExplored(section) {
   const explored = getExploredSections();
   if (explored[section]) return;
   explored[section] = true;
-  localStorage.setItem(EXPLORED_KEY, JSON.stringify(explored));
+  lsSet(EXPLORED_KEY, JSON.stringify(explored));
 }
 
 /* ===== عرض قسم كامل: بحث + فلاتر + شبكة بطاقات =====
