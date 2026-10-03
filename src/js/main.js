@@ -58,6 +58,12 @@ const lsRemove = (key) => storageCall("localStorage", "removeItem", key);
 const ssGet = (key) => storageCall("sessionStorage", "getItem", key);
 const ssSet = (key, value) => storageCall("sessionStorage", "setItem", key, value) !== null;
 
+// نص من بيانات المحتوى داخل HTML مبني كسلسلة: علامة " بعنوان (موجودة فعلاً بعناوين
+// بعض الأدلة) كانت تقطع سمة alt وتكسر وسم الصورة
+function escapeHtml(text) {
+  return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
 /* ===== بحث ذكي متسامح مع الأخطاء الإملائية ===== */
 function levenshtein(a, b) {
   const m = a.length;
@@ -126,7 +132,9 @@ function initSearchSuggestions(searchInput, items, onSelect) {
       return;
     }
 
-    const matches = items.filter((item) => fuzzyIncludes(item.title, query)).slice(0, 6);
+    const matches = items
+      .filter((item) => fuzzyIncludes(`${item.title} ${item.title_en || ""}`, query))
+      .slice(0, 6);
 
     if (matches.length === 0) {
       close();
@@ -136,9 +144,9 @@ function initSearchSuggestions(searchInput, items, onSelect) {
     dropdown.innerHTML = matches
       .map(
         (item) =>
-          `<div class="search-suggestion" data-id="${item.id}">
+          `<div class="search-suggestion" data-id="${escapeHtml(item.id)}">
             <span>${item.icon || "⭐"}</span>
-            <span>${item.title}</span>
+            <span>${escapeHtml(itemTitle(item))}</span>
           </div>`
       )
       .join("");
@@ -147,7 +155,7 @@ function initSearchSuggestions(searchInput, items, onSelect) {
     dropdown.querySelectorAll(".search-suggestion").forEach((el, i) => {
       el.addEventListener("mousedown", (e) => {
         e.preventDefault();
-        searchInput.value = matches[i].title;
+        searchInput.value = itemTitle(matches[i]);
         close();
         onSelect();
       });
@@ -3010,7 +3018,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
   const isLongDesc = desc.length > 100;
 
   card.innerHTML = `
-    ${item.image ? `<img class="item-photo" src="${item.image}" alt="${title}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async" />` : ""}
+    ${item.image ? `<img class="item-photo" src="${escapeHtml(item.image)}" alt="${escapeHtml(title)}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async" />` : ""}
     ${item.sponsored ? `<span class="sponsored-badge">${t("sponsored_badge")}</span>` : item.featured ? `<span class="featured-badge">${t("featured_badge")}</span>` : ""}
     <div class="item-body">
       ${sectionBadge(section)}
@@ -3280,7 +3288,17 @@ function renderSection(section, typeFilter) {
 
     const filtered = items.filter((item) => {
       const matchesTag = activeTag === "all" || (item.tags || []).includes(activeTag);
-      const haystack = item.title + " " + (item.desc || "") + " " + (item.tags || []).join(" ");
+      // الاسم والوصف باللغتين: زائر الصفحة الإنجليزية يبحث بالإنجليزي، ورابط مشاركة
+      // إنجليزي (?q=الاسم الإنجليزي) كان يفتح على "لا نتائج"
+      const haystack = [
+        item.title,
+        item.title_en,
+        item.desc,
+        item.desc_en,
+        ...(item.tags || []).flatMap((tag) => [tag, tagLabel(tag)]),
+      ]
+        .filter(Boolean)
+        .join(" ");
       const matchesQuery = fuzzyIncludes(haystack, query);
       return matchesTag && matchesQuery;
     });
@@ -3398,7 +3416,7 @@ function renderFavoritesPage() {
     grid.innerHTML = `
       <div class="empty-state full-row">
         <span class="icon">♡</span>
-        <p>لم تُضِف أي عنصر إلى المفضلة بعد.<br>تصفّح الأقسام واضغط على أيقونة القلب لحفظ ما يعجبك.</p>
+        <p>${t("favorites_empty_html")}</p>
       </div>
     `;
     return;
