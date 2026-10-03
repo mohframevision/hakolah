@@ -541,7 +541,20 @@ function initCookieConsent() {
   acceptBtn.addEventListener("click", () => {
     lsSet(KEY, "accepted");
     banner.classList.remove("open");
+    window.enableAnalytics?.(); // GA ما يشتغل إلا من هنا (أو من bootstrap.js لمن وافق سابقاً)
   });
+
+  document.getElementById("cookie-decline")?.addEventListener("click", () => {
+    lsSet(KEY, "declined");
+    banner.classList.remove("open");
+    // لو كان وافق سابقاً وتراجع: نوقف الإرسال فوراً، ولا يتحمّل بالزيارات القادمة
+    const gaId = window.GA_ID;
+    if (gaId) window["ga-disable-" + gaId] = true;
+    window.gtag = function () {};
+  });
+
+  // رابط الفوتر يفتح الشريط من جديد ليغيّر الزائر قراره بأي وقت
+  document.getElementById("cookie-settings")?.addEventListener("click", () => banner.classList.add("open"));
 }
 
 /* ===== تذكير "اختيار اليوم" (بديل خفيف عن الإشعارات لا يعتمد على أي خدمة

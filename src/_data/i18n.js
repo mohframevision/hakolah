@@ -26,8 +26,10 @@ module.exports = {
     footer_youtube: "📺 قناتنا على يوتيوب",
     footer_whatsapp: "📱 قناتنا على واتساب",
     cookie_text_html:
-      'نستخدم ملفات تعريف الارتباط (Cookies) لحفظ تفضيلاتك (كالمظهر والمفضلة) ولعرض إعلانات Google. بمتابعة تصفح الموقع فأنت توافق على <a href="{privacyUrl}">سياسة الخصوصية</a>.',
+      'نحفظ تفضيلاتك (كالمظهر والمفضلة) بملفات تعريف الارتباط. ولا نفعّل قياس الزيارات (Google Analytics) ولا تخصيص إعلانات Google إلا بموافقتك؛ وإن رفضت تبقى إعلانات غير مخصصة. التفاصيل في <a href="{privacyUrl}">سياسة الخصوصية</a>.',
     cookie_accept: "موافق",
+    cookie_decline: "رفض",
+    footer_cookies: "إعدادات الكوكيز",
     daily_pick_text_html: '🎯 شفت <a href="{homeUrl}">اختيار اليوم</a> بعد؟',
     daily_pick_close: "إغلاق",
     all_filter: "الكل",
@@ -169,8 +171,10 @@ module.exports = {
     footer_youtube: "📺 Our YouTube channel",
     footer_whatsapp: "📱 Our WhatsApp channel",
     cookie_text_html:
-      'We use cookies to save your preferences (theme, favorites) and show Google ads. By continuing to browse, you agree to our <a href="{privacyUrl}">Privacy Policy</a>.',
+      'We save your preferences (theme, favorites) with cookies. We only turn on visit measurement (Google Analytics) and personalized Google ads with your consent; if you decline, you only see non-personalized ads. Details are in our <a href="{privacyUrl}">Privacy Policy</a>.',
     cookie_accept: "Accept",
+    cookie_decline: "Decline",
+    footer_cookies: "Cookie settings",
     daily_pick_text_html: "🎯 Seen <a href=\"{homeUrl}\">today's pick</a> yet?",
     daily_pick_close: "Close",
     all_filter: "All",

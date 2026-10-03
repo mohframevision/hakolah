@@ -47,7 +47,6 @@
   {# preconnect لأصول خارجية تُستخدم فعلياً بالصفحة (تسريع DNS/TLS قبل أول fetch/سكربت) #}
   <link rel="preconnect" href="https://hakolah-push.hakolah.workers.dev" />
   {% if adsense.publisherId and not noThirdParty %}<link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />{% endif %}
-  {% if analytics.measurementId and not noThirdParty %}<link rel="preconnect" href="https://www.googletagmanager.com" />{% endif %}
   {# ملف خارجي (وليس سكربت مضمّن) عمداً — يسمح بسياسة CSP صارمة script-src
      بدون unsafe-inline. يُحمَّل بدون defer/async فيشتغل قبل أول رسم للصفحة
      (يمنع "وميض" المظهر الفاتح قبل تطبيق المظهر الداكن المحفوظ) #}
@@ -113,11 +112,7 @@
   {% if adsense.publisherId and not noThirdParty %}
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense.publisherId }}" crossorigin="anonymous"></script>
   {% endif %}
-  {# ضبط gtag انتقل لـ bootstrap.js (يقرأ المعرّف من #site-config) — كان
-     سكربت مضمّن يمنع سياسة CSP صارمة #}
-  {% if analytics.measurementId and not noThirdParty %}
-  <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics.measurementId }}"></script>
-  {% endif %}
+  {# gtag.js ما يُحمَّل هنا: bootstrap.js يحمّله بعد موافقة الزائر على الكوكيز #}
 
   <script type="application/ld+json">
   {
@@ -208,6 +203,7 @@
         <a href="{{ ('/en/contact.html' if lang == 'en' else '/contact.html') | url }}">{{ t.footer_contact }}</a>
         <a href="{{ ('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url }}">{{ t.footer_privacy }}</a>
         <a href="{{ ('/en/terms.html' if lang == 'en' else '/terms.html') | url }}">{{ t.footer_terms }}</a>
+        <button type="button" class="footer-link-btn" id="cookie-settings">{{ t.footer_cookies }}</button>
         {% if social.youtubeUrl %}<a href="{{ social.youtubeUrl }}" target="_blank" rel="noopener noreferrer">{{ t.footer_youtube }}</a>{% endif %}
         {% if social.whatsappUrl %}<a href="{{ social.whatsappUrl }}" target="_blank" rel="noopener noreferrer">{{ t.footer_whatsapp }}</a>{% endif %}
       </div>
@@ -236,6 +232,7 @@
 
   <div class="cookie-banner" id="cookie-banner" role="region" aria-label="{{ t.cookie_accept }}">
     <p>{{ t.cookie_text_html | replace("{privacyUrl}", (('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url)) | safe }}</p>
+    <button type="button" class="btn secondary cookie-decline" id="cookie-decline">{{ t.cookie_decline }}</button>
     <button type="button" class="btn cookie-accept" id="cookie-accept">{{ t.cookie_accept }}</button>
   </div>
 

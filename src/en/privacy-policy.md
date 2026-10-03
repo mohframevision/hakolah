@@ -31,7 +31,7 @@ checking whether the same device has hit a per-minute limit on likes.
 
 ## Cookies and ads
 
-Google may use cookies to show relevant ads based on your visits to this site and other sites, and to measure visits via Google Analytics. You can control these ads through [Google Ads Settings](https://adssettings.google.com).
+We save your preferences (such as theme and favorites) in your browser with cookies, which the site needs to work. Visit measurement through Google Analytics and personalization of Google ads based on your visits to this site and others are only turned on after you consent in the banner shown on your first visit; if you decline, Google Analytics is not loaded and ads stay non-personalized. You can change your choice at any time from the "Cookie settings" link at the bottom of every page, and manage Google ads through [Google Ads Settings](https://adssettings.google.com).
 
 ## External links
 

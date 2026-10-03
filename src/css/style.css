@@ -1733,8 +1733,19 @@ img {
   flex-wrap: wrap;
 }
 
-.footer-links a:hover {
+.footer-links a:hover,
+.footer-link-btn:hover {
   color: var(--color-primary);
+}
+
+/* زر الفوتر «إعدادات الكوكيز» بشكل رابط عادي (هو زر لأنه يفتح شريطاً لا صفحة) */
+.footer-link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
 /* ===== رسالة تأكيد عابرة (Toast) ===== */
