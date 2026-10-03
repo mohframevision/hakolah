@@ -47,7 +47,7 @@ langSwitchUrl: "/en/contact.html"
 
   <button type="submit" id="submitBtn" class="btn">
     <span id="btnText">إرسال</span>
-    <span id="btnLoading" class="hidden">جاري الإرسال…</span>
+    <span id="btnLoading" class="hidden">جارٍ الإرسال…</span>
   </button>
 </form>
 
