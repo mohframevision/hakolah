@@ -13,12 +13,14 @@ import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import java.io.ByteArrayInputStream;
 
 // أدوات "تجارب الذكاء الاصطناعي" (محوّل الملفات، حاسبة المصاريف، اختبار
 // الطباعة) و"صوتيات هكوله" منطقها مئات الأسطر جافاسكربت لكل أداة —
@@ -80,7 +82,8 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         settings.setMediaPlaybackRequiresUserGesture(false);
         // حفظ الملفات المصدَّرة (WebView ما ينزّل روابط blob:) — لشاشة الصوتيات فقط
         if (tab != null) webView.addJavascriptInterface(new SaveBridge(this), "HakolahApp");
-        webView.setWebViewClient(new LoadingClient(progress));
+        // شاشة الصوتيات (فيها جسر الحفظ): نمنع تحميل أي طرف ثالث غير الموقع وGoogle Analytics
+        webView.setWebViewClient(new LoadingClient(progress, tab != null));
         webView.setWebChromeClient(new PageChrome(this));
         // كيبورد موصول بالجوال: الأزرار توصل للصفحة فقط لو الـWebView هو المركّز
         webView.setFocusableInTouchMode(true);
@@ -116,9 +119,26 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
     // توثيق خارجي) يُفتح بمتصفح/تطبيق خارجي حقيقي بدل التصفح داخل تطبيقنا
     private static class LoadingClient extends WebViewClient {
         private final ProgressBar progress;
+        // true بالشاشة اللي فيها جسر HakolahApp
+        private final boolean locked;
 
-        LoadingClient(ProgressBar progress) {
+        LoadingClient(ProgressBar progress, boolean locked) {
             this.progress = progress;
+            this.locked = locked;
+        }
+
+        // addJavascriptInterface يُحقن بكل إطار بالصفحة، حتى إطارات الإعلانات، وكان ممكن لإعلان
+        // يستدعي HakolahApp.save يكتب ملفات بمجلد التنزيلات. أندرويد بلا مكتبة خارجية ما يتيح
+        // تحديد الأصل للجسر، فنقطع المصدر: بهذي الشاشة لا يُحمَّل إلا الموقع وقياس Google
+        // Analytics (سكربت Google نفسه). الإعلانات تفشل بصمت ولا تظهر بالتطبيق أصلاً.
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+            if (!locked) return null;
+            Uri uri = request.getUrl();
+            String scheme = uri.getScheme();
+            if (!"http".equals(scheme) && !"https".equals(scheme)) return null; // blob: وdata: من الصفحة نفسها
+            if (isAllowedHost(uri.getHost())) return null;
+            return new WebResourceResponse("text/plain", "utf-8", 403, "Blocked", null, new ByteArrayInputStream(new byte[0]));
         }
 
         @Override
@@ -137,6 +157,21 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
             }
             return true;
         }
+    }
+
+    // أصول موثوقة للجسر والميكروفون: الموقع فقط (github.io القديم يحوّل لـhakolah.com أصلاً، وهو
+    // يستضيف أيضاً الموقع الشخصي فما نمنحه الميكروفون)
+    static boolean isSiteHost(String host) {
+        return "hakolah.com".equals(host) || "www.hakolah.com".equals(host);
+    }
+
+    static boolean isAllowedHost(String host) {
+        if (host == null) return false;
+        return isSiteHost(host)
+                || "mohframevision.github.io".equals(host)
+                || "www.googletagmanager.com".equals(host)
+                || host.endsWith(".google-analytics.com")
+                || host.endsWith(".analytics.google.com");
     }
 
     // "صوتك" بالصوتيات: تسجيل من الميكروفون (getUserMedia) واختيار ملف صوت
@@ -160,6 +195,12 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
     }
 
     void onMicRequest(PermissionRequest request) {
+        // الإذن لصفحات الموقع فقط (كان يُمنح لأي إطار)
+        Uri origin = request.getOrigin();
+        if (origin == null || !isSiteHost(origin.getHost())) {
+            request.deny();
+            return;
+        }
         boolean wantsMic = false;
         for (String r : request.getResources()) {
             if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r)) wantsMic = true;
