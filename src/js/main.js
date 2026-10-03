@@ -1742,8 +1742,13 @@ function initExpenseCalculator() {
   let type = "expense";
   let selectedCategory = "";
   let selectedClass = "";
-  const todayStr = () => new Date().toISOString().slice(0, 10);
-  const thisMonthStr = () => new Date().toISOString().slice(0, 7);
+  // تاريخ الجهاز المحلي لا UTC: البحرين UTC+3، فـtoISOString كان يسجّل عمليات ما
+  // بين ١٢ و٣ الفجر بتاريخ أمس، وراتب أول الشهر يطلع بالشهر اللي قبله
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const thisMonthStr = () => todayStr().slice(0, 7);
   if (dateInput) dateInput.value = todayStr();
   if (monthInput) monthInput.value = thisMonthStr();
 
