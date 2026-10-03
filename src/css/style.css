@@ -1373,6 +1373,17 @@ img {
   border-radius: 999px;
 }
 
+/* الداكن: الوردي على خلفيته الوردية الداكنة كان بتباين 4:1 — أفتح درجة تكفي */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .liked-badge {
+    color: #f472b6;
+  }
+}
+
+:root[data-theme="dark"] .liked-badge {
+  color: #f472b6;
+}
+
 .video-badge {
   display: inline-flex;
   align-items: center;
@@ -1478,13 +1489,13 @@ img {
   display: inline-block;
   margin-top: 8px;
   font-size: 0.74rem;
+  /* بلا شفافية: لون "باهت" + شفافية 0.7 كان يطلع #949494 على أبيض (تباين 3:1،
+     أقل من حد WCAG 4.5:1)، والخط الصغير يكفي لإبعاده عن العين */
   color: var(--color-text-muted);
-  opacity: 0.7;
   text-decoration: none;
 }
 
 .report-link:hover {
-  opacity: 1;
   text-decoration: underline;
 }
 
@@ -6311,7 +6322,7 @@ html[lang="en"] .instrument-btn.is-new::after {
 }
 
 .about-chip-liked {
-  background: #d9412b;
+  background: #c93a26;
 }
 
 .about-chip-reviews {
