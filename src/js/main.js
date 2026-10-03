@@ -3688,6 +3688,23 @@ async function initPushNotifications() {
    لتفاصيل الفكرة. القطع الكبيرة (عنوان/صورة/هاتف/موقع/تصنيفات) تضل هي
    النتيجة النهائية فوق الشاشة كاملة، ما ترجع لبطاقة صغيرة بعدها — وتحتها
    أزرار التواصل الفعلية (اتصال/موقع/إنستقرام) وزر إعادة المحاولة والإغلاق */
+/* يخفي عن قارئ الشاشة كل عناصر body الظاهرة خلف حاجز شاشة كاملة (اختار لي/
+   القائمة) وقت فتحه — بدونه يقدر قارئ الشاشة "يقرأ" الهيدر/الفوتر/المحتوى
+   المخفي بصرياً خلف الحاجز. لا يغيّر أي شيء مرئياً (aria-hidden بلا أثر على
+   العرض) ولا يلمس عنصراً مخفياً بالفعل (يدعم حواري متداخلة: فتح حاجز القائمة
+   فوق حاجز "اختار لي" المفتوح يخفي الحاجز الأول أيضاً، ويرجعه ظاهراً لقارئ
+   الشاشة عند إغلاق حاجز القائمة فقط، لا كل شيء دفعة وحدة). يرجّع دالة إرجاع
+   خاصة بنفس العناصر اللي أخفاها فعلياً. */
+function hideBackgroundFromAT(overlay) {
+  const hidden = [];
+  Array.from(document.body.children).forEach((el) => {
+    if (el === overlay || el.tagName === "SCRIPT" || el.hasAttribute("aria-hidden")) return;
+    el.setAttribute("aria-hidden", "true");
+    hidden.push(el);
+  });
+  return () => hidden.forEach((el) => el.removeAttribute("aria-hidden"));
+}
+
 function openPickerReveal(item, { onRetry, onClose } = {}) {
   // نحفظ العنصر اللي كان عليه التركيز (زر "اختار لي") عشان نرجّع له التركيز
   // بعد الإغلاق — بدونه يضيع تركيز لوحة المفاتيح على body بعد كل إغلاق
@@ -3699,10 +3716,12 @@ function openPickerReveal(item, { onRetry, onClose } = {}) {
   overlay.setAttribute("aria-label", itemTitle(item));
   document.body.appendChild(overlay);
   document.body.style.overflow = "hidden";
+  const restoreBackground = hideBackgroundFromAT(overlay);
 
   function close() {
     overlay.remove();
     document.body.style.overflow = "";
+    restoreBackground();
     document.removeEventListener("keydown", onKeydown);
     if (trigger && document.contains(trigger) && typeof trigger.focus === "function") {
       trigger.focus();
@@ -3787,10 +3806,12 @@ function openMenuOverlay(item) {
   overlay.setAttribute("aria-label", `${t("link_menu")} — ${itemTitle(item)}`);
   document.body.appendChild(overlay);
   document.body.style.overflow = "hidden";
+  const restoreBackground = hideBackgroundFromAT(overlay);
 
   function close() {
     overlay.remove();
     document.body.style.overflow = "";
+    restoreBackground();
     document.removeEventListener("keydown", onKeydown);
     if (trigger && document.contains(trigger) && typeof trigger.focus === "function") {
       trigger.focus();

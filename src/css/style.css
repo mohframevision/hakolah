@@ -4316,6 +4316,12 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .sounds-pane:not([hidden]) {
+    animation: none;
+  }
+}
+
 .beep-help {
   width: 100%;
   text-align: center;
