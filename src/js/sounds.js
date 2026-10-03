@@ -3588,8 +3588,9 @@ function initBeepMelodyExperiment() {
     const t1a = l.t1;
     const offa = l.offset;
     const canvas = clip.querySelector("canvas");
+    const zoom0 = zoomOf(); // التكبير ثابت طول السحبة: قراءة هندسة وحدة بدل وحدة لكل حركة
     const move = (ev) => {
-      const d = (ev.clientX - x0) / zoomOf() / pxPerSec;
+      const d = (ev.clientX - x0) / zoom0 / pxPerSec;
       if (side === "right") {
         const endAbs = snap(offa + (t1a - t0a) + d);
         l.t1 = Math.min(l.end, Math.max(l.t0 + TRIM_MIN, endAbs - offa + t0a));
@@ -3653,7 +3654,8 @@ function initBeepMelodyExperiment() {
       select(l);
       // مثل باند لاب: الضغط على المقطع نفسه يضع الخط الأبيض تحت الماوس بالضبط
       // (قبل كان يحدّد فقط ويبقى الخط بعيداً) — فالقص بـS يصير عند مكان النقر
-      cursor = snap((e.clientX - board.getBoundingClientRect().left) / zoomOf() / pxPerSec);
+      const zoom0 = zoomOf(); // ثابت طول السحبة (موضع اللوحة نفسه يُقرأ حياً لأنه يتغيّر مع التمرير)
+      cursor = snap((e.clientX - board.getBoundingClientRect().left) / zoom0 / pxPerSec);
       setPlayhead(null);
       clip.classList.add("dragging");
       const x0 = e.clientX;
@@ -3664,8 +3666,8 @@ function initBeepMelodyExperiment() {
       const maxRow = Math.min(rowCount(), MAX_TRACKS - 1); // آخر خانة = مسار جديد تحت الكل
       let moved = false;
       const move = (ev) => {
-        l.offset = snap(off0 + (ev.clientX - x0) / zoomOf() / pxPerSec);
-        l.row = Math.min(maxRow, Math.max(0, row0 + Math.round((ev.clientY - y0) / zoomOf() / ROW_H)));
+        l.offset = snap(off0 + (ev.clientX - x0) / zoom0 / pxPerSec);
+        l.row = Math.min(maxRow, Math.max(0, row0 + Math.round((ev.clientY - y0) / zoom0 / ROW_H)));
         moved = moved || l.offset !== off0 || l.row !== row0;
         clip.style.left = l.offset * pxPerSec + "px";
         clip.style.top = l.row * ROW_H + 3 + "px";
@@ -3787,8 +3789,9 @@ function initBeepMelodyExperiment() {
     if (e.button) return;
     e.preventDefault();
     captureEl.setPointerCapture(e.pointerId);
+    const zoom0 = zoomOf(); // موضع rectEl يبقى يُقرأ بكل حركة: الجدول يتمرّر أفقياً أثناء السحب
     const set = (ev) => {
-      cursor = snap((ev.clientX - rectEl.getBoundingClientRect().left) / zoomOf() / pxPerSec);
+      cursor = snap((ev.clientX - rectEl.getBoundingClientRect().left) / zoom0 / pxPerSec);
       setPlayhead(null);
     };
     set(e);
@@ -4577,9 +4580,9 @@ function initBeepMelodyExperiment() {
       svg.setPointerCapture(e.pointerId);
       const before = snapshot();
       tr.auto = tr.auto.map((p) => ({ ...p })); // اللقطة القديمة تبقى سليمة
+      const z = zoomOf(); // ثابت طول السحبة؛ موضع svg يُقرأ حياً (يتغيّر مع التمرير)
       const at = (ev) => {
         const rect = svg.getBoundingClientRect();
-        const z = zoomOf();
         const t = snap((ev.clientX - rect.left) / z / pxPerSec);
         const v = clamp(Math.round((1 - ((ev.clientY - rect.top) / z - 5) / (ROW_H - 10)) * AUTO_MAX * 100) / 100, 0, AUTO_MAX);
         return { t, v };
@@ -5666,6 +5669,16 @@ function initBeepMelodyExperiment() {
         true
       )
     );
+    // تفعيل مفتاح بلا مؤشر (قارئ شاشة، أو Enter/Space لو صار عليه تركيز): النقرة تصل
+    // بلا pointerdown، وتُعرف بـ detail === 0. نقرات الماوس واللمس الحقيقية detail ≥ 1
+    // وتُعزف أصلاً من pointerdown فوق، فما تنعزف مرتين
+    playBox.addEventListener("click", (e) => {
+      if (e.detail !== 0) return;
+      const key = e.target.closest("[data-midi]");
+      if (!key) return;
+      noteOn("a:" + key.dataset.midi, Number(key.dataset.midi));
+      setTimeout(() => noteOff("a:" + key.dataset.midi), 150);
+    });
   }
 
   /* ===== مزامنة الفيديو (لطلاب الأفلام والأنيميشن) =====
