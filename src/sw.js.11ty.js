@@ -25,13 +25,14 @@ const PRECACHE = [
   BASE + "en/index.html",
   OFFLINE_AR,
   OFFLINE_EN,
-  BASE + "css/style.css",
-  BASE + "theme.css",
+  // نفس روابط base.njk حرفياً (مع ?v=النسخة): هكذا تتطابق بالكاش بلا تجاهل للمعاملات
+  BASE + "css/style.css?v=" + VERSION,
+  BASE + "theme.css?v=" + VERSION,
   // الأربعة مطلوبة لعرض أي صفحة: بلا data.js تطلع الصفحة بلا بطاقات
   BASE + "js/theme-init.js",
-  BASE + "js/bootstrap.js",
-  BASE + "js/data.js",
-  BASE + "js/main.js",
+  BASE + "js/bootstrap.js?v=" + VERSION,
+  BASE + "js/data.js?v=" + VERSION,
+  BASE + "js/main.js?v=" + VERSION,
   BASE + "assets/fonts/cairo-arabic.woff2",
 ];
 
@@ -71,7 +72,11 @@ async function networkFirst(request, offlineUrl) {
 
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE);
-  const cached = await cache.match(request, { ignoreSearch: true });
+  /* ملف بنسخة (?v=…) يُطابق حرفياً: تجاهل المعاملات كان يرجّع CSS/JS النسخة
+     القديمة مع HTML النشر الجديد، فأول صفحتين بعد كل نشر تطلعان بتنسيق قديم
+     أو سكربت لا يطابق الصفحة. الملفات بلا نسخة (صور، خطوط) تبقى كما كانت */
+  const versioned = new URL(request.url).searchParams.has("v");
+  const cached = await cache.match(request, { ignoreSearch: !versioned });
   const fetching = fetch(request)
     .then((res) => {
       if (res && res.ok) cache.put(request, res.clone());
