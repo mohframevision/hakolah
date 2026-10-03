@@ -669,6 +669,19 @@ function initHeaderScroll() {
    بدون كاش، ولو تغيّرت النسخة عن آخر مرة شافها هالتبويب، يعيد التحميل تلقائياً. */
 function initAutoUpdateCheck() {
   const SEEN_KEY = "site_seen_version";
+  // نسخة جديدة اكتُشفت والزائر يستخدم الصفحة: ما نعيد التحميل تحت يده (كان يمسح
+  // نص نموذج التواصل، واختبار الكتابة، وتسجيلاً جارياً بالصوتيات). ننتظر لين
+  // يترك التبويب، فيلقى النسخة الجديدة لما يرجع بلا ما يحس بشي
+  let pending = false;
+  const hasTypedText = () =>
+    [...document.querySelectorAll("textarea, input[type=text], input[type=email], input[type=tel], input[type=number], input:not([type])")].some(
+      (el) => el.value && el.value !== el.defaultValue
+    );
+  // .recording = تسجيل جارٍ باستوديو الصوتيات (يستمر والتبويب بالخلفية)
+  function reloadWhenSafe() {
+    if (pending && document.visibilityState === "hidden" && !hasTypedText() && !document.querySelector(".recording"))
+      location.reload();
+  }
 
   async function checkVersion() {
     try {
@@ -680,7 +693,8 @@ function initAutoUpdateCheck() {
       const seen = ssGet(SEEN_KEY);
       if (seen && data.version && seen !== data.version) {
         ssSet(SEEN_KEY, data.version);
-        location.reload();
+        pending = true;
+        reloadWhenSafe();
         return;
       }
       if (data.version) ssSet(SEEN_KEY, data.version);
@@ -693,6 +707,7 @@ function initAutoUpdateCheck() {
   setInterval(checkVersion, 5 * 60 * 1000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") checkVersion();
+    else reloadWhenSafe();
   });
 }
 
