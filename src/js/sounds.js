@@ -918,13 +918,164 @@ function initBeepMelodyExperiment() {
   instrumentButtons.forEach((b) => {
     if (b.dataset.new && Date.now() - Date.parse(b.dataset.new) < 30 * 864e5) b.classList.add("is-new");
   });
-  // فتح لوحة الآلة: الصندوق يُمرَّر داخلياً، فنظهر الآلة المختارة لو كانت تحت
-  instrumentButtons[0]?.closest("details")?.addEventListener("toggle", (e) => {
-    if (!e.target.open) return;
-    const box = document.getElementById("instrumentPicker");
-    const active = box.querySelector(".instrument-group .instrument-btn.active");
-    if (active && active.offsetTop > box.clientHeight - 40) box.scrollTop = active.offsetTop - box.clientHeight / 2;
+  /* ===== قائمة الآلات المنسدلة (على طريقة BandLab) =====
+     شريط صغير فوق مفاتيح البيانو: ‹ الآلة الحالية › تفتح نافذة فيها أقسام + قائمة + زر ▶ للتجربة +
+     بحث. تنفتح فوق الشريط (أو تحته لو ما في مساحة) وما تدفع الصفحة ولا تغطي البيانو، فتقدر
+     تعزف وتجرّب الآلات وهي مفتوحة. على شاشة صغيرة جداً (جوال أفقي) تتحول لنافذة بملء الشاشة.
+     الأزرار الأصلية (.instrument-btn) باقية بمعالجاتها كما هي: البحث وآخر ما استخدمت وشارة
+     "جديد" كلها تشتغل عليها؛ هنا نلفّها بصفوف ونضيف زر التجربة بس. */
+  const dd = document.getElementById("instrumentDd");
+  const pop = document.getElementById("instrumentPop");
+  const popBtn = document.getElementById("instCurrent");
+  const listBox = document.getElementById("instrumentPicker");
+  const catsBox = document.getElementById("instrumentCats");
+  const isEnPage = document.documentElement.lang === "en";
+
+  instrumentButtons.forEach((b) => {
+    const row = document.createElement("div");
+    row.className = "ip-row";
+    b.parentNode.insertBefore(row, b);
+    if (b.dataset.instrument !== "custom") {
+      const pv = document.createElement("button");
+      pv.type = "button";
+      pv.className = "ip-preview";
+      pv.textContent = "▶";
+      pv.setAttribute("aria-label", (isEnPage ? "Preview " : "تجربة ") + b.textContent.trim());
+      pv.addEventListener("click", () => previewInstrument(b.dataset.instrument, pv));
+      row.append(pv);
+    }
+    row.append(b);
   });
+
+  // أقسام على الجنب: ضغطة تنزّل القائمة لقسمها، والقسم الظاهر يتلوّن أثناء التمرير
+  const instGroups = [...listBox.querySelectorAll(".instrument-group")];
+  const catButtons = instGroups.map((g) => {
+    const cb = document.createElement("button");
+    cb.type = "button";
+    cb.textContent = g.querySelector(".instrument-group-title").textContent.trim();
+    cb.addEventListener("click", () => {
+      listBox.scrollTo({ top: g.offsetTop - 2, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    });
+    catsBox.append(cb);
+    return cb;
+  });
+  let spyRaf = 0;
+  const spy = () => {
+    spyRaf = 0;
+    let at = 0;
+    instGroups.forEach((g, i) => { if (!g.hidden && g.offsetTop <= listBox.scrollTop + 24) at = i; });
+    catButtons.forEach((cb, i) => cb.classList.toggle("active", i === at));
+  };
+  listBox.addEventListener("scroll", () => { if (!spyRaf) spyRaf = requestAnimationFrame(spy); });
+
+  // مكان النافذة: في تبويب "اعزف" تنفتح دايماً فوق الشريط (تحته مفاتيح البيانو، وهي ما تنغطى أبداً)؛
+  // لو فوق الشريط ما يكفي نرجّع الصفحة لفوق شوي لنفتح مساحة، وإلا تصير نافذة بملء الشاشة.
+  // في تبويب "ألّف" الشريط بأول التبويب فتنفتح تحته.
+  function placePop(adjust = true) {
+    pop.classList.remove("up", "down", "sheet");
+    const wantUp = dd.parentElement?.id !== "instrumentSlotCompose";
+    const hdr = document.querySelector(".site-header");
+    const measure = () => {
+      const r = dd.getBoundingClientRect();
+      const z = r.width / dd.offsetWidth || 1; // تكبير الصفحة (zoom على الشاشات العريضة)
+      const topEdge = hdr ? Math.max(0, hdr.getBoundingClientRect().bottom) : 0;
+      return { z, above: (r.top - topEdge - 8) / z, below: (window.innerHeight - r.bottom - 8) / z };
+    };
+    let m = measure();
+    if (adjust && wantUp && m.above < 300 && window.scrollY > 0) {
+      window.scrollBy(0, -(300 - m.above) * m.z);
+      m = measure();
+    }
+    let dir = wantUp ? (m.above >= 200 ? "up" : "") : m.below >= 200 ? "down" : m.above >= 200 ? "up" : "";
+    if (!dir) {
+      pop.classList.add("sheet");
+      pop.style.maxHeight = "";
+      return;
+    }
+    pop.classList.add(dir);
+    pop.style.maxHeight = Math.min(420, (dir === "up" ? m.above : m.below) - 6) + "px";
+  }
+  // الصفحة تحركت أو تغيّر المقاس وهي مفتوحة: نعيد حساب الاتجاه والارتفاع (بدون تحريك الصفحة)
+  let replaceRaf = 0;
+  function replacePop() {
+    if (!replaceRaf) replaceRaf = requestAnimationFrame(() => { replaceRaf = 0; if (!pop.hidden) placePop(false); });
+  }
+  function onOutsidePointer(e) {
+    if (dd.contains(e.target)) return;
+    if (e.target.closest("#beepPlayKeys")) return; // مفاتيح البيانو تبقى تعزف والقائمة مفتوحة
+    closeInstrumentPop();
+  }
+  function onPopKey(e) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeInstrumentPop();
+      popBtn.focus({ preventScroll: true });
+    }
+  }
+  function openInstrumentPop() {
+    if (!pop.hidden) return;
+    pop.hidden = false;
+    popBtn.setAttribute("aria-expanded", "true");
+    placePop(true);
+    const active = listBox.querySelector(".instrument-group .instrument-btn.active");
+    if (active) listBox.scrollTop = Math.max(0, active.offsetTop - listBox.clientHeight / 2);
+    spy();
+    document.addEventListener("pointerdown", onOutsidePointer, true);
+    document.addEventListener("keydown", onPopKey, true);
+    window.addEventListener("resize", replacePop);
+    window.addEventListener("scroll", replacePop, { passive: true });
+    // فتحها بالماوس: البحث جاهز للكتابة (باللمس لا، حتى ما يطلع الكيبورد ويغطيها)
+    if (!navigator.maxTouchPoints && instrumentSearch) instrumentSearch.focus({ preventScroll: true });
+  }
+  function closeInstrumentPop() {
+    if (pop.hidden) return;
+    pop.hidden = true;
+    popBtn.setAttribute("aria-expanded", "false");
+    document.removeEventListener("pointerdown", onOutsidePointer, true);
+    document.removeEventListener("keydown", onPopKey, true);
+    window.removeEventListener("resize", replacePop);
+    window.removeEventListener("scroll", replacePop);
+    if (instrumentSearch && instrumentSearch.value) {
+      instrumentSearch.value = "";
+      instrumentSearch.dispatchEvent(new Event("input")); // يرجّع كل الآلات للمرة الجاية
+    }
+  }
+  popBtn.addEventListener("click", () => (pop.hidden ? openInstrumentPop() : closeInstrumentPop()));
+  document.getElementById("instrumentClose")?.addEventListener("click", () => {
+    closeInstrumentPop();
+    popBtn.focus({ preventScroll: true });
+  });
+
+  // ‹ › : الآلة السابقة/التالية بدون فتح القائمة
+  function stepInstrument(dir) {
+    const all = [...instrumentButtons].filter((b) => b.dataset.instrument !== "custom" || customSample);
+    const i = all.findIndex((b) => b.classList.contains("active"));
+    all[(i + dir + all.length) % all.length]?.click();
+  }
+  document.getElementById("instPrev")?.addEventListener("click", () => stepInstrument(-1));
+  document.getElementById("instNext")?.addEventListener("click", () => stepInstrument(1));
+
+  // ▶ بجانب كل آلة: نغمة قصيرة بها بدون ما تتغير الآلة المختارة
+  let instPreviewTimer = 0;
+  let instPreviewRestore = null;
+  async function previewInstrument(id, btn) {
+    if (rec) return;
+    const set = INSTRUMENTS[id]?.sampled;
+    if (set && !sampleBank[set]) {
+      btn.classList.add("loading");
+      await Promise.race([loadSampleSet(set), new Promise((r) => setTimeout(r, 2500))]);
+      btn.classList.remove("loading");
+    }
+    clearTimeout(instPreviewTimer);
+    if (instPreviewRestore === null) instPreviewRestore = currentInstrument;
+    currentInstrument = id;
+    keyOn("KeyG");
+    instPreviewTimer = setTimeout(() => {
+      keyOff("KeyG");
+      currentInstrument = instPreviewRestore;
+      instPreviewRestore = null;
+    }, 650);
+  }
   const customSoundBox = document.getElementById("customSound");
   instrumentButtons.forEach((el) => {
     el.addEventListener("click", () => {
@@ -935,10 +1086,14 @@ function initBeepMelodyExperiment() {
         setCustomStatus("need");
         return;
       }
+      // ما نغيّر الآلة وسط تجربة ▶ جارية (كانت ترجّع الآلة القديمة بعد ٦٥٠ms وتلغي الاختيار)
+      clearTimeout(instPreviewTimer);
+      instPreviewRestore = null;
       currentInstrument = id;
       instrumentButtons.forEach((b) => b.classList.toggle("active", b === el));
       updateSoundSummary();
       rememberInstrument(id);
+      if (id !== "custom") closeInstrumentPop();
       // نغمة تجربة بالآلة الجديدة بدل صوت النقرة (والمفتاح ينضغط على البيانو)،
       // إلا أثناء التسجيل حتى ما تنحفظ بالطبقة
       if (rec) return playClickSound();
@@ -2383,6 +2538,8 @@ function initBeepMelodyExperiment() {
       let shown = 0;
       chips.forEach((c) => {
         c.hidden = !words.every((w) => index.get(c).includes(w));
+        const row = c.closest(".ip-row");
+        if (row) row.hidden = c.hidden;
         if (!c.hidden) shown++;
       });
       groups.forEach((g) => (g.hidden = !g.querySelector(".instrument-btn:not([hidden])")));
@@ -2586,6 +2743,14 @@ function initBeepMelodyExperiment() {
       tab.setAttribute("aria-selected", String(on));
       document.getElementById(tab.dataset.pane).hidden = !on;
     });
+    const slot = document.getElementById(id === "panePlay" ? "instrumentSlotPlay" : id === "paneCompose" ? "instrumentSlotCompose" : "");
+    if (dd) {
+      if (slot && dd.parentElement !== slot) {
+        closeInstrumentPop();
+        slot.append(dd);
+      }
+      dd.hidden = !slot;
+    }
   }
   tabs.forEach((tab) =>
     tab.addEventListener("click", () => {

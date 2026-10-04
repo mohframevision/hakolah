@@ -4855,16 +4855,15 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   align-items: stretch;
   flex-wrap: nowrap;
   gap: 4px;
-  /* صندوق بارتفاع ثابت يُمرَّر داخله: اللوحة تبقى صغيرة والبيانو تحتها ظاهر */
+  /* جسم النافذة المنسدلة: يتمرّر داخلياً وارتفاعه يحدده ارتفاع النافذة (.instrument-pop) */
   position: relative;
-  max-height: 264px;
-  margin: 0 12px;
-  padding: 2px 0 10px;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0 2px 6px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.12);
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
@@ -4881,8 +4880,13 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
    خضراء. كانت المربعات تأخذ مساحة كبيرة وتزحم العين (ملاحظة مستخدم) */
 .instrument-group-chips {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* "آخر ما استخدمت" تبقى كبسولات متجاورة فوق القائمة */
+.instrument-recent .instrument-group-chips {
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 0 2px;
 }
 
 .instrument-btn {
@@ -5009,8 +5013,282 @@ html[lang="en"] .instrument-btn.is-new::after {
 
 .instrument-none[hidden],
 .instrument-btn[hidden],
-.instrument-group[hidden] {
+.instrument-group[hidden],
+.ip-row[hidden] {
   display: none;
+}
+
+/* ===== قائمة الآلات المنسدلة (على طريقة BandLab) ===== */
+.instrument-slot {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.instrument-dd {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+}
+
+.instrument-dd[hidden] {
+  display: none;
+}
+
+.instrument-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.ib-label {
+  padding-inline: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.ib-current {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ib-current:hover,
+.ib-current[aria-expanded="true"] {
+  background: rgba(63, 164, 128, 0.3);
+}
+
+.ib-current .beep-panel-now {
+  order: 0;
+  flex: 1;
+  flex-basis: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ib-caret {
+  flex: none;
+  transition: transform 0.2s ease;
+}
+
+.ib-current[aria-expanded="true"] .ib-caret {
+  transform: rotate(180deg);
+}
+
+.ib-step,
+.ip-close,
+.ip-preview {
+  flex: none;
+  border: 0;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ib-step {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.ib-step:hover,
+.ip-preview:hover,
+.ip-close:hover {
+  background: rgba(63, 164, 128, 0.45);
+}
+
+.instrument-pop {
+  position: absolute;
+  z-index: 60;
+  inset-inline-start: 0;
+  width: min(460px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  background: #0e2a22;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+  text-align: start;
+  animation: ipIn 0.14s ease-out;
+}
+
+.instrument-pop[hidden] {
+  display: none;
+}
+
+/* display:flex على .custom-sound كان يلغي سمة hidden فيبقى القسم ظاهراً دايماً */
+.custom-sound[hidden] {
+  display: none;
+}
+
+.instrument-pop.up {
+  bottom: calc(100% + 6px);
+}
+
+.instrument-pop.down {
+  top: calc(100% + 6px);
+}
+
+/* لا مساحة كافية لا فوق الشريط ولا تحته (جوال أفقي): نافذة بملء الشاشة */
+.instrument-pop.sheet {
+  position: fixed;
+  inset: 6px;
+  width: auto;
+  max-height: none;
+  z-index: 95;
+}
+
+@keyframes ipIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.ip-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ip-head strong {
+  white-space: nowrap;
+  font-size: 0.95rem;
+}
+
+.ip-head .instrument-search {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  padding: 8px 14px;
+}
+
+.ip-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+.ip-body {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  min-height: 0;
+}
+
+.ip-cats {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  width: 108px;
+  padding-inline-end: 6px;
+  overflow-y: auto;
+  border-inline-end: 1px solid rgba(255, 255, 255, 0.12);
+  scrollbar-width: thin;
+}
+
+.ip-cats button {
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.ip-cats button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ip-cats button.active {
+  background: rgba(63, 164, 128, 0.22);
+  color: #fff;
+  font-weight: 800;
+}
+
+.ip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ip-preview {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+}
+
+.ip-preview.loading {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.ip-row .instrument-btn {
+  flex: 1;
+  padding: 9px 10px;
+  font-size: 0.95rem;
+}
+
+.ip-row .instrument-btn.active {
+  box-shadow: inset 3px 0 0 #6fc8a4;
+}
+
+[dir="rtl"] .ip-row .instrument-btn.active {
+  box-shadow: inset -3px 0 0 #6fc8a4;
+}
+
+/* جوال عمودي: الأقسام تصير شريطاً أفقياً فوق القائمة */
+@media (max-width: 560px) {
+  .ip-body {
+    flex-direction: column;
+  }
+
+  .ip-cats {
+    flex-direction: row;
+    width: auto;
+    padding: 0 0 6px;
+    overflow-x: auto;
+    overflow-y: visible;
+    border-inline-end: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .ip-cats button {
+    flex: none;
+    white-space: nowrap;
+  }
 }
 
 /* ===== تمرين التأليف (Piper) ===== */
