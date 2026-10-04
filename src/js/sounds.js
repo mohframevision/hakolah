@@ -5963,7 +5963,6 @@ function initBeepMelodyExperiment() {
         return [];
       }
     };
-    const ppb = () => lane.clientHeight / 4; // بكسل لكل نبضة: الشاشة تعرض ٤ نبضات قادمة
     const active = () => !$("panePractice").hidden;
     const setStatus = (text) => (statusEl.textContent = text || "");
     const keyEl = (m) => playBox.querySelector(`[data-midi="${m}"]`);
@@ -5981,42 +5980,55 @@ function initBeepMelodyExperiment() {
       renderPlayKeys();
       buildBars();
     }
-    // عمود لكل نغمة، موضعه الأفقي من مفتاحها (بالنسبة المئوية فيتبع أي مقاس)
-    function buildBars() {
-      const unit = ppb();
-      const w = playBox.offsetWidth || 1;
-      const names = labelMode === "solfege" ? "solfege" : "letters";
-      track.replaceChildren();
-      parsed.events.forEach((ev, i) =>
-        ev.notes.forEach((m, j) => {
-          const key = keyEl(m);
-          if (!key) return;
-          const black = key.classList.contains("pk-black");
-          const bar = document.createElement("div");
-          bar.className = "song-bar" + (black ? " black" : "");
-          bar.dataset.i = i;
-          bar.style.left = ((key.offsetLeft - (black ? key.offsetWidth / 2 : 0)) / w) * 100 + "%";
-          bar.style.width = (key.offsetWidth / w) * 100 + "%";
-          bar.style.bottom = ev.t * unit + "px";
-          bar.style.height = Math.max(8, (ev.durs?.[j] ?? ev.d) * unit - 3) + "px"; // MIDI: كل نغمة بطولها
-          bar.textContent = noteName(m, names);
-          track.append(bar);
-        })
-      );
-      markedNext = -1;
-      markBars();
+    /* عمود لكل نغمة، موضعه الأفقي من مفتاحها (بالنسبة المئوية فيتبع أي عرض). مواقع المفاتيح تُقاس
+       مرة وحدة قبل أي إضافة، والأعمدة تنضاف دفعة وحدة: القياس بعد كل إضافة كان يعيد تخطيط الصفحة
+       مع كل عمود (٩٥٠ عمود بملف MIDI = ثواني على الجوال). والارتفاع والموضع العمودي بمتغير --ppb،
+       فتغيّر مقاس الممر يحدّث متغيراً واحداً بدل إعادة البناء */
+    let unit = 0; // بكسل لكل نبضة: الممر يعرض ٤ نبضات قادمة
+    let barsOf = []; // أعمدة كل نغمة/كورد، فتلوين الجاية والمنتهية ما يمر على كل الأعمدة
+    function setUnit() {
+      unit = lane.clientHeight / 4;
+      track.style.setProperty("--ppb", unit + "px");
       moveTrack();
     }
-    const moveTrack = () => (track.style.transform = `translateY(${play.pos * ppb()}px)`);
+    function buildBars() {
+      const w = playBox.offsetWidth || 1;
+      const names = labelMode === "solfege" ? "solfege" : "letters";
+      const at = {};
+      playBox.querySelectorAll("[data-midi]").forEach((k) => {
+        const black = k.classList.contains("pk-black");
+        at[k.dataset.midi] = { left: ((k.offsetLeft - (black ? k.offsetWidth / 2 : 0)) / w) * 100, width: (k.offsetWidth / w) * 100, black };
+      });
+      const frag = document.createDocumentFragment();
+      barsOf = parsed.events.map((ev, i) =>
+        ev.notes.flatMap((m, j) => {
+          const k = at[m];
+          if (!k) return [];
+          const bar = document.createElement("div");
+          bar.className = "song-bar" + (k.black ? " black" : "");
+          bar.dataset.i = i;
+          // MIDI: كل نغمة بطولها
+          bar.style.cssText = `left:${k.left}%;width:${k.width}%;bottom:calc(var(--ppb) * ${ev.t});height:max(8px, calc(var(--ppb) * ${ev.durs?.[j] ?? ev.d} - 3px))`;
+          bar.textContent = noteName(m, names);
+          frag.append(bar);
+          return [bar];
+        })
+      );
+      track.replaceChildren(frag);
+      markedNext = -1;
+      markBars();
+      setUnit();
+    }
+    const moveTrack = () => (track.style.transform = `translateY(${play.pos * unit}px)`);
     let markedNext = -1;
     function markBars() {
       const next = play.next;
-      if (next === markedNext) return; // آلاف الأعمدة بملفات MIDI: نلوّنها فقط لما تتغير النغمة الجاية
+      if (next === markedNext) return;
+      if (markedNext < 0 || next < markedNext) barsOf.forEach((bars, i) => bars.forEach((x) => x.classList.toggle("done", i < next))); // بناء جديد أو رجوع للخلف
+      else for (let i = markedNext; i < next; i++) barsOf[i].forEach((x) => x.classList.add("done"));
+      barsOf[markedNext]?.forEach((x) => x.classList.remove("now"));
+      barsOf[next]?.forEach((x) => x.classList.add("now"));
       markedNext = next;
-      track.querySelectorAll(".song-bar").forEach((b) => {
-        b.classList.toggle("done", Number(b.dataset.i) < next);
-        b.classList.toggle("now", Number(b.dataset.i) === next);
-      });
     }
     function markWanted(ev) {
       playBox.querySelectorAll(".want").forEach((k) => k.classList.remove("want"));
@@ -6468,7 +6480,7 @@ function initBeepMelodyExperiment() {
         renderPlayKeys();
       }
     });
-    new ResizeObserver(() => !lane.hidden && buildBars()).observe(lane);
+    new ResizeObserver(() => !lane.hidden && setUnit()).observe(lane);
   }
 
   function shiftOctave(step) {
