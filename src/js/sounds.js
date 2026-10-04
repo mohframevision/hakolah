@@ -2821,7 +2821,8 @@ function initBeepMelodyExperiment() {
   // القياسية C D E أو Do Re Mi — للتعلّم. التحكم نفسه بالحالات الثلاث لا يتغيّر.
   let labelMode = ["letters", "solfege"].includes(store.get("beepLabels")) ? store.get("beepLabels") : "keys";
   // "compact": ١٨ مفتاحاً = نافذة الكيبورد، "full": بيانو كامل ٨٨ مفتاحاً (La0–Do8)
-  let boardMode = store.get("beepBoard") === "full" ? "full" : "compact";
+  // اللوحة: مبسّطة (أوكتاف بمفاتيح كبيرة) / عادية (نافذة الكيبورد ١٨ نغمة) / كاملة ٨٨
+  let boardMode = ["simple", "full"].includes(store.get("beepBoard")) ? store.get("beepBoard") : "compact";
 
   /* ===== المقامات العربية بأرباع الأصوات =====
      كل مقام = درجاته السبع بتهجئتها الصحيحة (الحرف + العلامة)، ومنها نشتق كل شي:
@@ -2891,7 +2892,7 @@ function initBeepMelodyExperiment() {
     const full = boardMode === "full" && !songRange; // تبويب التدريب: نطاق الأغنية بدل اللوحة
     const base = windowBase();
     const lo = songRange ? songRange.lo : full ? 21 : base;
-    const hi = songRange ? songRange.hi : full ? 108 : base + 17;
+    const hi = songRange ? songRange.hi : full ? 108 : base + (boardMode === "simple" ? 12 : 17);
     const isBlack = (m) => [1, 3, 6, 8, 10].includes(pcOf(m));
     const all = [];
     for (let m = lo; m <= hi; m++) all.push(m);
@@ -6106,9 +6107,32 @@ function initBeepMelodyExperiment() {
       return p;
     }
     // keep: نفس الأغنية (رجعت للتبويب) — نخلي الموضع؛ وإلا تبدأ من أولها
+    // «بسّط اللوحة»: كل نغمة تنطوي (بأوكتافات كاملة) داخل أوكتافين حول وسط اللحن، فالبيانو
+    // يصير ٢٤ مفتاحاً كبيراً بدل نطاق عريض بمفاتيح ضيقة؛ والنغمات المتكررة بعد الطي تندمج
+    let simple = store.get("songSimple") === "1";
+    function foldEvents(p) {
+      const all = p.events.flatMap((e) => e.notes).sort((a, b) => a - b);
+      if (!all.length || all[all.length - 1] - all[0] < 24) return p; // يتسع أصلاً
+      const lo = Math.round((all[all.length >> 1] - 12) / 12) * 12;
+      const fold = (m) => lo + ((((m - lo) % 24) + 24) % 24);
+      p.events.forEach((e) => {
+        const notes = [];
+        const durs = [];
+        e.notes.forEach((m, j) => {
+          const f = fold(m);
+          if (notes.includes(f)) return;
+          notes.push(f);
+          durs.push(e.durs?.[j] ?? e.d);
+        });
+        e.notes = notes;
+        e.durs = durs;
+      });
+      return p;
+    }
     function loadText(keep = false) {
       const was = play.pos;
       parsed = compressGaps(midiSong ? midiEvents() : parseSong(textEl.value));
+      if (simple) foldEvents(parsed);
       setStatus(parsed.events.length ? parsed.events.length + songBox.dataset.notes : "");
       if (keep) {
         play.pos = clamp(was, startPos(), endPos());
@@ -6227,6 +6251,7 @@ function initBeepMelodyExperiment() {
       await ensureContext();
       $("songEditor").open = false; // صندوق الكتابة يتطوى فيقرب البيانو (ضغطة ترجّعه)
       play.mode = mode;
+      play.last = mode;
       play.at = performance.now();
       (mode === "listen" ? listenBtn : trainBtn).textContent = (mode === "listen" ? listenBtn : trainBtn).dataset.stop;
       if (mode === "train") setStatus(songBox.dataset.wait);
@@ -6289,6 +6314,18 @@ function initBeepMelodyExperiment() {
     seekEl.addEventListener("input", () => {
       const a = startPos();
       seek(a + (seekEl.value / 1000) * (endPos() - a));
+    });
+    // Space = تشغيل/إيقاف مؤقت (آخر وضع استخدمته)، Home = من البداية — نفس اختصارات تبويب «اعزف»
+    document.addEventListener("keydown", (e) => {
+      if (!active() || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.target.closest("input, textarea, select, [contenteditable], summary")) return;
+      if (e.code === "Space" && !e.target.closest("button")) {
+        e.preventDefault();
+        playSong(play.mode || play.last || "listen");
+      } else if (e.code === "Home") {
+        e.preventDefault();
+        $("songRestart").click();
+      }
     });
     $("songRestart").addEventListener("click", () => {
       seek(startPos());
@@ -6383,6 +6420,20 @@ function initBeepMelodyExperiment() {
       openSong({ title: "", text: "" });
       $("songEditor").open = true;
       textEl.focus();
+    });
+    const simpleBtn = $("songSimple");
+    const paintSimple = () => {
+      simpleBtn.classList.toggle("active", simple);
+      simpleBtn.setAttribute("aria-pressed", String(simple));
+    };
+    paintSimple();
+    simpleBtn.addEventListener("click", () => {
+      simple = !simple;
+      store.set("songSimple", simple ? "1" : "0");
+      paintSimple();
+      pauseSong();
+      loadText(true);
+      playClickSound();
     });
     listenBtn.addEventListener("click", () => playSong("listen"));
     trainBtn.addEventListener("click", () => playSong("train"));

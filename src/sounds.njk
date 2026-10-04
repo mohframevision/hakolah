@@ -28,20 +28,15 @@ pageScript: "sounds"
   <section class="sounds-pane" id="panePlay" role="tabpanel">
     <div class="beep-play">
       <details class="beep-help">
-        <summary>⌨️ طريقة العزف وأسماء المفاتيح</summary>
+        <summary>⌨️ طريقة العزف والاختصارات</summary>
         <p class="beep-param-note">الصف الأوسط <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> للمفاتيح البيضاء، والصف الذي فوقه <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> للسوداء، و<kbd>Z</kbd> / <kbd>X</kbd> لتغيير الأوكتاف، وأمسك <kbd>Shift</kbd> للدواسة. تعمل أيضاً بلوحة مفاتيح موصولة بالجوال، أو بكيبورد MIDI حقيقي، أو بلمس المفاتيح مباشرة: اضغط أعلى المفتاح لنغمة هادئة وأسفله لنغمة قوية. اختصارات التسجيل: <kbd>R</kbd> بدء/إيقاف، و<kbd>Space</kbd> تشغيل/إيقاف بعد أول تسجيل (تظهر القائمة الكاملة معه).</p>
-        <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="ما يُكتب على المفاتيح">
-          <button type="button" class="filter-chip active" data-labels="keys">⌨️ أحرف الكيبورد</button>
-          <button type="button" class="filter-chip" data-labels="letters">C D E</button>
-          <button type="button" class="filter-chip" data-labels="solfege">Do Re Mi</button>
-        </div>
       </details>
       <div class="beep-play-octave">
         <button type="button" class="filter-chip" id="beepOctDown" aria-label="أوكتاف أخفض">Z ⬇️</button>
         <span id="beepOctLabel" dir="ltr">C4</span>
+        <button type="button" class="filter-chip" id="beepOctUp" aria-label="أوكتاف أعلى">X ⬆️</button>
         <button type="button" class="filter-chip" id="beepRecToggle" data-label="⏺ سجّل" data-stop="⏹ أوقف" data-more="⏺ أضف طبقة" data-empty="لم تعزف أي نغمة بعد">⏺ سجّل</button>
         <span class="beep-rec-time" id="beepRecTime" dir="ltr"></span>
-        <button type="button" class="filter-chip" id="beepOctUp" aria-label="أوكتاف أعلى">X ⬆️</button>
         <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="ملء الشاشة">⛶</button>
       </div>
       <div class="beep-quickbar">
@@ -54,8 +49,24 @@ pageScript: "sounds"
         </div>
         <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 وصّل MIDI" data-on="🎹 " data-none="لم يُعثر على كيبورد MIDI — وصّله بالجهاز ثم اضغط مرة أخرى." data-denied="لم يُسمح باستخدام MIDI.">🎹 <span class="qb-text">وصّل MIDI</span></button>
       </div>
+      <div class="beep-setting beep-labels-row">
+        <span class="beep-setting-label">🔤 على المفاتيح</span>
+        <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="ما يُكتب على المفاتيح">
+          <button type="button" class="filter-chip active" data-labels="keys">⌨️ أحرف الكيبورد</button>
+          <button type="button" class="filter-chip" data-labels="letters">C D E</button>
+          <button type="button" class="filter-chip" data-labels="solfege">Do Re Mi</button>
+        </div>
+      </div>
+      <div class="beep-setting beep-board-row">
+        <span class="beep-setting-label">🎹 اللوحة</span>
+        <div class="instrument-picker" id="beepBoardSize" role="group" aria-label="حجم اللوحة">
+          <button type="button" class="filter-chip" data-board="simple" title="أوكتاف واحد بمفاتيح كبيرة">مبسّطة</button>
+          <button type="button" class="filter-chip" data-board="compact">عادية</button>
+          <button type="button" class="filter-chip" data-board="full">كاملة ٨٨</button>
+        </div>
+      </div>
       <details class="beep-help beep-settings" id="beepSettings">
-        <summary>⚙️ المقام والميزان واللوحة</summary>
+        <summary><span class="sum-play">⚙️ المقام وإعدادات التسجيل</span><span class="sum-practice">🕌 المقام</span></summary>
         <div class="beep-setting">
           <span class="beep-setting-label">🕌 المقام</span>
           <div class="instrument-picker" id="beepMaqam" role="group" aria-label="المقام">
@@ -71,13 +82,6 @@ pageScript: "sounds"
           </div>
         </div>
         <p class="beep-param-note" id="beepMaqamNote" data-none="السلّم الغربي المعتاد. اختر مقاماً لتعزف بأرباع الأصوات: المفاتيح خارج المقام تبهت، ونقطة صغيرة تعلّم القرار." data-quarter="½♭ = نصف بيمول (ربع صوت)، يُعزف بالمفتاح الأبيض نفسه."></p>
-        <div class="beep-setting">
-          <span class="beep-setting-label">🎹 اللوحة</span>
-          <div class="instrument-picker" id="beepBoardSize" role="group" aria-label="حجم اللوحة">
-            <button type="button" class="filter-chip" data-board="compact">مختصرة</button>
-            <button type="button" class="filter-chip" data-board="full">كاملة ٨٨ مفتاحاً</button>
-          </div>
-        </div>
         <div class="beep-setting">
           <span class="beep-setting-label">🎼 الميزان</span>
           <div class="instrument-picker" id="beepMeter" role="group" aria-label="الميزان">
@@ -610,6 +614,7 @@ C C D E E-D D
       <div class="song-controls">
         <button type="button" class="btn" id="songListen" data-stop="⏸ إيقاف مؤقت">▶️ استمع</button>
         <button type="button" class="btn secondary" id="songTrain" data-stop="⏸ إيقاف مؤقت">🎯 تدرّب</button>
+        <button type="button" class="filter-chip" id="songSimple" aria-pressed="false" title="يجمع كل نغمات الأغنية في أوكتافين فقط: مفاتيح أكبر وأسهل، واللحن نفسه بأوكتاف أقرب">🎹 بسّط اللوحة</button>
         <div class="instrument-picker" id="songSpeed" role="group" aria-label="السرعة">
           <button type="button" class="filter-chip" data-speed="0.5">🐢 50%</button>
           <button type="button" class="filter-chip" data-speed="0.75">75%</button>
@@ -620,13 +625,13 @@ C C D E E-D D
       <p class="song-status" id="songStatus" aria-live="polite"></p>
       <p class="song-lyric" id="songLyric" dir="auto"></p>
       <div class="song-timeline" id="songTimeline" dir="ltr" hidden>
-        <button type="button" class="filter-chip" id="songRestart" aria-label="من البداية" title="من البداية">⏮</button>
+        <button type="button" class="filter-chip" id="songRestart" aria-label="من البداية" title="من البداية (Home)">⏮</button>
         <span id="songTimeNow">0:00</span>
         <input type="range" id="songSeek" min="0" max="1000" step="1" value="0" aria-label="موضع الأغنية" />
         <span id="songTimeAll">0:00</span>
       </div>
       <div class="song-keys-slot" id="songKeysSlot"></div>
-      <p class="beep-param-note">وضع «تدرّب» ينتظرك: تنزل الأعمدة وتتوقف عند الخط حتى تضغط النغمة الصحيحة — بالإصبع أو الكيبورد أو كيبورد MIDI. وتقدر تفتح ملف MIDI (من مواقع مثل bitmidi.com) فينزل بإيقاعه الصحيح بالضبط.</p>
+      <p class="beep-param-note">وضع «تدرّب» ينتظرك: تنزل الأعمدة وتتوقف عند الخط حتى تضغط النغمة الصحيحة — بالإصبع أو الكيبورد أو كيبورد MIDI. وتقدر تفتح ملف MIDI (من مواقع مثل bitmidi.com) فينزل بإيقاعه الصحيح بالضبط. ومن الكيبورد: <kbd>Space</kbd> تشغيل/إيقاف مؤقت، و<kbd>Home</kbd> من البداية.</p>
     </div>
   </section>
 </div>

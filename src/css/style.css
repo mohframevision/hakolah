@@ -6997,3 +6997,23 @@ html[lang="en"] .instrument-btn.is-new::after {
 .song-timeline .filter-chip {
   padding: 4px 12px;
 }
+
+/* صف «اللوحة» صار ظاهراً فوق البيانو (كان مدفوناً داخل الإعدادات). عنوان الإعدادات يتبدّل:
+   في «اعزف» = المقام وإعدادات التسجيل، وفي «تدرّب» = المقام فقط (التسجيل والميزان والشبكة
+   ما لها معنى هناك، ونطاق اللوحة تحدده الأغنية أو زر «بسّط اللوحة») */
+.sum-practice,
+#songKeysSlot .sum-play,
+#songKeysSlot .beep-board-row,
+#songKeysSlot .beep-setting:has(#beepMeter, #beepGrid, #beepCountIn) {
+  display: none;
+}
+
+#songKeysSlot .sum-practice {
+  display: inline;
+}
+
+/* البيانو هو أول شي بعد صف الأوكتاف (كان تحت ٥ صفوف أدوات ويحتاج تمرير، خاصة بالجوال)،
+   والدواسة والمترونوم والسرعة واللوحة والإعدادات تنزل تحته */
+.sounds-tool .beep-play > :is(.beep-help:not(.beep-settings), .beep-play-octave, .beep-keys-wrap) {
+  order: -1;
+}

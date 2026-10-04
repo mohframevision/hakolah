@@ -29,20 +29,15 @@ pageScript: "sounds"
   <section class="sounds-pane" id="panePlay" role="tabpanel">
     <div class="beep-play">
       <details class="beep-help">
-        <summary>⌨️ How to play & key labels</summary>
+        <summary>⌨️ How to play & shortcuts</summary>
         <p class="beep-param-note">Middle row <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> for the white keys, the row above <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> for the black keys, <kbd>Z</kbd> / <kbd>X</kbd> to shift the octave, and hold <kbd>Shift</kbd> for the sustain pedal. It also works with a keyboard plugged into your phone, a real MIDI keyboard, or by touching the keys directly: press near the top of a key for a soft note and near the bottom for a strong one. Recording shortcuts: <kbd>R</kbd> start/stop, and <kbd>Space</kbd> play/stop after your first recording (the full list appears with it).</p>
-        <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="What is written on the keys">
-          <button type="button" class="filter-chip active" data-labels="keys">⌨️ Keyboard letters</button>
-          <button type="button" class="filter-chip" data-labels="letters">C D E</button>
-          <button type="button" class="filter-chip" data-labels="solfege">Do Re Mi</button>
-        </div>
       </details>
       <div class="beep-play-octave">
         <button type="button" class="filter-chip" id="beepOctDown" aria-label="Octave down">Z ⬇️</button>
         <span id="beepOctLabel" dir="ltr">C4</span>
+        <button type="button" class="filter-chip" id="beepOctUp" aria-label="Octave up">X ⬆️</button>
         <button type="button" class="filter-chip" id="beepRecToggle" data-label="⏺ Record" data-stop="⏹ Stop" data-more="⏺ Add layer" data-empty="You haven't played any notes yet">⏺ Record</button>
         <span class="beep-rec-time" id="beepRecTime" dir="ltr"></span>
-        <button type="button" class="filter-chip" id="beepOctUp" aria-label="Octave up">X ⬆️</button>
         <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="Fullscreen">⛶</button>
       </div>
       <div class="beep-quickbar">
@@ -55,8 +50,24 @@ pageScript: "sounds"
         </div>
         <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 Connect MIDI" data-on="🎹 " data-none="No MIDI keyboard found — plug it in, then press again." data-denied="MIDI access wasn't allowed.">🎹 <span class="qb-text">Connect MIDI</span></button>
       </div>
+      <div class="beep-setting beep-labels-row">
+        <span class="beep-setting-label">🔤 Key labels</span>
+        <div class="instrument-picker" id="beepPlayLabels" role="group" aria-label="What is written on the keys">
+          <button type="button" class="filter-chip active" data-labels="keys">⌨️ Keyboard letters</button>
+          <button type="button" class="filter-chip" data-labels="letters">C D E</button>
+          <button type="button" class="filter-chip" data-labels="solfege">Do Re Mi</button>
+        </div>
+      </div>
+      <div class="beep-setting beep-board-row">
+        <span class="beep-setting-label">🎹 Keyboard</span>
+        <div class="instrument-picker" id="beepBoardSize" role="group" aria-label="Keyboard size">
+          <button type="button" class="filter-chip" data-board="simple" title="One octave with big keys">Simple</button>
+          <button type="button" class="filter-chip" data-board="compact">Normal</button>
+          <button type="button" class="filter-chip" data-board="full">Full 88</button>
+        </div>
+      </div>
       <details class="beep-help beep-settings" id="beepSettings">
-        <summary>⚙️ Maqam, time signature & keyboard</summary>
+        <summary><span class="sum-play">⚙️ Maqam & recording settings</span><span class="sum-practice">🕌 Maqam</span></summary>
         <div class="beep-setting">
           <span class="beep-setting-label">🕌 Maqam</span>
           <div class="instrument-picker" id="beepMaqam" role="group" aria-label="Maqam">
@@ -72,13 +83,6 @@ pageScript: "sounds"
           </div>
         </div>
         <p class="beep-param-note" id="beepMaqamNote" data-none="The usual Western scale. Pick a maqam to play with quarter tones: keys outside the maqam fade, and a small dot marks the tonic." data-quarter="½♭ = half-flat (a quarter tone), played on the same white key."></p>
-        <div class="beep-setting">
-          <span class="beep-setting-label">🎹 Keyboard</span>
-          <div class="instrument-picker" id="beepBoardSize" role="group" aria-label="Keyboard size">
-            <button type="button" class="filter-chip" data-board="compact">Compact</button>
-            <button type="button" class="filter-chip" data-board="full">Full 88 keys</button>
-          </div>
-        </div>
         <div class="beep-setting">
           <span class="beep-setting-label">🎼 Time signature</span>
           <div class="instrument-picker" id="beepMeter" role="group" aria-label="Time signature">
@@ -611,6 +615,7 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
       <div class="song-controls">
         <button type="button" class="btn" id="songListen" data-stop="⏸ Pause">▶️ Listen</button>
         <button type="button" class="btn secondary" id="songTrain" data-stop="⏸ Pause">🎯 Practice</button>
+        <button type="button" class="filter-chip" id="songSimple" aria-pressed="false" title="Folds every note of the song into two octaves: bigger, easier keys, same melody in a closer octave">🎹 Simplify keyboard</button>
         <div class="instrument-picker" id="songSpeed" role="group" aria-label="Speed">
           <button type="button" class="filter-chip" data-speed="0.5">🐢 50%</button>
           <button type="button" class="filter-chip" data-speed="0.75">75%</button>
@@ -621,13 +626,13 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
       <p class="song-status" id="songStatus" aria-live="polite"></p>
       <p class="song-lyric" id="songLyric" dir="auto"></p>
       <div class="song-timeline" id="songTimeline" dir="ltr" hidden>
-        <button type="button" class="filter-chip" id="songRestart" aria-label="From the start" title="From the start">⏮</button>
+        <button type="button" class="filter-chip" id="songRestart" aria-label="From the start" title="From the start (Home)">⏮</button>
         <span id="songTimeNow">0:00</span>
         <input type="range" id="songSeek" min="0" max="1000" step="1" value="0" aria-label="Song position" />
         <span id="songTimeAll">0:00</span>
       </div>
       <div class="song-keys-slot" id="songKeysSlot"></div>
-      <p class="beep-param-note">Practice mode waits for you: the bars fall and stop at the line until you press the right note — by touch, computer keyboard, or a MIDI keyboard. You can also open a MIDI file (from sites like bitmidi.com) and it falls with its exact rhythm.</p>
+      <p class="beep-param-note">Practice mode waits for you: the bars fall and stop at the line until you press the right note — by touch, computer keyboard, or a MIDI keyboard. You can also open a MIDI file (from sites like bitmidi.com) and it falls with its exact rhythm. Keyboard: <kbd>Space</kbd> play/pause, <kbd>Home</kbd> back to the start.</p>
     </div>
   </section>
 </div>
