@@ -964,6 +964,8 @@ function initBeepMelodyExperiment() {
     spyRaf = 0;
     let at = 0;
     instGroups.forEach((g, i) => { if (!g.hidden && g.offsetTop <= listBox.scrollTop + 24) at = i; });
+    // آخر القائمة: الأقسام الأخيرة القصيرة ما توصل للأعلى، فالقسم الأخير هو المضيء
+    if (listBox.scrollTop + listBox.clientHeight >= listBox.scrollHeight - 4) at = instGroups.findLastIndex((g) => !g.hidden);
     catButtons.forEach((cb, i) => cb.classList.toggle("active", i === at));
   };
   listBox.addEventListener("scroll", () => { if (!spyRaf) spyRaf = requestAnimationFrame(spy); });

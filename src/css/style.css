@@ -4855,6 +4855,7 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   align-items: stretch;
   flex-wrap: nowrap;
   gap: 4px;
+  justify-content: flex-start; /* center (من .instrument-picker) يدفع أول الأقسام فوق بداية التمرير فما توصلها */
   /* جسم النافذة المنسدلة: يتمرّر داخلياً وارتفاعه يحدده ارتفاع النافذة (.instrument-pop) */
   position: relative;
   flex: 1;
