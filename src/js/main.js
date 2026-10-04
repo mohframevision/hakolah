@@ -3700,9 +3700,19 @@ function hideBackgroundFromAT(overlay) {
   Array.from(document.body.children).forEach((el) => {
     if (el === overlay || el.tagName === "SCRIPT" || el.hasAttribute("aria-hidden")) return;
     el.setAttribute("aria-hidden", "true");
+    // inert (مدعوم بكل المتصفحات الحديثة) يمنع أيضاً وصول Tab/التركيز لهذي
+    // العناصر أثناء فتح الحاجز — بدونه كان ممكن لمستخدم لوحة مفاتيح يخرج
+    // بـTab من الحاجز لمحتوى الصفحة الخلفي (ظل بصرياً مخفياً خلف الحاجز، بس
+    // ما زال بترتيب التركيز). لا يغيّر أي سلوك فأرة/لمس (الحاجز يغطي الشاشة
+    // كاملة أصلاً بـz-index أعلى فيعترض كل نقرة قبل وصولها للخلفية).
+    el.setAttribute("inert", "");
     hidden.push(el);
   });
-  return () => hidden.forEach((el) => el.removeAttribute("aria-hidden"));
+  return () =>
+    hidden.forEach((el) => {
+      el.removeAttribute("aria-hidden");
+      el.removeAttribute("inert");
+    });
 }
 
 function openPickerReveal(item, { onRetry, onClose } = {}) {
