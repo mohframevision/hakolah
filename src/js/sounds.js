@@ -2745,8 +2745,8 @@ function initBeepMelodyExperiment() {
       tab.setAttribute("aria-selected", String(on));
       document.getElementById(tab.dataset.pane).hidden = !on;
     });
-    // البيانو وكل إعداداته (أسماء المفاتيح، الأوكتاف، الدواسة، المترونوم، السرعة، MIDI، المقام)
-    // وشريط الآلة تنتقل لتبويب "تدرّب" وترجع لمكانها في "اعزف"
+    // البيانو وإعداداته وشريط الآلة تنتقل (أدوات العزف الحر اللي ما تخدم التدريب يخفيها CSS)
+    // وتنتقل لتبويب "تدرّب" وترجع لمكانها في "اعزف"
     const keysBox = document.getElementById("beepKeysWrap");
     const songSlot = document.getElementById("songKeysSlot");
     if (keysBox && songSlot) {
@@ -5937,6 +5937,7 @@ function initBeepMelodyExperiment() {
       loadText();
       if (!parsed.events.length) return setStatus(songBox.dataset.empty);
       await ensureContext();
+      $("songEditor").open = false; // صندوق الكتابة يتطوى فيقرب البيانو (ضغطة ترجّعه)
       const btn = mode === "listen" ? listenBtn : trainBtn;
       btn.textContent = btn.dataset.stop;
       const last = parsed.events[parsed.events.length - 1];
@@ -5948,7 +5949,7 @@ function initBeepMelodyExperiment() {
       const tick = (now) => {
         const s = state;
         if (!s) return;
-        let pos = s.pos + ((now - s.at) / 1000) * (bpm / 60) * speed; // سرعة البيانو (BPM) × سرعة التدريب
+        let pos = s.pos + ((now - s.at) / 1000) * (90 / 60) * speed; // ٩٠ نبضة بالدقيقة × نسبة التدريب
         s.at = now;
         if (s.mode === "train") {
           const ev = parsed.events[s.next];
@@ -5966,8 +5967,6 @@ function initBeepMelodyExperiment() {
           }
           s.sounding.forEach((off, id) => off <= pos && (noteOff(id), s.sounding.delete(id)));
         }
-        // المترونوم (نفس زره في البيانو): نقرة على كل نبضة، والأقوى أول المازورة
-        if (metroOn && pos >= 0 && Math.floor(pos) > Math.floor(s.pos)) metroClick(audioCtx.currentTime, Math.floor(pos) % meter === 0);
         s.pos = pos;
         moveTrack();
         lyricAt(pos);

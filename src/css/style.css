@@ -6880,3 +6880,9 @@ html[lang="en"] .instrument-btn.is-new::after {
     height: 34vh;
   }
 }
+
+/* تبويب «تدرّب» يركّز على الأغنية: من أدوات العزف الحر يبقى أسماء المفاتيح وMIDI وملء الشاشة
+   والمقام فقط (الأوكتاف يتضبط على نطاق الأغنية، والسرعة من أزرار التدريب) */
+#songKeysSlot :is(#beepOctDown, #beepOctUp, #beepOctLabel, #beepRecToggle, #beepRecTime, #beepPedal, #beepMetro, .beep-tempo) {
+  display: none;
+}
