@@ -6810,7 +6810,7 @@ html[lang="en"] .instrument-btn.is-new::after {
   margin-top: 6px;
   overflow: hidden;
   border-radius: 12px 12px 0 0;
-  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px calc(100% / 14)), rgba(0, 0, 0, 0.3);
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px calc(100% / var(--whites, 14))), #0b2019; /* خط عند حد كل مفتاح أبيض؛ لون ثابت لأنها تطلع برا البطاقة على الجوال */
 }
 
 .song-lane[hidden] {
@@ -6923,4 +6923,44 @@ html[lang="en"] .instrument-btn.is-new::after {
 
 .beep-play-keys.dense .pk-black b {
   display: none;
+}
+
+/* «تدرّب»: البيانو بعرض الصفحة كله (بدل حد ٩٠٠px) فيكبر مع الشاشة، وباقي الأدوات تبقى
+   بعرض مريح للقراءة. طول المفاتيح من عرض المفتاح نفسه (نسبة البيانو الحقيقي ~١:٦) بدل
+   نسبة ثابتة للوحة كلها، فما تصير المفاتيح أطول من الشاشة لما يتوسع البيانو */
+.sounds-tool .song-practice {
+  max-width: none;
+}
+
+.song-practice > :not(.song-keys-slot) {
+  max-width: min(100%, 868px);
+}
+
+.song-keys-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  container-type: inline-size;
+}
+
+.sounds-tool .song-keys-slot .beep-play-keys {
+  aspect-ratio: auto;
+  max-height: none;
+  height: clamp(170px, calc(100cqi / var(--whites, 15) * 6), 42vh);
+}
+
+/* جوال: الأعمدة والمفاتيح تطلع من حواف البطاقات لحافة الشاشة (عنصر أعرض من أبيه بـflex مركّز يتوزع
+   على الجهتين). على الشاشات العريضة لا: هناك zoom على الصفحة يكبّر 100vw */
+@media (max-width: 700px) {
+  .song-keys-slot .beep-keys-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .song-keys-slot :is(.song-lane, .beep-play-keys) {
+    flex: none;
+    width: calc(100vw - 8px);
+  }
 }

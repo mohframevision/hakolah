@@ -2899,6 +2899,7 @@ function initBeepMelodyExperiment() {
     const { scale, tonic } = MAQAMS[maqam];
     const asNotes = labelMode !== "keys";
     playBox.style.setProperty("--whites", whites.length);
+    keysWrap?.style.setProperty("--whites", whites.length); // خطوط ممر الأعمدة (تدرّب) على حدود المفاتيح
     playBox.classList.toggle("dense", whites.length > 22); // نطاق أغنية عريض: أسماء أصغر والمفاتيح ما تطلع برا الشاشة
     playBox.dataset.labels = labelMode;
     playBox.classList.toggle("full", full);
@@ -6112,15 +6113,20 @@ function initBeepMelodyExperiment() {
       const btn = mode === "listen" ? listenBtn : trainBtn;
       btn.textContent = btn.dataset.stop;
       const end = Math.max(...parsed.events.map((e) => e.t + e.d));
-      // pos بالنبضات، يبدأ قبل الصفر بنبضتين: الأعمدة الأولى تنزل قبل ما توصل الخط
-      state = { mode, pos: -2, next: 0, hits: new Set(), misses: 0, sounding: new Map(), end, at: performance.now(), raf: 0 };
+      // pos بالنبضات، يبدأ قبل أول نغمة بنبضتين (مو من الصفر: ملفات MIDI كثير تبدأ بصمت أو بمقدمة
+      // لآلات ثانية، فكان العمود الأول ياخذ وقت لين ينزل)
+      state = { mode, pos: Math.min(...parsed.events.map((e) => e.t)) - 2, next: 0, hits: new Set(), misses: 0, sounding: new Map(), end, at: performance.now(), raf: 0 };
       if (mode === "train") setStatus(songBox.dataset.wait);
       markBars();
       playBox.scrollIntoView({ block: "end", behavior: "smooth" }); // الأعمدة والمفاتيح كلها قدامك
       const tick = (now) => {
         const s = state;
         if (!s) return;
-        let pos = s.pos + ((now - s.at) / 1000) * (90 / 60) * speed; // ٩٠ نبضة بالدقيقة × نسبة التدريب
+        // فراغ طويل بلا نغمات (أكثر من ٣ نبضات لين العمود الجاي، ولا شي يرن): تقديم سريع ×٨
+        const gap = parsed.events[s.next] ? parsed.events[s.next].t - s.pos : 0;
+        const rush = gap > 3 && !s.sounding.size ? 8 : 1;
+        let pos = s.pos + ((now - s.at) / 1000) * (90 / 60) * speed * rush; // ٩٠ نبضة بالدقيقة × نسبة التدريب
+        if (rush > 1) pos = Math.min(pos, parsed.events[s.next].t - 2.5); // يرجع للسرعة العادية قبل العمود بشوي
         s.at = now;
         if (s.mode === "train") {
           const ev = parsed.events[s.next];
