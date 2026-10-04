@@ -6732,9 +6732,14 @@ html[lang="en"] .instrument-btn.is-new::after {
 
 /* ===== تبويب «تدرّب»: نوتات مكتوبة تنزل أعمدة فوق البيانو ===== */
 @media (max-width: 440px) {
+  .sounds-tabs {
+    max-width: 100%;
+    gap: 2px;
+  }
+
   .sounds-tab {
-    padding: 9px 11px;
-    font-size: 0.88rem;
+    padding: 9px 8px;
+    font-size: 0.82rem;
   }
 }
 
@@ -6963,4 +6968,32 @@ html[lang="en"] .instrument-btn.is-new::after {
     flex: none;
     width: calc(100vw - 8px);
   }
+}
+
+/* «تدرّب»: الشريط الزمني فوق الأعمدة — ⏮ من البداية، الوقت الحالي، سحب لأي نقطة، الطول */
+.song-timeline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 868px;
+  margin: 6px auto 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.song-timeline[hidden] {
+  display: none;
+}
+
+.song-timeline input {
+  flex: 1;
+  min-width: 0;
+  accent-color: #6fc8a4;
+  cursor: pointer;
+}
+
+.song-timeline .filter-chip {
+  padding: 4px 12px;
 }

@@ -5940,7 +5940,7 @@ function initBeepMelodyExperiment() {
     lane.hidden = true;
     lane.innerHTML = '<div class="song-track"></div><div class="song-hitline"></div>';
     playBox.before(lane);
-    lane.before(document.getElementById("songLyric")); // الكلمات فوق الأعمدة مباشرة
+    lane.before(document.getElementById("songLyric"), document.getElementById("songTimeline")); // الكلمات والشريط الزمني فوق الأعمدة مباشرة
     document.getElementById("songLyric").hidden = true;
     const track = lane.firstChild;
     const textEl = $("songText");
@@ -5955,7 +5955,6 @@ function initBeepMelodyExperiment() {
     const DEMO = "E E F G G F E D\nC C D E E:1.5 D:0.5 D:2\nE E F G G F E D\nC C D E D:1.5 C:0.5 C:2";
     let speed = Number(store.get("songSpeed")) || 1;
     let parsed = { events: [], lyrics: [] };
-    let state = null; // التشغيل الجاري
     const readSongs = () => {
       try {
         return JSON.parse(store.get(SONGS_KEY)) || [];
@@ -6003,12 +6002,16 @@ function initBeepMelodyExperiment() {
           track.append(bar);
         })
       );
+      markedNext = -1;
       markBars();
       moveTrack();
     }
-    const moveTrack = () => (track.style.transform = `translateY(${(state ? state.pos : 0) * ppb()}px)`);
+    const moveTrack = () => (track.style.transform = `translateY(${play.pos * ppb()}px)`);
+    let markedNext = -1;
     function markBars() {
-      const next = state ? state.next : -1;
+      const next = play.next;
+      if (next === markedNext) return; // آلاف الأعمدة بملفات MIDI: نلوّنها فقط لما تتغير النغمة الجاية
+      markedNext = next;
       track.querySelectorAll(".song-bar").forEach((b) => {
         b.classList.toggle("done", Number(b.dataset.i) < next);
         b.classList.toggle("now", Number(b.dataset.i) === next);
@@ -6062,7 +6065,7 @@ function initBeepMelodyExperiment() {
         chip.textContent = (t.name || family || tracksBox.dataset.track + " " + (i + 1)) + " · " + t.notes.length;
         chip.addEventListener("click", () => {
           midiSong.on[i] = !midiSong.on[i];
-          stopSong();
+          pauseSong();
           saveDraft();
           renderTracks();
           loadText();
@@ -6079,105 +6082,219 @@ function initBeepMelodyExperiment() {
       const chip = e.target.closest("[data-hand]");
       if (!chip || !midiSong) return;
       midiSong.hand = chip.dataset.hand;
-      stopSong();
+      pauseSong();
       saveDraft();
       renderTracks();
       loadText();
       playClickSound();
     });
-    function loadText() {
-      parsed = midiSong ? midiEvents() : parseSong(textEl.value);
+    // صمت طويل بين نغمتين (أكثر من ٤ نبضات، مثلاً مقدمة لآلات ما اخترتها) ينضغط لنبضتين:
+    // الأعمدة والشريط والصوت كلها تمشي على نفس الوقت المضغوط
+    function compressGaps(p) {
+      let shift = 0;
+      let end = -Infinity;
+      const cuts = [];
+      p.events.forEach((e) => {
+        if (e.t - end > 4 && end > -Infinity) {
+          shift += e.t - end - 2;
+          cuts.push([e.t, shift]);
+        }
+        end = Math.max(end, e.t + e.d);
+        e.t -= shift;
+      });
+      p.lyrics.forEach((l) => (l.t -= cuts.filter(([t]) => t <= l.t).pop()?.[1] || 0));
+      return p;
+    }
+    // keep: نفس الأغنية (رجعت للتبويب) — نخلي الموضع؛ وإلا تبدأ من أولها
+    function loadText(keep = false) {
+      const was = play.pos;
+      parsed = compressGaps(midiSong ? midiEvents() : parseSong(textEl.value));
       setStatus(parsed.events.length ? parsed.events.length + songBox.dataset.notes : "");
+      if (keep) {
+        play.pos = clamp(was, startPos(), endPos());
+        play.next = nextAt(play.pos);
+      } else resetPos();
       fitKeys();
+      render();
     }
 
-    function stopSong() {
-      if (!state) return;
-      cancelAnimationFrame(state.raf);
-      state.sounding.forEach((_, id) => noteOff(id));
-      state = null;
+    /* ===== التشغيل: موضع واحد (play.pos بالنبضات) يبقى لين تغيّر الأغنية =====
+       الزر نفسه يوقف مؤقتاً ويكمل من مكانه، ⏮ يرجع للبداية، والشريط يقفز لأي نقطة.
+       «استمع» يجدول النغمات مسبقاً على ساعة الصوت (مو مع كل إطار رسم)، فيكمل حتى لو
+       رحت لنافذة ثانية — المتصفح يوقف الرسم بالخلفية ويبطّئ المؤقتات لثانية، فنجدول ٢٫٥ ثانية قدّام. */
+    const RATE = () => 1.5 * speed; // نبضة بالثانية: ٩٠ نبضة/دقيقة × نسبة التدريب
+    const AHEAD = 2.5;
+    const target = () => ({ ctx: audioCtx, dry: masterInput, wet: delayNode, live: false });
+    const play = { pos: 0, next: 0, mode: null, misses: 0, hits: new Set(), raf: 0, timer: 0, at: 0, anchor: null, sched: 0, notes: [] };
+    const startPos = () => (parsed.events.length ? parsed.events[0].t - 2 : 0); // قبل أول نغمة بنبضتين
+    const endPos = () => Math.max(0, ...parsed.events.map((e) => e.t + e.d));
+    const nextAt = (pos) => {
+      const i = parsed.events.findIndex((e) => e.t >= pos - 1e-6);
+      return i < 0 ? parsed.events.length : i;
+    };
+    const clock = (sec) => Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0");
+
+    // الشريط الزمني والوقت: بثواني الأغنية على سرعتها الأصلية
+    const seekEl = $("songSeek");
+    function paintTime() {
+      const a = startPos();
+      const span = Math.max(0.001, endPos() - a);
+      seekEl.value = Math.round(clamp((play.pos - a) / span, 0, 1) * 1000);
+      $("songTimeNow").textContent = clock(Math.max(0, play.pos - a) / 1.5);
+      $("songTimeAll").textContent = clock(span / 1.5);
+    }
+    function render() {
+      moveTrack();
+      markBars();
+      lyricAt(play.pos);
+      paintTime();
+    }
+
+    // النغمات المجدولة: نطفيها كلها عند الإيقاف/القفز، ونضيء مفاتيحها وقت رنينها فقط
+    function releaseAt(env, t) {
+      if (!env) return;
+      if (env.gain.cancelAndHoldAtTime) {
+        env.gain.cancelAndHoldAtTime(t);
+        env.gain.setTargetAtTime(0.0001, t, env._tau || 0.09);
+      } else setTimeout(() => keyRelease(env), Math.max(0, (t - audioCtx.currentTime) * 1000)); // فايرفوكس
+    }
+    function silence() {
+      play.notes.forEach((n) => {
+        keyRelease(n.env);
+        if (n.lit) markKey(n.m, false);
+      });
+      play.notes = [];
+    }
+    function schedule() {
+      const now = audioCtx.currentTime;
+      const { audio, pos } = play.anchor;
+      const until = pos + (now + AHEAD - audio) * RATE();
+      for (let ev = parsed.events[play.sched]; ev && ev.t <= until; ev = parsed.events[++play.sched]) {
+        const on = audio + (ev.t - pos) / RATE();
+        if (on < now - 0.05) continue; // فات وقتها (بعد قفزة)
+        ev.notes.forEach((m, j) => {
+          const off = on + ((ev.durs?.[j] ?? ev.d) * 0.92) / RATE();
+          const env = playNote(target(), pseudoDegree(m), Math.max(on, now), holdSeconds(currentInstrument), velGain(90), 0, 0, freqOf(m, centsOf(m)));
+          releaseAt(env, off);
+          play.notes.push({ env, m, on, off, lit: false });
+        });
+      }
+      play.notes = play.notes.filter((n) => {
+        if (n.off >= now - 1) return true;
+        if (n.lit) markKey(n.m, false);
+        return false;
+      });
+    }
+    function lightKeys() {
+      const now = audioCtx.currentTime;
+      play.notes.forEach((n) => {
+        const on = now >= n.on && now < n.off;
+        if (on !== n.lit) markKey(n.m, on);
+        n.lit = on;
+      });
+    }
+
+    function pauseSong() {
+      if (!play.mode) return;
+      cancelAnimationFrame(play.raf);
+      clearInterval(play.timer);
+      play.mode = null;
+      silence();
       markWanted(null);
       [listenBtn, trainBtn].forEach((b) => (b.textContent = b.dataset.idle));
-      lyricEl.textContent = "";
-      markBars();
-      moveTrack();
+      render();
     }
-    async function startSong(mode) {
-      const again = state?.mode === mode;
-      stopSong();
-      if (again) return; // نفس الزر = إيقاف
-      loadText();
+    function resetPos() {
+      play.pos = startPos();
+      play.next = 0;
+      play.misses = 0;
+      play.hits.clear();
+    }
+    function seek(pos) {
+      const mode = play.mode;
+      pauseSong();
+      play.pos = clamp(pos, startPos(), endPos());
+      play.next = nextAt(play.pos);
+      play.hits.clear();
+      render();
+      if (mode) playSong(mode);
+    }
+    async function playSong(mode) {
+      if (play.mode === mode) return pauseSong(); // نفس الزر = إيقاف مؤقت
+      pauseSong();
       if (!parsed.events.length) return setStatus(songBox.dataset.empty);
+      if (play.pos >= endPos() - 1e-6) resetPos(); // خلصت: نبدأ من جديد
       await ensureContext();
       $("songEditor").open = false; // صندوق الكتابة يتطوى فيقرب البيانو (ضغطة ترجّعه)
-      const btn = mode === "listen" ? listenBtn : trainBtn;
-      btn.textContent = btn.dataset.stop;
-      const end = Math.max(...parsed.events.map((e) => e.t + e.d));
-      // pos بالنبضات، يبدأ قبل أول نغمة بنبضتين (مو من الصفر: ملفات MIDI كثير تبدأ بصمت أو بمقدمة
-      // لآلات ثانية، فكان العمود الأول ياخذ وقت لين ينزل)
-      state = { mode, pos: Math.min(...parsed.events.map((e) => e.t)) - 2, next: 0, hits: new Set(), misses: 0, sounding: new Map(), end, at: performance.now(), raf: 0 };
+      play.mode = mode;
+      play.at = performance.now();
+      (mode === "listen" ? listenBtn : trainBtn).textContent = (mode === "listen" ? listenBtn : trainBtn).dataset.stop;
       if (mode === "train") setStatus(songBox.dataset.wait);
-      markBars();
+      else {
+        play.anchor = { audio: audioCtx.currentTime + 0.05, pos: play.pos };
+        play.sched = play.next;
+        schedule();
+        play.timer = setInterval(schedule, 200);
+      }
       playBox.scrollIntoView({ block: "end", behavior: "smooth" }); // الأعمدة والمفاتيح كلها قدامك
       const tick = (now) => {
-        const s = state;
-        if (!s) return;
-        // فراغ طويل بلا نغمات (أكثر من ٣ نبضات لين العمود الجاي، ولا شي يرن): تقديم سريع ×٨
-        const gap = parsed.events[s.next] ? parsed.events[s.next].t - s.pos : 0;
-        const rush = gap > 3 && !s.sounding.size ? 8 : 1;
-        let pos = s.pos + ((now - s.at) / 1000) * (90 / 60) * speed * rush; // ٩٠ نبضة بالدقيقة × نسبة التدريب
-        if (rush > 1) pos = Math.min(pos, parsed.events[s.next].t - 2.5); // يرجع للسرعة العادية قبل العمود بشوي
-        s.at = now;
-        if (s.mode === "train") {
-          const ev = parsed.events[s.next];
+        if (!play.mode) return;
+        if (play.mode === "train") {
+          let pos = play.pos + ((now - play.at) / 1000) * RATE();
+          const ev = parsed.events[play.next];
           if (ev && pos > ev.t) pos = ev.t; // ينتظرك عند الخط
+          play.pos = pos;
           markWanted(ev && ev.t - pos < 1.5 ? ev : null);
         } else {
-          // استمع: كل نغمة توصل الخط تنعزف، وتنطفي بعد مدتها
-          for (let ev = parsed.events[s.next]; ev && ev.t <= pos; ev = parsed.events[++s.next]) {
-            ev.notes.forEach((m, j) => {
-              const id = "s:" + s.next + ":" + m;
-              noteOn(id, m, 90);
-              s.sounding.set(id, ev.t + (ev.durs?.[j] ?? ev.d) * 0.92);
-            });
-            markBars();
-          }
-          s.sounding.forEach((off, id) => off <= pos && (noteOff(id), s.sounding.delete(id)));
+          play.pos = play.anchor.pos + (audioCtx.currentTime - play.anchor.audio) * RATE();
+          play.next = nextAt(play.pos);
+          lightKeys();
         }
-        s.pos = pos;
-        moveTrack();
-        lyricAt(pos);
-        if (s.next >= parsed.events.length && pos >= s.end) {
-          stopSong();
-          if (s.mode === "train") {
-            setStatus(songBox.dataset.done + s.misses);
+        play.at = now;
+        render();
+        if (play.next >= parsed.events.length && play.pos >= endPos()) {
+          const { mode: m, misses } = play;
+          pauseSong();
+          play.pos = endPos();
+          render();
+          if (m === "train") {
+            setStatus(songBox.dataset.done + misses);
             playSound("success");
           }
           return;
         }
-        s.raf = requestAnimationFrame(tick);
+        play.raf = requestAnimationFrame(tick);
       };
-      state.raf = requestAnimationFrame(tick);
+      play.raf = requestAnimationFrame(tick);
+      render();
     }
     // كل ضغطة من المستخدم (لمس، كيبورد، MIDI) توصل هنا من noteOn
     songHit = (midi) => {
-      const s = state;
-      const ev = s?.mode === "train" && parsed.events[s.next];
-      if (!ev || ev.t - s.pos > 1.5) return;
+      const ev = play.mode === "train" && parsed.events[play.next];
+      if (!ev || ev.t - play.pos > 1.5) return;
       if (!ev.notes.includes(midi)) {
-        s.misses++;
+        play.misses++;
         const key = keyEl(midi);
         key?.classList.add("miss");
         setTimeout(() => key?.classList.remove("miss"), 250);
         return;
       }
-      s.hits.add(midi);
-      if (ev.notes.every((m) => s.hits.has(m))) {
-        s.hits.clear();
-        s.next++;
+      play.hits.add(midi);
+      if (ev.notes.every((m) => play.hits.has(m))) {
+        play.hits.clear();
+        play.next++;
         markBars();
       }
     };
+    seekEl.addEventListener("input", () => {
+      const a = startPos();
+      seek(a + (seekEl.value / 1000) * (endPos() - a));
+    });
+    $("songRestart").addEventListener("click", () => {
+      seek(startPos());
+      play.misses = 0;
+      setStatus(parsed.events.length + songBox.dataset.notes);
+    });
 
     // ===== المكتبة: محفوظة بالمتصفح، وملف .hakolah ينقلها بين الأجهزة =====
     const currentSong = () => ({ title: titleEl.value.trim() || titleEl.placeholder, text: midiSong ? "" : textEl.value, ...(midiSong && { midi: midiSong }) });
@@ -6189,7 +6306,7 @@ function initBeepMelodyExperiment() {
       listEl.value = selectId;
     }
     function openSong(s) {
-      stopSong();
+      pauseSong();
       midiSong = s.midi ? cleanMidiSong(s.midi) : null;
       renderTracks();
       titleEl.value = s.title;
@@ -6258,7 +6375,7 @@ function initBeepMelodyExperiment() {
     });
     textEl.addEventListener("input", () => {
       saveDraft();
-      stopSong();
+      pauseSong();
       loadText();
     });
     titleEl.addEventListener("input", saveDraft);
@@ -6267,11 +6384,12 @@ function initBeepMelodyExperiment() {
       $("songEditor").open = true;
       textEl.focus();
     });
-    listenBtn.addEventListener("click", () => startSong("listen"));
-    trainBtn.addEventListener("click", () => startSong("train"));
+    listenBtn.addEventListener("click", () => playSong("listen"));
+    trainBtn.addEventListener("click", () => playSong("train"));
     chipGroup("songSpeed", "speed", String(speed), (v) => {
       speed = Number(v);
       store.set("songSpeed", v);
+      if (play.mode) seek(play.pos); // نعيد الجدولة على السرعة الجديدة من نفس المكان
     });
 
     let draft = null;
@@ -6291,15 +6409,15 @@ function initBeepMelodyExperiment() {
       const on = e.detail === "panePractice";
       lane.hidden = !on;
       lyricEl.hidden = !on;
-      if (on) return loadText();
-      stopSong();
+      $("songTimeline").hidden = !on;
+      if (on) return loadText(true);
+      pauseSong();
       if (songRange) {
         songRange = null;
         renderPlayKeys();
       }
     });
     new ResizeObserver(() => !lane.hidden && buildBars()).observe(lane);
-    document.addEventListener("visibilitychange", () => document.hidden && stopSong());
   }
 
   function shiftOctave(step) {

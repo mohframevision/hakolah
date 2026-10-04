@@ -609,8 +609,8 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
         <button type="button" class="filter-chip" id="songToText">✍️ Type notes instead</button>
       </div>
       <div class="song-controls">
-        <button type="button" class="btn" id="songListen" data-stop="⏹ Stop">▶️ Listen</button>
-        <button type="button" class="btn secondary" id="songTrain" data-stop="⏹ Stop">🎯 Practice</button>
+        <button type="button" class="btn" id="songListen" data-stop="⏸ Pause">▶️ Listen</button>
+        <button type="button" class="btn secondary" id="songTrain" data-stop="⏸ Pause">🎯 Practice</button>
         <div class="instrument-picker" id="songSpeed" role="group" aria-label="Speed">
           <button type="button" class="filter-chip" data-speed="0.5">🐢 50%</button>
           <button type="button" class="filter-chip" data-speed="0.75">75%</button>
@@ -620,6 +620,12 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
       </div>
       <p class="song-status" id="songStatus" aria-live="polite"></p>
       <p class="song-lyric" id="songLyric" dir="auto"></p>
+      <div class="song-timeline" id="songTimeline" dir="ltr" hidden>
+        <button type="button" class="filter-chip" id="songRestart" aria-label="From the start" title="From the start">⏮</button>
+        <span id="songTimeNow">0:00</span>
+        <input type="range" id="songSeek" min="0" max="1000" step="1" value="0" aria-label="Song position" />
+        <span id="songTimeAll">0:00</span>
+      </div>
       <div class="song-keys-slot" id="songKeysSlot"></div>
       <p class="beep-param-note">Practice mode waits for you: the bars fall and stop at the line until you press the right note — by touch, computer keyboard, or a MIDI keyboard. You can also open a MIDI file (from sites like bitmidi.com) and it falls with its exact rhythm.</p>
     </div>
