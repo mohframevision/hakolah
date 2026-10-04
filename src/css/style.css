@@ -6729,3 +6729,154 @@ html[lang="en"] .instrument-btn.is-new::after {
     animation: none;
   }
 }
+
+/* ===== تبويب «تدرّب»: نوتات مكتوبة تنزل أعمدة فوق البيانو ===== */
+@media (max-width: 440px) {
+  .sounds-tab {
+    padding: 9px 11px;
+    font-size: 0.88rem;
+  }
+}
+
+.song-lib,
+.song-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.song-lib select {
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  background: #0e2a22;
+  color: #fff;
+  font: inherit;
+}
+
+.song-editor {
+  width: 100%;
+}
+
+.song-editor .instrument-search {
+  width: 100%;
+  margin: 8px 0;
+  border-radius: 10px;
+}
+
+.song-text {
+  width: 100%;
+  min-height: 9em;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font: 0.95rem/1.6 ui-monospace, Consolas, monospace;
+  resize: vertical;
+}
+
+.song-status {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.song-lyric {
+  min-height: 1.5em;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.song-keys-slot {
+  width: 100%;
+}
+
+/* بدء أغنية يمرّر الصفحة لين أسفل المفاتيح؛ الشريط السفلي الثابت (60px) ما يغطيها */
+.song-keys-slot .beep-play-keys {
+  scroll-margin-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+}
+
+.song-lane {
+  position: relative;
+  height: clamp(160px, 32vh, 280px);
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px calc(100% / 14)), rgba(0, 0, 0, 0.3);
+}
+
+.song-lane[hidden] {
+  display: none;
+}
+
+/* المسار كله يتحرك بتحويل واحد كل إطار؛ أسفله = خط الضرب */
+.song-track {
+  position: absolute;
+  inset: auto 0 0;
+  height: 0;
+  will-change: transform;
+}
+
+.song-hitline {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: #6fc8a4;
+  box-shadow: 0 0 10px rgba(111, 200, 164, 0.9);
+}
+
+.song-bar {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  padding-bottom: 2px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #6fc8a4, #3fa480);
+  color: #08261b;
+  font-size: 0.65rem;
+  font-weight: 800;
+  transition: opacity 0.2s ease;
+}
+
+.song-bar.black {
+  background: linear-gradient(180deg, #4f8fd9, #2f63a8);
+  color: #fff;
+}
+
+.song-bar.now {
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+}
+
+.song-bar.done {
+  opacity: 0.25;
+}
+
+.pk-white.want {
+  background: linear-gradient(180deg, #fff6c9, #ffe27a);
+  box-shadow: 0 0 16px rgba(255, 214, 90, 0.9);
+}
+
+.pk-black.want {
+  background: linear-gradient(180deg, #d9a92b, #a87a10);
+}
+
+.pk-white.miss,
+.pk-black.miss {
+  background: #e05a5a;
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .song-lane {
+    height: 34vh;
+  }
+}

@@ -2745,7 +2745,14 @@ function initBeepMelodyExperiment() {
       tab.setAttribute("aria-selected", String(on));
       document.getElementById(tab.dataset.pane).hidden = !on;
     });
-    const slot = document.getElementById(id === "panePlay" ? "instrumentSlotPlay" : id === "paneCompose" ? "instrumentSlotCompose" : "");
+    // البيانو (ومعه شريط الآلة) ينتقل لتبويب "تدرّب" ويرجع لمكانه في "اعزف"
+    const keysBox = document.getElementById("beepKeysWrap");
+    const songSlot = document.getElementById("songKeysSlot");
+    if (keysBox && songSlot) {
+      if (id === "panePractice") songSlot.append(keysBox);
+      else if (keysBox.parentElement === songSlot) document.querySelector("#panePlay .beep-add-row").before(keysBox);
+    }
+    const slot = document.getElementById(id === "panePlay" || id === "panePractice" ? "instrumentSlotPlay" : id === "paneCompose" ? "instrumentSlotCompose" : "");
     if (dd) {
       if (slot && dd.parentElement !== slot) {
         closeInstrumentPop();
@@ -2753,6 +2760,7 @@ function initBeepMelodyExperiment() {
       }
       dd.hidden = !slot;
     }
+    document.dispatchEvent(new CustomEvent("sounds:pane", { detail: id }));
   }
   tabs.forEach((tab) =>
     tab.addEventListener("click", () => {
@@ -2875,10 +2883,10 @@ function initBeepMelodyExperiment() {
 
   function renderPlayKeys() {
     if (!playBox) return;
-    const full = boardMode === "full";
+    const full = boardMode === "full" && !songRange; // تبويب التدريب: نطاق الأغنية بدل اللوحة
     const base = windowBase();
-    const lo = full ? 21 : base;
-    const hi = full ? 108 : base + 17;
+    const lo = songRange ? songRange.lo : full ? 21 : base;
+    const hi = songRange ? songRange.hi : full ? 108 : base + 17;
     const isBlack = (m) => [1, 3, 6, 8, 10].includes(pcOf(m));
     const all = [];
     for (let m = lo; m <= hi; m++) all.push(m);
@@ -2970,6 +2978,7 @@ function initBeepMelodyExperiment() {
     held.set(id, entry);
     const pressedAt = performance.now(); // وقت الضغط الفعلي، قبل انتظار تجهيز الصوت
     markKey(midi, true);
+    if (!id.startsWith("s:")) songHit(midi); // وضع التدريب ينتظر هذي الضغطة؟ (s: = الأغنية نفسها تعزف)
     // نفس المصدر أو نفس النغمة ترنّ بالدواسة: الضربة الجديدة تخمد القديمة (مثل البيانو)
     releaseSustained(id);
     sustained.forEach((s, other) => s.midi === midi && releaseSustained(other));
@@ -5733,6 +5742,354 @@ function initBeepMelodyExperiment() {
     });
   }
 
+  /* ===== تدرّب على أغنية: نوتات مكتوبة بالحروف → تنعزف على البيانو وتنزل أعمدة =====
+     الصيغة نفس مواقع مثل noobnotes: حرف لكل نغمة، ^ أعلى، . أخفض، شرطة للأسرع، ~ تطويل،
+     _ سكتة، C+E+G أو [C E G] معاً، C:2 مدة. السطر اللي أغلبه مو نوتات = كلمات الأغنية.
+     «استمع» يعزفها، و«تدرّب» ينتظرك عند كل نغمة لين تضغطها صح (أي مصدر: لمس/كيبورد/MIDI).
+     البيانو نفسه (#beepKeysWrap) ينتقل لهذا التبويب، ونطاقه يصير نطاق الأغنية. */
+  const SOLFA = { do: 0, re: 2, mi: 4, fa: 5, sol: 7, so: 7, la: 9, si: 11, ti: 11, "دو": 0, "ري": 2, "مي": 4, "فا": 5, "صول": 7, "لا": 9, "سي": 11 };
+  const LETTER = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
+  const NOTE_RE = /^(\^*|\.*)(do|re|mi|fa|sol|so|la|si|ti|دو|ري|مي|فا|صول|لا|سي|[a-g])([#♯]|b|♭)?(\d)?$/i;
+  function parseNote(tok) {
+    const m = NOTE_RE.exec(tok);
+    if (!m) return null;
+    const name = m[2].toLowerCase();
+    const pc = name.length === 1 && name in LETTER ? LETTER[name] : SOLFA[name];
+    if (pc == null) return null;
+    const shift = m[1].startsWith("^") ? m[1].length : -m[1].length;
+    const acc = m[3] ? (m[3] === "#" || m[3] === "♯" ? 1 : -1) : 0;
+    const octave = m[4] != null ? Number(m[4]) : 4 + shift;
+    return clamp(12 * (octave + 1) + pc + acc, 21, 108);
+  }
+  // كلمة واحدة من السطر → { notes, dur } أو { hold } أو { rest } أو null (مو نوتة)
+  function parseToken(tok) {
+    if (/^~+$/.test(tok)) return { hold: tok.length };
+    if (/^[_.]$/.test(tok)) return { rest: true };
+    const [body, len] = tok.split(":");
+    const notes = body.split("+").map(parseNote);
+    if (!notes.length || notes.some((n) => n == null)) return null;
+    return { notes, dur: Number(len) > 0 ? Number(len) : null };
+  }
+  function parseSong(text) {
+    const events = [];
+    const lyrics = [];
+    let t = 0;
+    let lineStart = -1;
+    text.split(/\r?\n/).forEach((raw) => {
+      // [C E G] → C+E+G، والشرطة بمسافات " - " فاصل عادي
+      const line = raw
+        .replace(/\[([^\]]*)\]/g, (_, inner) => inner.trim().split(/\s+/).join("+"))
+        .replace(/\s+-\s+/g, " ")
+        .trim();
+      if (!line) return;
+      const groups = line.split(/\s+/).map((w) => w.split("-").filter(Boolean).map(parseToken));
+      const flat = groups.flat();
+      const ok = flat.filter(Boolean).length;
+      if (!ok || ok < flat.length * 0.7) {
+        // سطر كلمات: يتبع سطر النوتات اللي قبله
+        if (lineStart >= 0) lyrics.push({ t: lineStart, text: raw.trim() });
+        return;
+      }
+      lineStart = t;
+      groups.forEach((group) => {
+        const quick = group.length > 1; // A-B-A بلا مسافات: نغمات المقطع الواحد أسرع
+        group.forEach((p) => {
+          if (!p) return;
+          if (p.hold) {
+            const prev = events[events.length - 1];
+            if (prev) prev.d += p.hold;
+            t += p.hold;
+          } else if (p.rest) t += 1;
+          else {
+            const d = p.dur ?? (quick ? 0.5 : 1);
+            events.push({ notes: [...new Set(p.notes)], t, d });
+            t += d;
+          }
+        });
+      });
+      t += 1; // نفَس بين السطور
+    });
+    return { events, lyrics };
+  }
+
+  const songBox = document.getElementById("songPractice");
+  let songRange = null; // { lo, hi } لما تبويب التدريب مفتوح وفيه أغنية
+  let songHit = () => {};
+  if (songBox && playBox) {
+    const $ = (id) => document.getElementById(id);
+    const lane = document.createElement("div");
+    lane.className = "song-lane";
+    lane.hidden = true;
+    lane.innerHTML = '<div class="song-track"></div><div class="song-hitline"></div>';
+    playBox.before(lane);
+    const track = lane.firstChild;
+    const textEl = $("songText");
+    const titleEl = $("songTitle");
+    const listEl = $("songList");
+    const statusEl = $("songStatus");
+    const lyricEl = $("songLyric");
+    const listenBtn = $("songListen");
+    const trainBtn = $("songTrain");
+    [listenBtn, trainBtn].forEach((b) => (b.dataset.idle = b.textContent));
+    const SONGS_KEY = "hakolahSongs";
+    const DEMO = "E E F G G F E D\nC C D E E:1.5 D:0.5 D:2\nE E F G G F E D\nC C D E D:1.5 C:0.5 C:2";
+    let speed = Number(store.get("songSpeed")) || 1;
+    let parsed = { events: [], lyrics: [] };
+    let state = null; // التشغيل الجاري
+    const readSongs = () => {
+      try {
+        return JSON.parse(store.get(SONGS_KEY)) || [];
+      } catch {
+        return [];
+      }
+    };
+    const ppb = () => lane.clientHeight / 4; // بكسل لكل نبضة: الشاشة تعرض ٤ نبضات قادمة
+    const active = () => !$("panePractice").hidden;
+    const setStatus = (text) => (statusEl.textContent = text || "");
+    const keyEl = (m) => playBox.querySelector(`[data-midi="${m}"]`);
+
+    // نطاق البيانو = نطاق الأغنية (أوكتافات كاملة، اثنان على الأقل)، والكيبورد على أخفضها
+    function fitKeys() {
+      const all = parsed.events.flatMap((e) => e.notes);
+      if (!active() || !all.length) songRange = null;
+      else {
+        const lo = Math.floor(Math.min(...all) / 12) * 12;
+        const hi = Math.max(Math.ceil((Math.max(...all) + 1) / 12) * 12 - 1, lo + 23);
+        songRange = { lo: Math.max(21, lo), hi: Math.min(108, hi) };
+        playOctave = clamp(Math.floor(songRange.lo / 12) - 1, 1, 7);
+      }
+      renderPlayKeys();
+      buildBars();
+    }
+    // عمود لكل نغمة، موضعه الأفقي من مفتاحها (بالنسبة المئوية فيتبع أي مقاس)
+    function buildBars() {
+      const unit = ppb();
+      const w = playBox.offsetWidth || 1;
+      const names = labelMode === "solfege" ? "solfege" : "letters";
+      track.replaceChildren();
+      parsed.events.forEach((ev, i) =>
+        ev.notes.forEach((m) => {
+          const key = keyEl(m);
+          if (!key) return;
+          const black = key.classList.contains("pk-black");
+          const bar = document.createElement("div");
+          bar.className = "song-bar" + (black ? " black" : "");
+          bar.dataset.i = i;
+          bar.style.left = ((key.offsetLeft - (black ? key.offsetWidth / 2 : 0)) / w) * 100 + "%";
+          bar.style.width = (key.offsetWidth / w) * 100 + "%";
+          bar.style.bottom = ev.t * unit + "px";
+          bar.style.height = Math.max(8, ev.d * unit - 3) + "px";
+          bar.textContent = noteName(m, names);
+          track.append(bar);
+        })
+      );
+      markBars();
+      moveTrack();
+    }
+    const moveTrack = () => (track.style.transform = `translateY(${(state ? state.pos : 0) * ppb()}px)`);
+    function markBars() {
+      const next = state ? state.next : -1;
+      track.querySelectorAll(".song-bar").forEach((b) => {
+        b.classList.toggle("done", Number(b.dataset.i) < next);
+        b.classList.toggle("now", Number(b.dataset.i) === next);
+      });
+    }
+    function markWanted(ev) {
+      playBox.querySelectorAll(".want").forEach((k) => k.classList.remove("want"));
+      ev?.notes.forEach((m) => keyEl(m)?.classList.add("want"));
+    }
+    function lyricAt(pos) {
+      let text = "";
+      parsed.lyrics.forEach((l) => l.t <= pos + 0.5 && (text = l.text));
+      if (lyricEl.textContent !== text) lyricEl.textContent = text;
+    }
+    function loadText() {
+      parsed = parseSong(textEl.value);
+      setStatus(parsed.events.length ? parsed.events.length + songBox.dataset.notes : "");
+      fitKeys();
+    }
+
+    function stopSong() {
+      if (!state) return;
+      cancelAnimationFrame(state.raf);
+      state.sounding.forEach((_, id) => noteOff(id));
+      state = null;
+      markWanted(null);
+      [listenBtn, trainBtn].forEach((b) => (b.textContent = b.dataset.idle));
+      lyricEl.textContent = "";
+      markBars();
+      moveTrack();
+    }
+    async function startSong(mode) {
+      const again = state?.mode === mode;
+      stopSong();
+      if (again) return; // نفس الزر = إيقاف
+      loadText();
+      if (!parsed.events.length) return setStatus(songBox.dataset.empty);
+      await ensureContext();
+      const btn = mode === "listen" ? listenBtn : trainBtn;
+      btn.textContent = btn.dataset.stop;
+      const last = parsed.events[parsed.events.length - 1];
+      // pos بالنبضات، يبدأ قبل الصفر بنبضتين: الأعمدة الأولى تنزل قبل ما توصل الخط
+      state = { mode, pos: -2, next: 0, hits: new Set(), misses: 0, sounding: new Map(), end: last.t + last.d, at: performance.now(), raf: 0 };
+      if (mode === "train") setStatus(songBox.dataset.wait);
+      markBars();
+      playBox.scrollIntoView({ block: "end", behavior: "smooth" }); // الأعمدة والمفاتيح كلها قدامك
+      const tick = (now) => {
+        const s = state;
+        if (!s) return;
+        let pos = s.pos + ((now - s.at) / 1000) * (100 / 60) * speed; // ١٠٠ نبضة بالدقيقة × السرعة
+        s.at = now;
+        if (s.mode === "train") {
+          const ev = parsed.events[s.next];
+          if (ev && pos > ev.t) pos = ev.t; // ينتظرك عند الخط
+          markWanted(ev && ev.t - pos < 1.5 ? ev : null);
+        } else {
+          // استمع: كل نغمة توصل الخط تنعزف، وتنطفي بعد مدتها
+          for (let ev = parsed.events[s.next]; ev && ev.t <= pos; ev = parsed.events[++s.next]) {
+            ev.notes.forEach((m) => {
+              const id = "s:" + s.next + ":" + m;
+              noteOn(id, m, 90);
+              s.sounding.set(id, ev.t + ev.d * 0.92);
+            });
+            markBars();
+          }
+          s.sounding.forEach((off, id) => off <= pos && (noteOff(id), s.sounding.delete(id)));
+        }
+        s.pos = pos;
+        moveTrack();
+        lyricAt(pos);
+        if (s.next >= parsed.events.length && pos >= s.end) {
+          stopSong();
+          if (s.mode === "train") {
+            setStatus(songBox.dataset.done + s.misses);
+            playSound("success");
+          }
+          return;
+        }
+        s.raf = requestAnimationFrame(tick);
+      };
+      state.raf = requestAnimationFrame(tick);
+    }
+    // كل ضغطة من المستخدم (لمس، كيبورد، MIDI) توصل هنا من noteOn
+    songHit = (midi) => {
+      const s = state;
+      const ev = s?.mode === "train" && parsed.events[s.next];
+      if (!ev || ev.t - s.pos > 1.5) return;
+      if (!ev.notes.includes(midi)) {
+        s.misses++;
+        const key = keyEl(midi);
+        key?.classList.add("miss");
+        setTimeout(() => key?.classList.remove("miss"), 250);
+        return;
+      }
+      s.hits.add(midi);
+      if (ev.notes.every((m) => s.hits.has(m))) {
+        s.hits.clear();
+        s.next++;
+        markBars();
+      }
+    };
+
+    // ===== المكتبة: محفوظة بالمتصفح، وملف .hakolah ينقلها بين الأجهزة =====
+    const currentSong = () => ({ title: titleEl.value.trim() || titleEl.placeholder, text: textEl.value });
+    const saveDraft = () => store.set("songDraft", JSON.stringify(currentSong()));
+    function renderList(selectId) {
+      listEl.replaceChildren(listEl.options[0]);
+      readSongs().forEach((s) => listEl.add(new Option(s.title, s.id)));
+      listEl.value = selectId;
+    }
+    function openSong(s) {
+      stopSong();
+      titleEl.value = s.title;
+      textEl.value = s.text;
+      saveDraft();
+      loadText();
+    }
+    $("songSave").addEventListener("click", () => {
+      if (!textEl.value.trim()) return setStatus(songBox.dataset.empty);
+      const songs = readSongs();
+      const id = listEl.value || Date.now().toString(36);
+      const i = songs.findIndex((s) => s.id === id);
+      songs.splice(i < 0 ? songs.length : i, 1, { id, ...currentSong() });
+      store.set(SONGS_KEY, JSON.stringify(songs));
+      renderList(id);
+      showToast(songBox.dataset.saved);
+    });
+    $("songDelete").addEventListener("click", () => {
+      if (!listEl.value || !confirm(songBox.dataset.delAsk)) return;
+      store.set(SONGS_KEY, JSON.stringify(readSongs().filter((s) => s.id !== listEl.value)));
+      renderList("");
+    });
+    listEl.addEventListener("change", () => openSong(readSongs().find((s) => s.id === listEl.value) || { title: "", text: "" }));
+    $("songDownload").addEventListener("click", () => {
+      if (!textEl.value.trim()) return setStatus(songBox.dataset.empty);
+      const song = currentSong();
+      const body = JSON.stringify({ type: "hakolah-song", version: 1, ...song }, null, 2);
+      downloadBlob(new Blob([body], { type: "application/json" }), song.title.replace(/[\\/:*?"<>|]+/g, "-").slice(0, 60) + ".hakolah");
+    });
+    // يقبل ملف .hakolah، أو أي ملف نصي فيه نوتات (يصير عنوانه اسم الملف)
+    $("songFile").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      e.target.value = "";
+      if (!file) return;
+      try {
+        if (file.size > 512 * 1024) throw new Error("too big");
+        const raw = await file.text();
+        let song;
+        try {
+          const j = JSON.parse(raw);
+          if (j?.type !== "hakolah-song" || typeof j.text !== "string") throw new Error("not a song");
+          song = { title: String(j.title || ""), text: j.text };
+        } catch {
+          if (/[\0�]/.test(raw)) throw new Error("binary");
+          song = { title: file.name.replace(/\.[^.]+$/, ""), text: raw };
+        }
+        listEl.value = "";
+        openSong(song);
+        showToast(songBox.dataset.loaded);
+      } catch {
+        setStatus(songBox.dataset.bad);
+      }
+    });
+    textEl.addEventListener("input", () => {
+      saveDraft();
+      stopSong();
+      loadText();
+    });
+    titleEl.addEventListener("input", saveDraft);
+    listenBtn.addEventListener("click", () => startSong("listen"));
+    trainBtn.addEventListener("click", () => startSong("train"));
+    chipGroup("songSpeed", "speed", String(speed), (v) => {
+      speed = Number(v);
+      store.set("songSpeed", v);
+    });
+
+    let draft = null;
+    try {
+      draft = JSON.parse(store.get("songDraft"));
+    } catch {
+      // مسودة تالفة: نبدأ بالمثال
+    }
+    titleEl.value = draft?.title ?? "Ode to Joy — Beethoven";
+    textEl.value = draft?.text ?? DEMO;
+    renderList("");
+
+    // البيانو ينتقل لهذا التبويب (showPane) ونطاقه يصير نطاق الأغنية، ويرجع لما نطلع
+    document.addEventListener("sounds:pane", (e) => {
+      const on = e.detail === "panePractice";
+      lane.hidden = !on;
+      if (on) return loadText();
+      stopSong();
+      if (songRange) {
+        songRange = null;
+        renderPlayKeys();
+      }
+    });
+    new ResizeObserver(() => !lane.hidden && buildBars()).observe(lane);
+    document.addEventListener("visibilitychange", () => document.hidden && stopSong());
+  }
+
   function shiftOctave(step) {
     playOctave = clamp(playOctave + step, 1, 7);
     renderPlayKeys();
@@ -5781,16 +6138,17 @@ function initBeepMelodyExperiment() {
       return { 186: "Semicolon", 59: "Semicolon", 222: "Quote" }[e.keyCode] || "";
     };
     const typing = (e) => e.target.closest("input, textarea, select, [contenteditable]");
+    const pianoHidden = () => document.getElementById("panePlay").hidden && document.getElementById("panePractice")?.hidden !== false;
     document.addEventListener("keydown", (e) => {
       // Shift ممسوك = دواسة الاستدامة (حتى مع حرف: Shift+A تعزف A بالدواسة)
-      if (e.key === "Shift" && !e.repeat && !typing(e) && !document.getElementById("panePlay").hidden) {
+      if (e.key === "Shift" && !e.repeat && !typing(e) && !pianoHidden()) {
         pedalKey = true;
         return paintPedal();
       }
       if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return; // defaultPrevented: اختصار محرّر أخذ المفتاح
       if (typing(e)) return;
-      // البيانو للتبويب "اعزف" فقط — بغيره (تأليف/تعلّم) الحروف ما تعزف نغمات مفاجئة
-      if (document.getElementById("panePlay").hidden) return;
+      // البيانو لتبويبي "اعزف" و"تدرّب" فقط — بغيرهما (تأليف/تعلّم) الحروف ما تعزف نغمات مفاجئة
+      if (pianoHidden()) return;
       const code = physicalCode(e);
       if (code === "KeyZ" || code === "KeyX") {
         shiftOctave(code === "KeyZ" ? -1 : 1);

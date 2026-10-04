@@ -23,6 +23,7 @@ pageScript: "sounds"
     <button type="button" class="sounds-tab active" role="tab" aria-selected="true" aria-controls="panePlay" data-pane="panePlay">🎹 Play</button>
     <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneCompose" data-pane="paneCompose">🎼 Compose</button>
     <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneLearn" data-pane="paneLearn">📚 Learn</button>
+    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="panePractice" data-pane="panePractice">🎶 Practice</button>
   </div>
 
   <section class="sounds-pane" id="panePlay" role="tabpanel">
@@ -575,5 +576,42 @@ pageScript: "sounds"
       <p class="beep-quiz-result" id="beepQuizResult" aria-live="polite"></p>
     </div>
     <p class="beep-experiment-hint">📚 The learning tools here are inspired by a music production course the site's owner is taking at university.</p>
+  </section>
+
+  <section class="sounds-pane" id="panePractice" role="tabpanel" hidden>
+    <div class="beep-play song-practice" id="songPractice" data-saved="✅ Saved in your browser" data-del-ask="Delete this song from your browser?" data-bad="Could not read the file" data-loaded="✅ Song opened" data-empty="Type some notes first" data-wait="Press the glowing key" data-done="🎉 Finished! Mistakes: " data-notes=" notes">
+      <div class="song-lib">
+        <select id="songList" aria-label="Your songs"><option value="">— New song —</option></select>
+        <button type="button" class="filter-chip" id="songSave">💾 Save</button>
+        <button type="button" class="filter-chip" id="songDownload">⬇️ Download file</button>
+        <label class="filter-chip" for="songFile">📂 Open file</label>
+        <input type="file" id="songFile" hidden />
+        <button type="button" class="filter-chip" id="songDelete" aria-label="Delete song" title="Delete song">🗑️</button>
+      </div>
+      <details class="beep-help song-editor" id="songEditor" open>
+        <summary>✍️ Type or paste the notes</summary>
+        <input type="text" id="songTitle" class="instrument-search" placeholder="Song title" aria-label="Song title" />
+        <textarea id="songText" class="song-text" dir="ltr" rows="7" spellcheck="false" placeholder="Example:
+E E F G G F E D
+C C D E E-D D
+
+Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or paste the notes"></textarea>
+        <p class="beep-param-note">Each note is a letter: <span dir="ltr">C D E F G A B</span> (or Do Re Mi), with <span dir="ltr">#</span> or <span dir="ltr">b</span> after it for sharp and flat. <span dir="ltr">^</span> before it = one octave up, <span dir="ltr">.</span> before it = one down. Notes joined with a dash <span dir="ltr">A-B-A</span> are quicker, <span dir="ltr">~</span> holds the previous note longer, and <span dir="ltr">_</span> is a rest. To press several keys together: <span dir="ltr">C+E+G</span> or <span dir="ltr">[C E G]</span>; for an exact length: <span dir="ltr">C:2</span>. Lyric lines are skipped when playing and shown above the piano.</p>
+      </details>
+      <div class="song-controls">
+        <button type="button" class="btn" id="songListen" data-stop="⏹ Stop">▶️ Listen</button>
+        <button type="button" class="btn secondary" id="songTrain" data-stop="⏹ Stop">🎯 Practice</button>
+        <div class="instrument-picker" id="songSpeed" role="group" aria-label="Speed">
+          <button type="button" class="filter-chip" data-speed="0.5">🐢 50%</button>
+          <button type="button" class="filter-chip" data-speed="0.75">75%</button>
+          <button type="button" class="filter-chip active" data-speed="1">100%</button>
+          <button type="button" class="filter-chip" data-speed="1.25">125%</button>
+        </div>
+      </div>
+      <p class="song-status" id="songStatus" aria-live="polite"></p>
+      <p class="song-lyric" id="songLyric" dir="auto"></p>
+      <div class="song-keys-slot" id="songKeysSlot"></div>
+      <p class="beep-param-note">Practice mode waits for you: the bars fall and stop at the line until you press the right note — by touch, computer keyboard, or a MIDI keyboard.</p>
+    </div>
   </section>
 </div>
