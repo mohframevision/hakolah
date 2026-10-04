@@ -578,7 +578,7 @@ pageScript: "sounds"
   </section>
 
   <section class="sounds-pane" id="panePractice" role="tabpanel" hidden>
-    <div class="beep-play song-practice" id="songPractice" data-saved="✅ حُفظت في متصفحك" data-del-ask="تحذف هذه المقطوعة من متصفحك؟" data-bad="تعذّر قراءة الملف" data-loaded="✅ فُتحت المقطوعة" data-empty="اكتب نوتات أولاً" data-wait="اضغط النغمة المضيئة" data-done="🎉 أنهيتها! الأخطاء: " data-notes=" نغمة">
+    <div class="beep-play song-practice" id="songPractice" data-saved="✅ حُفظت في متصفحك" data-del-ask="تحذف هذه المقطوعة من متصفحك؟" data-bad="تعذّر قراءة الملف" data-loaded="✅ فُتحت المقطوعة" data-empty="اكتب نوتات أولاً" data-wait="اضغط النغمة المضيئة" data-done="🎉 أنهيتها! الأخطاء: " data-full="مساحة المتصفح ممتلئة — استخدم «نزّل ملف» لحفظها" data-notes=" نغمة">
       <div class="song-lib">
         <select id="songList" aria-label="مقطوعاتك"><option value="">— مقطوعة جديدة —</option></select>
         <button type="button" class="filter-chip" id="songSave">💾 احفظ</button>
@@ -597,6 +597,16 @@ C C D E E-D D
 أو الصق نوتات من موقع مثل noobnotes" aria-label="✍️ اكتب النوتات أو الصقها"></textarea>
         <p class="beep-param-note">كل نغمة حرف: <span dir="ltr">C D E F G A B</span> (أو Do Re Mi)، و<span dir="ltr">#</span> أو <span dir="ltr">b</span> بعدها للدييز والبيمول. <span dir="ltr">^</span> قبلها = أوكتاف أعلى، و<span dir="ltr">.</span> قبلها = أخفض. كل نغمة نصف نبضة بنفس الطول، و<span dir="ltr">~</span> تطيل التي قبلها، و<span dir="ltr">_</span> سكتة. للضغط على أكثر من زر معاً: <span dir="ltr">C+E+G</span> أو <span dir="ltr">[C E G]</span>، ولمدة محددة: <span dir="ltr">C:2</span>. سطور الكلمات تُتجاهل في العزف وتظهر فوق البيانو.</p>
       </details>
+      <div class="song-tracks" id="songTracks" data-families="بيانو|إيقاع لحني|أورغ|غيتار|باص|وتريات|فرقة وكورال|نحاسيات|نفخ بالقصبة|ناي وفلوت|سنث لحن|سنث خلفية|مؤثرات سنث|آلات شعبية|إيقاع|مؤثرات صوتية" data-track="مسار" hidden>
+        <p class="beep-setting-label">🎼 ملف MIDI — اختر المسارات اللي تتدرب عليها:</p>
+        <div class="instrument-picker" id="songTrackChips"></div>
+        <div class="instrument-picker" id="songHands" role="group" aria-label="اليد">
+          <button type="button" class="filter-chip" data-hand="both">🙌 اليدين</button>
+          <button type="button" class="filter-chip" data-hand="right">🫱 اليد اليمنى</button>
+          <button type="button" class="filter-chip" data-hand="left">🫲 اليد اليسرى</button>
+        </div>
+        <button type="button" class="filter-chip" id="songToText">✍️ اكتب نوتات بدلها</button>
+      </div>
       <div class="song-controls">
         <button type="button" class="btn" id="songListen" data-stop="⏹ أوقف">▶️ استمع</button>
         <button type="button" class="btn secondary" id="songTrain" data-stop="⏹ أوقف">🎯 تدرّب</button>
@@ -610,7 +620,7 @@ C C D E E-D D
       <p class="song-status" id="songStatus" aria-live="polite"></p>
       <p class="song-lyric" id="songLyric" dir="auto"></p>
       <div class="song-keys-slot" id="songKeysSlot"></div>
-      <p class="beep-param-note">وضع «تدرّب» ينتظرك: تنزل الأعمدة وتتوقف عند الخط حتى تضغط النغمة الصحيحة — بالإصبع أو الكيبورد أو كيبورد MIDI.</p>
+      <p class="beep-param-note">وضع «تدرّب» ينتظرك: تنزل الأعمدة وتتوقف عند الخط حتى تضغط النغمة الصحيحة — بالإصبع أو الكيبورد أو كيبورد MIDI. وتقدر تفتح ملف MIDI (من مواقع مثل bitmidi.com) فينزل بإيقاعه الصحيح بالضبط.</p>
     </div>
   </section>
 </div>

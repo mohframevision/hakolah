@@ -6886,3 +6886,41 @@ html[lang="en"] .instrument-btn.is-new::after {
 #songKeysSlot :is(#beepOctDown, #beepOctUp, #beepOctLabel, #beepRecToggle, #beepRecTime, #beepPedal, #beepMetro, .beep-tempo) {
   display: none;
 }
+
+/* ملف MIDI: أزرار المسارات (يد يمين/يسار...) بدل صندوق الكتابة */
+.song-tracks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.song-tracks .beep-setting-label {
+  margin: 0;
+  text-align: center;
+}
+
+.song-tracks[hidden] {
+  display: none;
+}
+
+/* نطاق أغنية عريض (أكثر من ٣ أوكتافات): المفاتيح تنضغط داخل عرض الشاشة وأسماؤها أصغر */
+.beep-play-keys.dense .pk-white,
+.beep-play-keys.dense .pk-black {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.beep-play-keys.dense .pk-white b,
+.beep-play-keys.dense .pk-black b {
+  font-size: 0.55rem;
+}
+
+.beep-play-keys.dense small {
+  display: none;
+}
+
+.beep-play-keys.dense .pk-black b {
+  display: none;
+}

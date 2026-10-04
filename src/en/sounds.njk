@@ -579,7 +579,7 @@ pageScript: "sounds"
   </section>
 
   <section class="sounds-pane" id="panePractice" role="tabpanel" hidden>
-    <div class="beep-play song-practice" id="songPractice" data-saved="✅ Saved in your browser" data-del-ask="Delete this song from your browser?" data-bad="Could not read the file" data-loaded="✅ Song opened" data-empty="Type some notes first" data-wait="Press the glowing key" data-done="🎉 Finished! Mistakes: " data-notes=" notes">
+    <div class="beep-play song-practice" id="songPractice" data-saved="✅ Saved in your browser" data-del-ask="Delete this song from your browser?" data-bad="Could not read the file" data-loaded="✅ Song opened" data-empty="Type some notes first" data-wait="Press the glowing key" data-done="🎉 Finished! Mistakes: " data-full="Browser storage is full — use “Download file” to keep it" data-notes=" notes">
       <div class="song-lib">
         <select id="songList" aria-label="Your songs"><option value="">— New song —</option></select>
         <button type="button" class="filter-chip" id="songSave">💾 Save</button>
@@ -598,6 +598,16 @@ C C D E E-D D
 Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or paste the notes"></textarea>
         <p class="beep-param-note">Each note is a letter: <span dir="ltr">C D E F G A B</span> (or Do Re Mi), with <span dir="ltr">#</span> or <span dir="ltr">b</span> after it for sharp and flat. <span dir="ltr">^</span> before it = one octave up, <span dir="ltr">.</span> before it = one down. Every note is an even half beat, <span dir="ltr">~</span> holds the previous note longer, and <span dir="ltr">_</span> is a rest. To press several keys together: <span dir="ltr">C+E+G</span> or <span dir="ltr">[C E G]</span>; for an exact length: <span dir="ltr">C:2</span>. Lyric lines are skipped when playing and shown above the piano.</p>
       </details>
+      <div class="song-tracks" id="songTracks" data-families="Piano|Chromatic percussion|Organ|Guitar|Bass|Strings|Ensemble|Brass|Reed|Pipe|Synth lead|Synth pad|Synth effects|Ethnic|Percussive|Sound effects" data-track="Track" hidden>
+        <p class="beep-setting-label">🎼 MIDI file — choose the tracks to practice:</p>
+        <div class="instrument-picker" id="songTrackChips"></div>
+        <div class="instrument-picker" id="songHands" role="group" aria-label="Hand">
+          <button type="button" class="filter-chip" data-hand="both">🙌 Both hands</button>
+          <button type="button" class="filter-chip" data-hand="right">🫱 Right hand</button>
+          <button type="button" class="filter-chip" data-hand="left">🫲 Left hand</button>
+        </div>
+        <button type="button" class="filter-chip" id="songToText">✍️ Type notes instead</button>
+      </div>
       <div class="song-controls">
         <button type="button" class="btn" id="songListen" data-stop="⏹ Stop">▶️ Listen</button>
         <button type="button" class="btn secondary" id="songTrain" data-stop="⏹ Stop">🎯 Practice</button>
@@ -611,7 +621,7 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
       <p class="song-status" id="songStatus" aria-live="polite"></p>
       <p class="song-lyric" id="songLyric" dir="auto"></p>
       <div class="song-keys-slot" id="songKeysSlot"></div>
-      <p class="beep-param-note">Practice mode waits for you: the bars fall and stop at the line until you press the right note — by touch, computer keyboard, or a MIDI keyboard.</p>
+      <p class="beep-param-note">Practice mode waits for you: the bars fall and stop at the line until you press the right note — by touch, computer keyboard, or a MIDI keyboard. You can also open a MIDI file (from sites like bitmidi.com) and it falls with its exact rhythm.</p>
     </div>
   </section>
 </div>
