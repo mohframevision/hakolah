@@ -2745,12 +2745,17 @@ function initBeepMelodyExperiment() {
       tab.setAttribute("aria-selected", String(on));
       document.getElementById(tab.dataset.pane).hidden = !on;
     });
-    // البيانو (ومعه شريط الآلة) ينتقل لتبويب "تدرّب" ويرجع لمكانه في "اعزف"
+    // البيانو وكل إعداداته (أسماء المفاتيح، الأوكتاف، الدواسة، المترونوم، السرعة، MIDI، المقام)
+    // وشريط الآلة تنتقل لتبويب "تدرّب" وترجع لمكانها في "اعزف"
     const keysBox = document.getElementById("beepKeysWrap");
     const songSlot = document.getElementById("songKeysSlot");
     if (keysBox && songSlot) {
-      if (id === "panePractice") songSlot.append(keysBox);
-      else if (keysBox.parentElement === songSlot) document.querySelector("#panePlay .beep-add-row").before(keysBox);
+      if (id === "panePractice" && keysBox.parentElement !== songSlot) {
+        const kids = [...keysBox.parentElement.children];
+        songSlot.append(...kids.slice(0, kids.indexOf(keysBox) + 1));
+      } else if (id !== "panePractice" && keysBox.parentElement === songSlot) {
+        document.querySelector("#panePlay .beep-play").prepend(...songSlot.children);
+      }
     }
     const slot = document.getElementById(id === "panePlay" || id === "panePractice" ? "instrumentSlotPlay" : id === "paneCompose" ? "instrumentSlotCompose" : "");
     if (dd) {
@@ -5770,6 +5775,9 @@ function initBeepMelodyExperiment() {
     if (!notes.length || notes.some((n) => n == null)) return null;
     return { notes, dur: Number(len) > 0 ? Number(len) : null };
   }
+  // كل نغمة = نصف نبضة (ثُمن) بنفس الطول: مواقع النوتات ما تكتب المدد، والطول الموحّد يحافظ
+  // على النبض (الشرطة عندهم تفصل مقاطع الكلمة فقط، مو أسرع). C:2 = ضعف الطول، ~ = خطوة زيادة
+  const SONG_STEP = 0.5;
   function parseSong(text) {
     const events = [];
     const lyrics = [];
@@ -5792,22 +5800,21 @@ function initBeepMelodyExperiment() {
       }
       lineStart = t;
       groups.forEach((group) => {
-        const quick = group.length > 1; // A-B-A بلا مسافات: نغمات المقطع الواحد أسرع
         group.forEach((p) => {
           if (!p) return;
           if (p.hold) {
             const prev = events[events.length - 1];
-            if (prev) prev.d += p.hold;
-            t += p.hold;
-          } else if (p.rest) t += 1;
+            if (prev) prev.d += p.hold * SONG_STEP;
+            t += p.hold * SONG_STEP;
+          } else if (p.rest) t += SONG_STEP;
           else {
-            const d = p.dur ?? (quick ? 0.5 : 1);
+            const d = (p.dur ?? 1) * SONG_STEP;
             events.push({ notes: [...new Set(p.notes)], t, d });
             t += d;
           }
         });
       });
-      t += 1; // نفَس بين السطور
+      t = Math.ceil(t + SONG_STEP); // نفَس قصير، والسطر الجاي يبدأ على نبضة كاملة: النبض يبقى ثابت
     });
     return { events, lyrics };
   }
@@ -5822,6 +5829,9 @@ function initBeepMelodyExperiment() {
     lane.hidden = true;
     lane.innerHTML = '<div class="song-track"></div><div class="song-hitline"></div>';
     playBox.before(lane);
+    lane.before(document.getElementById("songLyric")); // الكلمات فوق الأعمدة مباشرة
+    document.getElementById("songLyric").hidden = true;
+    document.getElementById("songLyric").hidden = true;
     const track = lane.firstChild;
     const textEl = $("songText");
     const titleEl = $("songTitle");
@@ -5938,7 +5948,7 @@ function initBeepMelodyExperiment() {
       const tick = (now) => {
         const s = state;
         if (!s) return;
-        let pos = s.pos + ((now - s.at) / 1000) * (100 / 60) * speed; // ١٠٠ نبضة بالدقيقة × السرعة
+        let pos = s.pos + ((now - s.at) / 1000) * (bpm / 60) * speed; // سرعة البيانو (BPM) × سرعة التدريب
         s.at = now;
         if (s.mode === "train") {
           const ev = parsed.events[s.next];
@@ -5956,6 +5966,8 @@ function initBeepMelodyExperiment() {
           }
           s.sounding.forEach((off, id) => off <= pos && (noteOff(id), s.sounding.delete(id)));
         }
+        // المترونوم (نفس زره في البيانو): نقرة على كل نبضة، والأقوى أول المازورة
+        if (metroOn && pos >= 0 && Math.floor(pos) > Math.floor(s.pos)) metroClick(audioCtx.currentTime, Math.floor(pos) % meter === 0);
         s.pos = pos;
         moveTrack();
         lyricAt(pos);
@@ -6079,6 +6091,7 @@ function initBeepMelodyExperiment() {
     document.addEventListener("sounds:pane", (e) => {
       const on = e.detail === "panePractice";
       lane.hidden = !on;
+      lyricEl.hidden = !on;
       if (on) return loadText();
       stopSong();
       if (songRange) {
