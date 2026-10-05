@@ -27,6 +27,8 @@
    أول رسم بلا قفزة. */
 (function () {
   var root = document.documentElement;
+  // صفحة الصوتيات أداة (مثل BandLab) لا صفحة قراءة: أحجام حقيقية والأداة تاخذ العرض كله بدل التكبير
+  if (location.pathname.endsWith("/sounds.html")) return;
   function fit() {
     root.style.zoom = Math.min(1.8, Math.max(1, window.innerWidth / 1600));
   }

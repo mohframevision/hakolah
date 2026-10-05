@@ -7324,3 +7324,117 @@ main.container:has(.sounds-tool) {
     width: calc(100vw - 8px);
   }
 }
+
+/* ===== الصوتيات على الكمبيوتر: أداة بأحجام حقيقية مثل BandLab (بلا تكبير الصفحة، أزرار
+   مضغوطة، التبويبات والصوت بسطر واحد، وبلا بطاقة داخل بطاقة) ===== */
+@media (min-width: 901px) and (min-height: 521px) {
+  main.container:has(.sounds-tool) {
+    padding-inline: 12px;
+  }
+
+  main:has(.sounds-tool) .page-header {
+    padding: 12px 0 6px;
+  }
+
+  main:has(.sounds-tool) .page-header h1 {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+
+  main:has(.sounds-tool) .page-header p {
+    font-size: 0.85rem;
+  }
+
+  .sounds-tool {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px 16px;
+    margin: 6px 0 16px;
+    padding: 10px 14px 14px;
+    border-radius: 14px;
+  }
+
+  .sounds-tool > .sounds-tabs {
+    order: 1;
+  }
+
+  .sounds-tool > .sounds-top {
+    order: 2;
+    width: 240px;
+  }
+
+  .sounds-tool > .sounds-pane {
+    order: 3;
+    flex: 1 0 100%;
+  }
+
+  .sounds-tab {
+    padding: 6px 14px;
+    font-size: 0.86rem;
+  }
+
+  .sounds-tool .filter-chip {
+    padding: 5px 11px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+  }
+
+  .sounds-tool .btn {
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+  }
+
+  .sounds-tool :is(#panePlay, #panePractice) > .beep-play {
+    padding: 0;
+    gap: 8px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .play-toolbar,
+  .piano-head {
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  .play-toolbar {
+    justify-content: flex-start;
+  }
+
+  .piano-head .instrument-bar {
+    padding: 2px 4px;
+    border-radius: 9px;
+  }
+
+  .piano-head .ib-current {
+    padding: 5px 10px;
+  }
+
+  .piano-head .ib-step {
+    width: 30px;
+    height: 30px;
+  }
+
+  .sounds-tool #panePlay .beep-play-keys {
+    height: clamp(190px, 30vh, 300px);
+  }
+}
+
+/* سطر البيانو مثل BandLab: الآلة والأسماء واللوحة بطرف، والأوكتاف والدواسة وMIDI بالطرف الثاني */
+@media (min-width: 901px) {
+  .piano-head {
+    justify-content: flex-start;
+  }
+
+  /* الهامش على صف اللوحة لا على الأوكتاف: الأوكتاف اتجاهه ltr فينعكس عنده inline-start */
+  .piano-head .beep-board-row {
+    margin-inline-end: auto;
+  }
+}
