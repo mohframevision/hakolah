@@ -2769,6 +2769,7 @@ function initBeepMelodyExperiment() {
   }
   tabs.forEach((tab) =>
     tab.addEventListener("click", () => {
+      tab.closest(".sounds-tool").classList.add("switched"); // حركة الظهور للتبديل بس، لا وقت فتح الصفحة
       showPane(tab.dataset.pane);
       if (tab.dataset.pane === "panePlay" && layers.length) renderLayers();
       playClickSound();

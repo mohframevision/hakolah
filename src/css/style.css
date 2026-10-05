@@ -4301,11 +4301,11 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
 
 .beep-experiment .filter-chip:active:not(:disabled),
 .sounds-tab:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 
-/* تبديل "اعزف / ألّف / تعلّم" بظهور ناعم بدل القفزة */
-.sounds-pane:not([hidden]) {
+/* تبديل "اعزف / ألّف / تعلّم" بظهور ناعم بدل القفزة — بس عند التبديل (.switched)، لا وقت فتح الصفحة */
+.sounds-tool.switched .sounds-pane:not([hidden]) {
   animation: sounds-pane-in 0.25s ease;
 }
 
@@ -7477,4 +7477,66 @@ main.container:has(.sounds-tool) {
   color: #fff;
   font: inherit;
   text-align: center;
+}
+
+/* ===== صقل الصوتيات (مراجعة make-interfaces-feel-better) ===== */
+/* أرقام ثابتة العرض: الأوكتاف وعدد النغمات ما يحرّكون اللي جنبهم */
+#beepOctLabel,
+.song-status {
+  font-variant-numeric: tabular-nums;
+}
+
+/* منطقة ضغط: ٤٠ بكسل على الكمبيوتر و٤٤ على اللمس */
+.sounds-tool .ib-step,
+.sounds-tool .ip-preview,
+.sounds-tool .ip-close {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.sounds-tool .song-chip,
+.sounds-tool .beep-tempo .filter-chip {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.sounds-tool .song-chip {
+  padding: 6px 10px;
+}
+
+@media (min-width: 901px) and (min-height: 521px) {
+  .sounds-tool .play-toolbar .filter-chip,
+  .sounds-tool .piano-head .filter-chip,
+  .sounds-tool .song-practice .filter-chip {
+    min-height: 40px;
+  }
+
+  /* زوايا متداخلة: الخارجي = الداخلي + الهامش */
+  .sounds-tool {
+    border-radius: 20px;
+  }
+
+  .play-toolbar,
+  .piano-head {
+    border-radius: 14px;
+  }
+
+  .piano-head .ib-current {
+    border-radius: 7px;
+  }
+}
+
+.instrument-pop {
+  border-radius: 18px;
+}
+
+@media (pointer: coarse) {
+  .sounds-tool :is(.ib-step, .ip-preview, .ip-close, .beep-tempo .filter-chip) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .sounds-tool .song-chip {
+    min-height: 44px;
+  }
 }
