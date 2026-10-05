@@ -6545,6 +6545,7 @@ function initBeepMelodyExperiment() {
       render();
       renderChips();
       renderSongStaff();
+      paintLoop();
     }
 
     /* ===== التشغيل: موضع واحد (play.pos بالنبضات) يبقى لين تغيّر الأغنية =====
@@ -6653,6 +6654,12 @@ function initBeepMelodyExperiment() {
       pauseSong();
       if (!parsed.events.length) return setStatus(songBox.dataset.empty);
       if (play.pos >= endPos() - 1e-6) resetPos(); // خلصت: نبدأ من جديد
+      const L = loopRange();
+      if (L && (play.pos < L.a - 0.01 || play.pos >= L.b)) {
+        // التكرار شغّال وإحنا برا المقطع: نبدأ من أوله
+        play.pos = L.a;
+        play.next = nextAt(L.a);
+      }
       await ensureContext();
       $("songEditor").open = false; // صندوق الكتابة يتطوى فيقرب البيانو (ضغطة ترجّعه)
       play.mode = mode;
@@ -6682,6 +6689,8 @@ function initBeepMelodyExperiment() {
         }
         play.at = now;
         render();
+        const L = loopRange();
+        if (L && play.pos >= L.b) return seek(L.a); // 🔁 وصلنا آخر المقطع: نرجع لأوله
         if (play.next >= parsed.events.length && play.pos >= endPos()) {
           const { mode: m, misses } = play;
           pauseSong();
@@ -6807,6 +6816,44 @@ function initBeepMelodyExperiment() {
         markBars();
       }
     };
+    /* ===== 🔁 تكرار مقطع: من مازورة إلى مازورة (نفس أرقام المدرج)، لين يتقنه ===== */
+    const loopBtn = $("songLoop");
+    const loopFrom = $("songLoopFrom");
+    const loopTo = $("songLoopTo");
+    let looping = false;
+    const barIdx = (ev) => Math.floor((ev.q ?? ev.t) / (parsed.barQ || 4) + 1e-6);
+    function loopRange() {
+      if (!looping || !parsed.events.length) return null;
+      const first = barIdx(parsed.events[0]);
+      const last = barIdx(parsed.events[parsed.events.length - 1]);
+      const from = clamp(Math.round(Number(loopFrom.value)) || 1, first + 1, last + 1);
+      const to = clamp(Math.round(Number(loopTo.value)) || from, from, last + 1);
+      const start = parsed.events.find((e) => barIdx(e) >= from - 1);
+      const after = parsed.events.find((e) => barIdx(e) >= to);
+      return { a: Math.max(startPos(), start.t - 1), b: after ? after.t - 0.01 : endPos() }; // نبضة قبل أول نغمة
+    }
+    function paintLoop() {
+      loopBtn.classList.toggle("active", looping);
+      loopBtn.setAttribute("aria-pressed", String(looping));
+      $("songLoopRange").hidden = !looping;
+      if (parsed.events.length) {
+        const total = barIdx(parsed.events[parsed.events.length - 1]) + 1;
+        loopFrom.max = loopTo.max = total;
+      }
+    }
+    loopBtn.addEventListener("click", () => {
+      looping = !looping;
+      if (looping && parsed.events.length) {
+        // يبدأ من المازورة الحالية ولمدة ٤ مازورات
+        const here = barIdx(parsed.events[Math.min(play.next, parsed.events.length - 1)]) + 1;
+        loopFrom.value = here;
+        loopTo.value = here + 3;
+      }
+      paintLoop();
+      if (play.mode) seek(play.pos);
+      playClickSound();
+    });
+    [loopFrom, loopTo].forEach((el) => el.addEventListener("change", () => play.mode && seek(play.pos)));
     seekEl.addEventListener("input", () => {
       const a = startPos();
       seek(a + (seekEl.value / 1000) * (endPos() - a));

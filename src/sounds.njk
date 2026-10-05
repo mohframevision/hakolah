@@ -653,6 +653,8 @@ C C D E E-D D
         <span id="songTimeNow">0:00</span>
         <input type="range" id="songSeek" min="0" max="1000" step="1" value="0" aria-label="موضع الأغنية" />
         <span id="songTimeAll">0:00</span>
+        <button type="button" class="filter-chip" id="songLoop" aria-pressed="false" aria-label="كرّر مقطعاً من مازورة إلى مازورة" title="كرّر مقطعاً من مازورة إلى مازورة">🔁</button>
+        <span class="song-loop" id="songLoopRange" dir="rtl" hidden><label>من مازورة <input type="number" id="songLoopFrom" min="1" value="1" inputmode="numeric" /></label> <label>إلى <input type="number" id="songLoopTo" min="1" value="4" inputmode="numeric" /></label></span>
       </div>
       <div class="song-keys-slot" id="songKeysSlot"></div>
       <p class="beep-param-note">وضع «تدرّب» ينتظرك: تنزل الأعمدة وتتوقف عند الخط حتى تضغط النغمة الصحيحة — بالإصبع أو الكيبورد أو كيبورد MIDI. وتقدر تفتح ملف MIDI (من مواقع مثل bitmidi.com) فينزل بإيقاعه الصحيح بالضبط. ومن الكيبورد: <kbd>Space</kbd> تشغيل/إيقاف مؤقت، و<kbd>Home</kbd> من البداية.</p>

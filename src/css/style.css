@@ -6973,6 +6973,7 @@ html[lang="en"] .instrument-btn.is-new::after {
 /* «تدرّب»: الشريط الزمني فوق الأعمدة — ⏮ من البداية، الوقت الحالي، سحب لأي نقطة، الطول */
 .song-timeline {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   width: 100%;
@@ -6987,8 +6988,8 @@ html[lang="en"] .instrument-btn.is-new::after {
   display: none;
 }
 
-.song-timeline input {
-  flex: 1;
+.song-timeline input[type="range"] {
+  flex: 1 1 140px;
   min-width: 0;
   accent-color: #6fc8a4;
   cursor: pointer;
@@ -7453,4 +7454,27 @@ main.container:has(.sounds-tool) {
 .st-barno {
   font: 600 9px/1 system-ui, sans-serif;
   fill: var(--color-text-muted);
+}
+
+/* 🔁 تكرار مقطع: خانتا «من مازورة / إلى» بجانب الشريط الزمني */
+.song-loop {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.song-loop[hidden] {
+  display: none;
+}
+
+.song-loop input {
+  width: 3.4em;
+  padding: 3px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font: inherit;
+  text-align: center;
 }

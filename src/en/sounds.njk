@@ -654,6 +654,8 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
         <span id="songTimeNow">0:00</span>
         <input type="range" id="songSeek" min="0" max="1000" step="1" value="0" aria-label="Song position" />
         <span id="songTimeAll">0:00</span>
+        <button type="button" class="filter-chip" id="songLoop" aria-pressed="false" aria-label="Loop a passage, bar to bar" title="Loop a passage, bar to bar">🔁</button>
+        <span class="song-loop" id="songLoopRange" dir="ltr" hidden><label>From bar <input type="number" id="songLoopFrom" min="1" value="1" inputmode="numeric" /></label> <label>to <input type="number" id="songLoopTo" min="1" value="4" inputmode="numeric" /></label></span>
       </div>
       <div class="song-keys-slot" id="songKeysSlot"></div>
       <p class="beep-param-note">Practice mode waits for you: the bars fall and stop at the line until you press the right note — by touch, computer keyboard, or a MIDI keyboard. You can also open a MIDI file (from sites like bitmidi.com) and it falls with its exact rhythm. Keyboard: <kbd>Space</kbd> play/pause, <kbd>Home</kbd> back to the start.</p>
