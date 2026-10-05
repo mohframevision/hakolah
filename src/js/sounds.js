@@ -5916,6 +5916,93 @@ function initBeepMelodyExperiment() {
     }));
     return { tracks, barQ: barQ || 4 };
   }
+  /* ===== MusicXML (من MuseScore / Sibelius / Finale): كل مدرج مسار (🫱 يمين، 🫲 يسار)، بالمدد
+     الموسيقية الحقيقية والميزان والمفتاح والسرعة. يفهم الكورد، الربط، backup/forward (أكثر من صوت
+     بالمازورة)، ويتجاهل النوتات الزخرفية. ‏.mxl = نفس الملف مضغوط ZIP. */
+  function parseMusicXml(xml) {
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    if (doc.querySelector("parsererror") || !doc.querySelector("score-partwise")) throw new Error("not musicxml"); // ponytail: score-timewise نادر
+    const num = (el, sel, d = 0) => {
+      const x = el.querySelector(sel);
+      return x && x.textContent.trim() !== "" ? Number(x.textContent) : d;
+    };
+    const qpm = Number(doc.querySelector("sound[tempo]")?.getAttribute("tempo")) || num(doc, "metronome per-minute", 120) || 120; // ponytail: سرعة وحدة للمقطوعة كلها
+    const time = doc.querySelector("time");
+    const barQ = time ? (num(time, "beats", 4) * 4) / num(time, "beat-type", 4) : 4;
+    const key = clamp(Math.round(num(doc, "key fifths", 0)), -7, 7);
+    const names = {};
+    doc.querySelectorAll("score-part").forEach((sp) => (names[sp.id] = sp.querySelector("part-name")?.textContent.trim() || ""));
+    const STEPS = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+    const r3 = (x) => Math.round(x * 1000) / 1000;
+    const tracks = new Map();
+    doc.querySelectorAll("part").forEach((part) => {
+      const staves = num(part, "attributes staves", 1);
+      let div = 1;
+      let pos = 0;
+      let lastStart = 0;
+      const open = new Map(); // نغمة مربوطة بالجاية: "مدرج:midi" → النغمة
+      part.querySelectorAll(":scope > measure").forEach((measure) => {
+        for (const el of measure.children) {
+          if (el.tagName === "attributes") div = num(el, "divisions", div) || div;
+          else if (el.tagName === "backup") pos -= num(el, "duration") / div;
+          else if (el.tagName === "forward") pos += num(el, "duration") / div;
+          else if (el.tagName === "note" && !el.querySelector("grace")) {
+            const dur = num(el, "duration") / div;
+            const start = el.querySelector("chord") ? lastStart : pos;
+            if (!el.querySelector("chord")) {
+              lastStart = pos;
+              pos += dur;
+            }
+            const p = el.querySelector("pitch");
+            if (!p) continue; // سكتة
+            const midi = clamp(12 * (num(p, "octave", 4) + 1) + STEPS[p.querySelector("step").textContent.trim()] + num(p, "alter", 0), 21, 108);
+            const staff = num(el, "staff", 1);
+            const id = part.id + ":" + staff;
+            if (!tracks.has(id)) tracks.set(id, { name: (staves > 1 ? (staff === 1 ? "🫱 " : "🫲 ") : "") + (names[part.id] || ""), notes: [] });
+            const ties = [...el.querySelectorAll(":scope > tie")].map((t) => t.getAttribute("type"));
+            const tieKey = id + ":" + midi;
+            if (ties.includes("stop") && open.has(tieKey)) {
+              open.get(tieKey)[1] += dur; // امتداد للمربوطة بدل ضربة جديدة
+              if (!ties.includes("start")) open.delete(tieKey);
+              continue;
+            }
+            const n = [start, dur, midi];
+            tracks.get(id).notes.push(n);
+            if (ties.includes("start")) open.set(tieKey, n);
+          }
+        }
+      });
+    });
+    // نفس شكل مسارات MIDI: [بداية, مدة] بالنبضات على ٩٠ للعزف + midi + [بداية, مدة] بالسوداء للمدرج
+    const out = [...tracks.values()]
+      .filter((t) => t.notes.length)
+      .map((t) => ({
+        name: t.name,
+        prog: null,
+        notes: t.notes.map(([q, d, m]) => [r3((q * 90) / qpm), Math.max(0.05, r3((d * 90) / qpm)), m, r3(q), r3(d)]).sort((a, b) => a[0] - b[0]),
+      }));
+    return { tracks: out, barQ, key };
+  }
+  // ‏.mxl: نقرأ ZIP يدوياً (الفهرس بآخر الملف) ونفك أول ملف XML بـDecompressionStream المدمجة
+  async function unzipMusicXml(buf) {
+    const v = new DataView(buf);
+    let e = buf.byteLength - 22;
+    while (e >= 0 && v.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0) throw new Error("zip");
+    const entries = [];
+    for (let i = 0, p = v.getUint32(e + 16, true); i < v.getUint16(e + 10, true) && v.getUint32(p, true) === 0x02014b50; i++) {
+      const nlen = v.getUint16(p + 28, true);
+      entries.push({ name: new TextDecoder().decode(new Uint8Array(buf, p + 46, nlen)), method: v.getUint16(p + 10, true), size: v.getUint32(p + 20, true), off: v.getUint32(p + 42, true) });
+      p += 46 + nlen + v.getUint16(p + 30, true) + v.getUint16(p + 32, true);
+    }
+    const f = entries.find((x) => /\.(musicxml|xml)$/i.test(x.name) && !x.name.startsWith("META-INF"));
+    if (!f) throw new Error("no score in zip");
+    const data = new Uint8Array(buf, f.off + 30 + v.getUint16(f.off + 26, true) + v.getUint16(f.off + 28, true), f.size);
+    if (f.method === 0) return new TextDecoder().decode(data);
+    if (f.method !== 8) throw new Error("zip method");
+    return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+  }
+
   // المسارات اللي تشتغل أول ما يفتح الملف: البيانو/اللحن لو مسمّاة، وإلا الأكثر نغمات
   function defaultTracks(tracks) {
     const named = tracks.map((t) => /piano|melod|vocal|voice|lead|right|left|treble|bass clef|بيانو|لحن/i.test(t.name) || (!t.name && t.prog != null && t.prog < 8));
@@ -5935,7 +6022,7 @@ function initBeepMelodyExperiment() {
         .map(([t0, d, m2, ...qs]) => [t0, d, clamp(Math.round(m2), 0, 127), ...qs]),
     }));
     const on = Array.isArray(m.on) && m.on.length === tracks.length ? m.on.map(Boolean) : defaultTracks(tracks);
-    return { tracks, on, hand: ["right", "left"].includes(m.hand) ? m.hand : "both", barQ: m.barQ > 0 && m.barQ <= 16 ? m.barQ : 4 };
+    return { tracks, on, hand: ["right", "left"].includes(m.hand) ? m.hand : "both", barQ: m.barQ > 0 && m.barQ <= 16 ? m.barQ : 4, key: Number.isInteger(m.key) && Math.abs(m.key) <= 7 ? m.key : 0 };
   }
 
   /* ===== صيغة ABC (للمحترف): الصيغة النصية المعيارية للنوتة — X: T: M: L: Q: K: ثم النغمات.
@@ -6750,7 +6837,12 @@ function initBeepMelodyExperiment() {
         const raw = new TextDecoder().decode(buf);
         let song;
         try {
-          if (raw.startsWith("MThd")) {
+          if (raw.startsWith("PK") || raw.includes("<score-partwise")) {
+            // MusicXML (أو .mxl المضغوط) من MuseScore وغيره
+            const { tracks, barQ, key } = parseMusicXml(raw.startsWith("PK") ? await unzipMusicXml(buf) : raw);
+            if (!tracks.length) throw new Error("no notes");
+            song = { title, text: "", midi: { tracks, on: tracks.map(() => true), barQ, key } };
+          } else if (raw.startsWith("MThd")) {
             const { tracks: found, barQ } = parseMidi(buf);
             const tracks = found.filter((t) => t.notes.length);
             if (!tracks.length) throw new Error("no notes");
@@ -6761,7 +6853,7 @@ function initBeepMelodyExperiment() {
             song = { title: String(j.title || ""), text: String(j.text || ""), midi: j.midi };
           }
         } catch (err) {
-          if (raw.startsWith("MThd")) throw err;
+          if (raw.startsWith("MThd") || raw.startsWith("PK") || raw.includes("<score-partwise")) throw err;
           if (/[\0�]/.test(raw)) throw new Error("binary", { cause: err });
           song = { title, text: raw };
         }
