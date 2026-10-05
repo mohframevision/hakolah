@@ -5836,6 +5836,7 @@ function initBeepMelodyExperiment() {
     if (div & 0x8000) throw new Error("smpte"); // ponytail: توقيت SMPTE نادر جداً بملفات الأغاني
     const tempos = [[0, 500000]];
     let barQ = 0;
+    let keySig = null;
     const groups = new Map(); // "مسار:قناة" → { name, notes: [[بدايةtick, نهايةtick, midi]] }
     let p = 8 + v.getUint32(4);
     for (let k = 0; k < ntrks && p + 8 <= buf.byteLength; k++) {
@@ -5869,6 +5870,7 @@ function initBeepMelodyExperiment() {
           const len = vlq();
           if (type === 0x51 && len === 3) tempos.push([tick, v.getUint8(p) * 65536 + v.getUint16(p + 1)]);
           if (type === 0x03 && !name) name = text(p, len).trim();
+          if (type === 0x59 && keySig === null) keySig = v.getInt8(p); // المفتاح: عدد الدييز (+) أو البيمول (−)
           if (type === 0x58 && !barQ) barQ = (v.getUint8(p) * 4) / 2 ** v.getUint8(p + 1); // الميزان: طول المازورة بالسوداء
           p += len;
         } else if (status === 0xf0 || status === 0xf7) p += vlq();
@@ -5914,7 +5916,7 @@ function initBeepMelodyExperiment() {
       prog: g.prog,
       notes: g.notes.map(([a, b, note]) => [beat(a), Math.max(0.05, beat(b) - beat(a)), note, q(a), q(b - a)]).sort((x, y) => x[0] - y[0]),
     }));
-    return { tracks, barQ: barQ || 4 };
+    return { tracks, barQ: barQ || 4, key: clamp(keySig || 0, -7, 7) };
   }
   /* ===== MusicXML (من MuseScore / Sibelius / Finale): كل مدرج مسار (🫱 يمين، 🫲 يسار)، بالمدد
      الموسيقية الحقيقية والميزان والمفتاح والسرعة. يفهم الكورد، الربط، backup/forward (أكثر من صوت
@@ -6315,20 +6317,22 @@ function initBeepMelodyExperiment() {
     // اليد: يمين = من Do الوسطى (60) وفوق، يسار = تحتها — نفس تقسيم برامج تعليم البيانو
     const inHand = (m) => (midiSong.hand === "right" ? m >= 60 : midiSong.hand === "left" ? m < 60 : true);
     function midiEvents() {
+      // نغمات مدرج اليد اليسرى (🫲 من MusicXML) تنرسم على مفتاح فا مهما علت، واليمنى على صول
       const notes = midiSong.tracks
-        .flatMap((t, i) => (midiSong.on[i] ? t.notes : []))
+        .flatMap((t, i) => (midiSong.on[i] ? t.notes.map((n) => [...n.slice(0, 5), t.name.startsWith("🫲") ? 1 : t.name.startsWith("🫱") ? 0 : null]) : []))
         .filter((n) => inHand(n[2]))
         .sort((a, b) => a[0] - b[0]);
       const events = [];
-      notes.forEach(([t, d, m, q, qd]) => {
+      notes.forEach(([t, d, m, q, qd, lh]) => {
         const ev = events[events.length - 1];
         if (ev && t - ev.t < 0.06) {
           if (ev.notes.includes(m)) return;
           ev.notes.push(m);
           ev.durs.push(d);
           ev.qd.push(qd);
+          ev.lh.push(lh);
           ev.d = Math.max(ev.d, d);
-        } else events.push({ t, d, notes: [m], durs: [d], q, qd: [qd] });
+        } else events.push({ t, d, notes: [m], durs: [d], q, qd: [qd], lh: [lh] });
       });
       return { events, lyrics: [], barQ: midiSong.barQ, key: midiSong.key || 0 };
     }
@@ -6403,16 +6407,19 @@ function initBeepMelodyExperiment() {
         const notes = [];
         const durs = [];
         const qd = [];
+        const lh = [];
         e.notes.forEach((m, j) => {
           const f = fold(m);
           if (notes.includes(f)) return;
           notes.push(f);
           durs.push(e.durs?.[j] ?? e.d);
           qd.push(e.qd?.[j]);
+          lh.push(e.lh?.[j]);
         });
         e.notes = notes;
         e.durs = durs;
         if (e.qd) e.qd = qd;
+        if (e.lh) e.lh = lh;
       });
       return p;
     }
@@ -6420,8 +6427,9 @@ function initBeepMelodyExperiment() {
        نغمات الأعمدة، والجاية تضيء. الموضع = درجة بالسلّم (Do4 = 28، الخط الأسفل بصول Mi4 = 30) */
     const staffEl = $("songStaff");
     let showStaff = store.get("songStaff") === "1";
-    const LETTER_OF = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
-    const SHARP = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+    // نغمة (٠–١١) → [الحرف ٠–٦، التحويل]: بالدييز، وبالبيمول لمفاتيح البيمول
+    const SPELL_SHARP = [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [3, 0], [3, 1], [4, 0], [4, 1], [5, 0], [5, 1], [6, 0]];
+    const SPELL_FLAT = [[0, 0], [1, -1], [1, 0], [2, -1], [2, 0], [3, 0], [4, -1], [4, 0], [5, -1], [5, 0], [6, -1], [6, 0]];
     const HEAD_NAMES = ["CDEFGAB".split(""), ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"]];
     const W = 56; // بكسل لكل سوداء
     const GAP = 34; // مسافة بين مدرج صول ومدرج فا
@@ -6429,35 +6437,60 @@ function initBeepMelodyExperiment() {
       staffOf = [];
       staffEl.hidden = !showStaff || !active() || !parsed.events.length;
       if (staffEl.hidden) return;
-      // ملف MIDI: المدد الموسيقية الحقيقية (بالسوداء) والميزان من الملف؛ المكتوب بالحروف: نبضاته نفسها
+      // ملف MIDI/MusicXML/ABC: المدد الموسيقية الحقيقية (بالسوداء) والميزان؛ المكتوب بالحروف: نبضاته نفسها
       const musical = parsed.events[0].q != null;
       const tOf = (ev) => (musical ? ev.q : ev.t);
       const dOf = (ev, j) => (musical ? ev.qd[j] : (ev.durs?.[j] ?? ev.d));
       const barLen = parsed.barQ || 4;
-      const posOf = (m) => octaveOf(m) * 7 + LETTER_OF[pcOf(m)];
+      const key = parsed.key || 0;
+      const keyAlt = keyAlters(key);
+      // التهجئة من المفتاح: مفاتيح البيمول تكتب B♭ لا A♯ — [الحرف ٠–٦، التحويل]
+      const spell = (m) => (key < 0 ? SPELL_FLAT : SPELL_SHARP)[pcOf(m)];
+      const posOf = (m) => octaveOf(m) * 7 + spell(m)[0];
       const solfa = labelMode === "solfege";
-      const notes = parsed.events.flatMap((e) => e.notes);
-      const top = Math.max(42, ...notes.filter((m) => m >= 60).map(posOf)) + 2;
-      const low = Math.min(14, ...notes.filter((m) => m < 60).map(posOf)) - 2;
+      const onTreble = (ev, j) => (ev.lh?.[j] != null ? !ev.lh[j] : ev.notes[j] >= 60);
+      const placed = parsed.events.flatMap((e) => e.notes.map((m, j) => [posOf(m), onTreble(e, j)]));
+      const top = Math.max(42, ...placed.filter(([, tr]) => tr).map(([p]) => p)) + 2;
+      const low = Math.min(14, ...placed.filter(([, tr]) => !tr).map(([p]) => p)) - 2;
       const y = (p, treble) => 10 + (top - p) * STEP + (treble ? 0 : GAP);
       const t0 = Math.min(...parsed.events.map(tOf));
       const tEnd = Math.max(...parsed.events.flatMap((e) => e.notes.map((_, j) => tOf(e) + dOf(e, j))));
-      const startX = 48;
+      const startX = 54 + Math.abs(key) * 9;
       const xOf = (t) => startX + (t - t0) * W;
       const width = xOf(tEnd) + 30;
       let out = "";
       [30, 32, 34, 36, 38].forEach((p) => (out += `<line class="st-line" x1="0" x2="${width}" y1="${y(p, true)}" y2="${y(p, true)}"/>`));
       [18, 20, 22, 24, 26].forEach((p) => (out += `<line class="st-line" x1="0" x2="${width}" y1="${y(p)}" y2="${y(p)}"/>`));
       out += `<text class="st-clef" x="4" y="${y(30, true) + 10}">𝄞</text><text class="st-clef st-bass" x="6" y="${y(22) + 9}">𝄢</text>`;
-      for (let bar = Math.ceil((t0 + 0.001) / barLen) * barLen; bar < tEnd; bar += barLen) out += `<line class="st-bar" x1="${xOf(bar) - 8}" x2="${xOf(bar) - 8}" y1="${y(38, true)}" y2="${y(18)}"/>`;
+      // علامة المفتاح على المدرجين (فا أخفض بأوكتافين = ١٤ درجة)
+      const sig = key > 0 ? [38, 35, 39, 36, 33, 37, 34] : [34, 37, 33, 36, 32, 35, 31];
+      for (let k = 0; k < Math.abs(key); k++) {
+        const ch = key > 0 ? "♯" : "♭";
+        out += `<text class="st-acc" x="${40 + k * 9}" y="${y(sig[k], true) + 5}">${ch}</text><text class="st-acc" x="${40 + k * 9}" y="${y(sig[k] - 14) + 5}">${ch}</text>`;
+      }
+      // فواصل المازورات بأرقامها (يحتاجها المحترف للتنقل وتكرار مقطع)
+      const barOf = (t) => Math.floor(t / barLen + 1e-6);
+      out += `<text class="st-barno" x="${startX - 6}" y="${y(top - 1, true)}">${barOf(t0) + 1}</text>`;
+      for (let bar = Math.ceil((t0 + 0.001) / barLen) * barLen; bar < tEnd; bar += barLen) {
+        const bx = xOf(bar) - 8;
+        out += `<line class="st-bar" x1="${bx}" x2="${bx}" y1="${y(38, true)}" y2="${y(18)}"/><text class="st-barno" x="${bx + 3}" y="${y(top - 1, true)}">${barOf(bar) + 1}</text>`;
+      }
+      let seen = new Map(); // تحويلات المازورة الحالية: "حرف:أوكتاف" → تحويل
+      let curBar = -1;
       parsed.events.forEach((ev, i) => {
         const x = xOf(tOf(ev));
+        if (barOf(tOf(ev)) !== curBar) {
+          curBar = barOf(tOf(ev));
+          seen = new Map();
+        }
         let g = "";
         ev.notes.forEach((m, j) => {
+          const [letter, alter] = spell(m);
           const p = posOf(m);
           const d = dOf(ev, j);
-          const tr = m >= 60;
-          const ledger = (q) => (g += `<line class="st-line" x1="${x - 9}" x2="${x + 9}" y1="${y(q, tr)}" y2="${y(q, tr)}"/>`);
+          const tr = onTreble(ev, j);
+          const ny = y(p, tr);
+          const ledger = (q) => (g += `<line class="st-line" x1="${x - 10}" x2="${x + 10}" y1="${y(q, tr)}" y2="${y(q, tr)}"/>`);
           if (tr) {
             for (let q = 28; q >= p; q -= 2) ledger(q);
             for (let q = 40; q <= p; q += 2) ledger(q);
@@ -6465,20 +6498,35 @@ function initBeepMelodyExperiment() {
             for (let q = 28; q <= p; q += 2) ledger(q);
             for (let q = 16; q >= p; q -= 2) ledger(q);
           }
-          if (SHARP[pcOf(m)]) g += `<text class="st-acc" x="${x - 19}" y="${y(p, tr) + 5}">♯</text>`;
-          // اسم النغمة داخل رأسها (مثل ورقة دكتور المقرر): الطالب يقرأ النوتة وهو يتعلمها
-          const hollow = d >= 2;
-          g += `<ellipse class="st-head${hollow ? " hollow" : ""}" cx="${x}" cy="${y(p, tr)}" rx="7.5" ry="5.8"/>`;
-          g += `<text class="st-name${hollow ? " hollow" : ""}${solfa ? " solfa" : ""}" x="${x}" y="${y(p, tr)}">${HEAD_NAMES[solfa ? 1 : 0][LETTER_OF[pcOf(m)]]}</text>`;
-          if (d < 4) {
+          // علامة التحويل فقط لما تخالف المفتاح (أو تحويلاً سابقاً بنفس المازورة)، مرة وحدة بالمازورة
+          const id = letter + ":" + octaveOf(m);
+          const expected = seen.has(id) ? seen.get(id) : keyAlt[letter];
+          if (alter !== expected) {
+            g += `<text class="st-acc" x="${x - 19}" y="${ny + 5}">${alter > 0 ? "♯" : alter < 0 ? "♭" : "♮"}</text>`;
+            seen.set(id, alter);
+          }
+          // القيمة: مستديرة/بيضاء مفرّغة، والثُّمن بعلم وذات السنّين بعلمين، والمنقوطة بنقطة
+          const base = 2 ** Math.floor(Math.log2(Math.max(d, 0.125)) + 1e-9);
+          const dotted = Math.abs(d / base - 1.5) < 0.02;
+          const hollow = base >= 2;
+          g += `<ellipse class="st-head${hollow ? " hollow" : ""}" cx="${x}" cy="${ny}" rx="7.5" ry="5.8"/>`;
+          g += `<text class="st-name${hollow ? " hollow" : ""}${solfa ? " solfa" : ""}" x="${x}" y="${ny}">${HEAD_NAMES[solfa ? 1 : 0][letter]}</text>`;
+          if (dotted) g += `<circle class="st-head" cx="${x + 12}" cy="${ny - (p % 2 === 0 ? STEP : 0)}" r="1.8"/>`;
+          if (base < 4) {
             const up = p < (tr ? 34 : 22);
             const sx = up ? x + 7.3 : x - 7.3;
-            g += `<line class="st-stem" x1="${sx}" x2="${sx}" y1="${y(p, tr)}" y2="${y(p, tr) + (up ? -30 : 30)}"/>`;
+            const ey = ny + (up ? -32 : 32);
+            g += `<line class="st-stem" x1="${sx}" x2="${sx}" y1="${ny}" y2="${ey}"/>`;
+            const flags = base <= 0.25 ? 2 : base <= 0.5 ? 1 : 0;
+            for (let f = 0; f < flags; f++) {
+              const fy = ey + (up ? f * 7 : -f * 7);
+              g += `<path class="st-flag" d="M${sx} ${fy} c 0 ${up ? 6 : -6} 9 ${up ? 8 : -8} 7 ${up ? 17 : -17}"/>`;
+            }
           }
         });
         out += `<g class="st-note" data-i="${i}" data-x="${x}">${g}</g>`;
       });
-      // ponytail: بلا أعلام/أعمدة ربط للثُّمن ولا نقاط ولا علامة مفتاح، والبيمول يُكتب دييز — يكفي للقراءة والتدريب؛ مرحلة MusicXML تضيفها
+      // ponytail: الثُّمن بأعلام منفصلة لا بأعمدة ربط، وبلا رسم للسكتات — يكفي للقراءة والتدريب
       staffEl.innerHTML = `<svg width="${width}" height="${y(low) + 14}" aria-hidden="true">${out}</svg>`;
       staffEl.querySelectorAll(".st-note").forEach((g) => (staffOf[g.dataset.i] = g));
       markedNext = -1;
@@ -6843,10 +6891,10 @@ function initBeepMelodyExperiment() {
             if (!tracks.length) throw new Error("no notes");
             song = { title, text: "", midi: { tracks, on: tracks.map(() => true), barQ, key } };
           } else if (raw.startsWith("MThd")) {
-            const { tracks: found, barQ } = parseMidi(buf);
+            const { tracks: found, barQ, key } = parseMidi(buf);
             const tracks = found.filter((t) => t.notes.length);
             if (!tracks.length) throw new Error("no notes");
-            song = { title, text: "", midi: { tracks, on: defaultTracks(tracks), barQ } };
+            song = { title, text: "", midi: { tracks, on: defaultTracks(tracks), barQ, key } };
           } else {
             const j = JSON.parse(raw);
             if (j?.type !== "hakolah-song" || (typeof j.text !== "string" && !cleanMidiSong(j.midi))) throw new Error("not a song");

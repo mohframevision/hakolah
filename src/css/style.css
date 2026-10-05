@@ -7438,3 +7438,19 @@ main.container:has(.sounds-tool) {
     margin-inline-end: auto;
   }
 }
+
+/* المدرج: أعلام الثُّمن وأرقام المازورات */
+.st-flag {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 1.6;
+}
+
+.beep-experiment .st-note.on .st-flag {
+  stroke: #6fc8a4;
+}
+
+.st-barno {
+  font: 600 9px/1 system-ui, sans-serif;
+  fill: var(--color-text-muted);
+}
