@@ -583,7 +583,7 @@ pageScript: "sounds"
   </section>
 
   <section class="sounds-pane" id="panePractice" role="tabpanel" hidden>
-    <div class="beep-play song-practice" id="songPractice" data-saved="✅ Saved in your browser" data-del-ask="Delete this song from your browser?" data-bad="Could not read the file" data-loaded="✅ Song opened" data-empty="Type some notes first" data-wait="Press the glowing key" data-done="🎉 Finished! Mistakes: " data-full="Browser storage is full — use “Download file” to keep it" data-notes=" notes">
+    <div class="beep-play song-practice" id="songPractice" data-groups="Low 3|Low 2|Low|Middle|High|High 2|High 3" data-saved="✅ Saved in your browser" data-del-ask="Delete this song from your browser?" data-bad="Could not read the file" data-loaded="✅ Song opened" data-empty="Type some notes first" data-wait="Press the glowing key" data-done="🎉 Finished! Mistakes: " data-full="Browser storage is full — use “Download file” to keep it" data-notes=" notes">
       <div class="song-lib">
         <select id="songList" aria-label="Your songs"><option value="">— New song —</option></select>
         <button type="button" class="filter-chip" id="songSave">💾 Save</button>
@@ -600,6 +600,20 @@ E E F G G F E D
 C C D E E-D D
 
 Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or paste the notes"></textarea>
+        <div class="song-write" id="songWrite">
+          <button type="button" class="filter-chip" id="songWriteToggle" aria-pressed="false" title="Press piano keys and the notes are written for you, in the right group">✍️ Write with the piano</button>
+          <div class="instrument-picker" id="songWriteLen" role="group" aria-label="Length">
+            <button type="button" class="filter-chip" data-len="0.5">Short</button>
+            <button type="button" class="filter-chip" data-len="1">Normal</button>
+            <button type="button" class="filter-chip" data-len="2">Long</button>
+          </div>
+          <button type="button" class="filter-chip" id="songWriteChord" aria-pressed="false" title="Keys you press next are written together (played at the same time)">🎹 Chord</button>
+          <button type="button" class="filter-chip" id="songWriteRest">⏸ Rest</button>
+          <button type="button" class="filter-chip" id="songWriteLine">↵ Line</button>
+          <button type="button" class="filter-chip" id="songWriteBack" aria-label="Delete the last note" title="Delete the last note">⌫</button>
+        </div>
+        <div class="song-chips" id="songChips" role="group" aria-label="Written notes — tap any to hear it"></div>
+        <p class="beep-param-note song-groups-hint">🎨 Each key’s color = its group: “Middle” is green, “Low” blue, “High” yellow. When typing letters: <span dir="ltr">^</span> = high, <span dir="ltr">.</span> = low.</p>
         <p class="beep-param-note">Each note is a letter: <span dir="ltr">C D E F G A B</span> (or Do Re Mi), with <span dir="ltr">#</span> or <span dir="ltr">b</span> after it for sharp and flat. <span dir="ltr">^</span> before it = one octave up, <span dir="ltr">.</span> before it = one down. Every note is an even half beat, <span dir="ltr">~</span> holds the previous note longer, and <span dir="ltr">_</span> is a rest. To press several keys together: <span dir="ltr">C+E+G</span> or <span dir="ltr">[C E G]</span>; for an exact length: <span dir="ltr">C:2</span>. Lyric lines are skipped when playing and shown above the piano.</p>
       </details>
       <div class="song-tracks" id="songTracks" data-families="Piano|Chromatic percussion|Organ|Guitar|Bass|Strings|Ensemble|Brass|Reed|Pipe|Synth lead|Synth pad|Synth effects|Ethnic|Percussive|Sound effects" data-track="Track" hidden>

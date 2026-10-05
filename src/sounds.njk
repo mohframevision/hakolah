@@ -582,7 +582,7 @@ pageScript: "sounds"
   </section>
 
   <section class="sounds-pane" id="panePractice" role="tabpanel" hidden>
-    <div class="beep-play song-practice" id="songPractice" data-saved="✅ حُفظت في متصفحك" data-del-ask="تحذف هذه المقطوعة من متصفحك؟" data-bad="تعذّر قراءة الملف" data-loaded="✅ فُتحت المقطوعة" data-empty="اكتب نوتات أولاً" data-wait="اضغط النغمة المضيئة" data-done="🎉 أنهيتها! الأخطاء: " data-full="مساحة المتصفح ممتلئة — استخدم «نزّل ملف» لحفظها" data-notes=" نغمة">
+    <div class="beep-play song-practice" id="songPractice" data-groups="تحت ٣|تحت ٢|تحت|الوسط|فوق|فوق ٢|فوق ٣" data-saved="✅ حُفظت في متصفحك" data-del-ask="تحذف هذه المقطوعة من متصفحك؟" data-bad="تعذّر قراءة الملف" data-loaded="✅ فُتحت المقطوعة" data-empty="اكتب نوتات أولاً" data-wait="اضغط النغمة المضيئة" data-done="🎉 أنهيتها! الأخطاء: " data-full="مساحة المتصفح ممتلئة — استخدم «نزّل ملف» لحفظها" data-notes=" نغمة">
       <div class="song-lib">
         <select id="songList" aria-label="مقطوعاتك"><option value="">— مقطوعة جديدة —</option></select>
         <button type="button" class="filter-chip" id="songSave">💾 احفظ</button>
@@ -599,6 +599,20 @@ E E F G G F E D
 C C D E E-D D
 
 أو الصق نوتات من موقع مثل noobnotes" aria-label="✍️ اكتب النوتات أو الصقها"></textarea>
+        <div class="song-write" id="songWrite">
+          <button type="button" class="filter-chip" id="songWriteToggle" aria-pressed="false" title="اضغط مفاتيح البيانو وتنكتب النغمات لحالها بمجموعتها الصحيحة">✍️ اكتب بالبيانو</button>
+          <div class="instrument-picker" id="songWriteLen" role="group" aria-label="المدة">
+            <button type="button" class="filter-chip" data-len="0.5">قصيرة</button>
+            <button type="button" class="filter-chip" data-len="1">عادية</button>
+            <button type="button" class="filter-chip" data-len="2">طويلة</button>
+          </div>
+          <button type="button" class="filter-chip" id="songWriteChord" aria-pressed="false" title="النغمات اللي تضغطها بعده تنكتب مع بعض (تُعزف في نفس الوقت)">🎹 كورد</button>
+          <button type="button" class="filter-chip" id="songWriteRest">⏸ سكتة</button>
+          <button type="button" class="filter-chip" id="songWriteLine">↵ سطر</button>
+          <button type="button" class="filter-chip" id="songWriteBack" aria-label="امسح آخر نغمة" title="امسح آخر نغمة">⌫</button>
+        </div>
+        <div class="song-chips" id="songChips" role="group" aria-label="النغمات المكتوبة — اضغط أي واحدة تسمعها"></div>
+        <p class="beep-param-note song-groups-hint">🎨 لون كل مفتاح = مجموعته: «الوسط» أخضر، و«تحت» أزرق، و«فوق» أصفر. في الكتابة بالحروف: <span dir="ltr">^</span> = فوق، و<span dir="ltr">.</span> = تحت.</p>
         <p class="beep-param-note">كل نغمة حرف: <span dir="ltr">C D E F G A B</span> (أو Do Re Mi)، و<span dir="ltr">#</span> أو <span dir="ltr">b</span> بعدها للدييز والبيمول. <span dir="ltr">^</span> قبلها = أوكتاف أعلى، و<span dir="ltr">.</span> قبلها = أخفض. كل نغمة نصف نبضة بنفس الطول، و<span dir="ltr">~</span> تطيل التي قبلها، و<span dir="ltr">_</span> سكتة. للضغط على أكثر من زر معاً: <span dir="ltr">C+E+G</span> أو <span dir="ltr">[C E G]</span>، ولمدة محددة: <span dir="ltr">C:2</span>. سطور الكلمات تُتجاهل في العزف وتظهر فوق البيانو.</p>
       </details>
       <div class="song-tracks" id="songTracks" data-families="بيانو|إيقاع لحني|أورغ|غيتار|باص|وتريات|فرقة وكورال|نحاسيات|نفخ بالقصبة|ناي وفلوت|سنث لحن|سنث خلفية|مؤثرات سنث|آلات شعبية|إيقاع|مؤثرات صوتية" data-track="مسار" hidden>

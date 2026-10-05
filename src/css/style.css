@@ -7017,3 +7017,73 @@ html[lang="en"] .instrument-btn.is-new::after {
 .sounds-tool .beep-play > :is(.beep-help:not(.beep-settings), .beep-play-octave, .beep-keys-wrap) {
   order: -1;
 }
+
+/* ===== «تدرّب»: مجموعات الأوكتاف بألوان للطالب (تحت أزرق، الوسط أخضر، فوق أصفر، والأبعد بنفسجي/وردي)
+   على المفاتيح البيضاء ومربعات المعاينة، واسم المجموعة على Do أولها ===== */
+#songKeysSlot .pk-white:is([data-oct="4"]) { --oct: #d9f3e6; }
+#songKeysSlot .pk-white[data-oct="3"] { --oct: #dde9fa; }
+#songKeysSlot .pk-white[data-oct="5"] { --oct: #faefd4; }
+#songKeysSlot .pk-white:is([data-oct="2"], [data-oct="7"]) { --oct: #ece2fa; }
+#songKeysSlot .pk-white:is([data-oct="1"], [data-oct="6"]) { --oct: #f7dfea; }
+
+#songKeysSlot .pk-white:not(.down, .want, .miss, .off) {
+  background: linear-gradient(180deg, var(--oct, #f4f4f4), #ffffff 70%, var(--oct, #e8e8e8));
+}
+
+#songKeysSlot .pk-white[data-group] {
+  position: relative;
+  border-inline-start: 2px solid rgba(0, 0, 0, 0.25);
+}
+
+#songKeysSlot .pk-white[data-group]::after {
+  content: attr(data-group);
+  position: absolute;
+  top: 62%;
+  inset-inline: 0;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.55);
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#songKeysSlot .beep-play-keys.dense .pk-white[data-group]::after {
+  font-size: 0.5rem;
+}
+
+.song-write,
+.song-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.song-write[hidden],
+.song-chips[hidden] {
+  display: none;
+}
+
+.song-chips {
+  max-height: 160px;
+  overflow-y: auto;
+  direction: ltr;
+}
+
+.song-chip {
+  padding: 3px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--oct, #d9f3e6);
+  color: #10251d;
+  font: 700 0.8rem/1.4 ui-monospace, Consolas, monospace;
+  cursor: pointer;
+}
+
+.song-chip[data-oct="3"] { --oct: #dde9fa; }
+.song-chip[data-oct="5"] { --oct: #faefd4; }
+.song-chip:is([data-oct="2"], [data-oct="7"]) { --oct: #ece2fa; }
+.song-chip:is([data-oct="1"], [data-oct="6"]) { --oct: #f7dfea; }

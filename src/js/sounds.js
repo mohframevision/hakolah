@@ -2887,6 +2887,8 @@ function initBeepMelodyExperiment() {
     return { midi, cents, freq: freqOf(midi, cents), degree: pseudoDegree(midi), startBeat, held, durBeats, gain, velocity: gainVel(gain), pan: 0 };
   }
 
+  // أسماء مجموعات الأوكتاف للطالب (١ … ٧): «الوسط» = أوكتاف Do الوسطى (٤)، وفوقه/تحته
+  const GROUPS = (document.getElementById("songPractice")?.dataset.groups || "").split("|");
   function renderPlayKeys() {
     if (!playBox) return;
     const full = boardMode === "full" && !songRange; // تبويب التدريب: نطاق الأغنية بدل اللوحة
@@ -2929,7 +2931,7 @@ function initBeepMelodyExperiment() {
         if (scale && pcOf(m) === tonic) cls.push("tonic");
         if (full && code) cls.push("reach");
         if (downCount.has(m)) cls.push("down");
-        return `<button type="button" class="${cls.join(" ")}" data-midi="${m}"${code ? ` data-code="${code}"` : ""} style="--i:${pos}" tabindex="-1" aria-label="${noteName(m, noteStyle)}${octaveOf(m)}"><b>${main}</b>${small ? `<small>${small}</small>` : ""}</button>`;
+        return `<button type="button" class="${cls.join(" ")}" data-midi="${m}" data-oct="${octaveOf(m)}"${pcOf(m) === 0 && GROUPS[octaveOf(m) - 1] ? ` data-group="${GROUPS[octaveOf(m) - 1]}"` : ""}${code ? ` data-code="${code}"` : ""} style="--i:${pos}" tabindex="-1" aria-label="${noteName(m, noteStyle)}${octaveOf(m)}"><b>${main}</b>${small ? `<small>${small}</small>` : ""}</button>`;
       })
       .join("");
     document.getElementById("beepOctLabel").textContent = "C" + playOctave;
@@ -5970,7 +5972,8 @@ function initBeepMelodyExperiment() {
     // نطاق البيانو = نطاق الأغنية (أوكتافات كاملة، اثنان على الأقل)، والكيبورد على أخفضها
     function fitKeys() {
       const all = parsed.events.flatMap((e) => e.notes);
-      if (!active() || !all.length) songRange = null;
+      if (active() && writing) songRange = { lo: 48, hi: 83 }; // الكتابة: «تحت» و«الوسط» و«فوق» دائماً، مو نطاق اللي انكتب بس
+      else if (!active() || !all.length) songRange = null;
       else {
         const lo = Math.floor(Math.min(...all) / 12) * 12;
         const hi = Math.max(Math.ceil((Math.max(...all) + 1) / 12) * 12 - 1, lo + 23);
@@ -6064,7 +6067,7 @@ function initBeepMelodyExperiment() {
     function renderTracks() {
       tracksBox.hidden = !midiSong;
       textEl.hidden = !!midiSong;
-      $("songEditor").querySelector(".beep-param-note").hidden = !!midiSong; // شرح صيغة الحروف ما يخص ملف MIDI
+      $("songEditor").querySelectorAll(".beep-param-note, #songWrite, #songChips").forEach((x) => (x.hidden = !!midiSong)); // أدوات الكتابة بالحروف ما تخص ملف MIDI
       if (!midiSong) return;
       const box = $("songTrackChips");
       box.replaceChildren();
@@ -6152,6 +6155,7 @@ function initBeepMelodyExperiment() {
       } else resetPos();
       fitKeys();
       render();
+      renderChips();
     }
 
     /* ===== التشغيل: موضع واحد (play.pos بالنبضات) يبقى لين تغيّر الأغنية =====
@@ -6305,8 +6309,82 @@ function initBeepMelodyExperiment() {
       play.raf = requestAnimationFrame(tick);
       render();
     }
+    /* ===== اكتب بالبيانو (للطالب): كل ضغطة تنكتب نغمة بمجموعتها الصحيحة بصيغة الحروف نفسها
+       (^ فوق، . تحت)، فما يحتاج يحفظ رموز. الكورد: الضغطات تنضم لنفس النغمة بـ+ لين يطفّيه ===== */
+    const NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    let writing = false;
+    let writeLen = 1;
+    let chord = []; // نغمات الكورد المفتوح (تنكتب كلمة وحدة C+E+G)
+    const tokenOf = (notes) => {
+      const one = (m) => (octaveOf(m) > 4 ? "^".repeat(octaveOf(m) - 4) : ".".repeat(4 - octaveOf(m))) + NAMES[pcOf(m)];
+      return notes.map(one).join("+") + (writeLen === 1 ? "" : ":" + writeLen);
+    };
+    function writeText(next) {
+      textEl.value = next;
+      textEl.dispatchEvent(new Event("input")); // يحفظ المسودة ويعيد بناء الأعمدة والمعاينة
+      seek(Math.max(startPos(), endPos() - 3)); // الممر يعرض آخر اللي انكتب، مو أول الأغنية
+    }
+    const sep = () => (/(^|\s)$/.test(textEl.value) ? "" : " ");
+    function writeNote(midi) {
+      if (chord.length) {
+        if (chord.includes(midi)) return;
+        writeText(textEl.value.replace(/\S+$/, "") + tokenOf([...chord, midi])); // نبدّل كلمة الكورد بالجديدة
+        chord.push(midi);
+        return;
+      }
+      writeText(textEl.value + sep() + tokenOf([midi]));
+      if (chordBtn.getAttribute("aria-pressed") === "true") chord = [midi];
+    }
+    const writeBtn = $("songWriteToggle");
+    const chordBtn = $("songWriteChord");
+    const toggle = (btn, on) => {
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", String(on));
+    };
+    writeBtn.addEventListener("click", () => {
+      writing = !writing;
+      toggle(writeBtn, writing);
+      if (writing) pauseSong();
+      chord = [];
+      fitKeys();
+      if (writing) playBox.scrollIntoView({ block: "end", behavior: "smooth" }); // المفاتيح قدامك، واللي تكتبه يطلع أعمدة فوقها
+    });
+    chordBtn.addEventListener("click", () => {
+      toggle(chordBtn, chordBtn.getAttribute("aria-pressed") !== "true");
+      chord = []; // بداية كورد جديد أو قفله
+    });
+    chipGroup("songWriteLen", "len", "1", (v) => (writeLen = Number(v)));
+    $("songWriteRest").addEventListener("click", () => writeText(textEl.value + sep() + "_"));
+    $("songWriteLine").addEventListener("click", () => writeText(textEl.value.trimEnd() + "\n"));
+    $("songWriteBack").addEventListener("click", () => {
+      chord = [];
+      writeText(textEl.value.replace(/\S+\s*$/, ""));
+    });
+    // معاينة: كل نغمة/كورد مربع بلون مجموعته؛ الضغط يسمعه ويضيء مفتاحه
+    const chipsBox = $("songChips");
+    function renderChips() {
+      if (midiSong) return chipsBox.replaceChildren();
+      const names = labelMode === "solfege" ? "solfege" : "letters";
+      chipsBox.replaceChildren(
+        ...parsed.events.map((ev, i) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "song-chip";
+          chip.dataset.oct = octaveOf(ev.notes[0]);
+          chip.title = ev.notes.map((m) => GROUPS[octaveOf(m) - 1] || octaveOf(m)).join(" + ");
+          chip.textContent = ev.notes.map((m) => noteName(m, names)).join("+");
+          chip.addEventListener("click", () => {
+            ensureContext();
+            ev.notes.forEach((m) => noteOn("s:chip" + i + ":" + m, m, 90));
+            setTimeout(() => ev.notes.forEach((m) => noteOff("s:chip" + i + ":" + m)), 450);
+          });
+          return chip;
+        })
+      );
+    }
     // كل ضغطة من المستخدم (لمس، كيبورد، MIDI) توصل هنا من noteOn
     songHit = (midi) => {
+      if (writing && !midiSong && active()) return writeNote(midi);
       const ev = play.mode === "train" && parsed.events[play.next];
       if (!ev || ev.t - play.pos > 1.5) return;
       if (!ev.notes.includes(midi)) {
