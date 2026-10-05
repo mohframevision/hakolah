@@ -400,7 +400,7 @@ img {
 .sound-toggle:active,
 .nav-toggle:active,
 .icon-btn:active {
-  transform: scale(0.92);
+  transform: scale(0.96); /* أقل من 0.95 يحس مبالغ */
 }
 
 /* الأزرار النصية: حشوة أفقية مريحة. الأزرار الأيقونية: مربّعة تماماً
@@ -509,7 +509,7 @@ img {
    على عرض 360px لأن الأدوات كانت تنزل لسطر ثاني وحدها) */
 @media (max-width: 560px) {
   :root {
-    --control-height: 36px;
+    --control-height: 44px; /* منطقة الضغط للإصبع (كان 36) — تكفي بصف واحد من 375px */
   }
   .header-inner {
     padding: var(--space-3) var(--space-4);
@@ -1122,7 +1122,7 @@ img {
 }
 
 .filter-chip:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 
 .filter-chip.active,
@@ -7538,5 +7538,123 @@ main.container:has(.sounds-tool) {
 
   .sounds-tool .song-chip {
     min-height: 44px;
+  }
+}
+
+/* ===== صقل الموقع (مراجعة make-interfaces-feel-better) ===== */
+/* نص أنعم، وعناوين متوازنة الأسطر، وفقرات بلا كلمة يتيمة بآخرها */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+/* أرقام تتغير (إعجابات، تقدّم الاستكشاف) بعرض ثابت فما يتحرك اللي جنبها */
+.like-btn,
+.explore-progress-text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* أزرار البطاقة على الماوس: منطقة ضغط ٤٠ بكسل (كانت ٢٣–٣٥). اللمس عنده قاعدته الأقوى (٤٤) فوق
+   (@media (pointer: coarse))، فما نلمسه هنا عشان ما نصغّره */
+@media (pointer: fine) {
+  .like-btn,
+  .share-btn,
+  .fav-btn {
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+  }
+
+  .share-btn,
+  .fav-btn {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .desc-toggle {
+    min-height: 40px;
+  }
+
+  .report-link {
+    padding-block: 10px;
+    margin-top: 0;
+  }
+
+  .footer-link-btn {
+    min-height: 40px;
+  }
+
+  .about-chip {
+    min-height: 40px;
+  }
+}
+
+.about-chip {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 10px;
+}
+
+@media (pointer: coarse) {
+  .footer-link-btn,
+  .about-chip {
+    min-height: 44px;
+  }
+}
+
+/* حركة التمرير على أزرار البطاقة: لون بس بلا تكبير (يتكرر مع كل مرور للماوس) */
+.like-btn:hover,
+.share-btn:hover,
+.fav-btn:hover {
+  transform: none;
+}
+
+/* زر «فتح القائمة» بالشريط السفلي ورث ارتفاع أزرار الهيدر (36) من .nav-toggle */
+.bottom-nav button.nav-toggle {
+  width: auto;
+  height: auto;
+  border: 0;
+}
+
+/* عنوان «كيف يشتغل؟» بصفحات التجارب: منطقة ضغط (كان ٢٩ بكسل) */
+.calc-intro > summary {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+@media (pointer: coarse) {
+  .calc-intro > summary {
+    min-height: 44px;
+  }
+}
+
+@media (pointer: coarse) {
+  .logo,
+  .calc-backspace,
+  .btn {
+    min-height: 44px;
+  }
+
+  .calc-backspace {
+    min-width: 44px;
+  }
+}
+
+/* أضيق من 375: الشعار وخمس أيقونات بـ44 ما يكفون بسطر (الهيدر يصير سطرين) — 40 يكفي */
+@media (max-width: 374px) {
+  :root {
+    --control-height: 40px;
   }
 }
