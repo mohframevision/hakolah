@@ -7012,11 +7012,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   display: inline;
 }
 
-/* البيانو هو أول شي بعد صف الأوكتاف (كان تحت ٥ صفوف أدوات ويحتاج تمرير، خاصة بالجوال)،
-   والدواسة والمترونوم والسرعة واللوحة والإعدادات تنزل تحته */
-.sounds-tool .beep-play > :is(.beep-help:not(.beep-settings), .beep-play-octave, .beep-keys-wrap) {
-  order: -1;
-}
 
 /* ===== «تدرّب»: مجموعات الأوكتاف بألوان للطالب (تحت أزرق، الوسط أخضر، فوق أصفر، والأبعد بنفسجي/وردي)
    على المفاتيح البيضاء ومربعات المعاينة، واسم المجموعة على Do أولها ===== */
@@ -7120,4 +7115,212 @@ html[lang="en"] .instrument-btn.is-new::after {
 
 .beep-experiment .st-note.on .st-name.hollow {
   fill: #6fc8a4;
+}
+
+/* ===== «اعزف» على طريقة BandLab: شريط أدوات فوق، الاستوديو بالنص، ولوحة البيانو تحت بعرض
+   الصفحة كلها؛ فوق المفاتيح سطر واحد: الآلة، الأسماء، اللوحة، الأوكتاف، الدواسة، MIDI ===== */
+main.container:has(.sounds-tool) {
+  max-width: none; /* الأداة تاخذ عرض الشاشة بدل ١٣٢٠px حتى على الشاشات الكبيرة */
+}
+
+.sounds-tool .beep-play {
+  max-width: none;
+}
+
+.play-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.play-toolbar .filter-chip {
+  white-space: nowrap;
+}
+
+.play-toolbar .filter-chip[aria-expanded="true"] {
+  background: rgba(63, 164, 128, 0.35);
+}
+
+/* في «اعزف» زر الشريط يفتحها، فعنوانها مكرر */
+#panePlay .beep-play > details > summary {
+  display: none;
+}
+
+#panePlay .beep-play > details:not([open]) {
+  display: none;
+}
+
+.piano-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.piano-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+}
+
+.piano-head .instrument-slot {
+  width: auto;
+  flex: 1 1 300px;
+  max-width: 420px;
+}
+
+.piano-head .beep-setting {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.piano-head .beep-setting .filter-chip {
+  padding: 5px 10px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.piano-oct {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+/* شاشة كمبيوتر: مفاتيح بارتفاع مريح (مثل BandLab ~ ثلث الشاشة) بدل نسبة ثابتة تطوّلها مع العرض */
+@media (min-width: 700px) and (min-height: 521px) {
+  .sounds-tool #panePlay .beep-play-keys {
+    aspect-ratio: auto;
+    max-height: none;
+    height: clamp(180px, 32vh, 340px);
+  }
+}
+
+/* جوال عمودي: البيانو مباشرة بعد الشريط (الاستوديو تحته)، وشريط الآلة أقرب شي للمفاتيح */
+@media (max-width: 600px) and (orientation: portrait) {
+  .sounds-tool #panePlay .beep-play > .play-toolbar {
+    order: -2;
+  }
+
+  .sounds-tool #panePlay .beep-play > .piano-panel {
+    order: -1;
+  }
+
+  .piano-head {
+    justify-content: center;
+  }
+
+  .piano-head .instrument-slot {
+    order: 9;
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .piano-head .beep-setting {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+.piano-more {
+  display: none;
+}
+
+/* عناوين الأسماء/اللوحة مخفية فوق البيانو (الأزرار واضحة بنفسها، ولها aria-label) عشان يكفي سطر واحد */
+.piano-head .beep-setting-label {
+  display: none;
+}
+
+@media (max-width: 1500px) {
+
+  .piano-head .instrument-slot {
+    flex-basis: 260px;
+  }
+}
+
+/* شاشة ضيقة (جوال/تابلت): سطر البيانو = الآلة + الأوكتاف + الدواسة + ⋯، والشريط أيقونات */
+@media (max-width: 900px), (orientation: landscape) and (max-height: 520px) {
+  .piano-more {
+    display: inline-flex;
+  }
+
+  .piano-head:not(.open) :is(.beep-labels-row, #beepMidi, #beepFullscreen) {
+    display: none;
+  }
+
+  .piano-head .qb-text,
+  .play-toolbar .qb-text {
+    display: none;
+  }
+
+  .sounds-tool #panePlay .beep-play > .play-toolbar {
+    order: -2;
+  }
+
+  .sounds-tool #panePlay .beep-play > .piano-panel {
+    order: -1;
+  }
+
+  .piano-head {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 1500px) {
+  .piano-head {
+    column-gap: 8px;
+  }
+
+  .piano-head .instrument-slot {
+    flex-basis: 240px;
+  }
+}
+
+/* جوال عمودي: الشريط وسطر البيانو كل واحد سطر واحد — أزرار أصغر، وبلا كلمة BPM */
+@media (max-width: 600px) and (orientation: portrait) {
+  .play-toolbar,
+  .piano-head {
+    gap: 4px;
+  }
+
+  .play-toolbar .filter-chip,
+  .piano-head .filter-chip {
+    padding: 6px 9px;
+  }
+
+  .play-toolbar .beep-tempo-value span {
+    display: none;
+  }
+
+  .play-toolbar .beep-tempo-value input {
+    width: 3.2em;
+  }
+}
+
+@media (max-width: 1800px) {
+  .piano-head .ib-label {
+    display: none;
+  }
+}
+
+/* جوال: المفاتيح تطلع من حواف البطاقات لحافة الشاشة (مثل «تدرّب»)؛ اللوحة الكاملة لا،
+   لأنها تتمرّر أفقياً والتوسيط يخفي بدايتها */
+@media (max-width: 700px), (orientation: landscape) and (max-height: 520px) {
+  #panePlay .beep-keys-wrap:not(.full) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #panePlay .beep-keys-wrap:not(.full) .beep-play-keys {
+    flex: none;
+    width: calc(100vw - 8px);
+  }
 }

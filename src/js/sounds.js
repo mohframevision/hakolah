@@ -2745,16 +2745,16 @@ function initBeepMelodyExperiment() {
       tab.setAttribute("aria-selected", String(on));
       document.getElementById(tab.dataset.pane).hidden = !on;
     });
-    // البيانو وإعداداته وشريط الآلة تنتقل (أدوات العزف الحر اللي ما تخدم التدريب يخفيها CSS)
-    // وتنتقل لتبويب "تدرّب" وترجع لمكانها في "اعزف"
-    const keysBox = document.getElementById("beepKeysWrap");
+    // لوحة البيانو (الآلة والأسماء والأوكتاف والدواسة وMIDI والمفاتيح) والإعدادات تنتقل لتبويب
+    // "تدرّب" وترجع لمكانها في "اعزف" (أدوات العزف الحر اللي ما تخدم التدريب يخفيها CSS هناك)
+    const pianoPanel = document.getElementById("pianoPanel");
+    const settingsBox = document.getElementById("beepSettings");
     const songSlot = document.getElementById("songKeysSlot");
-    if (keysBox && songSlot) {
-      if (id === "panePractice" && keysBox.parentElement !== songSlot) {
-        const kids = [...keysBox.parentElement.children];
-        songSlot.append(...kids.slice(0, kids.indexOf(keysBox) + 1));
-      } else if (id !== "panePractice" && keysBox.parentElement === songSlot) {
-        document.querySelector("#panePlay .beep-play").prepend(...songSlot.children);
+    if (pianoPanel && songSlot) {
+      if (id === "panePractice" && pianoPanel.parentElement !== songSlot) songSlot.append(settingsBox, pianoPanel);
+      else if (id !== "panePractice" && pianoPanel.parentElement === songSlot) {
+        document.getElementById("beepHelp").after(settingsBox);
+        document.querySelector("#panePlay .beep-credit").before(pianoPanel);
       }
     }
     const slot = document.getElementById(id === "panePlay" || id === "panePractice" ? "instrumentSlotPlay" : id === "paneCompose" ? "instrumentSlotCompose" : "");
@@ -6875,6 +6875,21 @@ function initBeepMelodyExperiment() {
     );
     // ملء الشاشة: يخفي شريط المتصفح بالجوال الأفقي. داخل التطبيق ما يشتغل (WebView
     // بلا onShowCustomView) والتطبيق يخفي أشرطته بنفسه عند الأفقي
+    // شريط الأدوات: ⚙️ و⌨️ يفتحان لوحتيهما تحته (عنوان اللوحة نفسه مخفي في "اعزف")
+    [["beepSettingsBtn", "beepSettings"], ["beepHelpBtn", "beepHelp"]].forEach(([b, d]) => {
+      const btn = document.getElementById(b);
+      const box = document.getElementById(d);
+      btn?.addEventListener("click", () => {
+        box.open = !box.open;
+        btn.setAttribute("aria-expanded", String(box.open)); // فوراً (حدث toggle يجي متأخر)
+      });
+      box?.addEventListener("toggle", () => btn?.setAttribute("aria-expanded", String(box.open)));
+    });
+    // الشاشات الضيقة: سطر البيانو يعرض الآلة والأوكتاف والدواسة، و⋯ يفتح الباقي
+    document.getElementById("pianoMore")?.addEventListener("click", (e) => {
+      const open = e.currentTarget.closest(".piano-head").classList.toggle("open");
+      e.currentTarget.setAttribute("aria-expanded", String(open));
+    });
     const fsBtn = document.getElementById("beepFullscreen");
     const tool = document.querySelector(".sounds-tool");
     if (fsBtn && tool.requestFullscreen && !document.documentElement.classList.contains("in-app")) {
