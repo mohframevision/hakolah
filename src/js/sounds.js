@@ -5938,6 +5938,174 @@ function initBeepMelodyExperiment() {
     return { tracks, on, hand: ["right", "left"].includes(m.hand) ? m.hand : "both", barQ: m.barQ > 0 && m.barQ <= 16 ? m.barQ : 4 };
   }
 
+  /* ===== صيغة ABC (للمحترف): الصيغة النصية المعيارية للنوتة — X: T: M: L: Q: K: ثم النغمات.
+     الحرف الكبير = الأوكتاف الوسطى (C = Do الوسطى)، الصغير أعلى بأوكتاف، ' أعلى و, أخفض،
+     ^ دييز _ بيمول = بيكار، الرقم/الكسر بعد النغمة = المدة بوحدة L، z سكتة، [CEG] كورد،
+     - ربط، > و< إيقاع منقوط، (3 ثلاثية، | فاصل مازورة (التحويلات تنتهي معه).
+     تُعرف من سطر K: (حرف ثم نقطتين بأول السطر)، فما تختلط بصيغة الحروف البسيطة. */
+  const isAbc = (text) => /^K:/m.test(text) && /^[XTMLQ]:/m.test(text);
+  // عدد الدييز (+) أو البيمول (−) لكل مفتاح، للكبير والصغير
+  const KEY_FIFTHS = { C: 0, G: 1, D: 2, A: 3, E: 4, B: 5, "F#": 6, "C#": 7, F: -1, Bb: -2, Eb: -3, Ab: -4, Db: -5, Gb: -6, Cb: -7 };
+  const MINOR_FIFTHS = { A: 0, E: 1, B: 2, "F#": 3, "C#": 4, "G#": 5, "D#": 6, "A#": 7, D: -1, G: -2, C: -3, F: -4, Bb: -5, Eb: -6, Ab: -7 };
+  function keyFifths(k) {
+    const m = /^\s*([A-G][#b]?)\s*(m(?:in(?:or)?)?\b|maj(?:or)?\b)?/i.exec(k || "C");
+    if (!m) return 0;
+    const tonic = m[1][0].toUpperCase() + m[1].slice(1);
+    const minor = m[2] && /^m(in)?/i.test(m[2]) && !/^maj/i.test(m[2]);
+    return (minor ? MINOR_FIFTHS : KEY_FIFTHS)[tonic] ?? 0; // ponytail: الأنماط (Dorian...) تُعامل كبير
+  }
+  // تحويلات علامة المفتاح لكل حرف (C=0 … B=6)
+  function keyAlters(fifths) {
+    const alt = [0, 0, 0, 0, 0, 0, 0];
+    [3, 0, 4, 1, 5, 2, 6].slice(0, Math.max(0, fifths)).forEach((l) => (alt[l] = 1)); // F C G D A E B
+    [6, 2, 5, 1, 4, 0, 3].slice(0, Math.max(0, -fifths)).forEach((l) => (alt[l] = -1)); // B E A D G C F
+    return alt;
+  }
+  const frac = (s) => {
+    const [a, b] = s.split("/").map(Number);
+    return b ? a / b : a;
+  };
+  function parseAbc(text) {
+    const head = {};
+    const body = [];
+    let inBody = false;
+    text.split(/\r?\n/).forEach((raw) => {
+      const line = raw.replace(/%.*$/, "");
+      const h = /^([A-Za-z]):\s*(.*)$/.exec(line);
+      if (h && (!inBody || "KMLQVPW".includes(h[1].toUpperCase()))) {
+        if (h[1] === "K") inBody = true;
+        if (!(h[1] in head) || "KML".includes(h[1])) head[h[1]] = h[2].trim();
+        return; // ponytail: تغيير المفتاح/الميزان وسط المقطوعة يأخذ آخر قيمة للكل
+      }
+      if (inBody) body.push(line);
+    });
+    const meter = head.M === "C" ? "4/4" : head.M === "C|" ? "2/2" : head.M || "4/4";
+    const barQ = meter.includes("/") ? frac(meter) * 4 : 4;
+    const unit = head.L ? frac(head.L) : frac(meter) < 0.75 ? 1 / 16 : 1 / 8; // بالمستديرة
+    const qm = /(?:(\d+\/\d+)\s*=\s*)?(\d+)\s*$/.exec(head.Q || "");
+    const qpm = qm ? Number(qm[2]) * (qm[1] ? frac(qm[1]) * 4 : 1) : 120; // سوداء بالدقيقة
+    const fifths = keyFifths(head.K);
+    const keyAlt = keyAlters(fifths);
+    const events = [];
+    const ties = new Map(); // نغمة مربوطة بالجاية: midi → [حدث, رقمها فيه]
+    let q = 0;
+    let barAlt = new Map(); // تحويلات هذه المازورة: "حرف+أوكتاف" → تحويل
+    let tuplet = 0;
+    let tupletLeft = 0;
+    let broken = 1; // مضاعف المدة الجاية بعد > أو <
+    const src = body.join("\n").replace(/![^!\n]*!|\+[^+\n]*\+|"[^"\n]*"|\{[^}]*\}/g, " "); // زخارف/كوردات نصية/زخارف سريعة
+    const NOTE = /(\^\^|\^|__|_|=)?([A-Ga-g])([',]*)(\d*\/*\d*)(-?)/y;
+    const pcOfLetter = [0, 2, 4, 5, 7, 9, 11];
+    const pitch = (acc, letter, marks) => {
+      const l = "CDEFGAB".indexOf(letter.toUpperCase());
+      let oct = letter === letter.toUpperCase() ? 4 : 5;
+      for (const c of marks) oct += c === "'" ? 1 : -1;
+      const id = l + ":" + oct;
+      let alter;
+      if (acc) {
+        alter = { "^^": 2, "^": 1, "=": 0, _: -1, __: -2 }[acc];
+        barAlt.set(id, alter);
+      } else alter = barAlt.has(id) ? barAlt.get(id) : keyAlt[l];
+      return clamp(12 * (oct + 1) + pcOfLetter[l] + alter, 21, 108);
+    };
+    const lenOf = (s) => {
+      if (!s) return 1;
+      const m = /^(\d*)(\/*)(\d*)$/.exec(s);
+      const num = m[1] ? Number(m[1]) : 1;
+      const den = m[3] ? Number(m[3]) : 2 ** m[2].length;
+      return m[2] ? num / den : num;
+    };
+    const take = () => {
+      let f = broken;
+      broken = 1;
+      if (tupletLeft > 0) {
+        f *= tuplet;
+        tupletLeft--;
+      }
+      return f;
+    };
+    const place = (notes, len) => {
+      // notes: [[midi, tie]] — مدة بالسوداء
+      const qd = unit * 4 * len;
+      const fresh = [];
+      notes.forEach(([m, tie]) => {
+        const held = ties.get(m);
+        ties.delete(m);
+        if (held) {
+          held[0].qd[held[1]] += qd; // امتداد للنغمة المربوطة بدل ضربة جديدة
+          if (tie) ties.set(m, held);
+        } else fresh.push([m, tie]);
+      });
+      if (fresh.length) {
+        const ev = { q, notes: [], qd: [] };
+        fresh.forEach(([m, tie]) => {
+          if (ev.notes.includes(m)) return;
+          ev.notes.push(m);
+          ev.qd.push(qd);
+          if (tie) ties.set(m, [ev, ev.notes.length - 1]);
+        });
+        events.push(ev);
+      }
+      q += qd;
+      return qd;
+    };
+    for (let i = 0; i < src.length; ) {
+      const c = src[i];
+      NOTE.lastIndex = i;
+      const n = NOTE.exec(src);
+      if (n) {
+        const f = take();
+        const len = lenOf(n[4]) * f;
+        i = NOTE.lastIndex;
+        const prev = place([[pitch(n[1], n[2], n[3]), n[5] === "-"]], len);
+        if (src[i] === ">" || src[i] === "<") {
+          // A>B: الأولى منقوطة والثانية نصف
+          const longer = src[i] === ">";
+          q -= prev;
+          const ev = events[events.length - 1];
+          const qd = prev * (longer ? 1.5 : 0.5);
+          if (ev && ev.q === q) ev.qd = ev.qd.map(() => qd);
+          q += qd;
+          broken = longer ? 0.5 : 1.5;
+          i++;
+        }
+      } else if (c === "[" && /^\[[\^_=A-Ga-g]/.test(src.slice(i, i + 3))) {
+        const end = src.indexOf("]", i);
+        if (end < 0) break;
+        const inner = src.slice(i + 1, end);
+        const notes = [];
+        let shortest = Infinity;
+        for (const m of inner.matchAll(/(\^\^|\^|__|_|=)?([A-Ga-g])([',]*)(\d*\/*\d*)(-?)/g)) {
+          notes.push([pitch(m[1], m[2], m[3]), m[5] === "-"]);
+          shortest = Math.min(shortest, lenOf(m[4]));
+        }
+        const after = /^(\d*\/*\d*)(-?)/.exec(src.slice(end + 1));
+        i = end + 1 + after[0].length;
+        if (after[2]) notes.forEach((x) => (x[1] = true));
+        if (notes.length) place(notes, (shortest === Infinity ? 1 : shortest) * lenOf(after[1]) * take());
+      } else if (c === "z" || c === "x" || c === "Z") {
+        const m = /^[zxZ](\d*\/*\d*)/.exec(src.slice(i));
+        i += m[0].length;
+        q += c === "Z" ? barQ * (Number(m[1]) || 1) : unit * 4 * lenOf(m[1]) * take();
+      } else if (c === "(" && /\d/.test(src[i + 1])) {
+        const p = Number(src[i + 1]);
+        tuplet = p === 3 ? 2 / 3 : p === 2 ? 3 / 2 : p === 4 ? 3 / 4 : 2 / p;
+        tupletLeft = p;
+        i += 2;
+      } else {
+        if (c === "|" || c === ":" || c === "]") barAlt = new Map();
+        i++;
+      }
+    }
+    // للعزف: نبضات على ٩٠ (مثل MIDI) من سرعة المقطوعة
+    events.forEach((ev) => {
+      ev.t = (ev.q * 90) / qpm;
+      ev.durs = ev.qd.map((d) => (d * 90) / qpm);
+      ev.d = Math.max(...ev.durs);
+    });
+    return { events, lyrics: [], barQ, key: fifths, title: head.T || "" };
+  }
+
   const songBox = document.getElementById("songPractice");
   let songRange = null; // { lo, hi } لما تبويب التدريب مفتوح وفيه أغنية
   let songHit = () => {};
@@ -6075,7 +6243,7 @@ function initBeepMelodyExperiment() {
           ev.d = Math.max(ev.d, d);
         } else events.push({ t, d, notes: [m], durs: [d], q, qd: [qd] });
       });
-      return { events, lyrics: [] };
+      return { events, lyrics: [], barQ: midiSong.barQ, key: midiSong.key || 0 };
     }
     const tracksBox = $("songTracks");
     function renderTracks() {
@@ -6178,7 +6346,7 @@ function initBeepMelodyExperiment() {
       const musical = parsed.events[0].q != null;
       const tOf = (ev) => (musical ? ev.q : ev.t);
       const dOf = (ev, j) => (musical ? ev.qd[j] : (ev.durs?.[j] ?? ev.d));
-      const barLen = musical ? midiSong.barQ : 4;
+      const barLen = parsed.barQ || 4;
       const posOf = (m) => octaveOf(m) * 7 + LETTER_OF[pcOf(m)];
       const solfa = labelMode === "solfege";
       const notes = parsed.events.flatMap((e) => e.notes);
@@ -6231,7 +6399,7 @@ function initBeepMelodyExperiment() {
     }
     function loadText(keep = false) {
       const was = play.pos;
-      parsed = compressGaps(midiSong ? midiEvents() : parseSong(textEl.value));
+      parsed = compressGaps(midiSong ? midiEvents() : isAbc(textEl.value) ? parseAbc(textEl.value) : parseSong(textEl.value));
       if (simple) foldEvents(parsed);
       setStatus(parsed.events.length ? parsed.events.length + songBox.dataset.notes : "");
       if (keep) {
@@ -6402,6 +6570,17 @@ function initBeepMelodyExperiment() {
     let writeLen = 1;
     let chord = []; // نغمات الكورد المفتوح (تنكتب كلمة وحدة C+E+G)
     const tokenOf = (notes) => {
+      if (isAbc(textEl.value)) {
+        // النص بصيغة ABC: نكتب بها (كبير = الوسط، صغير وفوق بـ'، تحت بـ, ؛ ^ دييز؛ المدة بوحدة L)
+        const one = (m) => {
+          const o = octaveOf(m);
+          const n = NAMES[pcOf(m)];
+          const l = o >= 5 ? n[0].toLowerCase() + "'".repeat(o - 5) : n[0] + ",".repeat(4 - o);
+          return (n[1] ? "^" : "") + l;
+        };
+        const len = writeLen === 1 ? "" : writeLen === 0.5 ? "/2" : String(writeLen);
+        return (notes.length > 1 ? "[" + notes.map(one).join("") + "]" : one(notes[0])) + len;
+      }
       const one = (m) => (octaveOf(m) > 4 ? "^".repeat(octaveOf(m) - 4) : ".".repeat(4 - octaveOf(m))) + NAMES[pcOf(m)];
       return notes.map(one).join("+") + (writeLen === 1 ? "" : ":" + writeLen);
     };
@@ -6440,7 +6619,7 @@ function initBeepMelodyExperiment() {
       chord = []; // بداية كورد جديد أو قفله
     });
     chipGroup("songWriteLen", "len", "1", (v) => (writeLen = Number(v)));
-    $("songWriteRest").addEventListener("click", () => writeText(textEl.value + sep() + "_"));
+    $("songWriteRest").addEventListener("click", () => writeText(textEl.value + sep() + (isAbc(textEl.value) ? "z" : "_")));
     $("songWriteLine").addEventListener("click", () => writeText(textEl.value.trimEnd() + "\n"));
     $("songWriteBack").addEventListener("click", () => {
       chord = [];
