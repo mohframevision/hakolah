@@ -628,6 +628,7 @@ C C D E E-D D
       <div class="song-controls">
         <button type="button" class="btn" id="songListen" data-stop="⏸ إيقاف مؤقت">▶️ استمع</button>
         <button type="button" class="btn secondary" id="songTrain" data-stop="⏸ إيقاف مؤقت">🎯 تدرّب</button>
+        <button type="button" class="filter-chip" id="songStaffToggle" aria-pressed="false" title="اعرض المقطوعة على المدرج الموسيقي (مفتاحا صول وفا)، والنغمة الجاية تضيء">🎼 النوتة</button>
         <button type="button" class="filter-chip" id="songSimple" aria-pressed="false" title="يجمع كل نغمات الأغنية في أوكتافين فقط: مفاتيح أكبر وأسهل، واللحن نفسه بأوكتاف أقرب">🎹 بسّط اللوحة</button>
         <div class="instrument-picker" id="songSpeed" role="group" aria-label="السرعة">
           <button type="button" class="filter-chip" data-speed="0.5">🐢 50%</button>
@@ -638,6 +639,7 @@ C C D E E-D D
       </div>
       <p class="song-status" id="songStatus" aria-live="polite"></p>
       <p class="song-lyric" id="songLyric" dir="auto"></p>
+      <div class="beep-staff-scroll song-staff" id="songStaff" hidden></div>
       <div class="song-timeline" id="songTimeline" dir="ltr" hidden>
         <button type="button" class="filter-chip" id="songRestart" aria-label="من البداية" title="من البداية (Home)">⏮</button>
         <span id="songTimeNow">0:00</span>

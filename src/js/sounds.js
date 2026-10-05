@@ -5835,6 +5835,7 @@ function initBeepMelodyExperiment() {
     const div = v.getUint16(12);
     if (div & 0x8000) throw new Error("smpte"); // ponytail: توقيت SMPTE نادر جداً بملفات الأغاني
     const tempos = [[0, 500000]];
+    let barQ = 0;
     const groups = new Map(); // "مسار:قناة" → { name, notes: [[بدايةtick, نهايةtick, midi]] }
     let p = 8 + v.getUint32(4);
     for (let k = 0; k < ntrks && p + 8 <= buf.byteLength; k++) {
@@ -5868,6 +5869,7 @@ function initBeepMelodyExperiment() {
           const len = vlq();
           if (type === 0x51 && len === 3) tempos.push([tick, v.getUint8(p) * 65536 + v.getUint16(p + 1)]);
           if (type === 0x03 && !name) name = text(p, len).trim();
+          if (type === 0x58 && !barQ) barQ = (v.getUint8(p) * 4) / 2 ** v.getUint8(p + 1); // الميزان: طول المازورة بالسوداء
           p += len;
         } else if (status === 0xf0 || status === 0xf7) p += vlq();
         else if (status >= 0x80 && status < 0xf0) {
@@ -5905,11 +5907,14 @@ function initBeepMelodyExperiment() {
       return Math.round((sg.sec + ((tick - sg.tick) * sg.us) / 1e6 / div) * 1.5 * 1000) / 1000;
     };
     const sameName = (name) => [...groups.values()].filter((g) => g.name === name).length > 1;
-    return [...groups.values()].map((g) => ({
+    const q = (tick) => Math.round((tick / div) * 1000) / 1000; // بالسوداء (للنوتة الموسيقية)
+    // نغمة = [بداية, مدة] بالنبضات على ٩٠ للعزف + midi + [بداية, مدة] بالسوداء للمدرج
+    const tracks = [...groups.values()].map((g) => ({
       name: g.name + (g.name && sameName(g.name) ? " " + (g.ch + 1) : ""),
       prog: g.prog,
-      notes: g.notes.map(([a, b, note]) => [beat(a), Math.max(0.05, beat(b) - beat(a)), note]).sort((x, y) => x[0] - y[0]),
+      notes: g.notes.map(([a, b, note]) => [beat(a), Math.max(0.05, beat(b) - beat(a)), note, q(a), q(b - a)]).sort((x, y) => x[0] - y[0]),
     }));
+    return { tracks, barQ: barQ || 4 };
   }
   // المسارات اللي تشتغل أول ما يفتح الملف: البيانو/اللحن لو مسمّاة، وإلا الأكثر نغمات
   function defaultTracks(tracks) {
@@ -5926,16 +5931,17 @@ function initBeepMelodyExperiment() {
       prog: Number.isInteger(t?.prog) ? clamp(t.prog, 0, 127) : null,
       notes: (Array.isArray(t?.notes) ? t.notes : [])
         .slice(0, 50000)
-        .filter((n) => Array.isArray(n) && n.length === 3 && n.every(Number.isFinite) && n[0] >= 0 && n[1] > 0)
-        .map(([t0, d, m2]) => [t0, d, clamp(Math.round(m2), 0, 127)]),
+        .filter((n) => Array.isArray(n) && (n.length === 3 || n.length === 5) && n.every(Number.isFinite) && n[0] >= 0 && n[1] > 0)
+        .map(([t0, d, m2, ...qs]) => [t0, d, clamp(Math.round(m2), 0, 127), ...qs]),
     }));
     const on = Array.isArray(m.on) && m.on.length === tracks.length ? m.on.map(Boolean) : defaultTracks(tracks);
-    return { tracks, on, hand: ["right", "left"].includes(m.hand) ? m.hand : "both" };
+    return { tracks, on, hand: ["right", "left"].includes(m.hand) ? m.hand : "both", barQ: m.barQ > 0 && m.barQ <= 16 ? m.barQ : 4 };
   }
 
   const songBox = document.getElementById("songPractice");
   let songRange = null; // { lo, hi } لما تبويب التدريب مفتوح وفيه أغنية
   let songHit = () => {};
+  let songRelabel = () => {}; // أسماء المفاتيح تغيّرت: أسماء الأعمدة والنوتة تتبعها
   if (songBox && playBox) {
     const $ = (id) => document.getElementById(id);
     const lane = document.createElement("div");
@@ -5943,7 +5949,7 @@ function initBeepMelodyExperiment() {
     lane.hidden = true;
     lane.innerHTML = '<div class="song-track"></div><div class="song-hitline"></div>';
     playBox.before(lane);
-    lane.before(document.getElementById("songLyric"), document.getElementById("songTimeline")); // الكلمات والشريط الزمني فوق الأعمدة مباشرة
+    lane.before(document.getElementById("songLyric"), document.getElementById("songStaff"), document.getElementById("songTimeline")); // الكلمات والشريط الزمني فوق الأعمدة مباشرة
     document.getElementById("songLyric").hidden = true;
     const track = lane.firstChild;
     const textEl = $("songText");
@@ -6024,14 +6030,21 @@ function initBeepMelodyExperiment() {
     }
     const moveTrack = () => (track.style.transform = `translateY(${play.pos * unit}px)`);
     let markedNext = -1;
+    let staffOf = []; // عنصر كل نغمة/كورد على المدرج (لما يكون ظاهر)
+    const mark = (i, c, on) => {
+      barsOf[i]?.forEach((x) => x.classList.toggle(c, on));
+      staffOf[i]?.classList.toggle(c === "now" ? "on" : c, on);
+    };
     function markBars() {
       const next = play.next;
       if (next === markedNext) return;
-      if (markedNext < 0 || next < markedNext) barsOf.forEach((bars, i) => bars.forEach((x) => x.classList.toggle("done", i < next))); // بناء جديد أو رجوع للخلف
-      else for (let i = markedNext; i < next; i++) barsOf[i].forEach((x) => x.classList.add("done"));
-      barsOf[markedNext]?.forEach((x) => x.classList.remove("now"));
-      barsOf[next]?.forEach((x) => x.classList.add("now"));
+      if (markedNext < 0 || next < markedNext) barsOf.forEach((_, i) => mark(i, "done", i < next)); // بناء جديد أو رجوع للخلف
+      else for (let i = markedNext; i < next; i++) mark(i, "done", true);
+      mark(markedNext, "now", false);
+      mark(next, "now", true);
       markedNext = next;
+      const g = staffOf[next];
+      if (g) staffEl.scrollLeft = Number(g.dataset.x) - staffEl.clientWidth / 3; // المدرج يمشي مع النغمة الجاية
     }
     function markWanted(ev) {
       playBox.querySelectorAll(".want").forEach((k) => k.classList.remove("want"));
@@ -6052,14 +6065,15 @@ function initBeepMelodyExperiment() {
         .filter((n) => inHand(n[2]))
         .sort((a, b) => a[0] - b[0]);
       const events = [];
-      notes.forEach(([t, d, m]) => {
+      notes.forEach(([t, d, m, q, qd]) => {
         const ev = events[events.length - 1];
         if (ev && t - ev.t < 0.06) {
           if (ev.notes.includes(m)) return;
           ev.notes.push(m);
           ev.durs.push(d);
+          ev.qd.push(qd);
           ev.d = Math.max(ev.d, d);
-        } else events.push({ t, d, notes: [m], durs: [d] });
+        } else events.push({ t, d, notes: [m], durs: [d], q, qd: [qd] });
       });
       return { events, lyrics: [] };
     }
@@ -6133,16 +6147,87 @@ function initBeepMelodyExperiment() {
       p.events.forEach((e) => {
         const notes = [];
         const durs = [];
+        const qd = [];
         e.notes.forEach((m, j) => {
           const f = fold(m);
           if (notes.includes(f)) return;
           notes.push(f);
           durs.push(e.durs?.[j] ?? e.d);
+          qd.push(e.qd?.[j]);
         });
         e.notes = notes;
         e.durs = durs;
+        if (e.qd) e.qd = qd;
       });
       return p;
+    }
+    /* ===== النوتة الموسيقية للي يقرأ النوتة: مدرج صول + فا (من Do الوسطى وفوق على صول)، نفس
+       نغمات الأعمدة، والجاية تضيء. الموضع = درجة بالسلّم (Do4 = 28، الخط الأسفل بصول Mi4 = 30) */
+    const staffEl = $("songStaff");
+    let showStaff = store.get("songStaff") === "1";
+    const LETTER_OF = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
+    const SHARP = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+    const HEAD_NAMES = ["CDEFGAB".split(""), ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"]];
+    const W = 56; // بكسل لكل سوداء
+    const GAP = 34; // مسافة بين مدرج صول ومدرج فا
+    function renderSongStaff() {
+      staffOf = [];
+      staffEl.hidden = !showStaff || !active() || !parsed.events.length;
+      if (staffEl.hidden) return;
+      // ملف MIDI: المدد الموسيقية الحقيقية (بالسوداء) والميزان من الملف؛ المكتوب بالحروف: نبضاته نفسها
+      const musical = parsed.events[0].q != null;
+      const tOf = (ev) => (musical ? ev.q : ev.t);
+      const dOf = (ev, j) => (musical ? ev.qd[j] : (ev.durs?.[j] ?? ev.d));
+      const barLen = musical ? midiSong.barQ : 4;
+      const posOf = (m) => octaveOf(m) * 7 + LETTER_OF[pcOf(m)];
+      const solfa = labelMode === "solfege";
+      const notes = parsed.events.flatMap((e) => e.notes);
+      const top = Math.max(42, ...notes.filter((m) => m >= 60).map(posOf)) + 2;
+      const low = Math.min(14, ...notes.filter((m) => m < 60).map(posOf)) - 2;
+      const y = (p, treble) => 10 + (top - p) * STEP + (treble ? 0 : GAP);
+      const t0 = Math.min(...parsed.events.map(tOf));
+      const tEnd = Math.max(...parsed.events.flatMap((e) => e.notes.map((_, j) => tOf(e) + dOf(e, j))));
+      const startX = 48;
+      const xOf = (t) => startX + (t - t0) * W;
+      const width = xOf(tEnd) + 30;
+      let out = "";
+      [30, 32, 34, 36, 38].forEach((p) => (out += `<line class="st-line" x1="0" x2="${width}" y1="${y(p, true)}" y2="${y(p, true)}"/>`));
+      [18, 20, 22, 24, 26].forEach((p) => (out += `<line class="st-line" x1="0" x2="${width}" y1="${y(p)}" y2="${y(p)}"/>`));
+      out += `<text class="st-clef" x="4" y="${y(30, true) + 10}">𝄞</text><text class="st-clef st-bass" x="6" y="${y(22) + 9}">𝄢</text>`;
+      for (let bar = Math.ceil((t0 + 0.001) / barLen) * barLen; bar < tEnd; bar += barLen) out += `<line class="st-bar" x1="${xOf(bar) - 8}" x2="${xOf(bar) - 8}" y1="${y(38, true)}" y2="${y(18)}"/>`;
+      parsed.events.forEach((ev, i) => {
+        const x = xOf(tOf(ev));
+        let g = "";
+        ev.notes.forEach((m, j) => {
+          const p = posOf(m);
+          const d = dOf(ev, j);
+          const tr = m >= 60;
+          const ledger = (q) => (g += `<line class="st-line" x1="${x - 9}" x2="${x + 9}" y1="${y(q, tr)}" y2="${y(q, tr)}"/>`);
+          if (tr) {
+            for (let q = 28; q >= p; q -= 2) ledger(q);
+            for (let q = 40; q <= p; q += 2) ledger(q);
+          } else {
+            for (let q = 28; q <= p; q += 2) ledger(q);
+            for (let q = 16; q >= p; q -= 2) ledger(q);
+          }
+          if (SHARP[pcOf(m)]) g += `<text class="st-acc" x="${x - 19}" y="${y(p, tr) + 5}">♯</text>`;
+          // اسم النغمة داخل رأسها (مثل ورقة دكتور المقرر): الطالب يقرأ النوتة وهو يتعلمها
+          const hollow = d >= 2;
+          g += `<ellipse class="st-head${hollow ? " hollow" : ""}" cx="${x}" cy="${y(p, tr)}" rx="7.5" ry="5.8"/>`;
+          g += `<text class="st-name${hollow ? " hollow" : ""}${solfa ? " solfa" : ""}" x="${x}" y="${y(p, tr)}">${HEAD_NAMES[solfa ? 1 : 0][LETTER_OF[pcOf(m)]]}</text>`;
+          if (d < 4) {
+            const up = p < (tr ? 34 : 22);
+            const sx = up ? x + 7.3 : x - 7.3;
+            g += `<line class="st-stem" x1="${sx}" x2="${sx}" y1="${y(p, tr)}" y2="${y(p, tr) + (up ? -30 : 30)}"/>`;
+          }
+        });
+        out += `<g class="st-note" data-i="${i}" data-x="${x}">${g}</g>`;
+      });
+      // ponytail: بلا أعلام/أعمدة ربط للثُّمن ولا نقاط ولا علامة مفتاح، والبيمول يُكتب دييز — يكفي للقراءة والتدريب؛ مرحلة MusicXML تضيفها
+      staffEl.innerHTML = `<svg width="${width}" height="${y(low) + 14}" aria-hidden="true">${out}</svg>`;
+      staffEl.querySelectorAll(".st-note").forEach((g) => (staffOf[g.dataset.i] = g));
+      markedNext = -1;
+      markBars();
     }
     function loadText(keep = false) {
       const was = play.pos;
@@ -6156,6 +6241,7 @@ function initBeepMelodyExperiment() {
       fitKeys();
       render();
       renderChips();
+      renderSongStaff();
     }
 
     /* ===== التشغيل: موضع واحد (play.pos بالنبضات) يبقى لين تغيّر الأغنية =====
@@ -6382,6 +6468,12 @@ function initBeepMelodyExperiment() {
         })
       );
     }
+    songRelabel = () => {
+      if (!active()) return;
+      buildBars();
+      renderChips();
+      renderSongStaff();
+    };
     // كل ضغطة من المستخدم (لمس، كيبورد، MIDI) توصل هنا من noteOn
     songHit = (midi) => {
       if (writing && !midiSong && active()) return writeNote(midi);
@@ -6480,9 +6572,10 @@ function initBeepMelodyExperiment() {
         let song;
         try {
           if (raw.startsWith("MThd")) {
-            const tracks = parseMidi(buf).filter((t) => t.notes.length);
+            const { tracks: found, barQ } = parseMidi(buf);
+            const tracks = found.filter((t) => t.notes.length);
             if (!tracks.length) throw new Error("no notes");
-            song = { title, text: "", midi: { tracks, on: defaultTracks(tracks) } };
+            song = { title, text: "", midi: { tracks, on: defaultTracks(tracks), barQ } };
           } else {
             const j = JSON.parse(raw);
             if (j?.type !== "hakolah-song" || (typeof j.text !== "string" && !cleanMidiSong(j.midi))) throw new Error("not a song");
@@ -6510,6 +6603,19 @@ function initBeepMelodyExperiment() {
       openSong({ title: "", text: "" });
       $("songEditor").open = true;
       textEl.focus();
+    });
+    const staffBtn = $("songStaffToggle");
+    const paintStaffBtn = () => {
+      staffBtn.classList.toggle("active", showStaff);
+      staffBtn.setAttribute("aria-pressed", String(showStaff));
+    };
+    paintStaffBtn();
+    staffBtn.addEventListener("click", () => {
+      showStaff = !showStaff;
+      store.set("songStaff", showStaff ? "1" : "0");
+      paintStaffBtn();
+      renderSongStaff();
+      playClickSound();
     });
     const simpleBtn = $("songSimple");
     const paintSimple = () => {
@@ -6552,6 +6658,7 @@ function initBeepMelodyExperiment() {
       lyricEl.hidden = !on;
       $("songTimeline").hidden = !on;
       if (on) return loadText(true);
+      staffEl.hidden = true;
       pauseSong();
       if (songRange) {
         songRange = null;
@@ -6583,6 +6690,7 @@ function initBeepMelodyExperiment() {
         store.set("beepLabels", labelMode);
         markLabels();
         renderPlayKeys();
+        songRelabel();
         playClickSound();
       })
     );

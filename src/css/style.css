@@ -7087,3 +7087,37 @@ html[lang="en"] .instrument-btn.is-new::after {
 .song-chip[data-oct="5"] { --oct: #faefd4; }
 .song-chip:is([data-oct="2"], [data-oct="7"]) { --oct: #ece2fa; }
 .song-chip:is([data-oct="1"], [data-oct="6"]) { --oct: #f7dfea; }
+
+/* «تدرّب»: النوتة الموسيقية فوق الأعمدة — اللي انعزف يبهت، والجاية تضيء (.on من المدرج الأصلي) */
+.song-staff {
+  margin-top: 6px;
+}
+
+.st-bass {
+  font-size: 32px;
+}
+
+.st-note.done {
+  opacity: 0.35;
+}
+
+/* اسم النغمة داخل رأسها (طريقة دكتور المقرر لتسهيل القراءة) */
+.st-name {
+  font: 800 8px/1 system-ui, sans-serif;
+  fill: #0e2a22;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.st-name.solfa {
+  font-size: 5.5px;
+}
+
+.st-name.hollow {
+  fill: var(--color-text);
+}
+
+.beep-experiment .st-note.on .st-name.hollow {
+  fill: #6fc8a4;
+}

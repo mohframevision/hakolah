@@ -629,6 +629,7 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
       <div class="song-controls">
         <button type="button" class="btn" id="songListen" data-stop="⏸ Pause">▶️ Listen</button>
         <button type="button" class="btn secondary" id="songTrain" data-stop="⏸ Pause">🎯 Practice</button>
+        <button type="button" class="filter-chip" id="songStaffToggle" aria-pressed="false" title="Show the piece on the staff (treble and bass clef); the next note lights up">🎼 Sheet music</button>
         <button type="button" class="filter-chip" id="songSimple" aria-pressed="false" title="Folds every note of the song into two octaves: bigger, easier keys, same melody in a closer octave">🎹 Simplify keyboard</button>
         <div class="instrument-picker" id="songSpeed" role="group" aria-label="Speed">
           <button type="button" class="filter-chip" data-speed="0.5">🐢 50%</button>
@@ -639,6 +640,7 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
       </div>
       <p class="song-status" id="songStatus" aria-live="polite"></p>
       <p class="song-lyric" id="songLyric" dir="auto"></p>
+      <div class="beep-staff-scroll song-staff" id="songStaff" hidden></div>
       <div class="song-timeline" id="songTimeline" dir="ltr" hidden>
         <button type="button" class="filter-chip" id="songRestart" aria-label="From the start" title="From the start (Home)">⏮</button>
         <span id="songTimeNow">0:00</span>
