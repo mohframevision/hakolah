@@ -35,14 +35,8 @@ Have a restaurant, store, or tool you'd like added to the site? Or have a questi
 
   <div class="form-group">
     <label for="request_type">Request type</label>
-    <select id="request_type" name="request_type">
-<option value="Add to Links & Tools">Add to Links & Tools</option>
-<option value="Add to Guides">Add to Guides</option>
-<option value="Add to Restaurants">Add to Restaurants</option>
-<option value="Add to Stores">Add to Stores</option>
-<option value="Add to Cafes">Add to Cafes</option>
-<option value="Add to Places">Add to Places</option>
-<option value="Add to Bakeries">Add to Bakeries</option>
+    <select id="request_type" name="request_type">{%- for entry in sections %}
+<option value="Add to {{ entry.title_en }}">Add to {{ entry.title_en }}</option>{%- endfor %}
 <option value="Report incorrect info">🚩 Report incorrect info</option>
 <option value="General inquiry">General inquiry</option></select>
   </div>
