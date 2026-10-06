@@ -6266,27 +6266,49 @@ function initBeepMelodyExperiment() {
         const black = k.classList.contains("pk-black");
         at[k.dataset.midi] = { left: ((k.offsetLeft - (black ? k.offsetWidth / 2 : 0)) / w) * 100, width: (k.offsetWidth / w) * 100, black };
       });
-      const frag = document.createDocumentFragment();
-      barsOf = parsed.events.map((ev, i) =>
+      // نحفظ وصف كل عمود، ونصنع بس اللي حول الموضع الحالي (drawBarsWindow)
+      barSpecs = parsed.events.map((ev, i) =>
         ev.notes.flatMap((m, j) => {
           const k = at[m];
           if (!k) return [];
-          const bar = document.createElement("div");
-          bar.className = "song-bar" + (k.black ? " black" : "");
-          bar.dataset.i = i;
           // MIDI: كل نغمة بطولها
-          bar.style.cssText = `left:${k.left}%;width:${k.width}%;bottom:calc(var(--ppb) * ${ev.t});height:max(8px, calc(var(--ppb) * ${ev.durs?.[j] ?? ev.d} - 3px))`;
-          bar.textContent = noteName(m, names);
-          frag.append(bar);
-          return [bar];
+          return [{ i, cls: "song-bar" + (k.black ? " black" : ""), css: `left:${k.left}%;width:${k.width}%;bottom:calc(var(--ppb) * ${ev.t});height:max(8px, calc(var(--ppb) * ${ev.durs?.[j] ?? ev.d} - 3px))`, text: noteName(m, names) }];
         })
       );
-      track.replaceChildren(frag);
+      barWin = null;
+      drawBarsWindow();
       markedNext = -1;
       markBars();
       setUnit();
     }
-    const moveTrack = () => (track.style.transform = `translateY(${play.pos * unit}px)`);
+    /* الأعمدة: الممر يعرض ٤ نبضات، فنصنع بس أعمدة النغمات من نبضة قبل الموضع لعشر بعده (كانت
+       آلاف الأعمدة كلها بالصفحة لملف MIDI طويل، والمتصفح يعيد رسم طبقتها الضخمة مع كل نغمة) */
+    let barSpecs = [];
+    let barWin = null;
+    function drawBarsWindow() {
+      const pos = play.pos;
+      if (barWin && pos >= barWin.a + 0.5 && pos + 5 <= barWin.b) return;
+      barWin = { a: pos - 1, b: pos + 10 };
+      const frag = document.createDocumentFragment();
+      barsOf = [];
+      parsed.events.forEach((ev, i) => {
+        if (ev.t > barWin.b || ev.t + ev.d < barWin.a) return;
+        barsOf[i] = (barSpecs[i] || []).map((sp) => {
+          const bar = document.createElement("div");
+          bar.className = sp.cls + (i < play.next ? " done" : "") + (i === play.next ? " now" : "");
+          bar.dataset.i = i;
+          bar.style.cssText = sp.css;
+          bar.textContent = sp.text;
+          frag.append(bar);
+          return bar;
+        });
+      });
+      track.replaceChildren(frag);
+    }
+    const moveTrack = () => {
+      track.style.transform = `translateY(${play.pos * unit}px)`;
+      if (barSpecs.length) drawBarsWindow();
+    };
     let markedNext = -1;
     let staffOf = []; // عنصر كل نغمة/كورد على المدرج (لما يكون ظاهر)
     const mark = (i, c, on) => {
@@ -6301,8 +6323,11 @@ function initBeepMelodyExperiment() {
       mark(markedNext, "now", false);
       mark(next, "now", true);
       markedNext = next;
-      const g = staffOf[next];
-      if (g) staffEl.scrollLeft = Number(g.dataset.x) - staffEl.clientWidth / 3; // المدرج يمشي مع النغمة الجاية
+      const n = !staffEl.hidden && staffNotes[next];
+      if (n) {
+        staffEl.scrollLeft = n.x - staffEl.clientWidth / 3; // المدرج يمشي مع النغمة الجاية
+        drawStaffWindow();
+      }
     }
     function markWanted(ev) {
       playBox.querySelectorAll(".want").forEach((k) => k.classList.remove("want"));
@@ -6436,6 +6461,7 @@ function initBeepMelodyExperiment() {
     const GAP = 34; // مسافة بين مدرج صول ومدرج فا
     function renderSongStaff() {
       staffOf = [];
+      staffNotes = [];
       staffEl.hidden = !showStaff || !active() || !parsed.events.length;
       if (staffEl.hidden) return;
       // ملف MIDI/MusicXML/ABC: المدد الموسيقية الحقيقية (بالسوداء) والميزان؛ المكتوب بالحروف: نبضاته نفسها
@@ -6525,14 +6551,40 @@ function initBeepMelodyExperiment() {
             }
           }
         });
-        out += `<g class="st-note" data-i="${i}" data-x="${x}">${g}</g>`;
+        staffNotes[i] = { x, html: `<g class="st-note" data-i="${i}">${g}</g>` };
       });
       // ponytail: الثُّمن بأعلام منفصلة لا بأعمدة ربط، وبلا رسم للسكتات — يكفي للقراءة والتدريب
-      staffEl.innerHTML = `<svg width="${width}" height="${y(low) + 14}" aria-hidden="true">${out}</svg>`;
-      staffEl.querySelectorAll(".st-note").forEach((g) => (staffOf[g.dataset.i] = g));
+      staffSvg = { open: `<svg width="${width}" height="${y(low) + 14}" aria-hidden="true">${out}`, width };
+      staffWin = null;
+      drawStaffWindow();
       markedNext = -1;
       markBars();
     }
+    /* المدرج يُرسم كله مرة (الخطوط والمازورات)، لكن النوتات بس اللي حول الشاشة (شاشة قبل وشاشتين
+       بعد): مقطوعة طويلة كانت رسمة بعرض ~١٧٠٠٠px وآلاف النوتات يعيد المتصفح رسمها كلها مع كل
+       نغمة — ١٧ إطاراً بالثانية على جهاز بطيء. نعيد رسم النافذة لما تقترب الشاشة من حافتها */
+    let staffNotes = [];
+    let staffSvg = null;
+    let staffWin = null;
+    function drawStaffWindow() {
+      if (!staffSvg || staffEl.hidden) return;
+      const left = staffEl.scrollLeft;
+      const vw = staffEl.clientWidth || 1000;
+      if (staffWin && left >= staffWin.a + vw / 2 && left + vw <= staffWin.b - vw / 2) return;
+      staffWin = { a: left - vw, b: left + 2 * vw };
+      const html = staffNotes.filter((n) => n && n.x >= staffWin.a && n.x <= staffWin.b).map((n) => n.html);
+      staffEl.innerHTML = staffSvg.open + html.join("") + "</svg>";
+      if (Math.abs(staffEl.scrollLeft - left) > 1) staffEl.scrollTo({ left, behavior: "instant" }); // لا نقاطع التمرير الناعم
+      staffOf = [];
+      staffEl.querySelectorAll(".st-note").forEach((g) => {
+        const i = Number(g.dataset.i);
+        staffOf[i] = g;
+        g.classList.toggle("done", i < play.next);
+        g.classList.toggle("on", i === play.next);
+      });
+    }
+    let staffRaf = 0;
+    staffEl.addEventListener("scroll", () => staffRaf || (staffRaf = requestAnimationFrame(() => ((staffRaf = 0), drawStaffWindow()))), { passive: true });
     function loadText(keep = false) {
       const was = play.pos;
       parsed = compressGaps(midiSong ? midiEvents() : isAbc(textEl.value) ? parseAbc(textEl.value) : parseSong(textEl.value));
