@@ -3664,14 +3664,20 @@ function initBeepMelodyExperiment() {
     if (!from.length) return;
     to.push(snapshot());
     const s = from.pop();
+    const edAt = edLayer ? layers.indexOf(edLayer) : -1; // المحرّر يبقى مفتوحاً على نفس المقطع بعد التراجع
     layers = s.layers;
     tracks = s.tracks;
     bpm = s.bpm;
     meter = s.meter;
     markers = s.markers;
     paintProject();
-    selected = null;
-    closeEditor();
+    const back = edAt >= 0 && layers[edAt]?.kind === edLayer.kind ? layers[edAt] : null;
+    selected = back;
+    if (back) {
+      edLayer = back;
+      edNote = null;
+      edSel = new Set();
+    } else closeEditor();
     renderLayers();
   }
   const undo = () => restoreFrom(history, future);
@@ -4834,7 +4840,11 @@ function initBeepMelodyExperiment() {
   const edVel = document.getElementById("beepEdVel");
   const ED_KEYS_W = 46;
   let edLayer = null;
-  let edNote = null; // النغمة المحددة داخل المحرّر (كائن داخل edLayer.events)
+  let edNote = null; // النغمة "الأساسية" (آخر وحدة انضغطت): شريط القوة يعرضها
+  let edSel = new Set(); // كل النغمات المحددة (Ctrl+A، السحب على مكان فاضي، Shift/Ctrl+نقر)
+  let edClip = null; // نغمات منسوخة بالمحرّر (Ctrl+C/X) — منفصلة عن نسخ المقاطع
+  const edSelected = () => (edLayer ? edLayer.events.filter((e) => edSel.has(e)) : []);
+  const edOpen = () => Boolean(edLayer && editor && !editor.hidden);
   let edPx = 80;
   let edRowsCache = [];
   let lastNoteTap = null;
@@ -4844,6 +4854,7 @@ function initBeepMelodyExperiment() {
     if (l.kind === "audio") return showToast(toolEdit.dataset.audio);
     edLayer = l;
     edNote = null;
+    edSel = new Set();
     editor.hidden = false;
     edPx = clamp((edScroll.clientWidth - ED_KEYS_W) / Math.max(barSec(), layerLen(l) + barSec() * 0.5), 30, 260);
     renderEditor();
@@ -4855,6 +4866,7 @@ function initBeepMelodyExperiment() {
   function closeEditor() {
     edLayer = null;
     edNote = null;
+    edSel = new Set();
     if (editor) editor.hidden = true;
   }
 
@@ -4875,6 +4887,9 @@ function initBeepMelodyExperiment() {
     if (!edLayer) return;
     if (!layers.includes(edLayer)) return closeEditor();
     const l = edLayer;
+    edSel = new Set(l.events.filter((e) => edSel.has(e))); // بعد التراجع: الكائنات القديمة ما عادت موجودة
+    if (edNote && !l.events.includes(edNote)) edNote = null;
+    if (edNote) edSel.add(edNote);
     const drums = l.kind === "drums";
     const rows = (edRowsCache = edRows(l));
     const rowH = edRowH(l);
@@ -4914,12 +4929,13 @@ function initBeepMelodyExperiment() {
       const width = drums ? Math.max(8, (beat / 4) * edPx * 0.85) : Math.max(6, ev.held * edPx);
       const outside = ev.startBeat >= l.t1;
       const alpha = 0.45 + 0.55 * ((ev.velocity || 96) / 127);
-      out.push(`<div class="ed-note${ev === edNote ? " sel" : ""}${outside ? " outside" : ""}" data-i="${i}" style="left:${x}px;top:${r * rowH + 1}px;width:${width}px;height:${rowH - 2}px;--a:${alpha.toFixed(2)}"></div>`);
+      out.push(`<div class="ed-note${edSel.has(ev) ? " sel" : ""}${outside ? " outside" : ""}" data-i="${i}" style="left:${x}px;top:${r * rowH + 1}px;width:${width}px;height:${rowH - 2}px;--a:${alpha.toFixed(2)}"></div>`);
     });
     edGrid.innerHTML = out.join("");
-    edVel.disabled = !edNote;
-    document.getElementById("beepEdDelete").disabled = !edNote;
-    if (edNote) edVel.value = edNote.velocity || 96;
+    const lead = edNote || edSelected()[0];
+    edVel.disabled = !lead;
+    document.getElementById("beepEdDelete").disabled = !edSel.size;
+    if (lead) edVel.value = lead.velocity || 96;
   }
 
   // يسمع النغمة/الضربة لما تُضاف أو تتحرك — بنفس آلة المقطع
@@ -4936,8 +4952,10 @@ function initBeepMelodyExperiment() {
   // نسخة جديدة من مصفوفة النغمات قبل أي تعديل (اللقطات القديمة للتراجع تبقى سليمة)
   function edCow() {
     const i = edNote ? edLayer.events.indexOf(edNote) : -1;
+    const picked = edLayer.events.map((e, k) => (edSel.has(e) ? k : -1)).filter((k) => k >= 0);
     edLayer.events = edLayer.events.map((e) => ({ ...e }));
     edNote = i >= 0 ? edLayer.events[i] : null;
+    edSel = new Set(picked.map((k) => edLayer.events[k]));
   }
   // آخر نقطة يصلها المحتوى: نطوّل المقطع لو أُضيفت نغمة بعد نهايته
   function edGrow(l) {
@@ -4946,11 +4964,12 @@ function initBeepMelodyExperiment() {
     l.end = Math.max(l.end, l.t1, ...l.events.map((e) => e.startBeat + e.durBeats));
   }
   function edDeleteNote() {
-    if (!edNote || !edLayer) return;
+    if (!edLayer || !edSel.size) return;
     pushHistory();
     edCow();
-    edLayer.events.splice(edLayer.events.indexOf(edNote), 1);
+    edLayer.events = edLayer.events.filter((e) => !edSel.has(e));
     edNote = null;
+    edSel = new Set();
     // مقطع بلا نغمات ما له معنى: نحذفه كله
     if (!edLayer.events.some((e) => e.startBeat >= edLayer.t0 && e.startBeat < edLayer.t1)) {
       layers.splice(layers.indexOf(edLayer), 1);
@@ -4986,13 +5005,89 @@ function initBeepMelodyExperiment() {
         const s = gridStep() ? Math.round(abs / step) * step : Math.round(abs * 100) / 100;
         return Math.max(l.t0, s - l.offset + l.t0);
       };
+      const noteEl = e.target.closest(".ed-note");
+      const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+      if (noteEl && additive) {
+        // Shift/Ctrl+نقر: تضيف النغمة للتحديد أو تشيلها، بلا سحب
+        const n = edLayer.events[+noteEl.dataset.i];
+        if (edSel.has(n)) {
+          edSel.delete(n);
+          if (edNote === n) edNote = null;
+        } else {
+          edSel.add(n);
+          edNote = n;
+        }
+        return renderEditor();
+      }
+      if (!noteEl) {
+        // مكان فاضي: السحب = مستطيل تحديد، والنقرة بلا سحب = نغمة جديدة (تحت)
+        const gx = (ev) => (ev.clientX - rect.left) / z;
+        const gy = (ev) => (ev.clientY - rect.top) / z;
+        const sx = gx(e);
+        const sy = gy(e);
+        const keep = additive ? new Set(edSel) : new Set();
+        let box = null;
+        const boxMove = (ev) => {
+          const x1 = Math.min(sx, gx(ev));
+          const x2 = Math.max(sx, gx(ev));
+          const y1 = Math.min(sy, gy(ev));
+          const y2 = Math.max(sy, gy(ev));
+          if (!box) {
+            if (Math.abs(gx(ev) - sx) < 5 && Math.abs(gy(ev) - sy) < 5) return;
+            box = document.createElement("div");
+            box.className = "ed-marquee";
+            edGrid.append(box);
+          }
+          box.style.cssText = `left:${x1}px;top:${y1}px;width:${x2 - x1}px;height:${y2 - y1}px`;
+          edSel = new Set(keep);
+          edGrid.querySelectorAll(".ed-note").forEach((n) => {
+            const hit = n.offsetLeft < x2 && n.offsetLeft + n.offsetWidth > x1 && n.offsetTop < y2 && n.offsetTop + n.offsetHeight > y1;
+            if (hit) edSel.add(edLayer.events[+n.dataset.i]);
+            n.classList.toggle("sel", edSel.has(edLayer.events[+n.dataset.i]));
+          });
+        };
+        const boxUp = (ev) => {
+          edGrid.removeEventListener("pointermove", boxMove);
+          edGrid.removeEventListener("pointerup", boxUp);
+          edGrid.removeEventListener("pointercancel", boxUp);
+          if (box) {
+            box.remove();
+            edNote = null;
+            return renderEditor();
+          }
+          if (ev.type === "pointercancel") return;
+          if (additive) return; // Shift+نقرة على فاضي ما تضيف نغمة بالغلط
+          // نقرة عادية: نغمة جديدة بطول خطوة الشبكة (تُطوَّل من حافتها اليمنى)
+          const before = snapshot();
+          edCow();
+          const row = edRowsCache[rowOf(e)];
+          const st = snapRel(xOf(e) / edPx - (gridStep() ? step / 2 : 0));
+          const n = drums
+            ? { drum: row.drum, startBeat: st, held: 0.1, durBeats: 0.3, velocity: DRUM_VEL[row.drum], gain: drumGain(DRUM_VEL[row.drum]) }
+            : { ...makeNoteEvent(row.midi, centsOf(row.midi), st, step, step + 0.4, velGain(96)), velocity: 96 };
+          edLayer.events.push(n);
+          edNote = n;
+          edSel = new Set([n]);
+          lastNoteTap = null;
+          audition(l, n);
+          history.push(before);
+          if (history.length > HISTORY_MAX) history.shift();
+          future = [];
+          edGrow(edLayer);
+          renderLayers();
+        };
+        edGrid.addEventListener("pointermove", boxMove);
+        edGrid.addEventListener("pointerup", boxUp);
+        edGrid.addEventListener("pointercancel", boxUp);
+        return;
+      }
       const before = snapshot();
       edCow();
-      const noteEl = e.target.closest(".ed-note");
       let mode;
       let created = false;
       if (noteEl) {
         edNote = edLayer.events[+noteEl.dataset.i];
+        if (!edSel.has(edNote)) edSel = new Set([edNote]); // نغمة خارج التحديد: تصير هي التحديد
         const r = noteEl.getBoundingClientRect();
         mode = !drums && e.clientX > r.right - 8 * z ? "resize" : "move";
         // نقرتان على نفس النغمة = حذفها
@@ -5002,53 +5097,56 @@ function initBeepMelodyExperiment() {
           history.push(before);
           future = [];
           edLayer.events.splice(edLayer.events.indexOf(edNote), 1);
+          edSel.delete(edNote);
           edNote = null;
           return renderLayers();
         }
         lastNoteTap = { i: +noteEl.dataset.i, time: now };
-      } else {
-        const row = edRowsCache[rowOf(e)];
-        const s = snapRel(xOf(e) / edPx - (gridStep() ? step / 2 : 0));
-        edNote = drums
-          ? { drum: row.drum, startBeat: s, held: 0.1, durBeats: 0.3, velocity: DRUM_VEL[row.drum], gain: drumGain(DRUM_VEL[row.drum]) }
-          : { ...makeNoteEvent(row.midi, centsOf(row.midi), s, step, step + 0.4, velGain(96)), velocity: 96 };
-        edLayer.events.push(edNote);
-        created = true;
-        mode = drums ? "move" : "resize";
-        lastNoteTap = null;
-        audition(l, edNote);
       }
+      // السحب يحرّك (أو يطوّل) كل المحدد معاً بنفس المقدار، محسوباً من الموضع الأصلي لكل نغمة
+      const group = edSelected().map((n) => ({ n, o: { ...n }, row: edRowsCache.findIndex((x) => (drums ? x.drum === n.drum : x.midi === evMidi(n))) }));
       const ev0 = { ...edNote };
       const x0 = xOf(e);
       const row0 = rowOf(e);
       let changed = created;
-      const el = () => edGrid.querySelector(".ed-note.sel") || edGrid.querySelector(`.ed-note[data-i="${edLayer.events.indexOf(edNote)}"]`);
       renderEditor();
       const move = (ev) => {
         const dx = (xOf(ev) - x0) / edPx;
+        // الإزاحة تتحدد من النغمة الممسوكة (مع الانجذاب للشبكة)، وتنطبق على الباقي بنفسها
+        let dt;
         if (mode === "resize") {
           const end = snapRel(ev0.startBeat - l.t0 + ev0.held + dx);
-          edNote.held = Math.max(gridStep() ? step : 0.05, end - edNote.startBeat);
-          edNote.durBeats = edNote.held + 0.4;
+          dt = Math.max(gridStep() ? step : 0.05, end - ev0.startBeat) - ev0.held;
         } else {
-          edNote.startBeat = snapRel(ev0.startBeat - l.t0 + dx);
-          const row = edRowsCache[clamp(edRowsCache.findIndex((x) => (drums ? x.drum === ev0.drum : x.midi === evMidi(ev0))) + rowOf(ev) - row0, 0, edRowsCache.length - 1)];
-          if (drums && row.drum !== edNote.drum) {
-            edNote.drum = row.drum;
-            audition(l, edNote);
-          } else if (!drums && row.midi !== evMidi(edNote)) {
-            Object.assign(edNote, makeNoteEvent(row.midi, centsOf(row.midi), edNote.startBeat, edNote.held, edNote.durBeats, edNote.gain), { velocity: edNote.velocity });
-            audition(l, edNote);
+          dt = snapRel(ev0.startBeat - l.t0 + dx) - ev0.startBeat;
+          dt = Math.max(dt, l.t0 - Math.min(...group.map((g) => g.o.startBeat))); // لا تطلع قبل بداية المقطع
+        }
+        const dRow = mode === "resize" ? 0 : clamp(rowOf(ev) - row0, -Math.min(...group.map((g) => g.row)), edRowsCache.length - 1 - Math.max(...group.map((g) => g.row)));
+        let sound = false;
+        group.forEach(({ n, o, row }) => {
+          if (mode === "resize") {
+            n.held = Math.max(gridStep() ? step : 0.05, o.held + dt);
+            n.durBeats = n.held + 0.4;
+          } else {
+            n.startBeat = o.startBeat + dt;
+            const target = edRowsCache[row + dRow];
+            if (drums && target.drum !== n.drum) {
+              n.drum = target.drum;
+              sound = sound || n === edNote;
+            } else if (!drums && target.midi !== evMidi(n)) {
+              Object.assign(n, makeNoteEvent(target.midi, centsOf(target.midi), n.startBeat, n.held, n.durBeats, n.gain), { velocity: n.velocity });
+              sound = sound || n === edNote;
+            }
           }
-        }
-        changed = changed || edNote.startBeat !== ev0.startBeat || edNote.held !== ev0.held || evMidi(edNote) !== evMidi(ev0) || edNote.drum !== ev0.drum;
-        const node = el();
-        if (node) {
-          const r = drums ? edRowsCache.findIndex((x) => x.drum === edNote.drum) : edRowsCache.findIndex((x) => x.midi === evMidi(edNote));
-          node.style.left = ED_KEYS_W + (edNote.startBeat - l.t0) * edPx + "px";
-          node.style.top = r * rowH + 1 + "px";
-          if (!drums) node.style.width = Math.max(6, edNote.held * edPx) + "px";
-        }
+          const node = edGrid.querySelector(`.ed-note[data-i="${edLayer.events.indexOf(n)}"]`);
+          if (node) {
+            node.style.left = ED_KEYS_W + (n.startBeat - l.t0) * edPx + "px";
+            node.style.top = (row + dRow) * rowH + 1 + "px";
+            if (!drums) node.style.width = Math.max(6, n.held * edPx) + "px";
+          }
+        });
+        if (sound) audition(l, edNote);
+        changed = changed || dt !== 0 || dRow !== 0;
       };
       const up = () => {
         edGrid.removeEventListener("pointermove", move);
@@ -5069,26 +5167,27 @@ function initBeepMelodyExperiment() {
 
     let velBefore = null;
     edVel.addEventListener("pointerdown", () => {
-      if (!edNote) return;
+      if (!edSel.size) return;
       velBefore = snapshot();
       edCow();
     });
     edVel.addEventListener("input", () => {
-      if (!edNote) return;
+      if (!edSel.size) return;
       if (!velBefore) {
         velBefore = snapshot(); // تغيير بالكيبورد (أسهم) بلا ضغطة ماوس
         edCow();
       }
-      edNote.velocity = Number(edVel.value);
-      edNote.gain = edLayer.kind === "drums" ? drumGain(edNote.velocity) : velGain(edNote.velocity);
-      const node = edGrid.querySelector(".ed-note.sel");
-      if (node) node.style.setProperty("--a", (0.45 + 0.55 * (edNote.velocity / 127)).toFixed(2));
+      edSelected().forEach((n) => {
+        n.velocity = Number(edVel.value);
+        n.gain = edLayer.kind === "drums" ? drumGain(n.velocity) : velGain(n.velocity);
+        edGrid.querySelector(`.ed-note[data-i="${edLayer.events.indexOf(n)}"]`)?.style.setProperty("--a", (0.45 + 0.55 * (n.velocity / 127)).toFixed(2));
+      });
     });
     edVel.addEventListener("change", () => {
       if (!velBefore) return;
       pushHistory(velBefore);
       velBefore = null;
-      audition(edLayer, edNote);
+      audition(edLayer, edNote || edSelected()[0]);
       renderLayers();
     });
     document.getElementById("beepEdDelete").addEventListener("click", () => {
@@ -5670,7 +5769,70 @@ function initBeepMelodyExperiment() {
      تعارض واحد: S نغمة بيانو أيضاً، فتقصّ فقط لما تكون طبقة محددة (وضع التحرير)؛
      Esc يلغي التحديد فيرجع S نغمة. مفاتيح البيانو الباقية لا تُلمس. */
   const shortcutsBox = document.getElementById("beepShortcuts");
-  const SHORTCUT_KEYCODES = { 32: "Space", 27: "Escape", 46: "Delete", 8: "Backspace", 36: "Home", 35: "End", 13: "Enter", 191: "Slash", 37: "ArrowLeft", 39: "ArrowRight" };
+  const SHORTCUT_KEYCODES = { 32: "Space", 27: "Escape", 46: "Delete", 8: "Backspace", 36: "Home", 35: "End", 13: "Enter", 191: "Slash", 37: "ArrowLeft", 39: "ArrowRight", 38: "ArrowUp", 40: "ArrowDown" };
+  /* اختصارات محرّر النغمات (لما يكون مفتوحاً): ترجع true لو أخذت المفتاح.
+     Ctrl/⌘+A الكل، Delete حذف، Ctrl+C/X/V/D نسخ/قص/لصق/تكرار، ← → تحريك بخطوة الشبكة
+     (Shift = مازورة)، ↑ ↓ نصف درجة (Shift = أوكتاف) */
+  function edKey(code, e, mod) {
+    const l = edLayer;
+    const drums = l.kind === "drums";
+    const sel = edSelected();
+    const edit = (fn) => {
+      pushHistory();
+      edCow();
+      fn();
+      edGrow(l);
+      renderLayers();
+    };
+    const end = (list) => Math.max(...list.map((n) => n.startBeat + (drums ? 0.1 : n.held)));
+    const paste = (notes, at) => {
+      const base = Math.min(...notes.map((n) => n.startBeat));
+      const added = notes.map((n) => ({ ...n, startBeat: Math.max(l.t0, at + n.startBeat - base) }));
+      l.events.push(...added);
+      edSel = new Set(added);
+      edNote = added[0];
+    };
+    if (mod && code === "KeyA") {
+      edSel = new Set(l.events.filter((n) => n.startBeat >= l.t0 - 1e-6));
+      edNote = null;
+      renderEditor();
+    } else if ((code === "Delete" || code === "Backspace") && sel.length) {
+      edDeleteNote();
+    } else if (mod && (code === "KeyC" || code === "KeyX") && sel.length) {
+      edClip = sel.map((n) => ({ ...n }));
+      if (code === "KeyX") edDeleteNote();
+    } else if (mod && code === "KeyV" && edClip) {
+      // عند الخط الأبيض لو كان داخل المقطع، وإلا مباشرة بعد آخر نغمة بالمقطع
+      const local = cursor - l.offset + l.t0;
+      const at = local >= l.t0 && local <= l.t0 + layerLen(l) + barSec() ? local : l.events.length ? end(l.events) : l.t0;
+      edit(() => paste(edClip, at));
+    } else if (mod && code === "KeyD" && sel.length) {
+      const span = end(sel) - Math.min(...sel.map((n) => n.startBeat));
+      const st = gridStep() || beatSec() / 4;
+      edit(() => paste(sel, Math.min(...sel.map((n) => n.startBeat)) + Math.ceil(span / st - 1e-6) * st));
+    } else if ((code === "ArrowLeft" || code === "ArrowRight") && sel.length && !mod) {
+      const d = (code === "ArrowRight" ? 1 : -1) * (e.shiftKey ? barSec() : gridStep() || 0.1);
+      const dt = Math.max(d, l.t0 - Math.min(...sel.map((n) => n.startBeat)));
+      edit(() => edSelected().forEach((n) => (n.startBeat += dt)));
+    } else if ((code === "ArrowUp" || code === "ArrowDown") && sel.length && !mod) {
+      const d = (code === "ArrowUp" ? 1 : -1) * (e.shiftKey ? 12 : 1);
+      edit(() =>
+        edSelected().forEach((n) => {
+          if (drums) {
+            const kit = DRUM_KITS[l.kit];
+            n.drum = kit[clamp(kit.indexOf(n.drum) - Math.sign(d), 0, kit.length - 1)];
+          } else {
+            const m = clamp(evMidi(n) + d, 21, 108);
+            Object.assign(n, makeNoteEvent(m, centsOf(m), n.startBeat, n.held, n.durBeats, n.gain), { velocity: n.velocity });
+          }
+        })
+      );
+      audition(l, edNote || edSelected()[0]);
+    } else if ((mod && ["KeyC", "KeyX", "KeyD"].includes(code)) || code === "Delete" || code === "Backspace") {
+      // المحرّر مفتوح بلا نغمات محددة: لا نلمس المقطع كله بالغلط (كان Ctrl+X يقص المقطع ويقفل المحرّر)
+    } else return false;
+    return true;
+  }
   function shortcutCode(e) {
     if (e.code && e.code !== "Unidentified") return e.code;
     if (SHORTCUT_KEYCODES[e.keyCode]) return SHORTCUT_KEYCODES[e.keyCode];
@@ -5703,11 +5865,14 @@ function initBeepMelodyExperiment() {
         else startRec("notes");
       } else if (code === "KeyC" && plain) {
         toggleMetro();
+      } else if (edOpen() && edKey(code, e, mod)) {
+        // اختصارات المحرّر (Ctrl+A، Delete، نسخ/قص/لصق/تكرار، الأسهم) — قبل اختصارات المقاطع
       } else if (code === "Escape") {
         if (rec) stopRec();
         stopTake();
-        if (edNote) {
+        if (edSel.size) {
           edNote = null;
+          edSel = new Set();
           renderEditor();
         } else select(null);
       } else if (code === "Enter" && !onButton && studioActive()) {
@@ -5729,8 +5894,6 @@ function initBeepMelodyExperiment() {
         else copySelected();
       } else if (mod && code === "KeyV" && clipboard) {
         pasteClipboard();
-      } else if ((code === "Delete" || code === "Backspace") && edNote && edLayer) {
-        edDeleteNote(); // نغمة محددة بالمحرّر تُحذف قبل المقطع كله
       } else if ((code === "Delete" || code === "Backspace") && selected) {
         deleteSelected();
       } else if (code === "KeyS" && plain && selected) {
