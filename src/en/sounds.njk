@@ -43,6 +43,7 @@ pageScript: "sounds"
       <details class="beep-help" id="beepHelp">
         <summary>⌨️ How to play & shortcuts</summary>
         <p class="beep-param-note">Middle row <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> for the white keys, the row above <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> for the black keys, <kbd>Z</kbd> / <kbd>X</kbd> to shift the octave, and hold <kbd>Shift</kbd> for the sustain pedal. It also works with a keyboard plugged into your phone, a real MIDI keyboard, or by touching the keys directly: press near the top of a key for a soft note and near the bottom for a strong one. Recording shortcuts: <kbd>R</kbd> start/stop, and <kbd>Space</kbd> play/stop after your first recording (the full list appears with it).</p>
+        <p class="beep-param-note">🎬 The video stays on your device and is never uploaded. It follows the white line: move the line to see the frame, and press play or record while you watch. Put a “cut marker” (M) at every cut in the scene and clips and effects snap to it. Step frame by frame with the buttons or the , and . keys — then download the video with your music, or the separate stems for your editing software.</p>
       </details>
       <details class="beep-help beep-settings" id="beepSettings">
         <summary><span class="sum-play">⚙️ Maqam & recording settings</span><span class="sum-practice">🕌 Maqam</span></summary>
@@ -168,6 +169,7 @@ pageScript: "sounds"
           <button type="button" class="filter-chip" id="beepFramePrev" aria-label="Previous frame">⏮ Frame</button>
           <button type="button" class="filter-chip" id="beepFrameNext" aria-label="Next frame">Frame ⏭</button>
           <button type="button" class="filter-chip" id="beepMarkerAdd">📍 Cut marker</button>
+          <button type="button" class="filter-chip" id="beepVideoPip" hidden title="Video in a small window floating over everything (even other tabs), still in sync">📺 Float</button>
           <button type="button" class="filter-chip" id="beepVideoAudio" aria-pressed="true" data-on="🔊 Video sound" data-off="🔇 Video sound">🔊 Video sound</button>
           <div class="instrument-picker" role="group" aria-label="Frames per second">
             <button type="button" class="filter-chip" data-fps="24" dir="ltr">24 fps</button>
@@ -177,7 +179,6 @@ pageScript: "sounds"
           <button type="button" class="filter-chip" id="beepVideoExport" data-working="⏳" data-failed="Couldn't prepare the video in this browser">🎬 Download video with sound</button>
           <button type="button" class="filter-chip" id="beepVideoRemove">✕ Remove video</button>
         </div>
-        <p class="beep-param-note">The video stays on your device and is never uploaded. It follows the white line: move the line to see the frame, and press play or record while you watch. Put a “cut marker” (M) at every cut in the scene and clips and effects snap to it. Step frame by frame with the buttons or the , and . keys — then download the video with your music, or the separate stems for your editing software.</p>
       </div>
       <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-track="Track" data-max="You've reached the limit: 64 clips and 16 tracks" data-silent="All layers are muted" data-restored="🔄 Your last project was restored" data-shared="🔗 Opened the shared project — edit it and share it again">
         <div class="beep-clip-tools" id="beepClipTools">

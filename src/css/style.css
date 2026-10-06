@@ -7658,3 +7658,60 @@ li {
     --control-height: 40px;
   }
 }
+
+/* ===== الفيديو فوق وأنت تعزف: صندوق الفيديو يثبت أعلى الشاشة لما تنزل للجدول والبيانو،
+   فتشوف المشهد وتعزف عليه بنفس الوقت (كان البيانو ~٩٣٠px تحته). ارتفاعه محدود عشان يبقى
+   مكان للبيانو، والجوال العمودي يحطه فوق البيانو مباشرة ===== */
+#beepVideoBox:not([hidden]) {
+  position: sticky;
+  top: calc(var(--header-h, 64px) + 4px);
+  z-index: 20;
+  gap: 6px;
+  padding: 8px;
+  background: #0b2019;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.beep-video video {
+  width: auto;
+  max-width: 100%;
+  max-height: 32vh;
+}
+
+@media (max-width: 900px) and (orientation: portrait), (orientation: landscape) and (max-height: 520px) {
+  .sounds-tool #panePlay .beep-play > #beepVideoBox {
+    order: -1;
+  }
+
+  .beep-video video {
+    max-height: 26vh;
+  }
+
+  /* شريط أزرار الفيديو بسطر واحد يتمرر أفقياً بدل ٥ أسطر تدفع البيانو تحت */
+  .beep-video-bar {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .beep-video-bar .instrument-picker {
+    flex-wrap: nowrap;
+  }
+
+  .beep-video-bar > *,
+  .beep-video-bar .instrument-picker > * {
+    flex: none; /* بحجمها الطبيعي — الصف يتمرر بدل ما تنضغط وتتداخل حروفها */
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .beep-video video {
+    max-height: 29vh;
+  }
+
+  #beepVideoBox:not([hidden]) {
+    top: 0;
+  }
+}

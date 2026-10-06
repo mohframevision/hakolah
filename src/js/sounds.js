@@ -7449,6 +7449,15 @@ function initBeepMelodyExperiment() {
       playClickSound();
     });
     document.getElementById("beepVideoExport").addEventListener("click", (e) => exportVideo(e.currentTarget));
+    // نافذة عائمة (Picture-in-Picture المدمجة بالمتصفح): نفس عنصر الفيديو، فالتزامن مع الخط الأبيض يبقى كما هو
+    const pipBtn = document.getElementById("beepVideoPip");
+    if (document.pictureInPictureEnabled && pipBtn) {
+      pipBtn.hidden = false;
+      pipBtn.addEventListener("click", () => {
+        if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
+        else if (videoReady()) videoEl.requestPictureInPicture().catch(() => showToast(videoBox.dataset.failed));
+      });
+    }
     videoAudioBtn.addEventListener("click", () => {
       videoEl.muted = !videoEl.muted;
       videoAudioBtn.textContent = videoEl.muted ? videoAudioBtn.dataset.off : videoAudioBtn.dataset.on;

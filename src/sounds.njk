@@ -42,6 +42,7 @@ pageScript: "sounds"
       <details class="beep-help" id="beepHelp">
         <summary>⌨️ طريقة العزف والاختصارات</summary>
         <p class="beep-param-note">الصف الأوسط <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> للمفاتيح البيضاء، والصف الذي فوقه <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> للسوداء، و<kbd>Z</kbd> / <kbd>X</kbd> لتغيير الأوكتاف، وأمسك <kbd>Shift</kbd> للدواسة. تعمل أيضاً بلوحة مفاتيح موصولة بالجوال، أو بكيبورد MIDI حقيقي، أو بلمس المفاتيح مباشرة: اضغط أعلى المفتاح لنغمة هادئة وأسفله لنغمة قوية. اختصارات التسجيل: <kbd>R</kbd> بدء/إيقاف، و<kbd>Space</kbd> تشغيل/إيقاف بعد أول تسجيل (تظهر القائمة الكاملة معه).</p>
+        <p class="beep-param-note">🎬 الفيديو يبقى على جهازك ولا يُرفع لأي مكان. يمشي مع الخط الأبيض: حرّك الخط لترى الإطار، واضغط تشغيل أو سجّل وأنت تشاهد. ضع «علامة قطع» (M) عند كل قطع في المشهد، فالمقاطع والمؤثرات تنجذب إليها. والإطار بالإطار بالزرّين أو بمفتاحي , و . — ثم نزّل الفيديو بموسيقاك، أو المسارات منفصلة لبرنامج المونتاج.</p>
       </details>
       <details class="beep-help beep-settings" id="beepSettings">
         <summary><span class="sum-play">⚙️ المقام وإعدادات التسجيل</span><span class="sum-practice">🕌 المقام</span></summary>
@@ -167,6 +168,7 @@ pageScript: "sounds"
           <button type="button" class="filter-chip" id="beepFramePrev" aria-label="الإطار السابق">⏮ إطار</button>
           <button type="button" class="filter-chip" id="beepFrameNext" aria-label="الإطار التالي">إطار ⏭</button>
           <button type="button" class="filter-chip" id="beepMarkerAdd">📍 علامة قطع</button>
+          <button type="button" class="filter-chip" id="beepVideoPip" hidden title="الفيديو في نافذة صغيرة تطفو فوق كل شي (حتى لو رحت لتبويب ثاني) وتبقى متزامنة">📺 نافذة عائمة</button>
           <button type="button" class="filter-chip" id="beepVideoAudio" aria-pressed="true" data-on="🔊 صوت الفيديو" data-off="🔇 صوت الفيديو">🔊 صوت الفيديو</button>
           <div class="instrument-picker" role="group" aria-label="إطارات بالثانية">
             <button type="button" class="filter-chip" data-fps="24" dir="ltr">24 fps</button>
@@ -176,7 +178,6 @@ pageScript: "sounds"
           <button type="button" class="filter-chip" id="beepVideoExport" data-working="⏳" data-failed="تعذّر تجهيز الفيديو في هذا المتصفح">🎬 تحميل الفيديو مع الصوت</button>
           <button type="button" class="filter-chip" id="beepVideoRemove">✕ أزل الفيديو</button>
         </div>
-        <p class="beep-param-note">الفيديو يبقى على جهازك ولا يُرفع لأي مكان. يمشي مع الخط الأبيض: حرّك الخط لترى الإطار، واضغط تشغيل أو سجّل وأنت تشاهد. ضع «علامة قطع» (M) عند كل قطع في المشهد، فالمقاطع والمؤثرات تنجذب إليها. والإطار بالإطار بالزرّين أو بمفتاحي , و . — ثم نزّل الفيديو بموسيقاك، أو المسارات منفصلة لبرنامج المونتاج.</p>
       </div>
       <div class="beep-rec-take" id="beepRecTake" hidden data-layer="طبقة" data-track="مسار" data-max="وصلت الحد الأقصى: ٦٤ مقطعاً و١٦ مساراً" data-silent="كل الطبقات مكتومة" data-restored="🔄 استُعيد مشروعك الأخير" data-shared="🔗 فُتح المشروع المشارَك — عدّل عليه وشاركه من جديد">
         <div class="beep-clip-tools" id="beepClipTools">
