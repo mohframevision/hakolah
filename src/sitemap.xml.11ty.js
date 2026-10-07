@@ -24,6 +24,15 @@ exports.render = function (data) {
       ])
   );
 
+  // صفحة كل نوع محل سيارات مستقلة (car-shop-type.njk، مثل car-shops/tires.html)
+  // كانت مفقودة بالكامل من الخريطة — ما فيها لا داخل detailPagePairs (مو صفحة
+  // عنصر) ولا EN_SECTION_SLUGS (مو صفحة قسم رئيسي). 16 رابطاً (8 أنواع × لغتين)
+  // اكتُشف غيابها بزاوية SEO (تعمّق فعلي)، راجع سجل المشاكل.
+  const carShopTypePairs = (data.carShopTypes || []).map((t) => [
+    `car-shops/${t.slug}.html`,
+    `en/car-shops/${t.slug}.html`,
+  ]);
+
   const bilingualPairs = [
     ["", "en/index.html"],
     ["favorites.html", "en/favorites.html"],
@@ -37,6 +46,7 @@ exports.render = function (data) {
     ["terms.html", "en/terms.html"],
     ...EN_SECTION_SLUGS.map((slug) => [`${slug}.html`, `en/${slug}.html`]),
     ...detailPagePairs,
+    ...carShopTypePairs,
   ];
 
   /*
