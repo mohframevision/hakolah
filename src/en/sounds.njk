@@ -285,9 +285,9 @@ pageScript: "sounds"
         <div class="beep-transport">
           <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ Play layers" data-stop="⏹ Stop">▶️ Play layers</button>
           <span class="beep-dl-label">⬇️ Download your project:</span>
-          <button type="button" class="filter-chip" id="beepRecWav" title="Full-quality audio file" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">WAV</button>
-          <button type="button" class="filter-chip" id="beepRecMp3" title="Smaller audio file" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">MP3</button>
-          <button type="button" class="filter-chip" id="beepRecMidi" title="The notes themselves (not audio): open it in BandLab or any music app and keep working">MIDI</button>
+          <button type="button" class="filter-chip" id="beepRecWav" aria-label="Download your project as WAV (full quality)" title="Full-quality audio file" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">WAV</button>
+          <button type="button" class="filter-chip" id="beepRecMp3" aria-label="Download your project as MP3 (smaller file)" title="Smaller audio file" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">MP3</button>
+          <button type="button" class="filter-chip" id="beepRecMidi" aria-label="Download your project as MIDI (the notes themselves, for BandLab or any music app)" title="The notes themselves (not audio): open it in BandLab or any music app and keep working">MIDI</button>
           <button type="button" class="filter-chip" id="beepRecStems" title="A ZIP with the full mix + one WAV per track, all the same length, ready for editing software" data-working="⏳" data-failed="Couldn't prepare the files" data-toolong="This project is too long to export as separate stems on this device — shorten it or export a single WAV">🗂️ Stems</button>
           <button type="button" class="filter-chip" id="beepShare" data-copied="✅ Project link copied" data-audio="✅ Link copied — audio recordings aren't shared by link, download them as WAV">🔗 Share</button>
           <button type="button" class="filter-chip" id="beepRecClear" aria-label="Delete all layers" title="Delete all layers">🗑️</button>
