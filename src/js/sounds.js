@@ -4442,22 +4442,47 @@ function initBeepMelodyExperiment() {
     const from = pos ?? (fromStart || cursor >= total - 0.05 ? 0 : cursor);
     const start = audioCtx.currentTime + 0.1;
     transport = { at: start, from };
-    scheduleLayers(liveTarget(), list, start, from);
-    if (metroOn) startMetronome(start, from);
-    videoStart(start, from);
-    // المفاتيح تنضغط وتنرفع مع الصوت (نفس شكل العزف الحي)
+    /* الجدولة بنافذة قادمة (٢٫٥ث، تتجدد كل ٢٠٠م.ث) بدل كل نغمات الأغنية دفعة وحدة: مشروع ٣ دقائق
+       بـ٦ مسارات كان يصنع آلاف عُقد الصوت ومؤقّتين لكل نغمة لحظة التشغيل — تجمّد ٢٫٨ث على جهاز
+       بطيء وحمل ثقيل على الصوت طول الأغنية. الصوت المسجّل والأتمتة قليلة فتُجدول مرة وحدة */
+    const target = liveTarget();
+    scheduleLayers(target, list.filter((l) => l.kind === "audio"), start, from);
+    const queue = [];
     list.forEach((l) => {
-      if (l.kind !== "notes") return;
-      clipEvents(l).forEach((ev) => {
-        const at = ev.startBeat + l.offset - from;
-        if (at < 0) return;
-        const key = () => playBox?.querySelector(`[data-midi="${evMidi(ev)}"]`);
-        takeTimers.push(
-          setTimeout(() => key()?.classList.add("down"), 100 + at * 1000),
-          setTimeout(() => !downCount.has(evMidi(ev)) && key()?.classList.remove("down"), 100 + (at + ev.held) * 1000)
-        );
+      if (l.kind === "audio") return;
+      clipEvents(l).forEach((e) => {
+        const t = e.startBeat + l.offset;
+        if (t >= from - 1e-6) queue.push({ t, e, l });
       });
     });
+    queue.sort((a, b) => a.t - b.t);
+    let next = 0;
+    const pump = () => {
+      const until = from + (audioCtx.currentTime - start) + 2.5;
+      const saved = currentInstrument;
+      for (; next < queue.length && queue[next].t <= until; next++) {
+        const { t, e, l } = queue[next];
+        const tt = target.chains ? { ...target, dry: target.chains[l.row]?.input || target.dry } : target;
+        if (l.kind === "drums") {
+          playDrum(tt, e.drum, start + t - from, e.gain);
+          continue;
+        }
+        currentInstrument = l.instrument;
+        scheduleEvents(tt, { events: [e], meta: { bpm: 60 } }, start + l.offset - from);
+        // المفاتيح تنضغط وتنرفع مع الصوت (نفس شكل العزف الحي) — مؤقّتات النافذة فقط
+        const wait = (start + t - from - audioCtx.currentTime) * 1000;
+        const key = () => playBox?.querySelector(`[data-midi="${evMidi(e)}"]`);
+        takeTimers.push(
+          setTimeout(() => key()?.classList.add("down"), wait),
+          setTimeout(() => !downCount.has(evMidi(e)) && key()?.classList.remove("down"), wait + e.held * 1000)
+        );
+      }
+      currentInstrument = saved;
+    };
+    pump();
+    takeTimers.push(setInterval(pump, 200));
+    if (metroOn) startMetronome(start, from);
+    videoStart(start, from);
     recPlay.textContent = recPlay.dataset.stop;
     takeTimers.push(setTimeout(() => stopTake(true), 200 + (total - from) * 1000));
     playheadTimer = setInterval(() => setPlayhead(from + audioCtx.currentTime - start), 50);
