@@ -11,7 +11,7 @@ doublebass flute clarinet bassoon sax horn trumpet trombone tuba xylophone/
         of Iowa Musical Instrument Samples, and Freesound users flcellogrl,
         quartertone and donyaquick)
 
-strings oboe marimba glockenspiel/
+strings oboe marimba glockenspiel pizz/
         VSCO 2 Community Edition — Sam Gossner / Versilian Studios — CC0
         https://github.com/sgossner/VSCO-2-CE
 

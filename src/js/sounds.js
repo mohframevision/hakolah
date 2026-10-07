@@ -450,6 +450,16 @@ function initBeepMelodyExperiment() {
       vibrato: { rateHz: 5, depthRatio: 0.004 },
       level: 0.37,
     },
+    // وتريات بالنقر (pizzicato): نفس تخليق الهارب كبديل لين تجهز العيّنات الحقيقية
+    pizz: {
+      harmonics: [{ mult: 1, weight: 1, type: "triangle" }, { mult: 2, weight: 0.3, type: "sine" }, { mult: 3, weight: 0.1, type: "sine" }],
+      attack: 0.003,
+      sustainRatio: 0,
+      filterBrightMult: 4,
+      filterDarkMult: 1.6,
+      ringScale: 0.7,
+      level: 1,
+    },
     harp: {
       harmonics: [{ mult: 1, weight: 1, type: "triangle" }, { mult: 2, weight: 0.35, type: "sine" }, { mult: 3, weight: 0.15, type: "sine" }, { mult: 4, weight: 0.08, type: "sine" }],
       attack: 0.004,
@@ -743,6 +753,8 @@ function initBeepMelodyExperiment() {
     marimba: "F2 C3 G3 B3 F4 C5 G5 B5 F6 C7",
     xylophone: "G4 C5 G5 C6 G6 C7 G7 C8",
     glockenspiel: "G5 C6 G6 C7 G7 C8",
+    // VSCO 2 CE: تشيلو (سكشن) للواطي وكمان (سكشن) للحاد — نفس رخصة CC0
+    pizz: "C2 E2 G2 B2 D3 F3 A3 C4 E4 G4 A4 C5 E5 G5 B5 D6",
   };
   // كل آلة لها تسجيلات تعزف منها (البيانو الهادئ = البيانو الكبير بفلتر لباد)
   Object.keys(SAMPLE_SETS).forEach((id) => (INSTRUMENTS[id].sampled = id));
@@ -750,7 +762,7 @@ function initBeepMelodyExperiment() {
   // آلات النفَس والقوس: العيّنة ٤ ثوانٍ، فنكرّر وسطها (بتداخل ناعم) ما دامت النغمة ممسوكة
   const LOOPED_SETS = new Set("organ harmonium violin cello doublebass strings flute clarinet oboe bassoon sax horn trumpet trombone tuba".split(" "));
   // ذيل الرفع (ثابت زمني بالثواني): البيانو يخمده المخمّد، الهارب والجلوكن يرنّان بعد الترك
-  const SAMPLE_RELEASE = { harp: 0.5, glockenspiel: 0.6, marimba: 0.25, xylophone: 0.2, guitar: 0.15, guitar_ac: 0.15, guitar_el: 0.12, ebass: 0.07, organ: 0.06 };
+  const SAMPLE_RELEASE = { pizz: 0.3, harp: 0.5, glockenspiel: 0.6, marimba: 0.25, xylophone: 0.2, guitar: 0.15, guitar_ac: 0.15, guitar_el: 0.12, ebass: 0.07, organ: 0.06 };
   const NOTE_PC = { C: 0, Cs: 1, D: 2, Ds: 3, E: 4, F: 5, Fs: 6, G: 7, Gs: 8, A: 9, As: 10, B: 11 };
   const sampleBank = {}; // المجموعة → [{ midi, buffer, skip, norm, loop }] بعد اكتمال تحميلها
   const sampleLoading = {};
@@ -4415,7 +4427,7 @@ function initBeepMelodyExperiment() {
   const GM_PROGRAM = {
     piano: 0, upright: 0, felt: 0, epiano: 4, harpsichord: 6, celesta: 8, glockenspiel: 9, musicbox: 10, vibraphone: 11, marimba: 12,
     xylophone: 13, bell: 14, santoor: 15, organ: 19, accordion: 21, harmonium: 20, harmonica: 22, melodica: 22, guitar: 24, guitar_ac: 25, guitar_el: 27, ebass: 33,
-    doublebass: 32, synthbass: 38, violin: 40, cello: 42, harp: 46, strings: 48, choir: 52, trumpet: 56,
+    doublebass: 32, synthbass: 38, violin: 40, cello: 42, pizz: 45, harp: 46, strings: 48, choir: 52, trumpet: 56,
     trombone: 57, tuba: 58, horn: 60, sax: 65, oboe: 68, bassoon: 70, clarinet: 71, flute: 73, recorder: 74, nay: 77, chiptune: 80,
     synth: 81, banjo: 105, oud: 106, qanun: 107, kalimba: 108, steelpan: 114, custom: 0,
   };
@@ -4935,6 +4947,7 @@ function initBeepMelodyExperiment() {
     const lead = edNote || edSelected()[0];
     edVel.disabled = !lead;
     document.getElementById("beepEdDelete").disabled = !edSel.size;
+    document.getElementById("beepEdRit").disabled = document.getElementById("beepEdAccel").disabled = edSelected().length < 2;
     if (lead) edVel.value = lead.velocity || 96;
   }
 
@@ -5190,6 +5203,36 @@ function initBeepMelodyExperiment() {
       audition(edLayer, edNote || edSelected()[0]);
       renderLayers();
     });
+    /* أبطئ/أسرع تدريجياً (ritardando / accelerando) على النغمات المحددة: الإطالة تزيد خطياً من
+       لا شيء عند أول نغمة إلى k عند آخرها، فموضع كل نغمة = تكامل ذلك الامتداد، وطولها × الامتداد
+       عندها. النغمات اللي بعد التحديد تنزاح بالفرق الكلي عشان ما تتداخل. كل ضغطة ١٠٪ */
+    function edBend(k) {
+      const sel = edSelected();
+      if (sel.length < 2) return;
+      const a = Math.min(...sel.map((n) => n.startBeat));
+      const b = Math.max(...sel.map((n) => n.startBeat));
+      const L = b - a;
+      if (L <= 0) return;
+      const at = (t) => a + (t - a) + ((k - 1) * (t - a) ** 2) / (2 * L);
+      const stretch = (t) => 1 + ((k - 1) * (t - a)) / L;
+      const shift = at(b) - b;
+      pushHistory();
+      edCow();
+      const picked = new Set(edSelected());
+      edLayer.events.forEach((n) => {
+        if (picked.has(n)) {
+          const f = stretch(n.startBeat);
+          n.startBeat = at(n.startBeat);
+          n.held *= f;
+          n.durBeats = n.held + 0.4;
+        } else if (n.startBeat > b) n.startBeat += shift;
+      });
+      edGrow(edLayer);
+      renderLayers();
+      playClickSound();
+    }
+    document.getElementById("beepEdRit").addEventListener("click", () => edBend(1.1));
+    document.getElementById("beepEdAccel").addEventListener("click", () => edBend(1 / 1.1));
     document.getElementById("beepEdDelete").addEventListener("click", () => {
       edDeleteNote();
       playClickSound();
