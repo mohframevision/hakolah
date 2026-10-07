@@ -94,6 +94,10 @@
         <item>September 4</item>
         <item>September 19</item>
         <item>September 27</item>
+        <item>September 28</item>
+        <item>September 30</item>
+        <item>October 5</item>
+        <item>October 7</item>
     </string-array>
     <string-array name="story_stop_texts">
         <item>The first version: sections, search, filters, favorites, and a control panel for adding content without writing code — plus the first real restaurant.</item>
@@ -105,6 +109,10 @@
         <item>The \"AI Experiments\" section: small tools built with AI.</item>
         <item>Work begins on a native Android app for Hakolah — the one in your hands right now.</item>
         <item>A new look for the app: a 3D \"Pick for me\" sphere, the \"Today\'s picks\" stack, calm sounds, and a full English version.</item>
+        <item>Hakolah Sounds grows from an experiment into a real tool: piano, recording, layers, and WAV, MP3 and MIDI export.</item>
+        <item>Hakolah moves to its own domain: hakolah.com.</item>
+        <item>The Practice tab: paste notes or open a MIDI file, and learn to play with falling bars and full sheet music.</item>
+        <item>New real instruments (accordion, celesta, mandolin), MIDI files that move to and from BandLab, and lighter playback on older devices.</item>
     </string-array>
     <string name="story_learned_title">What I learned along the way</string>
     <string-array name="story_tech_titles">
