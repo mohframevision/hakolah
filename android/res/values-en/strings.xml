@@ -112,7 +112,7 @@
         <item>Hakolah Sounds grows from an experiment into a real tool: piano, recording, layers, and WAV, MP3 and MIDI export.</item>
         <item>Hakolah moves to its own domain: hakolah.com.</item>
         <item>The Practice tab: paste notes or open a MIDI file, and learn to play with falling bars and full sheet music.</item>
-        <item>New real instruments (accordion, celesta, mandolin), MIDI files that move to and from BandLab, and lighter playback on older devices.</item>
+        <item>New real instruments (accordion, celesta, mandolin), MIDI import and export, and lighter playback on older devices.</item>
     </string-array>
     <string name="story_learned_title">What I learned along the way</string>
     <string-array name="story_tech_titles">
