@@ -15,5 +15,13 @@ strings oboe marimba glockenspiel pizz/
         VSCO 2 Community Edition — Sam Gossner / Versilian Studios — CC0
         https://github.com/sgossner/VSCO-2-CE
 
+accordion/   FreePats "Button Accordion HN" — Hohner accordion recorded by Jeff Stauffer,
+        processed by michael02022 — CC0
+        https://github.com/freepats/button-accordion-HN
+        (extended with the bank's own loop points and retuned to exact pitch)
+
+celesta/     "A Sampled Celesta" — Neil Bickford — samples CC0
+        https://gitlab.com/Nbickford/a-sampled-celesta
+
 Changes: converted to mono MP3, trimmed to 2.5–6 s, faded out, peak-normalized,
 and a subset of notes kept (about one every 2–4 semitones).

@@ -755,14 +755,18 @@ function initBeepMelodyExperiment() {
     glockenspiel: "G5 C6 G6 C7 G7 C8",
     // VSCO 2 CE: تشيلو (سكشن) للواطي وكمان (سكشن) للحاد — نفس رخصة CC0
     pizz: "C2 E2 G2 B2 D3 F3 A3 C4 E4 G4 A4 C5 E5 G5 B5 D6",
+    // FreePats Button Accordion HN (أكورديون Hohner حقيقي) — CC0؛ كل نغمة ضُبطت على طبقتها بالقياس
+    accordion: "B2 D3 Fs3 A3 C4 E4 G4 B4 D5 G5",
+    // A Sampled Celesta (Neil Bickford) — العيّنات CC0
+    celesta: "C4 Ds4 Fs4 A4 C5 Ds5 Fs5 A5 C6 Ds6 Fs6 A6 C7 Ds7 Fs7 A7 C8",
   };
   // كل آلة لها تسجيلات تعزف منها (البيانو الهادئ = البيانو الكبير بفلتر لباد)
   Object.keys(SAMPLE_SETS).forEach((id) => (INSTRUMENTS[id].sampled = id));
   INSTRUMENTS.felt.sampled = "piano";
   // آلات النفَس والقوس: العيّنة ٤ ثوانٍ، فنكرّر وسطها (بتداخل ناعم) ما دامت النغمة ممسوكة
-  const LOOPED_SETS = new Set("organ harmonium violin cello doublebass strings flute clarinet oboe bassoon sax horn trumpet trombone tuba".split(" "));
+  const LOOPED_SETS = new Set("accordion organ harmonium violin cello doublebass strings flute clarinet oboe bassoon sax horn trumpet trombone tuba".split(" "));
   // ذيل الرفع (ثابت زمني بالثواني): البيانو يخمده المخمّد، الهارب والجلوكن يرنّان بعد الترك
-  const SAMPLE_RELEASE = { pizz: 0.3, harp: 0.5, glockenspiel: 0.6, marimba: 0.25, xylophone: 0.2, guitar: 0.15, guitar_ac: 0.15, guitar_el: 0.12, ebass: 0.07, organ: 0.06 };
+  const SAMPLE_RELEASE = { pizz: 0.3, celesta: 0.7, accordion: 0.08, harp: 0.5, glockenspiel: 0.6, marimba: 0.25, xylophone: 0.2, guitar: 0.15, guitar_ac: 0.15, guitar_el: 0.12, ebass: 0.07, organ: 0.06 };
   const NOTE_PC = { C: 0, Cs: 1, D: 2, Ds: 3, E: 4, F: 5, Fs: 6, G: 7, Gs: 8, A: 9, As: 10, B: 11 };
   const sampleBank = {}; // المجموعة → [{ midi, buffer, skip, norm, loop }] بعد اكتمال تحميلها
   const sampleLoading = {};
