@@ -25,7 +25,7 @@ pageScript: "sounds"
     <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="panePractice" data-pane="panePractice">🎶 تدرّب</button>
   </div>
 
-  <section class="sounds-pane" id="panePlay" role="tabpanel">
+  <section class="sounds-pane" id="panePlay" role="tabpanel" data-drop="⬇️ أفلت الملف هنا" data-drop-bad="هذا النوع من الملفات ما يُفتح هنا — جرّب MIDI أو ملف صوتي أو فيديو">
     <div class="beep-play">
       <div class="play-toolbar">
         <button type="button" class="filter-chip" id="beepRecToggle" data-label="⏺ سجّل" data-stop="⏹ أوقف" data-more="⏺ أضف طبقة" data-empty="لم تعزف أي نغمة بعد">⏺ سجّل</button>
@@ -596,7 +596,7 @@ pageScript: "sounds"
     <p class="beep-experiment-hint">📚 أدوات التعلّم هنا مستوحاة من مقرر إنتاج موسيقي يدرسه صاحب الموقع في الجامعة.</p>
   </section>
 
-  <section class="sounds-pane" id="panePractice" role="tabpanel" hidden>
+  <section class="sounds-pane" id="panePractice" role="tabpanel" hidden data-drop="⬇️ أفلت الملف هنا">
     <div class="beep-play song-practice" id="songPractice" data-groups="تحت ٣|تحت ٢|تحت|الوسط|فوق|فوق ٢|فوق ٣" data-saved="✅ حُفظت في متصفحك" data-del-ask="تحذف هذه المقطوعة من متصفحك؟" data-bad="تعذّر قراءة الملف" data-loaded="✅ فُتحت المقطوعة" data-empty="اكتب نوتات أولاً" data-wait="اضغط النغمة المضيئة" data-done="🎉 أنهيتها! الأخطاء: " data-full="مساحة المتصفح ممتلئة — استخدم «نزّل ملف» لحفظها" data-notes=" نغمة">
       <div class="song-lib">
         <select id="songList" aria-label="مقطوعاتك"><option value="">— مقطوعة جديدة —</option></select>

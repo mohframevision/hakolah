@@ -26,7 +26,7 @@ pageScript: "sounds"
     <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="panePractice" data-pane="panePractice">🎶 Practice</button>
   </div>
 
-  <section class="sounds-pane" id="panePlay" role="tabpanel">
+  <section class="sounds-pane" id="panePlay" role="tabpanel" data-drop="⬇️ Drop the file here" data-drop-bad="This kind of file can't be opened here — try MIDI, audio or video">
     <div class="beep-play">
       <div class="play-toolbar">
         <button type="button" class="filter-chip" id="beepRecToggle" data-label="⏺ Record" data-stop="⏹ Stop" data-more="⏺ Add layer" data-empty="You haven't played any notes yet">⏺ Record</button>
@@ -597,7 +597,7 @@ pageScript: "sounds"
     <p class="beep-experiment-hint">📚 The learning tools here are inspired by a music production course the site's owner is taking at university.</p>
   </section>
 
-  <section class="sounds-pane" id="panePractice" role="tabpanel" hidden>
+  <section class="sounds-pane" id="panePractice" role="tabpanel" hidden data-drop="⬇️ Drop the file here">
     <div class="beep-play song-practice" id="songPractice" data-groups="Low 3|Low 2|Low|Middle|High|High 2|High 3" data-saved="✅ Saved in your browser" data-del-ask="Delete this song from your browser?" data-bad="Could not read the file" data-loaded="✅ Song opened" data-empty="Type some notes first" data-wait="Press the glowing key" data-done="🎉 Finished! Mistakes: " data-full="Browser storage is full — use “Download file” to keep it" data-notes=" notes">
       <div class="song-lib">
         <select id="songList" aria-label="Your songs"><option value="">— New song —</option></select>

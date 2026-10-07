@@ -7761,6 +7761,45 @@ function initBeepMelodyExperiment() {
     }
   }
 
+  /* ===== اسحب وأفلت (مثل BandLab): ملف من الجهاز على الصفحة يُفتح مباشرة =====
+     «اعزف»: MIDI → مسارات نغمات، صوت → مسار، فيديو → الفيديو. «تدرّب»: MIDI وMusicXML وملفات
+     الأغاني. الملف يُسلَّم لزر الملف نفسه كأنك اخترته، فيمر من نفس المعالجة المجرَّبة */
+  const feedInput = (id, file) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  const dropPane = () => ["panePlay", "panePractice"].map((id) => document.getElementById(id)).find((el) => el && !el.hidden);
+  const draggingFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+  let dropTimer = 0;
+  const dropOff = () => document.querySelectorAll(".drop-on").forEach((el) => el.classList.remove("drop-on"));
+  document.addEventListener("dragover", (e) => {
+    const pane = dropPane();
+    if (!pane || !draggingFiles(e)) return;
+    e.preventDefault(); // يسمح بالإفلات بدل ما يفتح المتصفح الملف
+    e.dataTransfer.dropEffect = "copy";
+    pane.classList.add("drop-on");
+    clearTimeout(dropTimer);
+    dropTimer = setTimeout(dropOff, 200); // dragover يتكرر طول السحب؛ لما يوقف = طلع الملف من الصفحة
+  });
+  document.addEventListener("drop", (e) => {
+    const pane = dropPane();
+    if (!pane || !draggingFiles(e)) return;
+    e.preventDefault();
+    dropOff();
+    [...e.dataTransfer.files].forEach((file) => {
+      const name = file.name.toLowerCase();
+      if (pane.id === "panePractice") return feedInput("songFile", file);
+      if (/.(mid|midi|kar)$/.test(name) || /midi/.test(file.type)) feedInput("beepMidiFile", file);
+      else if (file.type.startsWith("video/")) feedInput("beepVideoFile", file);
+      else if (file.type.startsWith("audio/") || /.(wav|mp3|ogg|oga|m4a|aac|flac|opus)$/.test(name)) feedInput("beepAudioFile", file);
+      else showToast(pane.dataset.dropBad);
+    });
+  });
+
   if (videoBox) {
     document.getElementById("beepVideoFile").addEventListener("change", (e) => {
       const file = e.target.files[0];

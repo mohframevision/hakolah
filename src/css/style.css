@@ -7733,3 +7733,25 @@ li {
   color: var(--color-text-muted);
   white-space: nowrap;
 }
+
+/* اسحب وأفلت: إطار متقطع ورسالة فوق التبويب وقت سحب ملف عليه */
+.sounds-pane {
+  position: relative;
+}
+
+.sounds-pane.drop-on::after {
+  content: attr(data-drop);
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px dashed #6fc8a4;
+  border-radius: 16px;
+  background: rgba(8, 30, 23, 0.82);
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 800;
+  pointer-events: none;
+}
