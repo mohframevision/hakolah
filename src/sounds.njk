@@ -89,6 +89,8 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepAddDrums" aria-expanded="false" aria-controls="beepDrums">🥁 إيقاع</button>
         <button type="button" class="filter-chip" id="beepMicRec" data-label="🎤 سجّل صوتك" data-stop="⏹ أوقف" data-denied="لم يُسمح باستخدام الميكروفون." data-failed="تعذّر تسجيل الصوت أو قراءته." data-silent="لم يُلتقط أي صوت.">🎤 سجّل صوتك</button>
         <button type="button" class="filter-chip" id="beepAddSfx" aria-expanded="false" aria-controls="beepSfx">💥 مؤثرات</button>
+        <label class="filter-chip" for="beepMidiFile">🎼 ملف MIDI</label>
+        <input type="file" id="beepMidiFile" accept=".mid,.midi,audio/midi,audio/x-midi" hidden data-done="✅ فُتح ملف MIDI: {n} مسار" data-failed="تعذّر قراءة ملف MIDI" />
         <label class="filter-chip" for="beepAudioFile">📁 ملف صوتي</label>
         <input type="file" id="beepAudioFile" accept="audio/*" hidden />
         <label class="filter-chip" for="beepVideoFile">🎬 فيديو</label>

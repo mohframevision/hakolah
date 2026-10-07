@@ -4204,6 +4204,54 @@ function initBeepMelodyExperiment() {
     renderLayers();
   }
 
+  /* ملف MIDI من أي برنامج (BandLab، MuseScore، Logic…) → مسار نغمات لكل آلة عند الخط الأبيض،
+     قابل للتحرير نغمة نغمة. الآلة: من اسم المسار لو كان من هكوله نفسه (التصدير يكتب اسم الآلة)،
+     وإلا من رقم آلة General MIDI. مشروع فاضي ياخذ سرعة الملف وميزانه. */
+  const GM_FAMILY = ["piano", "glockenspiel", "organ", "guitar", "ebass", "strings", "strings", "trumpet", "sax", "flute", "synth", "synth", "synth", "banjo", "marimba", "synth"];
+  function instrumentFor(t) {
+    const nm = String(t.name || "").replace(/ d+$/, "").trim().toLowerCase();
+    if (INSTRUMENTS[nm]) return nm;
+    if (t.prog == null) return "piano";
+    const exact = Object.keys(GM_PROGRAM).find((id) => GM_PROGRAM[id] === t.prog && INSTRUMENTS[id]);
+    return exact || GM_FAMILY[t.prog >> 3];
+  }
+  const midiFile = document.getElementById("beepMidiFile");
+  midiFile?.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    let parsed;
+    try {
+      const buf = await file.arrayBuffer();
+      if (new TextDecoder().decode(buf.slice(0, 4)) !== "MThd") throw new Error("not midi");
+      parsed = parseMidi(buf);
+    } catch {
+      return showToast(midiFile.dataset.failed);
+    }
+    const tracks = parsed.tracks.filter((t) => t.studio.length);
+    if (!tracks.length) return showToast(midiFile.dataset.failed);
+    const room = Math.min(MAX_TRACKS - rowCount(), MAX_LAYERS - layers.length);
+    if (room <= 0) return showToast(recTake.dataset.max);
+    if (takeTimers.length) stopTake();
+    const at = layers.length ? cursor : 0; // مشروع فاضي: الملف من بدايته؛ وإلا عند الخط الأبيض
+    if (!layers.length) {
+      setTempo(parsed.qpm);
+      if ([2, 3, 4].includes(parsed.barQ)) {
+        meter = parsed.barQ;
+        markMeter(meter);
+      }
+    }
+    pushHistory();
+    tracks.slice(0, room).forEach((t) => {
+      const events = t.studio.map(([st, d, m, v]) => ({ ...makeNoteEvent(m, 0, st, d, d + 0.4, velGain(v)), velocity: v }));
+      const end = Math.max(...events.map((x) => x.startBeat + x.held));
+      layers.push({ kind: "notes", events, instrument: instrumentFor(t), muted: false, end, t0: 0, t1: end, offset: at, row: rowCount() });
+    });
+    renderLayers();
+    playSound("success");
+    showToast(midiFile.dataset.done.replace("{n}", Math.min(tracks.length, room)) + (tracks.length > room ? " — " + recTake.dataset.max : ""));
+  });
+
   // ملف صوتي من الجهاز → مسار جديد عند الخط الأبيض (أحادي، حتى ١٠ دقائق)
   const audioFile = document.getElementById("beepAudioFile");
   audioFile?.addEventListener("change", async (e) => {
@@ -6089,17 +6137,17 @@ function initBeepMelodyExperiment() {
           if (type === 0xc0 && !(ch in progs)) progs[ch] = note;
           if (ch === 9 || (type !== 0x90 && type !== 0x80)) continue;
           const key = ch * 128 + note;
-          if (type === 0x90 && vel > 0) open.set(key, [...(open.get(key) || []), tick]);
+          if (type === 0x90 && vel > 0) open.set(key, [...(open.get(key) || []), [tick, vel]]);
           else {
-            const start = open.get(key)?.shift();
-            if (start != null) mine.push([start, tick, note, ch]);
+            const on = open.get(key)?.shift();
+            if (on) mine.push([on[0], tick, note, ch, on[1]]);
           }
         } else break; // بايت غريب: نكتفي بما قُرئ من هذا المسار
       }
-      mine.forEach(([a, b, note, ch]) => {
+      mine.forEach(([a, b, note, ch, vel]) => {
         const g = k + ":" + ch;
         if (!groups.has(g)) groups.set(g, { name, ch, prog: progs[ch] ?? null, notes: [] });
-        groups.get(g).notes.push([a, b, note]);
+        groups.get(g).notes.push([a, b, note, vel]);
       });
       p = end;
     }
@@ -6110,11 +6158,12 @@ function initBeepMelodyExperiment() {
       const prev = segs[segs.length - 1];
       segs.push({ tick, us, sec: prev ? prev.sec + ((tick - prev.tick) * prev.us) / 1e6 / div : 0 });
     });
-    const beat = (tick) => {
+    const sec = (tick) => {
       let sg = segs[0];
       for (const x of segs) if (x.tick <= tick) sg = x; // ponytail: بحث خطي، الملفات فيها تغييرات سرعة قليلة
-      return Math.round((sg.sec + ((tick - sg.tick) * sg.us) / 1e6 / div) * 1.5 * 1000) / 1000;
+      return sg.sec + ((tick - sg.tick) * sg.us) / 1e6 / div;
     };
+    const beat = (tick) => Math.round(sec(tick) * 1.5 * 1000) / 1000;
     const sameName = (name) => [...groups.values()].filter((g) => g.name === name).length > 1;
     const q = (tick) => Math.round((tick / div) * 1000) / 1000; // بالسوداء (للنوتة الموسيقية)
     // نغمة = [بداية, مدة] بالنبضات على ٩٠ للعزف + midi + [بداية, مدة] بالسوداء للمدرج
@@ -6122,8 +6171,10 @@ function initBeepMelodyExperiment() {
       name: g.name + (g.name && sameName(g.name) ? " " + (g.ch + 1) : ""),
       prog: g.prog,
       notes: g.notes.map(([a, b, note]) => [beat(a), Math.max(0.05, beat(b) - beat(a)), note, q(a), q(b - a)]).sort((x, y) => x[0] - y[0]),
+      // للاستوديو: [ثانية البداية, المدة بالثواني, midi, القوة] — بالضبط مع تغييرات السرعة
+      studio: g.notes.map(([a, b, note, vel]) => [sec(a), Math.max(0.03, sec(b) - sec(a)), note, vel]).sort((x, y) => x[0] - y[0]),
     }));
-    return { tracks, barQ: barQ || 4, key: clamp(keySig || 0, -7, 7) };
+    return { tracks, barQ: barQ || 4, key: clamp(keySig || 0, -7, 7), qpm: 60000000 / (segs[0]?.us || 500000) };
   }
   /* ===== MusicXML (من MuseScore / Sibelius / Finale): كل مدرج مسار (🫱 يمين، 🫲 يسار)، بالمدد
      الموسيقية الحقيقية والميزان والمفتاح والسرعة. يفهم الكورد، الربط، backup/forward (أكثر من صوت

@@ -90,6 +90,8 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepAddDrums" aria-expanded="false" aria-controls="beepDrums">🥁 Rhythm</button>
         <button type="button" class="filter-chip" id="beepMicRec" data-label="🎤 Record your voice" data-stop="⏹ Stop" data-denied="Microphone access wasn't allowed." data-failed="Couldn't record or read the audio." data-silent="No sound was picked up.">🎤 Record your voice</button>
         <button type="button" class="filter-chip" id="beepAddSfx" aria-expanded="false" aria-controls="beepSfx">💥 SFX</button>
+        <label class="filter-chip" for="beepMidiFile">🎼 MIDI file</label>
+        <input type="file" id="beepMidiFile" accept=".mid,.midi,audio/midi,audio/x-midi" hidden data-done="✅ MIDI file opened: {n} track(s)" data-failed="Could not read the MIDI file" />
         <label class="filter-chip" for="beepAudioFile">📁 Audio file</label>
         <input type="file" id="beepAudioFile" accept="audio/*" hidden />
         <label class="filter-chip" for="beepVideoFile">🎬 Video</label>
