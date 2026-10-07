@@ -90,7 +90,7 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepAddDrums" aria-expanded="false" aria-controls="beepDrums">🥁 Rhythm</button>
         <button type="button" class="filter-chip" id="beepMicRec" data-label="🎤 Record your voice" data-stop="⏹ Stop" data-denied="Microphone access wasn't allowed." data-failed="Couldn't record or read the audio." data-silent="No sound was picked up.">🎤 Record your voice</button>
         <button type="button" class="filter-chip" id="beepAddSfx" aria-expanded="false" aria-controls="beepSfx">💥 SFX</button>
-        <label class="filter-chip" for="beepMidiFile">🎼 MIDI file</label>
+        <label class="filter-chip" for="beepMidiFile" title="Open a MIDI file from BandLab or any app — each instrument becomes a track you can edit">📂 Open MIDI file</label>
         <input type="file" id="beepMidiFile" accept=".mid,.midi,audio/midi,audio/x-midi" hidden data-done="✅ MIDI file opened: {n} track(s)" data-failed="Could not read the MIDI file" />
         <label class="filter-chip" for="beepAudioFile">📁 Audio file</label>
         <input type="file" id="beepAudioFile" accept="audio/*" hidden />
@@ -283,9 +283,10 @@ pageScript: "sounds"
         </details>
         <div class="beep-transport">
           <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ Play layers" data-stop="⏹ Stop">▶️ Play layers</button>
-          <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ WAV</button>
-          <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">⬇️ MP3</button>
-          <button type="button" class="filter-chip" id="beepRecMidi">🎼 MIDI</button>
+          <span class="beep-dl-label">⬇️ Download your project:</span>
+          <button type="button" class="filter-chip" id="beepRecWav" title="Full-quality audio file" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">WAV</button>
+          <button type="button" class="filter-chip" id="beepRecMp3" title="Smaller audio file" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">MP3</button>
+          <button type="button" class="filter-chip" id="beepRecMidi" title="The notes themselves (not audio): open it in BandLab or any music app and keep working">MIDI</button>
           <button type="button" class="filter-chip" id="beepRecStems" title="A ZIP with the full mix + one WAV per track, all the same length, ready for editing software" data-working="⏳" data-failed="Couldn't prepare the files" data-toolong="This project is too long to export as separate stems on this device — shorten it or export a single WAV">🗂️ Stems</button>
           <button type="button" class="filter-chip" id="beepShare" data-copied="✅ Project link copied" data-audio="✅ Link copied — audio recordings aren't shared by link, download them as WAV">🔗 Share</button>
           <button type="button" class="filter-chip" id="beepRecClear" aria-label="Delete all layers" title="Delete all layers">🗑️</button>
@@ -441,7 +442,7 @@ pageScript: "sounds"
             <button type="button" class="filter-chip" id="beepOctUp" aria-label="Octave up">X ⬆️</button>
           </div>
           <button type="button" class="filter-chip" id="beepPedal" aria-pressed="false" title="Sustain pedal: notes keep ringing after you lift your finger (or hold Shift)">🦶 <span class="qb-text">Pedal</span></button>
-          <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 Connect MIDI" data-on="🎹 " data-none="No MIDI keyboard found — plug it in, then press again." data-denied="MIDI access wasn't allowed.">🎹 <span class="qb-text">Connect MIDI</span></button>
+          <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 Connect MIDI keyboard" data-on="🎹 " data-none="No MIDI keyboard found — plug it in, then press again." data-denied="MIDI access wasn't allowed.">🎹 <span class="qb-text">Connect MIDI keyboard</span></button>
           <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="Fullscreen">⛶</button>
           <button type="button" class="filter-chip piano-more" id="pianoMore" aria-expanded="false" aria-label="More keyboard options" title="More keyboard options">⋯</button>
         </div>

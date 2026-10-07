@@ -7725,3 +7725,11 @@ li {
   background: rgba(111, 200, 164, 0.15);
   pointer-events: none;
 }
+
+/* «نزّل مشروعك:» قبل أزرار التصدير — كانت WAV/MP3/MIDI أسماء صيغ بس وما يبان إنها تحميل */
+.beep-dl-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}

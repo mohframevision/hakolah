@@ -89,7 +89,7 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepAddDrums" aria-expanded="false" aria-controls="beepDrums">🥁 إيقاع</button>
         <button type="button" class="filter-chip" id="beepMicRec" data-label="🎤 سجّل صوتك" data-stop="⏹ أوقف" data-denied="لم يُسمح باستخدام الميكروفون." data-failed="تعذّر تسجيل الصوت أو قراءته." data-silent="لم يُلتقط أي صوت.">🎤 سجّل صوتك</button>
         <button type="button" class="filter-chip" id="beepAddSfx" aria-expanded="false" aria-controls="beepSfx">💥 مؤثرات</button>
-        <label class="filter-chip" for="beepMidiFile">🎼 ملف MIDI</label>
+        <label class="filter-chip" for="beepMidiFile" title="افتح ملف MIDI من BandLab أو أي برنامج، وكل آلة تصير مساراً تقدر تعدّله">📂 افتح ملف MIDI</label>
         <input type="file" id="beepMidiFile" accept=".mid,.midi,audio/midi,audio/x-midi" hidden data-done="✅ فُتح ملف MIDI: {n} مسار" data-failed="تعذّر قراءة ملف MIDI" />
         <label class="filter-chip" for="beepAudioFile">📁 ملف صوتي</label>
         <input type="file" id="beepAudioFile" accept="audio/*" hidden />
@@ -282,9 +282,10 @@ pageScript: "sounds"
         </details>
         <div class="beep-transport">
           <button type="button" class="filter-chip" id="beepRecPlay" data-play="▶️ شغّل الطبقات" data-stop="⏹ أوقف">▶️ شغّل الطبقات</button>
-          <button type="button" class="filter-chip" id="beepRecWav" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ WAV</button>
-          <button type="button" class="filter-chip" id="beepRecMp3" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">⬇️ MP3</button>
-          <button type="button" class="filter-chip" id="beepRecMidi">🎼 MIDI</button>
+          <span class="beep-dl-label">⬇️ نزّل مشروعك:</span>
+          <button type="button" class="filter-chip" id="beepRecWav" title="ملف صوت بجودة كاملة" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">WAV</button>
+          <button type="button" class="filter-chip" id="beepRecMp3" title="ملف صوت أصغر حجماً" data-working="⏳ جارٍ التجهيز…" data-failed="تعذّر تجهيز الملف">MP3</button>
+          <button type="button" class="filter-chip" id="beepRecMidi" title="النغمات نفسها (مو صوت): افتحه في BandLab أو أي برنامج موسيقى وكمّل عليه">MIDI</button>
           <button type="button" class="filter-chip" id="beepRecStems" title="ملف ZIP فيه المزيج + ملف WAV لكل مسار، بنفس الطول، جاهزة لبرامج المونتاج" data-working="⏳" data-failed="تعذّر تجهيز الملفات" data-toolong="المشروع أطول من أن يُصدَّر مسارات منفصلة على هذا الجهاز — قصّره أو صدّر WAV واحداً">🗂️ مسارات منفصلة</button>
           <button type="button" class="filter-chip" id="beepShare" data-copied="✅ نُسخ رابط المشروع" data-audio="✅ نُسخ الرابط — التسجيلات الصوتية لا تُشارك بالرابط، نزّلها WAV">🔗 شارك</button>
           <button type="button" class="filter-chip" id="beepRecClear" aria-label="احذف كل الطبقات" title="احذف كل الطبقات">🗑️</button>
@@ -440,7 +441,7 @@ pageScript: "sounds"
             <button type="button" class="filter-chip" id="beepOctUp" aria-label="أوكتاف أعلى">X ⬆️</button>
           </div>
           <button type="button" class="filter-chip" id="beepPedal" aria-pressed="false" title="دواسة الاستدامة: النغمات تستمر بعد رفع إصبعك (أو أمسك Shift)">🦶 <span class="qb-text">الدواسة</span></button>
-          <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 وصّل MIDI" data-on="🎹 " data-none="لم يُعثر على كيبورد MIDI — وصّله بالجهاز ثم اضغط مرة أخرى." data-denied="لم يُسمح باستخدام MIDI.">🎹 <span class="qb-text">وصّل MIDI</span></button>
+          <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 وصّل كيبورد MIDI" data-on="🎹 " data-none="لم يُعثر على كيبورد MIDI — وصّله بالجهاز ثم اضغط مرة أخرى." data-denied="لم يُسمح باستخدام MIDI.">🎹 <span class="qb-text">وصّل كيبورد MIDI</span></button>
           <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="ملء الشاشة">⛶</button>
           <button type="button" class="filter-chip piano-more" id="pianoMore" aria-expanded="false" aria-label="المزيد من إعدادات البيانو" title="المزيد من إعدادات البيانو">⋯</button>
         </div>
