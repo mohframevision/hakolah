@@ -350,6 +350,16 @@ function initBeepMelodyExperiment() {
       vibrato: { rateHz: 5, depthRatio: 0.006 },
       ringScale: 1.05,
     },
+    // ماندولين: تخليق قريب من البانجو كبديل لين تجهز العيّنات الحقيقية
+    mandolin: {
+      harmonics: [{ mult: 1, weight: 1, type: "triangle" }, { mult: 2, weight: 0.45, type: "sine" }, { mult: 3, weight: 0.25, type: "sine" }, { mult: 4, weight: 0.12, type: "sine" }],
+      attack: 0.002,
+      sustainRatio: 0,
+      filterBrightMult: 10,
+      filterDarkMult: 2.4,
+      ringScale: 0.8,
+      level: 1,
+    },
     banjo: {
       harmonics: [
         { mult: 1, weight: 1, type: "sawtooth" },
@@ -759,6 +769,9 @@ function initBeepMelodyExperiment() {
     accordion: "B2 D3 Fs3 A3 C4 E4 G4 B4 D5 G5",
     // A Sampled Celesta (Neil Bickford) — العيّنات CC0
     celesta: "C4 Ds4 Fs4 A4 C5 Ds5 Fs5 A5 C6 Ds6 Fs6 A6 C7 Ds7 Fs7 A7 C8",
+    // ferrosintesis-samples-mandolin (ماندولين حقيقي سجّله صاحبه) — CC0. التسجيل للهجمة وأول
+    // ٠٫٥٥ث، وبعدها ذيل وتر (Karplus-Strong) مبذور من التسجيل نفسه — نفس طريقة المكتبة الأصلية
+    mandolin: "G3 C4 D4 G4 A4 D5 E5 A5 D6 E6",
   };
   // كل آلة لها تسجيلات تعزف منها (البيانو الهادئ = البيانو الكبير بفلتر لباد)
   Object.keys(SAMPLE_SETS).forEach((id) => (INSTRUMENTS[id].sampled = id));
@@ -766,7 +779,7 @@ function initBeepMelodyExperiment() {
   // آلات النفَس والقوس: العيّنة ٤ ثوانٍ، فنكرّر وسطها (بتداخل ناعم) ما دامت النغمة ممسوكة
   const LOOPED_SETS = new Set("accordion organ harmonium violin cello doublebass strings flute clarinet oboe bassoon sax horn trumpet trombone tuba".split(" "));
   // ذيل الرفع (ثابت زمني بالثواني): البيانو يخمده المخمّد، الهارب والجلوكن يرنّان بعد الترك
-  const SAMPLE_RELEASE = { pizz: 0.3, celesta: 0.7, accordion: 0.08, harp: 0.5, glockenspiel: 0.6, marimba: 0.25, xylophone: 0.2, guitar: 0.15, guitar_ac: 0.15, guitar_el: 0.12, ebass: 0.07, organ: 0.06 };
+  const SAMPLE_RELEASE = { mandolin: 0.15, pizz: 0.3, celesta: 0.7, accordion: 0.08, harp: 0.5, glockenspiel: 0.6, marimba: 0.25, xylophone: 0.2, guitar: 0.15, guitar_ac: 0.15, guitar_el: 0.12, ebass: 0.07, organ: 0.06 };
   const NOTE_PC = { C: 0, Cs: 1, D: 2, Ds: 3, E: 4, F: 5, Fs: 6, G: 7, Gs: 8, A: 9, As: 10, B: 11 };
   const sampleBank = {}; // المجموعة → [{ midi, buffer, skip, norm, loop }] بعد اكتمال تحميلها
   const sampleLoading = {};
@@ -4481,7 +4494,7 @@ function initBeepMelodyExperiment() {
     xylophone: 13, bell: 14, santoor: 15, organ: 19, accordion: 21, harmonium: 20, harmonica: 22, melodica: 22, guitar: 24, guitar_ac: 25, guitar_el: 27, ebass: 33,
     doublebass: 32, synthbass: 38, violin: 40, cello: 42, pizz: 45, harp: 46, strings: 48, choir: 52, trumpet: 56,
     trombone: 57, tuba: 58, horn: 60, sax: 65, oboe: 68, bassoon: 70, clarinet: 71, flute: 73, recorder: 74, nay: 77, chiptune: 80,
-    synth: 81, banjo: 105, oud: 106, qanun: 107, kalimba: 108, steelpan: 114, custom: 0,
+    synth: 81, mandolin: 25, banjo: 105, oud: 106, qanun: 107, kalimba: 108, steelpan: 114, custom: 0,
   };
   function studioToMidi() {
     const PPQ = 480;

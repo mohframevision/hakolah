@@ -23,5 +23,10 @@ accordion/   FreePats "Button Accordion HN" — Hohner accordion recorded by Jef
 celesta/     "A Sampled Celesta" — Neil Bickford — samples CC0
         https://gitlab.com/Nbickford/a-sampled-celesta
 
+mandolin/    ferrosintesis-samples-mandolin — recorded by the ferrosintesis author on his own
+        mandolin — CC0   https://crates.io/crates/ferrosintesis-samples-mandolin
+        (pluck onsets retuned to exact pitch; each note continued by a string model
+        seeded from the recording, as the original library does)
+
 Changes: converted to mono MP3, trimmed to 2.5–6 s, faded out, peak-normalized,
 and a subset of notes kept (about one every 2–4 semitones).
