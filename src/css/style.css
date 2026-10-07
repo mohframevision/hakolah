@@ -7765,3 +7765,294 @@ li {
   background: rgba(111, 200, 164, 0.15);
   pointer-events: none;
 }
+
+/* ===== الجوال بالعرض: «اعزف» يصير تطبيقاً بكامل الشاشة (تخطيط Perfect Piano) =====
+   سطر علوي رفيع (التبويبات أيقونات + التسجيل والمترونوم والسرعة والطبقات)، تحته سطر
+   البيانو (الآلة + خريطة الـ٨٨ مفتاحاً + الدواسة + ⋯)، والباقي كله مفاتيح. 🎚️ يفتح
+   الطبقات فوق المفاتيح، و⚙️/⌨️ يفتحان لوحتيهما فوق كل شي. العناصر نفسها بلا نقل:
+   الأغلفة الوسيطة display: contents فتصير كلها خانات بشبكة واحدة */
+.phone-only,
+.oct-map,
+.phone-rotate {
+  display: none;
+}
+
+@media (orientation: portrait) and (max-width: 600px) {
+  html.touch #panePlay .phone-rotate {
+    display: block;
+    margin: 0 0 8px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(111, 200, 164, 0.14);
+    color: #d8efe5;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  html.touch body:has(.sounds-tool #panePlay:not([hidden])) {
+    overflow: hidden;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "tabs bar"
+      "head head"
+      "add add"
+      "extra extra"
+      "layers layers"
+      "keys keys";
+    gap: 4px 8px;
+    height: 100dvh;
+    margin: 0;
+    padding: 4px max(8px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    border-radius: 0;
+    overflow: hidden;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) :is(#panePlay, .beep-play, .piano-panel) {
+    display: contents;
+  }
+
+  /* مخفي بهذا الوضع: شريط الصوت (أزرار الجوال تكفي)، والفيديو، والشكر (ظاهر بالوضع العمودي)،
+     والتلميحات الطويلة، واختصارات الكيبورد */
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) :is(.sounds-top, #beepVideoBox, .beep-credit, .phone-rotate, #beepShortcuts, #beepTimelineHint, #beepRecTake > .beep-param-note),
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) :is(#beepHelp, #beepSettings):not([open]) {
+    display: none !important;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .sounds-tabs {
+    grid-area: tabs;
+    align-self: center;
+    justify-self: start;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .sounds-tab {
+    padding: 6px 10px;
+    font-size: 1rem;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .tab-text {
+    display: none;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .play-toolbar {
+    grid-area: bar;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 4px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) :is(.play-toolbar, .piano-head) .filter-chip {
+    min-height: 36px;
+    padding: 4px 10px;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .phone-only {
+    display: inline-flex;
+  }
+
+  html.touch .sounds-tool.layers-open:has(#panePlay:not([hidden])) #beepLayersBtn {
+    background: #2e8b67;
+    border-color: #6fc8a4;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .beep-tempo-value span {
+    display: none;
+  }
+
+  /* سطر البيانو: الآلة، الخريطة بين زرّي الأوكتاف، الدواسة، ملء الشاشة، ⋯ */
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .piano-head {
+    grid-area: head;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px 6px;
+    margin: 0;
+    padding: 0;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .piano-head .instrument-slot {
+    flex: 0 1 230px;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .piano-head:not(.open) .beep-board-row {
+    display: none;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .piano-oct {
+    flex: 1 1 200px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) #beepOctLabel {
+    display: none;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) #beepFullscreen:not([hidden]) {
+    display: inline-flex;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .oct-map {
+    position: relative;
+    display: block;
+    flex: 1;
+    height: 34px;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    touch-action: none;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 calc(100% / 52 - 1px), rgba(0, 0, 0, 0.35) calc(100% / 52 - 1px) calc(100% / 52)),
+      #e9eeec;
+  }
+
+  /* النافذة الظاهرة على الخريطة: كل شي برّاها باهت */
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .oct-map-win {
+    position: absolute;
+    inset-block: 0;
+    border: 2px solid #3fa480;
+    border-radius: 4px;
+    box-shadow: 0 0 0 999px rgba(10, 30, 22, 0.55);
+    transition: left 0.15s ease, width 0.15s ease;
+  }
+
+  /* الطبقات: فوق المفاتيح، بارتفاع محدود وتمرير داخلي. معها صف «أضف» (إيقاع، صوتك،
+     مؤثرات، ملفات) بسطر واحد يتمرّر، ولوحتا الإيقاع والمؤثرات لما تنفتحان */
+  html.touch .sounds-tool:has(#panePlay:not([hidden])):not(.layers-open) :is(#beepRecTake, .beep-add-row, #beepDrums, #beepSfx) {
+    display: none;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .beep-add-row {
+    grid-area: add;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 4px;
+    margin: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .beep-add-row .filter-chip {
+    flex: none;
+    min-height: 34px;
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) :is(#beepDrums, #beepSfx) {
+    grid-area: extra;
+    max-height: 38dvh;
+    margin: 0;
+    overflow-y: auto;
+  }
+
+  html.touch .sounds-tool.layers-open:has(#panePlay:not([hidden])) #beepRecTake:not([hidden]) {
+    grid-area: layers;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 6px;
+    max-height: 42dvh;
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* والطبقات مفتوحة: سطر الآلة والخريطة يختفي (يرجع بإقفالها) عشان تبقى المفاتيح
+     تنلمس، و▶️ وأزرار التنزيل أول شي، وأدوات المقطع أصغر — كلها بسطر واحد يتمرّر */
+  html.touch .sounds-tool.layers-open:has(#panePlay:not([hidden])) .piano-head {
+    display: none;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) #beepRecTake > :is(.beep-transport, .beep-clip-tools) {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) #beepRecTake > * {
+    flex: none;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) #beepRecTake > .beep-transport {
+    order: -3;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) #beepRecTake > .beep-clip-tools {
+    order: -2;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) #beepRecTake > .beep-timeline {
+    order: -1;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) #beepRecTake > :is(.beep-transport, .beep-clip-tools) > * {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) #beepRecTake > :is(.beep-transport, .beep-clip-tools) .filter-chip {
+    min-height: 32px;
+    padding: 3px 9px;
+    font-size: 0.82rem;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .beep-keys-wrap {
+    grid-area: keys;
+    min-height: 0;
+    height: 100%;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .beep-keys-wrap:not(.full) .beep-play-keys {
+    width: 100%;
+  }
+
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .beep-play-keys,
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .beep-play:has(.beep-rec-take:not([hidden])) .beep-play-keys {
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  /* الكاملة: مفاتيح بعرض إصبع (٥٢ × ٥٢px) وتتمرّر، والخريطة تتبعها */
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) .beep-play-keys.full {
+    min-width: calc(52 * 52px);
+  }
+
+  /* ⚙️ و⌨️: لوحة فوق كل شي بتمرير داخلي، تُقفل بنفس الزر */
+  html.touch .sounds-tool:has(#panePlay:not([hidden])) :is(#beepHelp, #beepSettings)[open] {
+    position: fixed;
+    inset: 52px max(8px, env(safe-area-inset-right)) 8px max(8px, env(safe-area-inset-left));
+    z-index: 5;
+    margin: 0;
+    padding: 12px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 14px;
+    background: #10261d;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  }
+}

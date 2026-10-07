@@ -20,13 +20,14 @@ pageScript: "sounds"
   </div>
 
   <div class="sounds-tabs" role="tablist">
-    <button type="button" class="sounds-tab active" role="tab" aria-selected="true" aria-controls="panePlay" data-pane="panePlay">🎹 Play</button>
-    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneCompose" data-pane="paneCompose">🎼 Compose</button>
-    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneLearn" data-pane="paneLearn">📚 Learn</button>
-    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="panePractice" data-pane="panePractice">🎶 Practice</button>
+    <button type="button" class="sounds-tab active" role="tab" aria-selected="true" aria-controls="panePlay" data-pane="panePlay">🎹 <span class="tab-text">Play</span></button>
+    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneCompose" data-pane="paneCompose">🎼 <span class="tab-text">Compose</span></button>
+    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneLearn" data-pane="paneLearn">📚 <span class="tab-text">Learn</span></button>
+    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="panePractice" data-pane="panePractice">🎶 <span class="tab-text">Practice</span></button>
   </div>
 
   <section class="sounds-pane" id="panePlay" role="tabpanel" data-drop="⬇️ Drop the file here" data-drop-bad="This kind of file can't be opened here — try MIDI, audio or video">
+    <p class="phone-rotate">🔄 Turn your phone sideways: the piano gets bigger, with recording and layers on one screen.</p>
     <div class="beep-play">
       <div class="play-toolbar">
         <button type="button" class="filter-chip" id="beepRecToggle" data-label="⏺ Record" data-stop="⏹ Stop" data-more="⏺ Add layer" data-empty="You haven't played any notes yet">⏺ Record</button>
@@ -39,6 +40,7 @@ pageScript: "sounds"
         </div>
         <button type="button" class="filter-chip" id="beepSettingsBtn" aria-expanded="false" aria-controls="beepSettings">⚙️ <span class="qb-text">Settings</span></button>
         <button type="button" class="filter-chip" id="beepHelpBtn" aria-expanded="false" aria-controls="beepHelp" aria-label="How to play & shortcuts" title="How to play & shortcuts">⌨️</button>
+        <button type="button" class="filter-chip phone-only" id="beepLayersBtn" aria-expanded="false" aria-controls="beepRecTake" aria-label="Layers" title="Layers">🎚️</button>
       </div>
       <details class="beep-help" id="beepHelp">
         <summary>⌨️ How to play & shortcuts</summary>
@@ -439,6 +441,7 @@ pageScript: "sounds"
           </div>
           <div class="piano-oct" dir="ltr">
             <button type="button" class="filter-chip" id="beepOctDown" aria-label="Octave down">Z ⬇️</button>
+            <div class="oct-map" id="beepOctMap" aria-hidden="true"><span class="oct-map-win"></span></div>
             <span id="beepOctLabel" dir="ltr">C4</span>
             <button type="button" class="filter-chip" id="beepOctUp" aria-label="Octave up">X ⬆️</button>
           </div>

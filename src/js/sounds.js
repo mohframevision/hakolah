@@ -2849,7 +2849,9 @@ function initBeepMelodyExperiment() {
   let playOctave = 4;
   // ما يُكتب على المفاتيح المرسومة: أحرف الكيبورد (الافتراضي) أو أسماء النغمات
   // القياسية C D E أو Do Re Mi — للتعلّم. التحكم نفسه بالحالات الثلاث لا يتغيّر.
-  let labelMode = ["letters", "solfege"].includes(store.get("beepLabels")) ? store.get("beepLabels") : "keys";
+  // الجوال/التابلت (اللمس هو المؤشر الأساسي) بلا كيبورد: الافتراضي أسماء النغمات مثل تطبيقات البيانو
+  const savedLabels = store.get("beepLabels");
+  let labelMode = ["keys", "letters", "solfege"].includes(savedLabels) ? savedLabels : matchMedia("(pointer: coarse)").matches ? "letters" : "keys";
   // "compact": ١٨ مفتاحاً = نافذة الكيبورد، "full": بيانو كامل ٨٨ مفتاحاً (La0–Do8)
   // اللوحة: مبسّطة (أوكتاف بمفاتيح كبيرة) / عادية (نافذة الكيبورد ١٨ نغمة) / كاملة ٨٨
   let boardMode = ["simple", "full"].includes(store.get("beepBoard")) ? store.get("beepBoard") : "compact";
@@ -2966,6 +2968,7 @@ function initBeepMelodyExperiment() {
       .join("");
     document.getElementById("beepOctLabel").textContent = "C" + playOctave;
     if (full) scrollToReach();
+    drawOctMap();
   }
 
   // اللوحة الكاملة أعرض من الشاشة: نمرّرها لتظهر نافذة الكيبورد (بعد تغيير الأوكتاف)
@@ -7502,6 +7505,59 @@ function initBeepMelodyExperiment() {
     renderPlayKeys();
     playClickSound();
   }
+
+  /* ===== خريطة البيانو (الجوال بالعرض، مثل Perfect Piano): شريط صغير لكل الـ٨٨ مفتاحاً
+     عليه النافذة الظاهرة. لمسها أو السحب عليها ينقل المفاتيح لهناك — بالأوكتاف في
+     اللوحة العادية/المبسّطة، وبالتمرير في الكاملة ===== */
+  const octMap = document.getElementById("beepOctMap");
+  // تُستدعى من renderPlayKeys (اللي ممكن تشتغل قبل هذا السطر)، فتجيب عناصرها بنفسها
+  function drawOctMap() {
+    const map = document.getElementById("beepOctMap");
+    if (!map?.offsetWidth) return;
+    const whiteIdx = (m) => Math.round(((m - 21) * 52) / 88); // ponytail: تقريب خطي، يكفي لشريط عرضه بضع مئات بكسل
+    let a, b;
+    if (keysWrap?.classList.contains("full")) {
+      a = keysWrap.scrollLeft / keysWrap.scrollWidth;
+      b = (keysWrap.scrollLeft + keysWrap.clientWidth) / keysWrap.scrollWidth;
+    } else {
+      const base = windowBase();
+      a = whiteIdx(base) / 52;
+      b = whiteIdx(base + (boardMode === "simple" ? 12 : 17)) / 52 + 1 / 52;
+    }
+    map.firstElementChild.style.left = (a * 100).toFixed(2) + "%";
+    map.firstElementChild.style.width = (Math.min(1, b) * 100 - a * 100).toFixed(2) + "%";
+  }
+  if (octMap) {
+    const jump = (e) => {
+      const r = octMap.getBoundingClientRect();
+      const f = clamp((e.clientX - r.left) / r.width, 0, 1);
+      if (keysWrap.classList.contains("full")) {
+        keysWrap.scrollLeft = f * keysWrap.scrollWidth - keysWrap.clientWidth / 2;
+        return;
+      }
+      const span = boardMode === "simple" ? 12 : 17;
+      const oct = clamp(Math.round((21 + f * 88 - span / 2 - 60) / 12) + 4, 1, 7);
+      if (oct !== playOctave) {
+        playOctave = oct;
+        renderPlayKeys();
+      }
+    };
+    octMap.addEventListener("pointerdown", (e) => {
+      octMap.setPointerCapture(e.pointerId);
+      jump(e);
+    });
+    octMap.addEventListener("pointermove", (e) => octMap.hasPointerCapture(e.pointerId) && jump(e));
+    keysWrap?.addEventListener("scroll", drawOctMap, { passive: true });
+    new ResizeObserver(drawOctMap).observe(octMap);
+  }
+
+  // 🎚️ الطبقات (الجوال بالعرض): الخط الزمني يفتح فوق المفاتيح بدل ما يكون تحتها خارج الشاشة
+  const layersBtn = document.getElementById("beepLayersBtn");
+  layersBtn?.addEventListener("click", () => {
+    const open = document.querySelector(".sounds-tool").classList.toggle("layers-open");
+    layersBtn.setAttribute("aria-expanded", String(open));
+    playClickSound();
+  });
 
   if (playBox) {
     renderPlayKeys();

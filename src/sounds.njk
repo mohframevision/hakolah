@@ -19,13 +19,14 @@ pageScript: "sounds"
   </div>
 
   <div class="sounds-tabs" role="tablist">
-    <button type="button" class="sounds-tab active" role="tab" aria-selected="true" aria-controls="panePlay" data-pane="panePlay">🎹 اعزف</button>
-    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneCompose" data-pane="paneCompose">🎼 ألّف</button>
-    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneLearn" data-pane="paneLearn">📚 تعلّم</button>
-    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="panePractice" data-pane="panePractice">🎶 تدرّب</button>
+    <button type="button" class="sounds-tab active" role="tab" aria-selected="true" aria-controls="panePlay" data-pane="panePlay">🎹 <span class="tab-text">اعزف</span></button>
+    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneCompose" data-pane="paneCompose">🎼 <span class="tab-text">ألّف</span></button>
+    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="paneLearn" data-pane="paneLearn">📚 <span class="tab-text">تعلّم</span></button>
+    <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="panePractice" data-pane="panePractice">🎶 <span class="tab-text">تدرّب</span></button>
   </div>
 
   <section class="sounds-pane" id="panePlay" role="tabpanel" data-drop="⬇️ أفلت الملف هنا" data-drop-bad="هذا النوع من الملفات ما يُفتح هنا — جرّب MIDI أو ملف صوتي أو فيديو">
+    <p class="phone-rotate">🔄 اقلب جوالك بالعرض: يصير البيانو أكبر، والتسجيل والطبقات كلها في شاشة واحدة.</p>
     <div class="beep-play">
       <div class="play-toolbar">
         <button type="button" class="filter-chip" id="beepRecToggle" data-label="⏺ سجّل" data-stop="⏹ أوقف" data-more="⏺ أضف طبقة" data-empty="لم تعزف أي نغمة بعد">⏺ سجّل</button>
@@ -38,6 +39,7 @@ pageScript: "sounds"
         </div>
         <button type="button" class="filter-chip" id="beepSettingsBtn" aria-expanded="false" aria-controls="beepSettings">⚙️ <span class="qb-text">الإعدادات</span></button>
         <button type="button" class="filter-chip" id="beepHelpBtn" aria-expanded="false" aria-controls="beepHelp" aria-label="طريقة العزف والاختصارات" title="طريقة العزف والاختصارات">⌨️</button>
+        <button type="button" class="filter-chip phone-only" id="beepLayersBtn" aria-expanded="false" aria-controls="beepRecTake" aria-label="الطبقات" title="الطبقات">🎚️</button>
       </div>
       <details class="beep-help" id="beepHelp">
         <summary>⌨️ طريقة العزف والاختصارات</summary>
@@ -438,6 +440,7 @@ pageScript: "sounds"
           </div>
           <div class="piano-oct" dir="ltr">
             <button type="button" class="filter-chip" id="beepOctDown" aria-label="أوكتاف أخفض">Z ⬇️</button>
+            <div class="oct-map" id="beepOctMap" aria-hidden="true"><span class="oct-map-win"></span></div>
             <span id="beepOctLabel" dir="ltr">C4</span>
             <button type="button" class="filter-chip" id="beepOctUp" aria-label="أوكتاف أعلى">X ⬆️</button>
           </div>
