@@ -3542,7 +3542,10 @@ function initBeepMelodyExperiment() {
   let timelineSeconds = 10;
   let playheadTimer = null;
   let cursor = 0; // موضع المؤشر الأبيض الثابت (ثوانٍ) — نقطة القص وبداية التسجيل
-  let selected = null; // المقطع المحدد
+  let selected = null; // المقطع المحدد (الأساسي: القص والتحرير والضبط تشتغل عليه)
+  let multi = new Set(); // مقاطع إضافية بالتحديد (Ctrl+A، مستطيل التحديد، Shift/Ctrl+نقر)
+  const isSel = (l) => l === selected || multi.has(l);
+  const picked = () => layers.filter(isSel);
 
   /* الموقع يكبّر الصفحة كلها بـzoom على الشاشات العريضة (theme-init.js، حتى ١٫٨×).
      الماوس وgetBoundingClientRect بوحدات الشاشة، بينما left/width للمقاطع والخط
@@ -3596,6 +3599,8 @@ function initBeepMelodyExperiment() {
   const toolQuant = document.getElementById("beepToolQuant");
   function updateTools() {
     tools.querySelectorAll("button").forEach((b) => (b.disabled = !selected));
+    // أكثر من مقطع: القص والتحرير والضبط لمقطع واحد؛ النسخ والكتم والحذف للمجموعة كلها
+    if (picked().length > 1) ["beepToolSplit", "beepToolEdit", "beepToolQuant"].forEach((id) => (document.getElementById(id).disabled = true));
     // التحرير نغمةً نغمة والضبط على الشبكة للنغمات والإيقاعات فقط، لا للصوت المسجّل
     if (selected?.kind === "audio") {
       toolEdit.disabled = true;
@@ -3606,10 +3611,21 @@ function initBeepMelodyExperiment() {
     mute.textContent = selected?.muted ? mute.dataset.unmute : mute.dataset.mute;
   }
 
-  function select(l) {
-    selected = l;
+  function select(l, add = false) {
+    if (add && l) {
+      if (isSel(l)) {
+        multi.delete(l);
+        if (selected === l) selected = picked().find((x) => x !== l) || null;
+      } else {
+        if (selected) multi.add(selected);
+        selected = l;
+      }
+    } else {
+      multi = new Set();
+      selected = l;
+    }
     board.querySelectorAll(".beep-clip").forEach((c) => {
-      const on = layers[+c.dataset.i] === l;
+      const on = isSel(layers[+c.dataset.i]);
       c.classList.toggle("selected", on);
       c.setAttribute("aria-pressed", String(on));
     });
@@ -3702,6 +3718,7 @@ function initBeepMelodyExperiment() {
     paintProject();
     const back = edAt >= 0 && layers[edAt]?.kind === edLayer.kind ? layers[edAt] : null;
     selected = back;
+    multi = new Set();
     if (back) {
       edLayer = back;
       edNote = null;
@@ -3713,15 +3730,19 @@ function initBeepMelodyExperiment() {
   const redo = () => restoreFrom(future, history);
 
   function toggleMute() {
-    if (!selected) return;
+    const list = picked();
+    if (!list.length) return;
     pushHistory();
-    selected.muted = !selected.muted;
+    const mute = !list.every((l) => l.muted); // مجموعة مختلطة: الكل يُكتم، ومكتومة كلها: تُفتح
+    list.forEach((l) => (l.muted = mute));
     renderLayers();
   }
 
   const cloneLayer = (l) => ({ ...l, events: l.events?.map((e) => ({ ...e })), lastTap: 0 });
+  // الحافظة = مجموعة مقاطع بأماكنها النسبية (زمن + مسار) فاللصق يحافظ على ترتيبها
   function copyToClipboard() {
-    if (selected) clipboard = cloneLayer(selected);
+    const list = picked();
+    if (list.length) clipboard = list.map(cloneLayer);
   }
   function cutSelected() {
     copyToClipboard();
@@ -3729,35 +3750,53 @@ function initBeepMelodyExperiment() {
   }
   // اللصق عند المؤشر الأبيض (مثل باند لاب: عند الـplayhead)
   function pasteClipboard() {
-    if (!clipboard) return;
-    if (layers.length >= MAX_LAYERS) return showToast(recTake.dataset.max);
+    if (!clipboard?.length) return;
+    if (layers.length + clipboard.length > MAX_LAYERS) return showToast(recTake.dataset.max);
     pushHistory();
-    const c = { ...cloneLayer(clipboard), offset: cursor };
-    layers.push(c);
-    selected = c;
+    const start = Math.min(...clipboard.map((l) => l.offset));
+    const added = clipboard.map((l) => ({ ...cloneLayer(l), offset: cursor + l.offset - start }));
+    layers.push(...added);
+    selected = added[0];
+    multi = new Set(added.slice(1));
     compactRows();
     renderLayers();
-    focusLayer(c);
+    focusLayer(selected);
   }
 
   function deleteSelected() {
-    if (!selected) return;
+    const list = picked();
+    if (!list.length) return;
     pushHistory();
-    layers.splice(layers.indexOf(selected), 1);
+    layers = layers.filter((l) => !list.includes(l));
     selected = null;
+    multi = new Set();
     compactRows();
     if (!layers.length) stopTake();
     renderLayers();
   }
 
+  // تكرار (Ctrl+D): المجموعة كلها تتكرر مباشرة بعد نهايتها، بنفس ترتيبها
   function copySelected() {
-    if (!selected) return;
-    if (layers.length >= MAX_LAYERS) return showToast(recTake.dataset.max);
+    const list = picked();
+    if (!list.length) return;
+    if (layers.length + list.length > MAX_LAYERS) return showToast(recTake.dataset.max);
     pushHistory();
-    const copy = { ...cloneLayer(selected), offset: selected.offset + layerLen(selected) };
-    layers.splice(layers.indexOf(selected) + 1, 0, copy);
-    selected = copy;
+    const span = Math.max(...list.map(layerEnd)) - Math.min(...list.map((l) => l.offset));
+    const copies = list.map((l) => ({ ...cloneLayer(l), offset: l.offset + span }));
+    layers.push(...copies);
+    selected = copies[list.indexOf(selected)] || copies[0];
+    multi = new Set(copies.filter((c) => c !== selected));
     renderLayers();
+  }
+  // تحريك المجموعة بالزمن والمسارات بنفس المقدار، بلا ما يطلع أي مقطع قبل الصفر أو برا المسارات
+  function moveGroup(list, dt, dRow) {
+    dt = Math.max(dt, -Math.min(...list.map((l) => l.offset)));
+    const maxRow = Math.min(rowCount(), MAX_TRACKS - 1);
+    dRow = clamp(dRow, -Math.min(...list.map((l) => l.row)), maxRow - Math.max(...list.map((l) => l.row)));
+    list.forEach((l) => {
+      l.offset = snap(l.offset + dt);
+      l.row += dRow;
+    });
   }
 
   // قص المقطع المحدد عند المؤشر الأبيض. القص غير مدمّر: نقسم "نافذة" المقطع [t0,t1]
@@ -3774,6 +3813,7 @@ function initBeepMelodyExperiment() {
     pushHistory();
     layers.splice(layers.indexOf(l), 1, a, b);
     selected = b;
+    multi = new Set();
     renderLayers();
   }
 
@@ -3843,12 +3883,12 @@ function initBeepMelodyExperiment() {
 
   function buildClip(l, i) {
     const clip = document.createElement("div");
-    clip.className = "beep-clip" + (l.muted ? " muted" : "") + (l === selected ? " selected" : "") + (l.kind !== "notes" ? " " + l.kind : "");
+    clip.className = "beep-clip" + (l.muted ? " muted" : "") + (isSel(l) ? " selected" : "") + (l.kind !== "notes" ? " " + l.kind : "");
     clip.dataset.i = String(i);
     clip.style.setProperty("--h", String(l.kind === "drums" ? 28 : l.kind === "audio" ? 200 : (i * 53 + 150) % 360));
     clip.tabIndex = 0;
     clip.setAttribute("role", "button");
-    clip.setAttribute("aria-pressed", String(l === selected));
+    clip.setAttribute("aria-pressed", String(isSel(l)));
     clip.title = clipLabel(l);
     clip.setAttribute("aria-label", recTake.dataset.layer + " " + (i + 1) + " · " + clipLabel(l));
     const w = Math.max(8, layerLen(l) * pxPerSec);
@@ -3872,8 +3912,15 @@ function initBeepMelodyExperiment() {
     clip.addEventListener("pointerdown", (e) => {
       if (e.button) return;
       e.preventDefault();
+      if (e.shiftKey || e.ctrlKey || e.metaKey) return select(l, true); // يضيف/يشيل من التحديد بلا سحب
       clip.setPointerCapture(e.pointerId);
-      select(l);
+      if (isSel(l) && picked().length > 1) {
+        // داخل مجموعة: تبقى المجموعة وتسحب كلها (الأساسي القديم يرجع للمجموعة بدل ما يطيح منها)
+        if (selected && selected !== l) multi.add(selected);
+        multi.delete(l);
+        selected = l;
+      } else select(l);
+      const group = picked().map((x) => ({ l: x, off: x.offset, row: x.row, el: board.querySelector(`.beep-clip[data-i="${layers.indexOf(x)}"]`) }));
       // مثل باند لاب: الضغط على المقطع نفسه يضع الخط الأبيض تحت الماوس بالضبط
       // (قبل كان يحدّد فقط ويبقى الخط بعيداً) — فالقص بـS يصير عند مكان النقر
       const zoom0 = zoomOf(); // ثابت طول السحبة (موضع اللوحة نفسه يُقرأ حياً لأنه يتغيّر مع التمرير)
@@ -3888,11 +3935,18 @@ function initBeepMelodyExperiment() {
       const maxRow = Math.min(rowCount(), MAX_TRACKS - 1); // آخر خانة = مسار جديد تحت الكل
       let moved = false;
       const move = (ev) => {
-        l.offset = snap(off0 + (ev.clientX - x0) / zoom0 / pxPerSec);
-        l.row = Math.min(maxRow, Math.max(0, row0 + Math.round((ev.clientY - y0) / zoom0 / ROW_H)));
+        // الإزاحة من المقطع الممسوك (بالانجذاب للشبكة)، وتنطبق على كل المجموعة بحدود الصفر والمسارات
+        const dt = Math.max(snap(off0 + (ev.clientX - x0) / zoom0 / pxPerSec) - off0, -Math.min(...group.map((g) => g.off)));
+        const dRow = clamp(Math.round((ev.clientY - y0) / zoom0 / ROW_H), -Math.min(...group.map((g) => g.row)), maxRow - Math.max(...group.map((g) => g.row)));
+        group.forEach((g) => {
+          g.l.offset = g === group.find((x) => x.l === l) ? off0 + dt : snap(g.off + dt);
+          g.l.row = g.row + dRow;
+          if (g.el) {
+            g.el.style.left = g.l.offset * pxPerSec + "px";
+            g.el.style.top = g.l.row * ROW_H + 3 + "px";
+          }
+        });
         moved = moved || l.offset !== off0 || l.row !== row0;
-        clip.style.left = l.offset * pxPerSec + "px";
-        clip.style.top = l.row * ROW_H + 3 + "px";
       };
       const up = () => {
         clip.removeEventListener("pointermove", move);
@@ -3920,15 +3974,16 @@ function initBeepMelodyExperiment() {
       clip.addEventListener("pointercancel", up);
     });
 
-    clip.addEventListener("focus", () => select(l)); // التنقل بـTab يحدّد الطبقة، فDelete ما يحذف غيرها
+    clip.addEventListener("focus", () => isSel(l) || select(l)); // التنقل بـTab يحدّد الطبقة، فDelete ما يحذف غيرها
     clip.addEventListener("keydown", (e) => {
       const step = e.shiftKey ? barSec() : gridStep() || 0.1;
+      const group = isSel(l) ? picked() : [l];
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
         pushHistory();
-        l.offset = snap(l.offset + (e.key === "ArrowRight" ? 1 : -1) * step);
+        moveGroup(group, (e.key === "ArrowRight" ? 1 : -1) * step, 0);
       } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
         pushHistory();
-        l.row = Math.min(rowCount(), MAX_TRACKS - 1, Math.max(0, l.row + (e.key === "ArrowDown" ? 1 : -1)));
+        moveGroup(group, 0, e.key === "ArrowDown" ? 1 : -1);
         compactRows();
       } else if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
@@ -3937,7 +3992,7 @@ function initBeepMelodyExperiment() {
         return;
       }
       e.preventDefault();
-      select(l);
+      if (!isSel(l)) select(l);
       renderLayers();
       focusLayer(l);
     });
@@ -3945,6 +4000,8 @@ function initBeepMelodyExperiment() {
   }
 
   function renderLayers() {
+    multi = new Set([...multi].filter((l) => l !== selected && layers.includes(l)));
+    if (selected && !layers.includes(selected)) selected = null;
     ensureTracks();
     recTake.hidden = !studioActive();
     if (!rec) {
@@ -4027,9 +4084,58 @@ function initBeepMelodyExperiment() {
     captureEl.addEventListener("pointercancel", up);
   }
   board.addEventListener("pointerdown", (e) => {
-    if (e.target !== board) return;
-    select(null);
-    scrub(e, board, board);
+    if (e.target !== board || e.button) return;
+    const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+    if (!additive) select(null);
+    e.preventDefault();
+    board.setPointerCapture(e.pointerId);
+    const z = zoomOf();
+    const r0 = board.getBoundingClientRect();
+    const gx = (ev) => (ev.clientX - board.getBoundingClientRect().left) / z;
+    const gy = (ev) => (ev.clientY - board.getBoundingClientRect().top) / z;
+    const sx = gx(e);
+    const sy = gy(e);
+    const keep = additive ? picked() : [];
+    let box = null;
+    // نقرة بلا سحب = الخط الأبيض هنا (مثل قبل)
+    cursor = snap((e.clientX - r0.left) / z / pxPerSec);
+    setPlayhead(null);
+    const move = (ev) => {
+      if (!box) {
+        if (Math.abs(gx(ev) - sx) < 5 && Math.abs(gy(ev) - sy) < 5) return;
+        box = document.createElement("div");
+        box.className = "beep-marquee";
+        board.append(box);
+      }
+      const x1 = Math.min(sx, gx(ev));
+      const x2 = Math.max(sx, gx(ev));
+      const y1 = Math.min(sy, gy(ev));
+      const y2 = Math.max(sy, gy(ev));
+      box.style.cssText = `left:${x1}px;top:${y1}px;width:${x2 - x1}px;height:${y2 - y1}px`;
+      const hits = layers.filter((l) => {
+        const a = l.offset * pxPerSec;
+        const b = a + Math.max(8, layerLen(l) * pxPerSec);
+        const t = l.row * ROW_H + 3;
+        return a < x2 && b > x1 && t < y2 && t + ROW_H - 6 > y1;
+      });
+      const all = [...new Set([...keep, ...hits])];
+      selected = all[0] || null;
+      multi = new Set(all.slice(1));
+      board.querySelectorAll(".beep-clip").forEach((c) => c.classList.toggle("selected", isSel(layers[+c.dataset.i])));
+    };
+    const up = () => {
+      board.removeEventListener("pointermove", move);
+      board.removeEventListener("pointerup", up);
+      board.removeEventListener("pointercancel", up);
+      box?.remove();
+      if (box) {
+        updateTools();
+        renderLayers();
+      }
+    };
+    board.addEventListener("pointermove", move);
+    board.addEventListener("pointerup", up);
+    board.addEventListener("pointercancel", up);
   });
   ruler.addEventListener("pointerdown", (e) => scrub(e, ruler, ruler));
   document.getElementById("beepFilm")?.addEventListener("pointerdown", (e) => scrub(e, e.currentTarget, ruler));
@@ -5996,6 +6102,11 @@ function initBeepMelodyExperiment() {
         redo();
       } else if (mod && code === "Slash") {
         if (shortcutsBox) shortcutsBox.open = !shortcutsBox.open;
+      } else if (mod && code === "KeyA" && layers.length) {
+        selected = layers[0];
+        multi = new Set(layers.slice(1));
+        renderLayers();
+        updateTools();
       } else if (mod && (code === "KeyC" || code === "KeyX" || code === "KeyD") && selected) {
         if (code === "KeyC") copyToClipboard();
         else if (code === "KeyX") cutSelected();

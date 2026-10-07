@@ -7755,3 +7755,13 @@ li {
   font-weight: 800;
   pointer-events: none;
 }
+
+/* مستطيل تحديد المقاطع بالجدول (السحب على مكان فارغ) */
+.beep-marquee {
+  position: absolute;
+  z-index: 6;
+  border: 1px solid #6fc8a4;
+  border-radius: 3px;
+  background: rgba(111, 200, 164, 0.15);
+  pointer-events: none;
+}

@@ -216,7 +216,7 @@ pageScript: "sounds"
           </div>
           <p class="beep-param-note">انقر مكاناً فارغاً لإضافة نغمة، واسحب على مكان فارغ لتحديد عدة نغمات (أو <kbd>Ctrl</kbd>+<kbd>A</kbd> للكل، و<kbd>Shift</kbd>+نقر لإضافة نغمة للتحديد). اسحب أي نغمة محددة لتحريك المحدد كله، أو حافتها اليمنى لتغيير الطول. <kbd>Delete</kbd> حذف، <kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd>/<kbd>D</kbd> نسخ وقص ولصق (عند الخط الأبيض) وتكرار، والأسهم <span dir="ltr">← →</span> تحريك بخطوة الشبكة و<span dir="ltr">↑ ↓</span> نصف درجة (مع <kbd>Shift</kbd>: مازورة / أوكتاف). انقر النغمة مرتين لحذفها، والنقر على اسمها يسمّعها.</p>
         </div>
-        <p class="beep-param-note" id="beepTimelineHint">↔️↕️ اسحب أي طبقة بحرية: يميناً ويساراً في الزمن (على الشبكة)، وإلى أعلى وأسفل بين المسارات (أنزلها تحت آخر مسار لتبدأ مساراً جديداً). اسحب حافة الطبقة لتقصيرها أو تطويلها بدون قصّ: لا يُمسح شيء، والتطويل يرجّع المخفي. لوضع الخط الأبيض انقر أو اسحب على المسطرة أو على أي مكان فارغ؛ عنده يبدأ التسجيل ويُقصّ المقطع المحدد. انقر الطبقة مرتين لتحرير نغماتها، ورقم المسار يفتح خلاطه.</p>
+        <p class="beep-param-note" id="beepTimelineHint">🔲 لتحديد عدة طبقات: اسحب على مكان فارغ، أو <kbd>Ctrl</kbd>+<kbd>A</kbd> للكل، أو <kbd>Shift</kbd>+نقر — وسحب أي واحدة منها يحرّكها كلها، والحذف والنسخ والتكرار والكتم والأسهم تنطبق على المحدد كله. ↔️↕️ اسحب أي طبقة بحرية: يميناً ويساراً في الزمن (على الشبكة)، وإلى أعلى وأسفل بين المسارات (أنزلها تحت آخر مسار لتبدأ مساراً جديداً). اسحب حافة الطبقة لتقصيرها أو تطويلها بدون قصّ: لا يُمسح شيء، والتطويل يرجّع المخفي. لوضع الخط الأبيض انقر أو اسحب على المسطرة أو على أي مكان فارغ؛ عنده يبدأ التسجيل ويُقصّ المقطع المحدد. انقر الطبقة مرتين لتحرير نغماتها، ورقم المسار يفتح خلاطه.</p>
         <details class="beep-help beep-mixer" id="beepMixer">
           <summary>🎚️ الخلاط والمؤثرات والماستر</summary>
           <div class="beep-mix-strips" id="beepMixStrips"></div>
@@ -274,6 +274,7 @@ pageScript: "sounds"
             <li><span class="beep-key-combo" dir="ltr"><kbd>Q</kbd></span><span>ضبط نغمات الطبقة المحددة على الشبكة</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Delete</kbd> · <kbd>Backspace</kbd></span><span>حذف النغمة المحددة بالمحرّر، أو الطبقة</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>C</kbd> · <kbd>X</kbd> · <kbd>V</kbd></span><span>نسخ · قصّ · لصق عند الخط الأبيض</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>A</kbd></span><span>تحديد كل الطبقات (اسحب على مكان فارغ لتحديد بعضها، وShift+نقر للإضافة)</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>D</kbd></span><span>تكرار الطبقة</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Shift</kbd> + <kbd>M</kbd></span><span>كتم / إلغاء كتم الطبقة</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>Z</kbd> · <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></span><span>تراجع · إعادة</span></li>
