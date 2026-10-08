@@ -16,7 +16,7 @@ const FONT = "Tahoma, Arial, sans-serif";
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 // البوستر يُحفظ بالمكانين معاً حسب القاعدة المتفق عليها
-const OUT_DIRS = ["D:\\موقع ربحي\\ملفات هكو له", "G:\\My Drive\\ملفات هكوله درايف"];
+const OUT_DIRS = ["D:\\موقع ربحي\\هكوله", "G:\\My Drive\\هكوله"];
 
 const POSTERS = [
   {
