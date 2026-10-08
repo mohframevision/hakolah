@@ -3613,6 +3613,7 @@ function initBeepMelodyExperiment() {
 
   const toolEdit = document.getElementById("beepToolEdit");
   const toolQuant = document.getElementById("beepToolQuant");
+  const toolClean = document.getElementById("beepToolClean");
   function updateTools() {
     tools.querySelectorAll("button").forEach((b) => (b.disabled = !selected));
     // أكثر من مقطع: القص والتحرير والضبط لمقطع واحد؛ النسخ والكتم والحذف للمجموعة كلها
@@ -3623,6 +3624,9 @@ function initBeepMelodyExperiment() {
       toolQuant.disabled = true;
     }
     if (selected?.kind === "drums") toolQuant.disabled = true; // الإيقاع على الشبكة أصلاً
+    // التنظيف لتسجيل الميكروفون/الملف الصوتي فقط (لا المؤثرات المولّدة)، ويتبدّل مع الأصلي
+    toolClean.disabled = !selected || picked().length > 1 || selected.kind !== "audio" || !!selected.sfx;
+    toolClean.textContent = selected?.raw ? toolClean.dataset.off : toolClean.dataset.on;
     const mute = document.getElementById("beepToolMute");
     mute.textContent = selected?.muted ? mute.dataset.unmute : mute.dataset.mute;
   }
@@ -3847,6 +3851,90 @@ function initBeepMelodyExperiment() {
     });
     renderLayers();
     showToast(toolQuant.dataset.done);
+  }
+
+  /* 🎤 نظّف صوتي — سلسلة ميكروفون الإذاعة بالترتيب، تُطبَّق مرة وحدة على التسجيل نفسه
+     (فالتشغيل والتصدير يسمعونها بلا كلفة إضافية): قص الرنين تحت ١٠٠ هرتز ← تخفيض
+     الضجيج بين الكلمات (expander ١:٣ تحت أرضية الضجيج × ٣) ← تخفيف صفير السين (فوق
+     ٥ كيلو لما يغلب على الكلام) ← +٤ ديسيبل عند ٣٫٥ كيلو للوضوح ← ضاغط ← سقف. الأصلي
+     يبقى بـ l.raw للرجوع (ponytail: ما يُحفظ مع المشروع، فبعد إعادة الفتح النظيف هو الأصل) */
+  async function cleanVoice(buf) {
+    const sr = buf.sampleRate;
+    const n = buf.length;
+    // ١) قص الرنين، ومعه نسخة الحدّة (فوق ٥ كيلو) لكاشف الصفير — بمرور واحد
+    const a = new OfflineAudioContext(2, n, sr);
+    const src = new AudioBufferSourceNode(a, { buffer: buf });
+    const hp = new BiquadFilterNode(a, { type: "highpass", frequency: 100, Q: 0.707 });
+    const hiss = new BiquadFilterNode(a, { type: "highpass", frequency: 5000, Q: 0.707 });
+    const merge = new ChannelMergerNode(a, { numberOfInputs: 2 });
+    src.connect(hp);
+    hp.connect(merge, 0, 0);
+    hp.connect(hiss).connect(merge, 0, 1);
+    merge.connect(a.destination);
+    src.start();
+    const r1 = await a.startRendering();
+    const x = r1.getChannelData(0);
+    const s = r1.getChannelData(1);
+    // متابع مستوى: ارتفاع سريع، نزول أبطأ
+    const follow = (sig, upMs, downMs) => {
+      const up = Math.exp(-1 / ((upMs / 1000) * sr));
+      const down = Math.exp(-1 / ((downMs / 1000) * sr));
+      const env = new Float32Array(n);
+      let e = 0;
+      for (let i = 0; i < n; i++) {
+        const v = Math.abs(sig[i]);
+        e = v > e ? up * e + (1 - up) * v : down * e + (1 - down) * v;
+        env[i] = e;
+      }
+      return env;
+    };
+    const ex = follow(x, 5, 120);
+    const es = follow(s, 2, 60);
+    // ٢) أرضية الضجيج = أهدأ ١٠٪ من مقاطع ٢٠ م.ث؛ تحت ثلاثة أضعافها نخفّض بنسبة ١:٣ (لحد −٣٠ ديسيبل)
+    const frames = [];
+    for (let i = 0; i < n; i += Math.round(sr * 0.02)) frames.push(ex[i]);
+    frames.sort((p, q) => p - q);
+    const thr = Math.max(frames[Math.floor(frames.length * 0.1)] * 3, 0.004);
+    const y = new Float32Array(n);
+    let g = 1;
+    let d = 1;
+    for (let i = 0; i < n; i++) {
+      const target = ex[i] >= thr ? 1 : Math.max((ex[i] / thr) ** 2, 0.032);
+      g += (target - g) * (target > g ? 0.01 : 0.0005); // يفتح بسرعة ويقفل بنعومة
+      // ٣) الصفير: لحظة ما تغلب الحدّة على الكلام نخفض الصوت كله −٢٤ ديسيبل وبنعومة (de-esser
+      // عريض — طرح نسخة الحدّة ما يلغيها لأن الفلتر يزيح طورها). قوي لأن ضاغط المتصفح بعده يرفع الهادي من نفسه (~+١٠ ديسيبل)
+      const dt = es[i] > ex[i] * 0.45 && es[i] > thr ? 0.06 : 1;
+      d += (dt - d) * (dt < d ? 0.02 : 0.002);
+      y[i] = x[i] * g * d;
+    }
+    // ٤-٦) وضوح ← ضاغط ← سقف
+    const b = new OfflineAudioContext(1, n, sr);
+    const yb = new AudioBuffer({ length: n, numberOfChannels: 1, sampleRate: sr });
+    yb.copyToChannel(y, 0);
+    const src2 = new AudioBufferSourceNode(b, { buffer: yb });
+    const clarity = new BiquadFilterNode(b, { type: "peaking", frequency: 3500, Q: 1, gain: 4 });
+    const comp = new DynamicsCompressorNode(b, { threshold: -24, knee: 6, ratio: 3, attack: 0.005, release: 0.15 });
+    const makeup = new GainNode(b, { gain: 1.2 }); // ضاغط المتصفح يرفع المستوى من نفسه، فهذا رفع بسيط فوقه
+    const ceiling = new DynamicsCompressorNode(b, { threshold: -2, knee: 0, ratio: 20, attack: 0.001, release: 0.08 });
+    src2.connect(clarity).connect(comp).connect(makeup).connect(ceiling).connect(b.destination);
+    src2.start();
+    return b.startRendering();
+  }
+  async function toggleClean() {
+    const l = selected;
+    if (!l || l.kind !== "audio" || l.sfx) return showToast(toolClean.dataset.only);
+    pushHistory();
+    if (l.raw) {
+      l.buffer = l.raw;
+      delete l.raw;
+    } else {
+      toolClean.disabled = true;
+      const cleaned = await cleanVoice(l.buffer);
+      l.raw = l.buffer;
+      l.buffer = cleaned;
+      showToast(toolClean.dataset.done);
+    }
+    renderLayers();
   }
 
   /* تقصير/تطويل المقطع بسحب حافته (بلا قص): الحافة اليمنى تغيّر t1، واليسرى تغيّر
@@ -4167,6 +4255,7 @@ function initBeepMelodyExperiment() {
     ["beepToolDelete", deleteSelected],
     ["beepToolEdit", () => openEditor(selected)],
     ["beepToolQuant", quantizeSelected],
+    ["beepToolClean", toggleClean],
   ].forEach(([id, fn]) =>
     document.getElementById(id).addEventListener("click", () => {
       fn();

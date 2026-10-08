@@ -8056,3 +8056,21 @@ li {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   }
 }
+
+/* قانون هيك: «اعزف» فيه زر أساسي واحد بعد المفاتيح — ⏺ سجّل. أحمر ممتلئ وعريض، وبقية
+   أزرار الشريط هادئة (بلا خلفية) فما فيه زرّان بنفس الأهمية. وقت التسجيل يبقى أحمر وينبض */
+.beep-experiment .play-toolbar #beepRecToggle {
+  background: oklch(0.56 0.19 27);
+  border-color: oklch(0.72 0.14 25);
+  color: #fff;
+  font-weight: 700;
+}
+
+.beep-experiment .play-toolbar #beepRecToggle:hover:not(:disabled) {
+  background: oklch(0.6 0.2 27);
+}
+
+.beep-experiment .play-toolbar .filter-chip:not(#beepRecToggle):not(.active):not(:hover):not([aria-pressed="true"]):not([aria-expanded="true"]) {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.14);
+}
