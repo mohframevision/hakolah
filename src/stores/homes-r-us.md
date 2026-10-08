@@ -14,5 +14,5 @@ links:
   website: http://www.homesrus.ae/
   phone: '17556001'
   maps: https://maps.app.goo.gl/YvrSyaYj25S9Fue48
-  instagram: ''
+  instagram: https://www.instagram.com/homesrusbahrain/
 ---
