@@ -80,6 +80,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
+  // صفحة من مجموعة برابطها (العربي مكتوب أحياناً بلا ترميز) — الإنجليزية تقرا شارات صفحتها العربية منها
+  eleventyConfig.addFilter("pageByUrl", (pages, url) => url && (pages || []).find((p) => decodeURI(p.url) === decodeURI(url)));
   // أول رابط خرائط قوقل داخل نص الصفحة — الصفحات الإنجليزية ما فيها links.maps بالبيانات
   eleventyConfig.addFilter("mapsUrl", (html) => (String(html).match(/https:\/\/(?:maps\.app\.goo\.gl|(?:www\.)?google\.com\/maps)[^"'\s<>)]*/) || [])[0]);
   /* تاريخ بصيغة YYYY-MM-DD. لازم فلتر: YAML يحوّل `2026-08-20` لكائن Date،

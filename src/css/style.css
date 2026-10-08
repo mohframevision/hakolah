@@ -1355,7 +1355,7 @@ img {
   font-weight: 800;
   vertical-align: middle;
   background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  color: #065f46; /* كان #10b981 بتباين ٢ تقريباً — هذا ٥+ */
   padding: 2px 9px;
   border-radius: 999px;
 }
@@ -1368,7 +1368,7 @@ img {
   font-weight: 800;
   vertical-align: middle;
   background: rgba(236, 72, 153, 0.15);
-  color: #ec4899;
+  color: #be185d; /* كان #ec4899 بتباين 2.9 — هذا 5+ */
   padding: 2px 9px;
   border-radius: 999px;
 }
@@ -8100,4 +8100,39 @@ li {
   .main-nav .nav-home {
     display: none;
   }
+}
+
+/* شارات الدليل بصفحة المكان: أكبر شوي من البطاقة */
+.detail-badges {
+  margin: 6px 0 0;
+  font-size: 1.15rem;
+}
+
+/* الجوال: نصوص البطاقة الصغيرة كانت ١١٫٦ بكسل — أقلها ١٣، ومسار التنقل بارتفاع يناسب الإبهام */
+@media (max-width: 700px) {
+  .item-meta .tag,
+  .report-link,
+  .verified-badge,
+  .liked-badge {
+    font-size: 0.8rem;
+  }
+
+  .breadcrumb a {
+    display: inline-block;
+    padding-block: 10px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .verified-badge {
+    color: #34d399;
+  }
+}
+
+:root[data-theme="dark"] .verified-badge {
+  color: #34d399;
+}
+
+:root[data-theme="dark"] .liked-badge {
+  color: #f472b6;
 }

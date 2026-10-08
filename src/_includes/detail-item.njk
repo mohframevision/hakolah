@@ -9,6 +9,10 @@ layout: base.njk
 {% if image %}<img class="detail-hero-photo" src="{{ image }}" alt="{{ title }}" />{% endif %}
 <section class="page-header">
   <h1>{{ icon }} {{ title }}</h1>
+  {# الدليل عند لحظة القرار: نفس شارات البطاقة، فوق زر الخريطة #}
+  {% set src = page if (verified or liked) else ((collections.all | pageByUrl(langSwitchUrl)).data if lang == 'en' else page) %}
+  {% set v = verified or (src and src.verified) %}{% set lk = liked or (src and src.liked) %}
+  {% if v or lk %}<p class="detail-badges">{% if v %}<span class="verified-badge">{{ t.verified_badge }}</span>{% endif %} {% if lk %}<span class="liked-badge">{{ t.liked_badge }}</span>{% endif %}</p>{% endif %}
   <div class="page-header-actions">
     {# الهدف الأول لزائر صفحة مكان: يروح له — فالخريطة الزر الأساسي والباقي ثانوي #}
     {% set mapsLink = links.maps if (links and links.maps) else (content | mapsUrl) %}
