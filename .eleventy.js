@@ -80,6 +80,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
+  // أول رابط خرائط قوقل داخل نص الصفحة — الصفحات الإنجليزية ما فيها links.maps بالبيانات
+  eleventyConfig.addFilter("mapsUrl", (html) => (String(html).match(/https:\/\/(?:maps\.app\.goo\.gl|(?:www\.)?google\.com\/maps)[^"'\s<>)]*/) || [])[0]);
   /* تاريخ بصيغة YYYY-MM-DD. لازم فلتر: YAML يحوّل `2026-08-20` لكائن Date،
      وطباعته كما هي بالقالب تطبع "Thu Aug 20 2026 03:00:00 GMT+0300 (...)" */
   eleventyConfig.addFilter("isoDate", (value) => {

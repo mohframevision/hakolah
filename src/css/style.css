@@ -2104,6 +2104,16 @@ img {
   padding-bottom: 30px;
 }
 
+/* الجوال: الأقسام تعبّي الشاشة فالزر الأساسي ينزل تحت — نثبّته فوق الشريط السفلي */
+@media (max-width: 1300px) {
+  .picker-action {
+    position: sticky;
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+    z-index: 5;
+    padding-bottom: 12px;
+  }
+}
+
 .picker-spin-btn {
   font-size: 1.15rem;
   padding: 16px 42px;
@@ -8073,4 +8083,21 @@ li {
 .beep-experiment .play-toolbar .filter-chip:not(#beepRecToggle):not(.active):not(:hover):not([aria-pressed="true"]):not([aria-expanded="true"]) {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* قانون هيك: الرئيسية كان ما فيها إجراء أساسي — زر واحد بارز تحت العنوان */
+.hero .hero-cta {
+  display: table;
+  margin: 18px auto 0;
+  padding: 14px 30px;
+  font-size: 1.05rem;
+  border-radius: 999px;
+}
+
+/* قانون هيك: بالكمبيوتر الشعار نفسه يرجّع للرئيسية (العُرف المعروف)، فرابطها بالقائمة
+   تكرار — نشيله ويبقى بقائمة الجوال المنسدلة والشريط السفلي */
+@media (min-width: 1301px) {
+  .main-nav .nav-home {
+    display: none;
+  }
 }

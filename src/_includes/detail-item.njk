@@ -10,6 +10,9 @@ layout: base.njk
 <section class="page-header">
   <h1>{{ icon }} {{ title }}</h1>
   <div class="page-header-actions">
+    {# الهدف الأول لزائر صفحة مكان: يروح له — فالخريطة الزر الأساسي والباقي ثانوي #}
+    {% set mapsLink = links.maps if (links and links.maps) else (content | mapsUrl) %}
+    {% if mapsLink %}<a class="btn" href="{{ mapsLink }}" target="_blank" rel="noopener">📍 {{ t.link_maps }}</a>{% endif %}
     {% if audio %}
     <button type="button" class="btn secondary article-listen-btn" data-audio-src="{{ audio | url }}">🔊 {{ t.article_listen }}</button>
     <audio class="article-audio-player hidden" controls preload="none"></audio>

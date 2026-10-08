@@ -162,7 +162,7 @@
       <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}" class="logo"><span class="dot">●</span>{% if lang == "en" %}<span class="logo-word">Hako<span class="logo-tail">lah</span></span>{% else %}<span class="logo-word">هكو<span class="logo-tail">له</span></span>{% endif %}</a>
       <nav class="main-nav" id="main-nav">
         {% set homeUrl = '/en/index.html' if lang == 'en' else '/index.html' %}
-        <a href="{{ homeUrl | url }}"{% if navActive == "home" %} class="active" aria-current="page"{% endif %}>{{ t.nav_home }}</a>
+        <a href="{{ homeUrl | url }}" class="nav-home{% if navActive == "home" %} active{% endif %}"{% if navActive == "home" %} aria-current="page"{% endif %}>{{ t.nav_home }}</a>
         {% for entry in sections %}
         <a href="{{ (('/en/' if lang == 'en' else '/') + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active" aria-current="page"{% endif %}>{{ entry.navLabel_en if lang == 'en' else entry.navLabel }}</a>
         {% endfor %}

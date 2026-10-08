@@ -3230,7 +3230,8 @@ function renderSection(section, typeFilter) {
 
   let activeTag = "all";
   let filtersExpanded = false;
-  const FILTER_CHIP_LIMIT = 10;
+  // قانون هيك: الجوال يعرض أهم ٥ فلاتر بس (الشاشة الأولى كانت ١٣ زراً)، والباقي ورا «عرض المزيد»
+  const FILTER_CHIP_LIMIT = matchMedia("(max-width: 700px)").matches ? 5 : 10;
   let userCoords = null;
   let sortByDistance = false;
 
@@ -4278,20 +4279,27 @@ function initRandomPicker() {
     )
     .join("");
 
+  function choose(btn) {
+    categoriesWrap.querySelectorAll(".picker-category").forEach((b) => {
+      b.classList.remove("active");
+      b.setAttribute("aria-pressed", "false");
+    });
+    btn.classList.add("active");
+    btn.setAttribute("aria-pressed", "true");
+    selectedSection = btn.dataset.section;
+    spinBtn.disabled = false;
+    helix.build(SITE_DATA[selectedSection].items);
+  }
   categoriesWrap.querySelectorAll(".picker-category").forEach((btn) => {
     btn.addEventListener("click", () => {
-      categoriesWrap.querySelectorAll(".picker-category").forEach((b) => {
-        b.classList.remove("active");
-        b.setAttribute("aria-pressed", "false");
-      });
-      btn.classList.add("active");
-      btn.setAttribute("aria-pressed", "true");
-      selectedSection = btn.dataset.section;
-      spinBtn.disabled = false;
-      helix.build(SITE_DATA[selectedSection].items);
+      choose(btn);
       playClickSound();
     });
   });
+  // قانون هيك: الزر يشتغل من أول لحظة — المطاعم مختارة افتراضياً (أكثر قسم يُسأل عنه)،
+  // واللي يبي قسم ثاني يغيّره بضغطة
+  const preset = categoriesWrap.querySelector('[data-section="restaurants"]') || categoriesWrap.querySelector(".picker-category");
+  if (preset) choose(preset);
 
   function reveal(item) {
     openPickerReveal(item, {
