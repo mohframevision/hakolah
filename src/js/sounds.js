@@ -675,6 +675,18 @@ function initBeepMelodyExperiment() {
       ringScale: 1.1,
       level: 0.48,
     },
+    // باد دافئ: خلفية حالمة — يدخل ببطء (يرتفع مثل الـswell)، يبقى ما دام المفتاح ممسوكاً،
+    // ويخفت ببطء بعد الرفع (release). مثلثي + نسختان خافتتان مزاحتان (حركة خفيفة بلا تموّج قوي) + منشار خافت تحت فلتر معتم
+    pad: {
+      harmonics: [{ mult: 1, weight: 1, type: "triangle" }, { mult: 1, weight: 0.25, type: "triangle", cents: -5 }, { mult: 1, weight: 0.25, type: "triangle", cents: 5 }, { mult: 1, weight: 0.15, type: "sawtooth" }, { mult: 2, weight: 0.3, type: "sine", cents: 4 }],
+      attack: 0.7,
+      sustainRatio: 0.95,
+      filterBrightMult: 3,
+      filterDarkMult: 2.2,
+      ringScale: 1.4,
+      release: 0.7,
+      level: 0.55,
+    },
     chiptune: {
       harmonics: [{ mult: 1, weight: 1, type: "square" }],
       attack: 0.002,
@@ -1587,6 +1599,7 @@ function initBeepMelodyExperiment() {
     const ringDuration = duration * registerFactor * instrument.ringScale;
 
     const envelope = ctx.createGain();
+    if (instrument.release) envelope._tau = instrument.release / 3; // خفوت بطيء بعد رفع المفتاح (الباد)
     envelope.gain.setValueAtTime(0.0001, startTime);
     envelope.gain.exponentialRampToValueAtTime(Math.max(peakGain, 0.0001), startTime + instrument.attack);
     if (instrument.sustainRatio > 0) {
@@ -4333,7 +4346,7 @@ function initBeepMelodyExperiment() {
   /* ملف MIDI من أي برنامج (BandLab، MuseScore، Logic…) → مسار نغمات لكل آلة عند الخط الأبيض،
      قابل للتحرير نغمة نغمة. الآلة: من اسم المسار لو كان من هكوله نفسه (التصدير يكتب اسم الآلة)،
      وإلا من رقم آلة General MIDI. مشروع فاضي ياخذ سرعة الملف وميزانه. */
-  const GM_FAMILY = ["piano", "glockenspiel", "organ", "guitar", "ebass", "strings", "strings", "trumpet", "sax", "flute", "synth", "synth", "synth", "banjo", "marimba", "synth"];
+  const GM_FAMILY = ["piano", "glockenspiel", "organ", "guitar", "ebass", "strings", "strings", "trumpet", "sax", "flute", "synth", "pad", "synth", "banjo", "marimba", "synth"];
   function instrumentFor(t) {
     const nm = String(t.name || "").replace(/ d+$/, "").trim().toLowerCase();
     if (INSTRUMENTS[nm]) return nm;
@@ -4628,7 +4641,7 @@ function initBeepMelodyExperiment() {
     xylophone: 13, bell: 14, santoor: 15, organ: 19, accordion: 21, harmonium: 20, harmonica: 22, melodica: 22, guitar: 24, guitar_ac: 25, guitar_el: 27, ebass: 33,
     doublebass: 32, synthbass: 38, violin: 40, cello: 42, pizz: 45, harp: 46, strings: 48, choir: 52, trumpet: 56,
     trombone: 57, tuba: 58, horn: 60, sax: 65, oboe: 68, bassoon: 70, clarinet: 71, flute: 73, recorder: 74, nay: 77, chiptune: 80,
-    synth: 81, mandolin: 25, banjo: 105, oud: 106, qanun: 107, kalimba: 108, steelpan: 114, custom: 0,
+    synth: 81, pad: 89, mandolin: 25, banjo: 105, oud: 106, qanun: 107, kalimba: 108, steelpan: 114, custom: 0,
   };
   function studioToMidi() {
     const PPQ = 480;
