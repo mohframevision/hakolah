@@ -12,6 +12,11 @@ module.exports = [
     ignores: [
       "_site/**",
       "_to_delete/**", // سلة نقل مؤقتة لملفات .git/*.lock العالقة ونسخ _site قديمة (راجع مراجعات-يومية/سجل-المشاكل.md) — بلا أي قيمة، مو جزءاً من كود الموقع
+      // هكوله/ فولدر الملفات المحلي (مجلد مرفوعة/غير متتبَّع بـgit، راجع .gitignore) —
+      // يحوي هكوله/فيديو/hakolah-videos مشروع Remotion مستقل بـnode_modules خاص فيه
+      // (+10000 ملف js). بدون هذا الاستثناء `eslint .` يفحص ذاك node_modules نفسه
+      // ويطيح بخطأ داخلي بـESLint (scopeManager.addGlobals) — اكتُشف 2026-10-09.
+      "هكوله/**",
       "node_modules/**",
       "cf-worker/**",
       "poster-editor/vendor/**",
