@@ -16,6 +16,7 @@ module.exports = {
   "عراقي": "Iraqi",
   "مشاوي": "Grills",
   "مندي": "Mandi",
+  "كبسة": "Kabsa",
   "ذرة": "Corn",
   "آلو وصوصات": "Fries & Sauces",
   "عيوش": "Aayosh",
