@@ -1,5 +1,5 @@
 ---
-title: Al Shola Restaurant
+title: Al Shoala Restaurant
 icon: 🍽️
 desc: Shawarma and the “Arabi” plate for dinner, grilled chicken and mezze with hot Turkish bread for lunch — with three branches.
 langSwitchUrl: "/restaurants/مطعم-الشعلة.html"
@@ -8,8 +8,9 @@ recommendation: "The “Arabi” plate for dinner — by far their best dish. Fo
 
 ## About the Restaurant
 
-Al Shola is a well-known shawarma restaurant in Bahrain. It also serves
-grilled chicken, mezze and a kebab sandwich. Lunch has plenty of dishes, but
+Al Shoala (Al Shoala Turkish Grill) is a well-known shawarma restaurant in
+Bahrain. It also serves Turkish grills, grilled chicken, mezze, pizza and
+pastries. Lunch has plenty of dishes, but
 most people come for the shawarma at dinner. It has **three branches**: Jid
 Hafs, Jid Ali and Busaiteen.
 
@@ -38,11 +39,32 @@ Everything is generous, so it makes a great lunch with the family.
 
 > Prices are from our latest visit and may change.
 
+## The Menu
+
+These dishes are from the restaurant's printed menu at the Jid Hafs branch. The menu may change:
+
+- **Shawarma:** chicken, meat or mixed shawarma plates, and the **Arabic shawarma** (meat or chicken)
+- **Sandwiches:** chicken and meat shawarma, malgoom, sarokh, tikka, kabab and a Roosi sandwich
+- **Grills:** a whole or half chicken, grilled breast, tikka and kabab (chicken and meat), chicken wings, reish, chelo kabab and mixed grills
+- **Lunch:** biryani, machboos, bukhari, mandi and kuzi (chicken and meat), raqaba, musaqqa'a, harees, lentil soup, macaroni, béchamel, salona (chicken, meat and vegetable) and bamia with meat
+- **Fish:** grilled (buri, tilapia, supreme), plus safi, shari and hamour with rice
+- **Pizza:** many kinds, including labna, spinach, murtadella and the Al Shoala pizza
+- **Pastries:** meat and chicken pies, cheese, labna in many forms, spinach, zaatar and a mixed dozen
+- **Other:** chicken and beef burgers, broasted chicken, drumsticks and wings
+- **Special orders:** meat or chicken with rice by the kilo, for feasts and gatherings
+
 ## Branches
 
 - **Jid Hafs** — we tried it, and it's our favorite
 - **Jid Ali** — we tried it
 - **Busaiteen** — we haven't tried it yet
+
+## Contact
+
+Jid Hafs branch: **Block 422, Road 80, Building 912**
+
+- 📞 **17552044** — the same number takes delivery orders, they deliver to homes
+- [📸 Instagram](https://www.instagram.com/alshoalarestaurant/)
 
 ## Location
 
