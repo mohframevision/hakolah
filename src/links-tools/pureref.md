@@ -1,6 +1,6 @@
 ---
 title: "PureRef"
-icon: "🎧"
+icon: "🖼️"
 desc: "جميع صورك المرجعية في مكان واحد. نظم مصادر إلهامك وسرّع عملية إبداعك مع PureRef"
 title_en: "PureRef"
 desc_en: "Keep all your reference images in one place, and organize your inspiration to speed up your creative work."
