@@ -103,6 +103,7 @@ module.exports = {
   "مأكولات عالمية": "International Cuisine",
   "بروستد": "Broasted Chicken",
   "ممشى": "Walkway",
+  "مزار سياحي": "Landmark",
 
   "غسيل": "Car Wash",
   "إكسسوارات السيارات": "Car Accessories",
