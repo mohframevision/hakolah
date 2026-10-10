@@ -9,10 +9,11 @@ recommendation: "The “Arabi” plate for dinner — by far their best dish. Fo
 ## About the Restaurant
 
 Al Shoala (Al Shoala Turkish Grill) is a well-known shawarma restaurant in
-Bahrain. It also serves Turkish grills, grilled chicken, mezze, pizza and
-pastries. Lunch has plenty of dishes, but
-most people come for the shawarma at dinner. It has **three branches**: Jid
-Hafs, Jid Ali and Busaiteen.
+Bahrain, and one of the old ones: **it opened in 1988**. It serves shawarma,
+Turkish grills, grilled chicken, mezze, pizza and pastries. It has **three
+branches**: Jid Hafs, Jid Ali and Muharraq.
+
+Lunch has plenty of dishes, but most people come for the shawarma at dinner.
 
 ## Dinner: Shawarma and the “Arabi” Plate
 
@@ -20,7 +21,8 @@ For dinner there is **chicken shawarma** and **meat shawarma**, plus a
 **kebab sandwich**. But the one to order is the **“Arabi”**, by far their best
 dish:
 
-- Six large pieces of shawarma, cut up and lightly grilled, **with cheese inside** that gives it an amazing taste, on Turkish bread
+- Six large pieces of shawarma, cut up and lightly grilled, **with cheese
+  inside** that gives it an amazing taste, on Turkish bread
 - Mayonnaise or garlic sauce on the side
 - Fries on the side, and a sachet of ketchup
 - Around **2.300 BHD**
@@ -37,7 +39,7 @@ Lunch has many dishes. What we usually order:
 
 Everything is generous, so it makes a great lunch with the family.
 
-> Prices are from our latest visit and may change.
+> Prices are from our own experience on our latest visit and may change.
 
 ## The Menu
 
@@ -56,15 +58,17 @@ These dishes are from the restaurant's printed menu at the Jid Hafs branch. The 
 ## Branches
 
 - **Jid Hafs** — we tried it, and it's our favorite
+  - Address: Block 422, Road 80, Building 912
+  - 📞 17552044
 - **Jid Ali** — we tried it
-- **Busaiteen** — we haven't tried it yet
+- **Muharraq** — we haven't tried it yet
+  - 📞 17333676
+  - According to the Jid Hafs menu, **pasta** is only available at the Muharraq branch
 
-## Contact
+## Delivery and Contact
 
-Jid Hafs branch: **Block 422, Road 80, Building 912**
-
-- 📞 **17552044** — the same number takes delivery orders, they deliver to homes
-- [📸 Instagram](https://www.instagram.com/alshoalarestaurant/)
+They offer **home delivery**: order through a branch's number. The
+restaurant's Instagram: [📸 @alshoalarestaurant](https://www.instagram.com/alshoalarestaurant/)
 
 ## Location
 
