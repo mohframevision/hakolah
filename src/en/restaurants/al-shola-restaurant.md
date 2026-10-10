@@ -61,6 +61,7 @@ These dishes are from the restaurant's printed menu at the Jid Hafs branch. The 
   - Address: Block 422, Road 80, Building 912
   - 📞 17552044
 - **Jid Ali** — we tried it
+  - 📞 17683378
 - **Muharraq** — we haven't tried it yet
   - 📞 17333676
   - According to the Jid Hafs menu, **pasta** is only available at the Muharraq branch
