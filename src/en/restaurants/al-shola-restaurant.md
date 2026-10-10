@@ -19,7 +19,7 @@ For dinner there is **chicken shawarma** and **meat shawarma**, plus a
 **kebab sandwich**. But the one to order is the **“Arabi”**, by far their best
 dish:
 
-- Six large pieces of shawarma, cut up and lightly grilled, on Turkish bread
+- Six large pieces of shawarma, cut up and lightly grilled, **with cheese inside** that gives it an amazing taste, on Turkish bread
 - Mayonnaise or garlic sauce on the side
 - Fries on the side, and a sachet of ketchup
 - Around **2.300 BHD**
