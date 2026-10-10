@@ -47,21 +47,21 @@ module.exports = [
         "error",
         {
           varsIgnorePattern:
-            "^(renderSection|renderFavoritesPage|initRandomPicker|openPickerReveal|sectionLabel|renderFeaturedPick|initPushNotifications|renderTrendingSection|renderExploreProgress)$",
+            "^(renderSection|renderFavoritesPage|initRandomPicker|openPickerReveal|sectionLabel|audioBufferToWav|audioBufferToMp3|lsSet|renderFeaturedPick|initPushNotifications|renderTrendingSection|renderExploreProgress)$",
         },
       ],
     },
   },
   {
-    // main.js وpicker.js ملفان بنفس الصفحة بلا وحدات: كل واحد يستخدم دوال الثاني العامة
+    // main.js وملفات الصفحات (picker/converter/expense/typing) بنفس الصفحة بلا وحدات: كل واحد يستخدم دوال الثاني العامة
     files: ["src/js/main.js"],
     languageOptions: { globals: { initRandomPicker: "readonly" } },
   },
   {
-    files: ["src/js/picker.js"],
+    files: ["src/js/picker.js", "src/js/converter.js", "src/js/expense.js", "src/js/typing.js"],
     languageOptions: {
       globals: Object.fromEntries(
-        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "openPickerReveal"].map((n) => [n, "readonly"])
+        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "openPickerReveal", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder"].map((n) => [n, "readonly"])
       ),
     },
   },

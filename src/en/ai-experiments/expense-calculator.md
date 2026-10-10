@@ -1,4 +1,5 @@
 ---
+pageScript: "expense"
 title: "Experiment Three: An Income & Expense Calculator"
 icon: 🧮
 desc: Log your income and expenses with categories you choose, and see your balance and spending breakdown instantly — no server, no account, everything stays in your browser.

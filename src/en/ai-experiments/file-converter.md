@@ -1,4 +1,5 @@
 ---
+pageScript: "converter"
 title: "Experiment Two: A Serverless File Converter"
 icon: 🔄
 desc: Convert images, audio and video — compress a photo, pull the audio out of a clip, shrink a video. Everything happens inside your browser, and your file never leaves your device.

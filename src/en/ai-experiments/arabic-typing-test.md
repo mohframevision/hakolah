@@ -1,4 +1,5 @@
 ---
+pageScript: "typing"
 title: "Experiment Four: Arabic Typing Speed Test"
 icon: ⌨️
 desc: "A real challenge to your speed and accuracy — sentences in literary Arabic, rich in hamzas and hard letter forms, not simplified language. The timer starts with your first keystroke."
