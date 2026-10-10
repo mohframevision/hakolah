@@ -706,6 +706,27 @@ img {
   scroll-snap-type: x mandatory;
   padding: 6px 4px 14px;
   margin: 0 -4px;
+  /* الأطراف تتلاشى بدل ما تنقص البطاقة بخط مستقيم، والحشوة الجانبية تخلي
+     أول وآخر بطاقة خارج منطقة التلاشي لما يوصل لها الزائر */
+  padding-inline: 32px;
+  scroll-padding-inline: 32px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+.home-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.home-carousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.home-carousel::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 999px;
 }
 
 .carousel-item {
