@@ -1,14 +1,14 @@
 ---
 title: Al Jazira Bakery
 icon: 🍞
-desc: A bakery since 1998 in Abu Quwah, with roti at 100 fils, known for its stuffed pocket, plus French pastries, Arabic and Western sweets, and orders for occasions.
+desc: A bakery since 1998 in North Sehla, with roti at 100 fils, known for its stuffed pocket, plus French pastries, Arabic and Western sweets, and orders for occasions.
 langSwitchUrl: "/bakeries/مخبز-الجزيرة.html"
 recommendation: The stuffed pocket — a quick, palm-sized snack with more than one filling, a great fix for sudden hunger.
 ---
 
 ## About the Bakery
 
-A regular neighborhood bakery in Abu Quwah — the go-to spot for plain
+A regular neighborhood bakery in North Sehla, near Abu Quwah — the go-to spot for plain
 roti bread at 100 fils.
 
 The bakery belongs to the Al Jazeera bakeries chain, founded in 1998, with branches in North Sehla,
@@ -37,4 +37,4 @@ Daily from 5am to 11pm.
 
 ## Location
 
-[📍 Open on Google Maps](https://maps.app.goo.gl/XU2brWkaTsKL3yTHA)
+[📍 Open on Google Maps](https://maps.app.goo.gl/D7aGQU5GAxKDB3jx6)
