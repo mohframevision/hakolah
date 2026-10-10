@@ -2304,10 +2304,9 @@ img {
   overflow: hidden;
 }
 
+/* إطار داخلي (inset): الظل الخارجي ينقص من يسار/فوق البطاقة بالمشهد ثلاثي الأبعاد بكروم */
 .picker-helix-card.chosen {
-  box-shadow:
-    0 0 0 3px #fff,
-    0 0 40px hsl(var(--hue) 90% 60% / 0.9);
+  box-shadow: inset 0 0 0 3px #fff;
 }
 
 @media (max-width: 600px) {
