@@ -94,6 +94,7 @@ module.exports = {
   "شهركان": "Shahrakkan",
   "طشان": "Tashan",
   "عالي": "A'ali",
+  "السايه": "Al Sayah",
   "عراد": "Arad",
   "عسكر": "Askar",
   "عوالي": "Awali",
