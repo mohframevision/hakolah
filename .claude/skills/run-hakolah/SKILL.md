@@ -62,7 +62,7 @@ commands strictly in order):
 node .claude/skills/run-hakolah/driver.mjs <<'EOF'
 launch
 nav http://localhost:8080/
-wait-for text=كل شيء مفيد
+wait-for text=دليلك إلى أماكن البحرين
 screenshot home
 quit
 EOF

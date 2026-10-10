@@ -58,6 +58,10 @@
   --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
   --color-accent: color-mix(in oklch, var(--color-primary) 65%, white);
   --color-border: #e0e0e0;
+  /* لحدود عناصر تحكم تفاعلية (حقول نموذج) حيث الحد هو الوسيلة الوحيدة
+     لتمييز حدودها (WCAG 1.4.11، يحتاج 3:1 كحد أدنى) — أقوى من --color-border
+     العادي (مقصود خفيف جداً لفواصل البطاقات الزخرفية فقط) */
+  --color-border-strong: #8a8a8a;
   --color-danger: #ef4444;
   /* خلفية ممتلئة عليها نص/أيقونة بيضاء (أزرار، شارات، الرابط النشط) — انظر
      @supports تحت: نفس اللون الأساسي بإضاءة لا تتجاوز 0.5 */
@@ -102,6 +106,7 @@
     --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
     --color-accent: color-mix(in oklch, var(--color-primary) 80%, white);
     --color-border: #2a2a2a;
+    --color-border-strong: #7a7a7a;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
     --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.5);
   }
@@ -117,6 +122,7 @@
   --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
   --color-accent: color-mix(in oklch, var(--color-primary) 80%, white);
   --color-border: #2a2a2a;
+  --color-border-strong: #7a7a7a;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
   --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
@@ -130,6 +136,7 @@
   --color-primary-dark: color-mix(in srgb, var(--color-primary) 75%, black);
   --color-accent: color-mix(in oklch, var(--color-primary) 65%, white);
   --color-border: #e0e0e0;
+  --color-border-strong: #8a8a8a;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 6px 20px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.1);
 }
@@ -476,11 +483,12 @@ img {
     justify-content: space-between;
   }
   .main-nav {
-    display: flex;
+    display: grid;
     width: 100%;
     order: 3; /* تنزل تحت صف الشعار والأدوات بدل ما تفصل بينهم */
-    flex-direction: column;
-    gap: 2px;
+    /* عمودان: كل قسم جديد يضيف صفاً بدل ما يصغر الخط أو ينقص آخر القائمة */
+    grid-template-columns: 1fr 1fr;
+    gap: 2px var(--space-2);
     max-height: 0;
     opacity: 0;
     overflow: hidden;
@@ -493,7 +501,8 @@ img {
       padding-top 0.25s ease;
   }
   .main-nav.open {
-    max-height: 520px;
+    max-height: min(75vh, 900px);
+    overflow-y: auto;
     opacity: 1;
     pointer-events: auto;
     padding-top: var(--space-3);
@@ -501,6 +510,8 @@ img {
   .main-nav a {
     padding: var(--space-3);
     font-size: 0.95rem;
+    text-align: center;
+    justify-content: center;
   }
 }
 
@@ -619,7 +630,7 @@ img {
 .hero::before {
   content: "";
   position: absolute;
-  inset: -20% -10% auto -10%;
+  inset: 0 0 auto 0;
   height: 480px;
   z-index: -1;
   background:
@@ -636,6 +647,11 @@ img {
   filter: blur(60px);
   opacity: 0.8;
   pointer-events: none;
+  /* يتلاشى قبل حدود الهيرو من كل الجهات بدل ما ينقص بخط مستقيم */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent), linear-gradient(transparent, #000 30%, #000 50%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent), linear-gradient(transparent, #000 30%, #000 50%, transparent);
+  mask-composite: intersect;
 }
 
 .hero h1 {
@@ -1986,7 +2002,9 @@ img {
 .form-group textarea {
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid var(--color-border);
+  /* --color-border-strong بدل --color-border العادي: هذا الحد هو الوسيلة
+     الوحيدة لتمييز حدود الحقل بالحالة العادية (بلا تركيز) — WCAG 1.4.11 */
+  border: 1px solid var(--color-border-strong);
   background: var(--color-surface);
   color: var(--color-text);
   font-family: inherit;
