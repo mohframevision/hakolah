@@ -4,8 +4,8 @@ icon: "🍽️"
 desc: مطعم كبسة بسار، يفتح وقت الغداء، وفيه توصيل للبيت بالاتصال أو عن طريق جاهز وكيتا وطلبات.
 title_en: Kabsatna Lmatna
 desc_en: A kabsa restaurant in Saar, open at lunchtime, with home delivery by phone or via Jahez, Keeta and Talabat.
-hours: "١٢ظ - ٥م"
-hours_en: "12pm - 5pm"
+hours: "يومياً ١٢ظ - ٥م (الجمعة من ١٢:٣٠ظ) · رمضان ٩:٣٠م - ٣:٣٠ص"
+hours_en: "Daily 12pm - 5pm (Fri from 12:30pm) · Ramadan 9:30pm - 3:30am"
 categories:
   - كبسة
   - سار
