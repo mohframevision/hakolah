@@ -47,9 +47,22 @@ module.exports = [
         "error",
         {
           varsIgnorePattern:
-            "^(renderSection|renderFavoritesPage|initRandomPicker|renderFeaturedPick|initPushNotifications|renderTrendingSection|renderExploreProgress)$",
+            "^(renderSection|renderFavoritesPage|initRandomPicker|openPickerReveal|sectionLabel|renderFeaturedPick|initPushNotifications|renderTrendingSection|renderExploreProgress)$",
         },
       ],
+    },
+  },
+  {
+    // main.js وpicker.js ملفان بنفس الصفحة بلا وحدات: كل واحد يستخدم دوال الثاني العامة
+    files: ["src/js/main.js"],
+    languageOptions: { globals: { initRandomPicker: "readonly" } },
+  },
+  {
+    files: ["src/js/picker.js"],
+    languageOptions: {
+      globals: Object.fromEntries(
+        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "openPickerReveal"].map((n) => [n, "readonly"])
+      ),
     },
   },
   {
