@@ -1461,20 +1461,6 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     playSound("share");
   });
 
-  card.querySelectorAll(".phone-copy-btn").forEach((phoneBtn) => {
-    phoneBtn.addEventListener("click", async () => {
-      const phone = phoneBtn.dataset.phone;
-      try {
-        await navigator.clipboard.writeText(phone);
-      } catch {
-        showToast(`${t("phone_copy_failed")} ${phone}`);
-        return;
-      }
-      showToast(t("phone_copied"));
-      playSound("copy");
-    });
-  });
-
   const descToggle = card.querySelector(".desc-toggle");
   if (descToggle) {
     const descEl = card.querySelector(".item-desc");
@@ -1490,15 +1476,34 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     });
   }
 
-  const menuBtn = card.querySelector(".menu-open-btn");
+  wireItemActions(card, item);
+
+  return card;
+}
+
+// أزرار buildActionsHtml اللي تحتاج JS (نسخ الرقم، المنيو التفاعلي) — مشتركة بين
+// بطاقة القائمة ونتيجة "اختار لي"
+function wireItemActions(root, item) {
+  root.querySelectorAll(".phone-copy-btn").forEach((phoneBtn) => {
+    phoneBtn.addEventListener("click", async () => {
+      const phone = phoneBtn.dataset.phone;
+      try {
+        await navigator.clipboard.writeText(phone);
+      } catch {
+        showToast(`${t("phone_copy_failed")} ${phone}`);
+        return;
+      }
+      showToast(t("phone_copied"));
+      playSound("copy");
+    });
+  });
+  const menuBtn = root.querySelector(".menu-open-btn");
   if (menuBtn) {
     menuBtn.addEventListener("click", () => {
       playSound("open");
       openMenuOverlay(item);
     });
   }
-
-  return card;
 }
 
 /* ===== تتبّع الأقسام اللي تصفّحها الزائر (محلياً، بدون تسجيل دخول) — يغذّي
@@ -2080,105 +2085,10 @@ function hideBackgroundFromAT(overlay) {
     });
 }
 
-function openPickerReveal(item, { onRetry, onClose } = {}) {
-  // نحفظ العنصر اللي كان عليه التركيز (زر "اختار لي") عشان نرجّع له التركيز
-  // بعد الإغلاق — بدونه يضيع تركيز لوحة المفاتيح على body بعد كل إغلاق
-  const trigger = document.activeElement;
-  const overlay = document.createElement("div");
-  overlay.className = "picker-reveal-overlay";
-  overlay.setAttribute("role", "dialog");
-  overlay.setAttribute("aria-modal", "true");
-  overlay.setAttribute("aria-label", itemTitle(item));
-  document.body.appendChild(overlay);
-  document.body.style.overflow = "hidden";
-  const restoreBackground = hideBackgroundFromAT(overlay);
-
-  function close() {
-    overlay.remove();
-    document.body.style.overflow = "";
-    restoreBackground();
-    document.removeEventListener("keydown", onKeydown);
-    if (trigger && document.contains(trigger) && typeof trigger.focus === "function") {
-      trigger.focus();
-    }
-    onClose?.();
-  }
-  function onKeydown(e) {
-    if (e.key === "Escape") close();
-  }
-  document.addEventListener("keydown", onKeydown);
-
-  const closeBtn = document.createElement("button");
-  closeBtn.className = "btn secondary picker-reveal-close";
-  closeBtn.textContent = "✕";
-  closeBtn.setAttribute("aria-label", t("daily_pick_close"));
-  closeBtn.addEventListener("click", () => {
-    playSound("close");
-    close();
-  });
-  overlay.appendChild(closeBtn);
-  // تحويل التركيز لأول عنصر تفاعلي بالحوار وقت فتحه — بدونه يضل تركيز
-  // لوحة المفاتيح/قارئ الشاشة على الزر المخفي خلف الحاجز
-  closeBtn.focus();
-
-  const burst = document.createElement("div");
-  burst.className = "picker-burst";
-  overlay.appendChild(burst);
-
-  burstPieces(item, burst, () => {
-    const actions = document.createElement("div");
-    actions.className = "picker-reveal-actions";
-    actions.innerHTML = buildActionsHtml(item);
-    if (item.mapsUrl) {
-      actions.insertAdjacentHTML(
-        "beforeend",
-        `<a class="btn secondary" href="${item.mapsUrl}" target="_blank" rel="noopener noreferrer">${LINK_META.maps.icon} ${t("link_maps")}</a>`
-      );
-    }
-    overlay.appendChild(actions);
-
-    actions.querySelectorAll(".phone-copy-btn").forEach((phoneBtn) => {
-      phoneBtn.addEventListener("click", async () => {
-        const phone = phoneBtn.dataset.phone;
-        try {
-          await navigator.clipboard.writeText(phone);
-        } catch {
-          showToast(`${t("phone_copy_failed")} ${phone}`);
-          return;
-        }
-        showToast(t("phone_copied"));
-        playSound("copy");
-      });
-    });
-
-    const menuBtn = actions.querySelector(".menu-open-btn");
-    if (menuBtn) {
-      menuBtn.addEventListener("click", () => {
-        playSound("open");
-        openMenuOverlay(item);
-      });
-    }
-
-    const retryBtn = document.createElement("button");
-    retryBtn.className = "btn picker-retry-btn";
-    retryBtn.textContent = t("try_again");
-    retryBtn.addEventListener("click", () => {
-      playClickSound();
-      close();
-      onRetry?.();
-    });
-    overlay.appendChild(retryBtn);
-
-    spawnConfetti(overlay);
-    playSuccessSound();
-  });
-}
-
-/* ===== بطاقة القائمة التفاعلية — نفس حاجز الشاشة الكاملة اللي "اختار لي"
-   يستخدمه (.picker-reveal-overlay)، بس ببطاقة بسيطة بدلاً من burstPieces.
-   اسم وسعر بس بلا صور — قرار صريح من صاحب الموقع. ===== */
+/* ===== بطاقة القائمة التفاعلية — حاجز بشاشة كاملة (.picker-reveal-overlay)
+   ببطاقة بسيطة: اسم وسعر بس بلا صور — قرار صريح من صاحب الموقع. ===== */
 function openMenuOverlay(item) {
-  // نفس منطق حفظ/إرجاع التركيز بـopenPickerReveal أعلاه
+  // نحفظ العنصر اللي كان عليه التركيز ونرجّع له بعد الإغلاق
   const trigger = document.activeElement;
   const overlay = document.createElement("div");
   overlay.className = "picker-reveal-overlay menu-overlay";
@@ -2230,63 +2140,6 @@ function openMenuOverlay(item) {
     <ul class="menu-items">${rows}</ul>
   `;
   overlay.appendChild(card);
-}
-
-/* قطع المعلومات نفسها تقفز من زاوية عشوائية بحركة مرنة داخل container،
-   وتستدعي onDone بعد ما تستقر كلها */
-function burstPieces(item, container, onDone) {
-  const pieces = [];
-
-  const titleEl = document.createElement("div");
-  titleEl.className = "burst-title";
-  titleEl.textContent = `${item.icon || "⭐"} ${itemTitle(item)}`;
-  pieces.push(titleEl);
-
-  if (item.image) {
-    const photoEl = document.createElement("img");
-    photoEl.className = "burst-photo";
-    photoEl.src = item.image;
-    photoEl.alt = "";
-    photoEl.loading = "lazy";
-    pieces.push(photoEl);
-  }
-
-  (item.tags || []).slice(0, 4).forEach((tag) => {
-    const chip = document.createElement("span");
-    chip.className = "burst-chip";
-    chip.textContent = `${tagIcon(tag) ? tagIcon(tag) + " " : ""}${tagLabel(tag)}`;
-    pieces.push(chip);
-  });
-
-  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-
-  pieces.forEach((el, i) => {
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 200 + Math.random() * 260;
-    el.style.setProperty("--x", `${Math.cos(angle) * dist}px`);
-    el.style.setProperty("--y", `${Math.sin(angle) * dist}px`);
-    el.style.setProperty("--rot", `${(Math.random() - 0.5) * 70}deg`);
-    el.style.setProperty("--delay", `${i * 100}ms`);
-    el.classList.add("burst-piece");
-    container.appendChild(el);
-  });
-
-  const totalMs = reduceMotion ? 0 : pieces.length * 100 + 700 + 400;
-  setTimeout(onDone, totalMs);
-}
-
-function spawnConfetti(container) {
-  const emojis = ["🎉", "✨", "⭐", "💫", "🎊"];
-  for (let i = 0; i < 14; i++) {
-    const el = document.createElement("span");
-    el.className = "confetti-piece";
-    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    el.style.setProperty("--x", `${(Math.random() - 0.5) * 240}px`);
-    el.style.setProperty("--rot", `${(Math.random() - 0.5) * 360}deg`);
-    el.style.animationDelay = `${Math.random() * 0.15}s`;
-    container.appendChild(el);
-    el.addEventListener("animationend", () => el.remove());
-  }
 }
 
 /* ===== خطة اليوم =====

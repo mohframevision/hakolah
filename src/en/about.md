@@ -62,4 +62,12 @@ A personal opinion only appears when it's stated clearly and openly, like the "�
 
 If a place has widespread negative attention online, we most likely won't share any opinion on it — even a positive one — unless our own personal experience there is enough to support it.
 
+<h2 id="credits">Music and sound credits</h2>
+
+The "Pick for me" page uses music and sound effects licensed from Uppbeat. Here are the credits:
+
+<p dir="ltr">Music: 'Sleepover' by Richard Smithson on <a href="https://uppbeat.io/c/richard-smithson" rel="noopener">Uppbeat</a></p>
+
+The train, car, boat, plane and wind sounds come from the Uppbeat sound effects library. Full details are in the [credits file](/assets/audio/CREDITS.txt).
+
 </article>

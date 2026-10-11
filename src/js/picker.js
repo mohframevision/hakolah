@@ -1,235 +1,611 @@
-/* "اختار لي" — تُحمَّل بصفحة picker.html فقط (pageScript)، بعد main.js، وتستخدم
-   دواله العامة (t، sectionLabel، playClickSound، openPickerReveal). main.js
-   يستدعي initRandomPicker عند DOMContentLoaded، والملف محمّل قبلها. */
+/* "اختار لي" — رحلة فوق البحر: الزائر راكب مركبة (قطار/سيارة/قارب/طيارة يختارها بنفسه)،
+   وعناصر القسم المختار بطاقات تطفو بالهوا وتمر من الشباك، لين توقف المركبة على وحدة
+   و"يطلّع راسه" من الشباك فتقرّب البطاقة وتصير النتيجة.
+   تُحمَّل بصفحة picker.html فقط (pageScript)، بعد main.js، وتستخدم دواله العامة (t،
+   itemTitle، sectionLabel، tagLabel، buildActionsHtml، wireItemActions، isSoundEnabled،
+   getAudioContext، playClickSound، lsGet/lsSet). main.js يستدعي initRandomPicker.
 
-/* حلزون بطاقات ثلاثي الأبعاد لـ"اختار لي" (مستوحى من pacomepertant.com) —
-   CSS 3D بس بلا WebGL/مكتبات. البطاقة k على زاوية k·STEP وارتفاع k·PITCH؛
-   "pos" (رقم عشري) هو البطاقة اللي بالواجهة، والدوران = تحريك pos على الحلزون.
-   النتيجة عشوائية بالأصل: العيّنة نفسها عشوائية، ونوقف على بطاقة عشوائية منها.
-   والزائر يقدر يسحب الحلزون بنفسه ويضغط أي بطاقة يختارها (onPick). */
-// أقصى تشبّع (chroma) يقدر sRGB يعرضه لإضاءة L ودرجة لون h بـOKLCH — بحث
-// ثنائي على تحويل Oklab القياسي. يُستخدم لإعطاء كل لون نفس "النسبة" من
-// أقصاه، فتتساوى الحيوية بين الأزرق والأصفر بدل ما يُقصّ لون خارج النطاق
-function oklchMaxChroma(L, h) {
-  const inGamut = (C) => {
-    const a = C * Math.cos((h * Math.PI) / 180);
-    const b = C * Math.sin((h * Math.PI) / 180);
-    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
-    const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
-    const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
-    return [
-      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-    ].every((v) => v >= 0 && v <= 1);
+   الأداء (أجهزة قديمة وجوالات): كل الحركة transform/opacity بـrAF على طبقات GPU — بلا
+   blur ولا mix-blend-mode ولا صور. البطاقات اللي برا الشاشة ما تنرسم، والحركة الهادية
+   وقت الانتظار تتوقف لما المشهد يطلع من الشاشة. حبيبات الفيلم بلاطة 128px تُرسم مرة
+   وحدة، والقمر كذلك. */
+
+// مسار السكربت نفسه — منه نبني مسار الأصوات بغض النظر عن مسار الموقع الأساسي
+const PICKER_SCRIPT_URL = document.currentScript?.src || location.href;
+const PICKER_AUDIO = (name) => new URL(`../assets/audio/picker/${name}.mp3`, PICKER_SCRIPT_URL).href;
+
+// كل مركبة لها طريقة وقوف: over = كم تتعدى الهدف (بكسل) قبل ما ترجع له، settle = مدة
+// الرجوع. القارب ينزلق أطول ويتمايل، والطيارة تبطأ بنعومة بلا رجوع تقريباً.
+// stopAt: صوت الوقوف يبدأ لما تنزل السرعة تحت هالنسبة (0 = عند الوقوف نفسه)
+const TRIP_VEHICLES = {
+  train: { icon: "🚆", dur: 4200, over: 14, settle: 500, stopAt: 0.35 },
+  car: { icon: "🚗", dur: 4000, over: 26, settle: 650, stopAt: 0.2 },
+  boat: { icon: "🛥️", dur: 4800, over: 60, settle: 1300, rock: 1, stopAt: 0.12 },
+  plane: { icon: "✈️", dur: 4400, over: 8, settle: 900, rock: 0.5, stopAt: 0 },
+};
+const TRIP_VEHICLE_KEY = "pickerVehicle";
+const TRIP_DIST = 5200; // مسافة الرحلة بوحدات الطبقة القريبة
+// ثلاث طبقات عمق: البعيد صغير وبطيء وقريب من الأفق، القريب كبير وسريع
+const TRIP_LANES = [
+  { depth: 0.35, y: 0.4, gap: 330 },
+  { depth: 0.62, y: 0.27, gap: 400 },
+  { depth: 1, y: 0.47, gap: 470 },
+];
+
+// منحنى السرعة: تسارع سريع ثم فرملة طويلة ناعمة؛ نجمّعه مسبقاً لجدول مسافات
+const TRIP_CURVE = (() => {
+  const n = 400;
+  const v = [];
+  const acc = [0];
+  for (let i = 0; i < n; i++) v.push(Math.min(1, i / n / 0.1) * (1 - i / n) ** 2.2);
+  for (let i = 0; i < n; i++) acc.push(acc[i] + v[i]);
+  const vMax = Math.max(...v);
+  return (t) => {
+    const i = Math.min(n - 1, Math.floor(t * n));
+    return [acc[i] / acc[n], v[i] / vMax];
   };
-  let lo = 0;
-  let hi = 0.4;
-  for (let i = 0; i < 20; i++) {
-    const mid = (lo + hi) / 2;
-    if (inGamut(mid)) lo = mid;
-    else hi = mid;
-  }
-  return lo;
+})();
+
+const tripEase = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+const tripBack = (t) => 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;
+
+// كل الحركات بـrAF (مو CSS transitions) عشان تمشي على نفس الساعة
+function tripTween(ms, fn, done) {
+  const t0 = performance.now();
+  (function frame(now) {
+    const t = Math.min(1, (now - t0) / ms);
+    fn(t);
+    if (t < 1) requestAnimationFrame(frame);
+    else done?.();
+  })(t0);
 }
 
-function createPickerHelix(stage, onPick) {
-  const COUNT = 30;
-  // بطاقتان متجاورتان على الحلزون ما تتلامسان ما دام عرض البطاقة أقل من
-  // 2·R·tan(STEP/2) — المقاسات بـstyle.css (--helix-r و--card-w) محسوبة عليها
-  const STEP = 40;
-  const PITCH = 30;
-  const MIN_TRAVEL = 12;
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let cards = [];
-  let rotor = null;
-  let pos = 0;
-  let idleFrame = null;
-  let idleStart = 0;
-  let moveFrame = null;
-  let busy = false;
-  let drag = null;
-  let lastTick = 0;
-  let lastTickTime = 0;
+/* ===== الصوت =====
+   يتبع زر الصوت العام بالهيدر (مطفأ افتراضياً). يتحمّل فقط بعد أول ضغطة على "اختر لي!"
+   وأصوات المركبة الحالية بس. صوت المركبة حلقة واحدة: ارتفاعها وحدّتها (playbackRate)
+   يتبعون السرعة، فتسمع التسارع والفرملة بنفس الملف. الموسيقى بعنصر <audio> (تشتغل
+   وهي تتحمّل)، والمؤثرات أخفض منها. الحقوق بصفحة "من نحن" (#credits). */
+const TripSound = (() => {
+  let ctx = null;
+  let sfx = null;
+  let master = null;
+  let loopSrc = null;
+  let loopGain = null;
+  let music = null;
+  let musicGain = null;
+  const cache = {};
 
-  function render() {
-    rotor.style.transform = `translateZ(calc(var(--helix-r) * -1)) translateY(${-pos * PITCH}px) rotateY(${-pos * STEP}deg)`;
-    cards.forEach(({ el }, k) => {
-      const facing = (Math.cos(((k - pos) * STEP * Math.PI) / 180) + 1) / 2;
-      el.style.opacity = (0.15 + 0.85 * facing * facing).toFixed(3);
+  function init() {
+    if (ctx) return true;
+    try {
+      ctx = getAudioContext();
+    } catch {
+      return false;
+    }
+    master = ctx.createGain();
+    master.gain.value = 0.8;
+    master.connect(ctx.destination);
+    sfx = ctx.createGain();
+    sfx.gain.value = 0.22;
+    sfx.connect(master);
+    return true;
+  }
+  const load = (name) =>
+    (cache[name] ||= fetch(PICKER_AUDIO(name))
+      .then((r) => r.arrayBuffer())
+      .then((b) => ctx.decodeAudioData(b))
+      .catch(() => null));
+
+  function play(name, gain = 1, rate = 1) {
+    if (!ctx || !isSoundEnabled()) return;
+    load(name).then((buf) => {
+      if (!buf) return;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.playbackRate.value = rate;
+      const g = ctx.createGain();
+      g.gain.value = gain;
+      src.connect(g).connect(sfx);
+      src.start();
     });
   }
 
-  function stopIdle() {
-    cancelAnimationFrame(idleFrame);
-    idleFrame = null;
+  function stopLoop(fade = 1.2) {
+    if (!loopSrc) return;
+    const src = loopSrc;
+    loopSrc = null;
+    loopGain.gain.setTargetAtTime(0, ctx.currentTime, fade / 4);
+    src.stop(ctx.currentTime + fade);
   }
 
-  // صوت "تكّة" مع كل بطاقة تمر بالواجهة (دوران أو سحب) — بحد أدنى 60ms
-  // بينها عشان الحركة السريعة ما تصير ضجيج متواصل
-  function moveTo(p) {
-    pos = Math.max(0, Math.min(COUNT - 1, p));
-    render();
-    const now = performance.now();
-    if (Math.round(pos) !== lastTick && now - lastTickTime > 60) {
-      lastTick = Math.round(pos);
-      lastTickTime = now;
-      playSound("tick");
+  function startMusic() {
+    if (!music) {
+      music = new Audio(PICKER_AUDIO("music"));
+      music.loop = true;
+      musicGain = ctx.createGain();
+      musicGain.gain.value = 0;
+      ctx.createMediaElementSource(music).connect(musicGain).connect(master);
+      musicGain.gain.setTargetAtTime(0.25, ctx.currentTime, 0.8);
+    }
+    if (music.paused) music.play().catch(() => {});
+  }
+
+  async function start(vehicle, isRunning) {
+    if (!isSoundEnabled() || !init()) return;
+    startMusic();
+    stopLoop(0.1);
+    load(`${vehicle}-stop`);
+    ["whoosh", "headout", "wind"].forEach(load);
+    const buf = await load(`${vehicle}-loop`);
+    if (!buf || !isRunning()) return;
+    loopSrc = ctx.createBufferSource();
+    loopSrc.buffer = buf;
+    loopSrc.loop = true;
+    loopGain = ctx.createGain();
+    loopGain.gain.value = 0;
+    loopSrc.connect(loopGain).connect(sfx);
+    loopSrc.start();
+  }
+
+  function speed(v) {
+    if (!loopSrc) return;
+    loopGain.gain.setTargetAtTime(0.15 + 0.55 * v, ctx.currentTime, 0.1);
+    loopSrc.playbackRate.setTargetAtTime(0.8 + 0.35 * v, ctx.currentTime, 0.1);
+  }
+
+  // نغمة النجاح: جرسين ناعمين (D5 ثم A5)، كل جرس نغمة أساسية + توافقيات الجرس الخافتة
+  function chime() {
+    if (!ctx || !isSoundEnabled()) return;
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 3200;
+    lp.connect(sfx);
+    [
+      [587.33, 0],
+      [880, 0.13],
+    ].forEach(([f, at]) => {
+      [
+        [1, 0.22],
+        [2.76, 0.045],
+        [5.4, 0.015],
+      ].forEach(([k, gain]) => {
+        const t0 = ctx.currentTime + at;
+        const o = ctx.createOscillator();
+        o.frequency.value = f * k;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.8 / k ** 0.3);
+        o.connect(g).connect(lp);
+        o.start(t0);
+        o.stop(t0 + 2);
+      });
+    });
+  }
+
+  // الزائر طفّى الصوت من الهيدر: نوقف الموسيقى والمحرك فوراً
+  function silence() {
+    if (!ctx) return;
+    stopLoop(0.2);
+    music?.pause();
+  }
+
+  return { start, speed, play, stopLoop, chime, silence };
+})();
+
+// شريط SVG مكرر مرتين: ننقله نص عرضه ونرجع = حركة لا نهائية بلا فراغ
+function tripStrip(path, fill) {
+  const svg = `<svg viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true"><path d="${path}" fill="${fill}"/></svg>`;
+  return svg + svg;
+}
+
+// القمر: قرص يغمق عند الحافة + بحار قمرية رمادية + فوهات صغيرة + حبيبات سطح
+function tripMoonTexture() {
+  const N = 128;
+  const r = N / 2;
+  const c = document.createElement("canvas");
+  c.width = c.height = N;
+  const g = c.getContext("2d");
+  const base = g.createRadialGradient(r * 0.8, r * 0.75, r * 0.1, r, r, r);
+  base.addColorStop(0, "#f6f3e8");
+  base.addColorStop(0.7, "#dcd8cb");
+  base.addColorStop(1, "#a9a597");
+  g.fillStyle = base;
+  g.beginPath();
+  g.arc(r, r, r - 1, 0, Math.PI * 2);
+  g.fill();
+  g.save();
+  g.clip();
+  g.filter = "blur(2.5px)";
+  g.fillStyle = "rgba(110, 108, 100, .38)";
+  for (const [x, y, rx, ry, rot] of [
+    [0.38, 0.32, 0.16, 0.11, 0.4],
+    [0.55, 0.28, 0.12, 0.09, 0],
+    [0.6, 0.45, 0.14, 0.1, 0.6],
+    [0.33, 0.52, 0.1, 0.13, 0],
+    [0.47, 0.62, 0.09, 0.07, 0],
+    [0.7, 0.6, 0.07, 0.06, 0],
+  ]) {
+    g.beginPath();
+    g.ellipse(x * N, y * N, rx * N, ry * N, rot, 0, Math.PI * 2);
+    g.fill();
+  }
+  g.filter = "none";
+  for (let i = 0; i < 40; i++) {
+    const x = Math.random() * N;
+    const y = Math.random() * N;
+    const cr = 1 + Math.random() * 3;
+    g.fillStyle = "rgba(80, 78, 72, .18)";
+    g.beginPath();
+    g.arc(x, y, cr, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = "rgba(255, 255, 255, .12)";
+    g.beginPath();
+    g.arc(x - cr * 0.3, y - cr * 0.3, cr * 0.6, 0, Math.PI * 2);
+    g.fill();
+  }
+  g.restore();
+  const img = g.getImageData(0, 0, N, N);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 14;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  return c.toDataURL();
+}
+
+// بلاطة حبيبات الفيلم
+function tripGrainTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const g = c.getContext("2d");
+  const img = g.createImageData(128, 128);
+  for (let i = 0; i < img.data.length; i += 4) {
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = Math.random() * 255;
+    img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  return c.toDataURL();
+}
+
+const TRIP_CLOUD_SVG =
+  '<svg viewBox="0 0 220 100" aria-hidden="true"><g fill="var(--cl)"><ellipse cx="62" cy="64" rx="50" ry="28"/><ellipse cx="112" cy="46" rx="54" ry="40"/><ellipse cx="162" cy="62" rx="46" ry="30"/><rect x="24" y="62" width="176" height="30" rx="15"/></g><ellipse cx="112" cy="88" rx="86" ry="9" fill="var(--cl2)" opacity=".6"/></svg>';
+
+function createTrip(stage, { onStart, onDone }) {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const scene = document.createElement("div");
+  scene.className = "trip-scene";
+  scene.setAttribute("aria-hidden", "true");
+  scene.innerHTML = `
+    <div class="trip-view">
+      <div class="trip-sky"></div><div class="trip-sun"></div>
+      <div class="trip-band trip-islands"></div>
+      <div class="trip-sea"></div>
+      <div class="trip-band trip-waves1"></div>
+      <div class="trip-band trip-waves2"></div>
+      <div class="trip-clouds trip-cfar"></div>
+      <div class="trip-carpet"></div>
+      <div class="trip-cards"></div>
+      <div class="trip-clouds trip-cnear"></div>
+      <div class="trip-band trip-fg"></div>
+    </div>
+    <div class="trip-window"></div>
+    <div class="trip-grain"></div>`;
+  stage.prepend(scene);
+  const $ = (cls) => scene.querySelector(`.trip-${cls}`);
+  const view = $("view");
+  const cardsBox = $("cards");
+  const win = $("window");
+  const fg = $("fg");
+  const bands = { islands: $("islands"), waves1: $("waves1"), waves2: $("waves2") };
+
+  bands.islands.innerHTML = tripStrip(
+    "M0 100 L0 80 Q60 60 120 78 L180 82 Q260 40 330 76 L520 84 Q600 55 680 80 L760 86 Q860 50 930 78 L1000 82 L1000 100Z",
+    "var(--isl)"
+  );
+  const wave = "M0 50 Q62 20 125 50 T250 50 T375 50 T500 50 T625 50 T750 50 T875 50 T1000 50 L1000 100 L0 100Z";
+  bands.waves1.innerHTML = tripStrip(wave, "var(--wv1)");
+  bands.waves2.innerHTML = tripStrip(wave, "var(--wv2)");
+  stage.style.setProperty("--trip-grain", `url(${tripGrainTexture()})`);
+  stage.style.setProperty("--trip-moon", `url(${tripMoonTexture()})`);
+
+  // الغيوم (مشهد الطيارة): كل غيمة عنصر بحجمه الطبيعي، يلف من جديد لما يطلع من الشاشة.
+  // البعيدة صغيرة وبطيئة فوق؛ القريبة كبيرة وسريعة عند حافة بساط الغيوم
+  const clouds = [];
+  function addClouds(box, n, depth, y0, y1, s0, s1) {
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement("div");
+      el.className = "trip-cloud";
+      el.innerHTML = TRIP_CLOUD_SVG;
+      box.append(el);
+      clouds.push({ el, x0: (i + Math.random() * 0.6) / n, depth, y: y0 + Math.random() * (y1 - y0), s: s0 + Math.random() * (s1 - s0) });
+    }
+  }
+  addClouds($("cfar"), 6, 0.18, 0.1, 0.42, 0.5, 1);
+  addClouds($("cnear"), 6, 1.3, 0.58, 0.62, 1.4, 2);
+
+  let vehicle = "train";
+  let items = [];
+  let cards = [];
+  let cam = 0;
+  let over = 0;
+  let running = false;
+  let idleFrame = 0;
+  let visible = true;
+  let result = null;
+
+  // أقرب طبقة للعين (تمر أسرع من البطاقات): أعمدة وسلك القطار، أو سياج جسر السيارة
+  function drawForeground() {
+    let d = "";
+    if (vehicle === "train") {
+      d = "M247 0 h5 v100 h-5z M747 0 h5 v100 h-5z M0 9 Q250 15 500 9 T1000 9 v1.2 Q750 16.2 500 10.2 T0 10.2z";
+    } else if (vehicle === "car") {
+      d = "M0 68 h1000 v2.4 h-1000z M0 75 h1000 v1.6 h-1000z";
+      for (let x = 0; x < 1000; x += 40) d += ` M${x} 68 h3 v32 h-3z`;
+    }
+    fg.innerHTML = d ? tripStrip(d, vehicle === "train" ? "#3b4148" : "#8b939c") : "";
+  }
+
+  function makeCard(item, lane, x, z) {
+    const el = document.createElement("div");
+    el.className = "trip-card";
+    const hue = Math.floor(Math.random() * 360);
+    el.style.setProperty("--h", hue);
+    el.innerHTML = `<span class="trip-card-icon">${item.icon || "⭐"}</span><span class="trip-card-title">${itemTitle(item)}</span>`;
+    const sh = document.createElement("div");
+    sh.className = "trip-shadow";
+    cardsBox.append(sh, el);
+    return { el, sh, item, lane, x, hue, z, phase: Math.random() * 6.28, dy: (Math.random() - 0.5) * 0.08, trail: -1 };
+  }
+
+  const pick = () => items[Math.floor(Math.random() * items.length)];
+
+  // يبني البطاقات على طول الرحلة؛ الفائزة بالطبقة القريبة، موقعها يجيها بالضبط بنص الشباك
+  // آخر الرحلة، وأي بطاقة قريبة تغطيها تنشال
+  function build() {
+    const W = stage.clientWidth;
+    cardsBox.textContent = "";
+    cards = [];
+    TRIP_LANES.forEach((lane, z) => {
+      const span = (TRIP_DIST + W * 2) * lane.depth + W;
+      for (let x = -W * 0.2 + Math.random() * lane.gap; x < span; x += lane.gap * (0.8 + Math.random() * 0.5)) {
+        cards.push(makeCard(pick(), lane, x, z));
+      }
+    });
+    const near = TRIP_LANES[2];
+    const winner = makeCard(pick(), near, W / 2 + TRIP_DIST, 2);
+    winner.dy = 0;
+    cards = cards.filter((c) => {
+      if (c.lane !== near || Math.abs(c.x - winner.x) > near.gap * 0.7) return true;
+      c.el.remove();
+      c.sh.remove();
+      return false;
+    });
+    cards.push(winner);
+    return winner;
+  }
+
+  function render(time, speed) {
+    const W = stage.clientWidth;
+    const H = stage.clientHeight;
+    // تمايل القارب/الطيارة: transform واحد للمنظر كله داخل الشباك
+    const rock = TRIP_VEHICLES[vehicle].rock || 0;
+    view.style.transform = rock ? `rotate(${Math.sin(time / 1400) * 0.8 * rock}deg) translateY(${Math.sin(time / 1100) * 4 * rock}px)` : "";
+    const horizon = H * 0.62;
+    for (const c of cards) {
+      const sx = c.x - cam * c.lane.depth;
+      const out = sx < -200 || sx > W + 200;
+      c.el.style.visibility = c.sh.style.visibility = out ? "hidden" : "";
+      if (out) continue;
+      const s = 0.45 + 0.55 * c.lane.depth;
+      const bob = Math.sin(time / 900 + c.phase) * 7 * c.lane.depth;
+      // الحركة من اليمين لليسار؛ ذيل السرعة يطول مع السرعة (اتجاهه عكس الحركة)
+      c.el.style.transform = `translate3d(${W - sx}px, ${H * (c.lane.y + c.dy) + bob}px, 0) scale(${s})`;
+      const trail = Math.round(Math.min(0.8, speed * c.lane.depth) * 20) / 20;
+      if (trail !== c.trail) {
+        c.trail = trail;
+        c.el.style.setProperty("--trail", trail);
+      }
+      c.el.style.zIndex = c.z;
+      c.sh.style.transform = `translate3d(${W - sx}px, ${horizon + (H - horizon) * (0.15 + 0.5 * c.lane.depth)}px, 0) scale(${s})`;
+    }
+    // الطبقات: كل وحدة بسرعة مختلفة حسب بعدها (parallax)
+    const loop = (v) => -(((v % W) + W) % W);
+    bands.islands.style.transform = `translate3d(${loop(-cam * 0.05)}px,0,0)`;
+    bands.waves1.style.transform = `translate3d(${loop(-cam * 0.3)}px,0,0)`;
+    bands.waves2.style.transform = `translate3d(${loop(-cam * 0.7)}px,0,0)`;
+    fg.style.transform = `translate3d(${loop(-cam * 1.6)}px,0,0)`;
+    if (vehicle === "plane") {
+      const span = W + 600;
+      for (const c of clouds) {
+        const sx = ((((c.x0 * span - cam * c.depth) % span) + span) % span) - 300;
+        c.el.style.transform = `translate3d(${W - sx}px, ${c.y * H}px, 0) scale(${c.s})`;
+      }
     }
   }
 
-  function animateTo(target, duration, power, done) {
-    cancelAnimationFrame(moveFrame);
+  // وقت الانتظار المشهد يمشي ببطء (حي بس هادي) — ويتوقف لما يطلع من الشاشة
+  function idle(now) {
+    idleFrame = 0;
+    if (running || !visible) return;
+    cam += 0.25;
+    render(now, 0);
+    idleFrame = requestAnimationFrame(idle);
+  }
+  function resumeIdle() {
+    if (!idleFrame && !running && visible && !reduceMotion) idleFrame = requestAnimationFrame(idle);
+  }
+  new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    resumeIdle();
+  }).observe(stage);
+
+  function clearResult() {
+    result?.remove();
+    result = null;
+    win.style.cssText = "";
+    fg.style.opacity = "";
+  }
+
+  function setVehicle(v) {
+    vehicle = v;
+    stage.dataset.vehicle = v;
+    drawForeground();
+    render(performance.now(), 0);
+  }
+
+  function setItems(list) {
+    items = list;
+    if (running) return;
+    clearResult();
+    cam = 0;
+    build();
+    render(performance.now(), 0);
+    resumeIdle();
+  }
+
+  function go() {
+    if (running || !items.length) return;
+    running = true;
+    cancelAnimationFrame(idleFrame);
+    idleFrame = 0;
+    clearResult();
+    cam = 0;
+    over = TRIP_VEHICLES[vehicle].over;
+    const winner = build();
+    onStart();
+    TripSound.start(vehicle, () => running);
     if (reduceMotion) {
-      moveTo(target);
-      done?.();
+      cam = TRIP_DIST;
+      render(0, 0);
+      reveal(winner);
       return;
     }
-    const from = pos;
-    const start = performance.now();
-    function frame(now) {
-      const t = Math.min((now - start) / duration, 1);
-      moveTo(from + (target - from) * (1 - Math.pow(1 - t, power)));
-      if (t < 1) moveFrame = requestAnimationFrame(frame);
-      else done?.();
-    }
-    moveFrame = requestAnimationFrame(frame);
+    const V = TRIP_VEHICLES[vehicle];
+    const t0 = performance.now();
+    let braked = false;
+    let lastWhoosh = 0;
+    (function frame(now) {
+      const t = Math.min(1, (now - t0) / V.dur);
+      const [p, v] = TRIP_CURVE(t);
+      cam = (TRIP_DIST + over) * p;
+      render(now, v);
+      TripSound.speed(v);
+      if (!braked && V.stopAt && t > 0.3 && v < V.stopAt) {
+        braked = true;
+        TripSound.play(`${vehicle}-stop`, 0.8);
+      }
+      // "ووش" لما بطاقة قريبة تعدّي نص الشباك — بحد أدنى 140ms بينها
+      const mid = stage.clientWidth / 2;
+      for (const c of cards) {
+        if (c.lane.depth !== 1) continue;
+        const side = c.x - cam > mid;
+        if (c.side !== undefined && c.side !== side && v > 0.2 && now - lastWhoosh > 140) {
+          lastWhoosh = now;
+          TripSound.play("whoosh", 0.1 + 0.2 * v, 0.9 + Math.random() * 0.2);
+        }
+        c.side = side;
+      }
+      if (t < 1) requestAnimationFrame(frame);
+      else stop(winner);
+    })(t0);
   }
 
-  function land(k, onDone) {
-    cards[k].el.classList.add("chosen");
-    playSuccessSound();
-    setTimeout(
-      () => {
-        busy = false;
-        onDone(cards[k].item);
+  function stop(winner) {
+    // الوقوف: تتعدى الهدف شوي ثم ترجع له بنعومة، مثل المركبة لما توقف
+    tripTween(
+      TRIP_VEHICLES[vehicle].settle,
+      (t) => {
+        cam = TRIP_DIST + over * (1 - tripEase(t));
+        render(performance.now(), 0);
       },
-      reduceMotion ? 0 : 650
+      () => {
+        // "طلّة الراس": الشباك يكبر ويطلع برا المشهد (ومعه الأعمدة/السياج)، باقي
+        // البطاقات تبهت، والفائزة تقرّب للنص
+        const W = stage.clientWidth;
+        const H = stage.clientHeight;
+        const y0 = H * winner.lane.y;
+        if (TRIP_VEHICLES[vehicle].stopAt === 0) TripSound.play(`${vehicle}-stop`, 0.7);
+        TripSound.stopLoop(1.5);
+        TripSound.play("headout", 0.6);
+        TripSound.play("wind", 0.45);
+        tripTween(
+          850,
+          (t) => {
+            const e = tripEase(t);
+            win.style.transform = `scale(${1 + 0.9 * e})`;
+            win.style.opacity = 1 - e;
+            fg.style.opacity = 1 - e;
+            for (const c of cards) if (c !== winner) c.el.style.opacity = c.sh.style.opacity = 1 - 0.7 * e;
+            winner.el.style.transform = `translate3d(${W / 2}px, ${y0 + (H * 0.46 - y0) * e}px, 0) scale(${1 + 0.7 * e})`;
+          },
+          () => reveal(winner)
+        );
+      }
     );
   }
 
-  // تقريباً المسافة على الشاشة بين مركزَي بطاقتين متجاورتين (وتر الدائرة).
-  // مضروبة بنسبة العرض المرسوم للعرض الداخلي: مع تكبير الصفحة (zoom بـ
-  // theme-init.js) إحداثيات المؤشر بكسل شاشة، و--helix-r بكسل غير مكبَّر
-  function cardPx() {
-    const helixEl = stage.querySelector(".picker-helix");
-    const r = parseFloat(getComputedStyle(helixEl).getPropertyValue("--helix-r"));
-    const scale = helixEl.getBoundingClientRect().width / helixEl.offsetWidth || 1;
-    return 2 * r * Math.sin((STEP * Math.PI) / 360) * scale;
-  }
-
-  function endDrag(e, cancelled) {
-    if (!drag || e.pointerId !== drag.id) return;
-    const d = drag;
-    drag = null;
-    stage.querySelector(".picker-helix")?.classList.remove("dragging");
-    if (!d.moved) {
-      // ضغطة بلا سحب = اختيار البطاقة: تدور للواجهة ثم تفتح النتيجة
-      const cardEl = !cancelled && e.target.closest(".picker-helix-card");
-      const k = cardEl ? cards.findIndex((c) => c.el === cardEl) : -1;
-      if (k === -1) return;
-      busy = true;
-      cards.forEach(({ el }) => el.classList.remove("chosen"));
-      animateTo(k, 450, 3, () => land(k, onPick));
-      return;
-    }
-    // زخم خفيف: نكمل باتجاه السحب حسب سرعته ثم نثبت على أقرب بطاقة
-    const target = Math.max(0, Math.min(COUNT - 1, Math.round(pos + d.v * 300)));
-    animateTo(target, 500, 3);
-  }
-
-  stage.addEventListener("pointerdown", (e) => {
-    if (!rotor || busy || !e.target.closest(".picker-helix")) return;
-    stopIdle();
-    cancelAnimationFrame(moveFrame);
-    // نحسب المسافة بالبكسل مرة واحدة عند بداية السحب بدل كل pointermove —
-    // تتغيّر فقط بتغيّر حجم الشاشة/التكبير، وهذا لا يحدث أثناء سحبة واحدة مستمرة
-    drag = {
-      id: e.pointerId,
-      x: e.clientX,
-      start: pos,
-      lastX: e.clientX,
-      lastT: e.timeStamp,
-      v: 0,
-      moved: false,
-      px: cardPx(),
-    };
-  });
-  stage.addEventListener("pointermove", (e) => {
-    if (!drag || e.pointerId !== drag.id) return;
-    const dx = e.clientX - drag.x;
-    if (!drag.moved) {
-      if (Math.abs(dx) < 6) return;
-      drag.moved = true;
-      stage.setPointerCapture(e.pointerId);
-      stage.querySelector(".picker-helix").classList.add("dragging");
-      cards.forEach(({ el }) => el.classList.remove("chosen"));
-    }
-    const dt = e.timeStamp - drag.lastT;
-    if (dt > 0) drag.v = -(e.clientX - drag.lastX) / drag.px / dt;
-    drag.lastX = e.clientX;
-    drag.lastT = e.timeStamp;
-    // سحب لليسار يجيب البطاقة اللي على اليمين للواجهة (البطاقة k+1 يمين)
-    moveTo(drag.start - dx / drag.px);
-  });
-  stage.addEventListener("pointerup", (e) => endDrag(e, false));
-  stage.addEventListener("pointercancel", (e) => endDrag(e, true));
-
-  // تمايل هادئ ذهاباً وإياباً بين البطاقة 2 و8 — يبقى المجال للأمام فاضي للدوران
-  function idle(now) {
-    pos = 5 - 3 * Math.cos((now - idleStart) / 4000);
-    render();
-    idleFrame = requestAnimationFrame(idle);
-  }
-
-  function build(items) {
-    stopIdle();
-    cancelAnimationFrame(moveFrame);
-    busy = false;
-    stage.innerHTML = `<div class="picker-helix" aria-hidden="true"><div class="picker-helix-rotor"></div></div><p class="picker-helix-hint">${t("picker_drag_hint")}</p>`;
-    rotor = stage.querySelector(".picker-helix-rotor");
-    cards = Array.from({ length: COUNT }, (_, k) => {
-      const item = items[Math.floor(Math.random() * items.length)];
-      const el = document.createElement("div");
-      el.className = "picker-helix-card";
-      const hue = (k * 47) % 360;
-      el.style.setProperty("--hue", hue);
-      // الإضاءات (0.54 أعلى، 0.44 أسفل التدرج) مطابقة لـ.picker-helix-card بـstyle.css
-      el.style.setProperty("--c1", (oklchMaxChroma(0.54, hue) * 0.85).toFixed(3));
-      el.style.setProperty("--c2", (oklchMaxChroma(0.44, (hue + 40) % 360) * 0.85).toFixed(3));
-      el.style.transform = `rotateY(${k * STEP}deg) translateZ(var(--helix-r)) translateY(${k * PITCH}px)`;
-      el.innerHTML = `<span class="picker-helix-icon">${item.icon || "⭐"}</span><span class="picker-helix-title">${itemTitle(item)}</span>`;
-      rotor.appendChild(el);
-      return { el, item };
+  function reveal(winner) {
+    const item = winner.item;
+    // متغيّر محلي: "جرّب مرة ثانية" وسط حركة الظهور يصفّر result قبل ما تخلص الحركة
+    const box = document.createElement("div");
+    result = box;
+    box.className = "trip-result";
+    box.setAttribute("role", "group");
+    box.setAttribute("aria-label", itemTitle(item));
+    box.style.setProperty("--h", winner.hue);
+    const meta = (item.tags || [])
+      .slice(0, 2)
+      .map((tag) => tagLabel(tag))
+      .join(" · ");
+    // "اقرأ التفاصيل" + الخريطة للعناصر اللي لها صفحة تفاصيل، وإلا أزرار العنصر العادية
+    const maps = item.mapsUrl
+      ? `<a class="btn secondary" href="${item.mapsUrl}" target="_blank" rel="noopener noreferrer">${LINK_META.maps.icon} ${t("link_maps")}</a>`
+      : "";
+    box.innerHTML = `
+      <div class="trip-result-top"><span class="trip-result-icon">${item.icon || "⭐"}</span><h2>${itemTitle(item)}</h2></div>
+      ${meta ? `<p class="trip-result-meta">${meta}</p>` : ""}
+      <div class="trip-result-actions">${buildActionsHtml(item)}${maps}</div>
+      <button type="button" class="trip-again">${t("try_again")}</button>`;
+    stage.append(box);
+    wireItemActions(box, item);
+    box.querySelector(".trip-again").addEventListener("click", () => {
+      playClickSound();
+      go();
     });
-    pos = 2;
-    lastTick = 2;
-    render();
-    if (!reduceMotion) {
-      idleStart = performance.now();
-      idleFrame = requestAnimationFrame(idle);
-    }
+    running = false;
+    onDone(item);
+    TripSound.chime();
+    box.querySelector("a, button")?.focus({ preventScroll: true });
+    if (reduceMotion) return;
+    box.style.opacity = 0;
+    tripTween(500, (t) => {
+      box.style.opacity = Math.min(1, t * 3);
+      box.style.scale = 0.75 + 0.25 * tripBack(t);
+      winner.el.style.opacity = 1 - Math.min(1, t * 3);
+    });
   }
 
-  function spin(items, onDone) {
-    if (busy) return;
-    if (!rotor || pos > COUNT - 3 - MIN_TRAVEL) build(items);
-    stopIdle();
-    drag = null;
-    busy = true;
-    cards.forEach(({ el }) => el.classList.remove("chosen"));
+  // يتبع مظهر الموقع: اختيار صريح (data-theme) أولاً، وإلا إعداد الجهاز
+  const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const applyTheme = () => {
+    const pref = document.documentElement.dataset.theme;
+    stage.classList.toggle("trip-night", pref === "dark" || (pref !== "light" && darkQuery.matches));
+  };
+  applyTheme();
+  darkQuery.addEventListener?.("change", applyTheme);
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
-    const minTarget = Math.ceil(pos) + MIN_TRAVEL;
-    const target = minTarget + Math.floor(Math.random() * (COUNT - 3 - minTarget + 1));
-    animateTo(target, 2800, 4, () => land(target, onDone));
-  }
-
-  return { build, spin };
+  return { setVehicle, setItems, go, isRunning: () => running };
 }
 
 function initRandomPicker() {
   const categoriesWrap = document.getElementById("pickerCategories");
   const spinBtn = document.getElementById("pickerSpinBtn");
+  const vehicleBtn = document.getElementById("pickerVehicleBtn");
+  const soundBtn = document.getElementById("pickerSoundBtn");
   const stage = document.getElementById("pickerStage");
   if (!categoriesWrap || !spinBtn || !stage) return;
 
@@ -237,10 +613,15 @@ function initRandomPicker() {
   const sectionKeys = ["restaurants", "cafes", "bakeries", "places", "stores", "car-shops"].filter(
     (key) => (SITE_DATA[key]?.items || []).length > 0
   );
-  let selectedSection = null;
-  const helix = createPickerHelix(stage, (item) => {
-    spinBtn.disabled = true;
-    reveal(item);
+  const trip = createTrip(stage, {
+    onStart: () => {
+      spinBtn.disabled = true;
+      vehicleBtn.disabled = true;
+    },
+    onDone: () => {
+      spinBtn.disabled = false;
+      vehicleBtn.disabled = false;
+    },
   });
 
   categoriesWrap.innerHTML = sectionKeys
@@ -255,46 +636,63 @@ function initRandomPicker() {
 
   function choose(btn) {
     categoriesWrap.querySelectorAll(".picker-category").forEach((b) => {
-      b.classList.remove("active");
-      b.setAttribute("aria-pressed", "false");
+      b.classList.toggle("active", b === btn);
+      b.setAttribute("aria-pressed", String(b === btn));
     });
-    btn.classList.add("active");
-    btn.setAttribute("aria-pressed", "true");
-    selectedSection = btn.dataset.section;
-    spinBtn.disabled = false;
-    helix.build(SITE_DATA[selectedSection].items);
+    trip.setItems(SITE_DATA[btn.dataset.section].items);
+    spinBtn.disabled = trip.isRunning();
   }
   categoriesWrap.querySelectorAll(".picker-category").forEach((btn) => {
     btn.addEventListener("click", () => {
+      if (trip.isRunning()) return;
       choose(btn);
       playClickSound();
     });
   });
-  // قانون هيك: الزر يشتغل من أول لحظة — المطاعم مختارة افتراضياً (أكثر قسم يُسأل عنه)،
-  // واللي يبي قسم ثاني يغيّره بضغطة
+  // قانون هيك: الزر يشتغل من أول لحظة — المطاعم مختارة افتراضياً (أكثر قسم يُسأل عنه)
   const preset = categoriesWrap.querySelector('[data-section="restaurants"]') || categoriesWrap.querySelector(".picker-category");
+
+  // المركبة: يختارها الزائر بنفسه، وتنحفظ له
+  const vehicles = Object.keys(TRIP_VEHICLES);
+  function setVehicle(v) {
+    trip.setVehicle(v);
+    vehicleBtn.textContent = TRIP_VEHICLES[v].icon;
+    const label = `${t("picker_vehicle")}: ${t(`picker_vehicle_${v}`)}`;
+    vehicleBtn.setAttribute("aria-label", label);
+    vehicleBtn.title = label;
+  }
+  const saved = lsGet(TRIP_VEHICLE_KEY);
+  setVehicle(TRIP_VEHICLES[saved] ? saved : "train");
+  vehicleBtn.addEventListener("click", () => {
+    const current = stage.dataset.vehicle;
+    const next = vehicles[(vehicles.indexOf(current) + 1) % vehicles.length];
+    setVehicle(next);
+    lsSet(TRIP_VEHICLE_KEY, next);
+    playClickSound();
+  });
+
+  // زر الصوت بالمشهد يضغط زر الصوت العام بالهيدر (نفس الإعداد بكل الموقع)
+  const headerSound = document.querySelector(".sound-toggle");
+  function syncSound() {
+    const on = isSoundEnabled();
+    soundBtn.textContent = on ? "🔊" : "🔇";
+    soundBtn.setAttribute("aria-label", on ? t("sound_on") : t("sound_off"));
+    soundBtn.title = soundBtn.getAttribute("aria-label");
+    if (!on) TripSound.silence();
+  }
+  if (headerSound) {
+    soundBtn.addEventListener("click", () => headerSound.click());
+    headerSound.addEventListener("click", syncSound);
+    syncSound();
+  } else {
+    soundBtn.hidden = true;
+  }
+
   if (preset) choose(preset);
-
-  function reveal(item) {
-    openPickerReveal(item, {
-      onRetry: spin,
-      onClose: () => {
-        spinBtn.disabled = false;
-      },
-    });
-  }
-
-  function spin() {
-    if (!selectedSection) return;
-    const items = SITE_DATA[selectedSection].items;
-    if (!items || items.length === 0) return;
-    spinBtn.disabled = true;
-    stage.scrollIntoView({ block: "center", behavior: "smooth" });
-    helix.spin(items, reveal);
-  }
 
   spinBtn.addEventListener("click", () => {
     playClickSound();
-    spin();
+    stage.scrollIntoView({ block: "center", behavior: "smooth" });
+    trip.go();
   });
 }

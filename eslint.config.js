@@ -61,7 +61,7 @@ module.exports = [
     files: ["src/js/picker.js", "src/js/converter.js", "src/js/expense.js", "src/js/typing.js"],
     languageOptions: {
       globals: Object.fromEntries(
-        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "openPickerReveal", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder"].map((n) => [n, "readonly"])
+        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder"].map((n) => [n, "readonly"])
       ),
     },
   },

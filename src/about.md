@@ -61,4 +61,12 @@ langSwitchUrl: "/en/about.html"
 
 وإذا كان حول مكانٍ كلامٌ سلبي منتشر على الإنترنت، فالأرجح أننا لن نكتب عنه أي رأي، حتى لو كان رأياً إيجابياً، ما لم تكن تجربتنا الشخصية فيه كافية لذلك.
 
+<h2 id="credits">حقوق الموسيقى والأصوات</h2>
+
+تستخدم صفحة «اختار لي» موسيقى ومؤثرات صوتية مرخّصة من منصة Uppbeat، وهذه حقوقها:
+
+<p dir="ltr">Music: 'Sleepover' by Richard Smithson on <a href="https://uppbeat.io/c/richard-smithson" rel="noopener">Uppbeat</a></p>
+
+أما أصوات القطار والسيارة والقارب والطائرة والرياح فمن مكتبة المؤثرات الصوتية في Uppbeat، والتفاصيل الكاملة في [ملف الحقوق](/assets/audio/CREDITS.txt).
+
 </article>

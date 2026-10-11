@@ -30,3 +30,26 @@ mandolin/    ferrosintesis-samples-mandolin — recorded by the ferrosintesis au
 
 Changes: converted to mono MP3, trimmed to 2.5–6 s, faded out, peak-normalized,
 and a subset of notes kept (about one every 2–4 semitones).
+
+----------------------------------------------------------------------
+Pick-for-me trip (picker.html) — assets/audio/picker/
+
+music.mp3   Music: 'Sleepover' by Richard Smithson on Uppbeat
+            https://uppbeat.io/c/richard-smithson
+
+Sound effects (Uppbeat SFX library):
+  train-loop     "Train ride interior ambience" — Tomas Herudek
+  train-stop     "Train brakes during stop" — Ivo Vicic
+  car-loop       "Car driving ambience (car interior)" — FascinatedSound
+  car-stop       "Car engine start, acceleration, stop" — Vadi Sound
+  boat-loop      "Fishing boat leaving harbor" — FTUS
+  boat-stop      "Harbor ambience, fishing ship engine" — FTUS
+  plane-loop     "Airplane cabin in-flight ambience" — Jochi SFX
+  plane-stop     "Airplane seatbelt fasten" — GFX Sounds
+  whoosh         "Whoosh soft air movement" — Davies Aguirre
+  headout        "Whoosh soft low impact" — SmartSound FX
+  wind           "Winter breeze blowing trees in forest" — Ivo Vicic
+
+Changes: trimmed, converted to mono MP3 64 kbps (music: stereo 64 kbps),
+loops made seamless with an equal-power crossfade, loudness-normalized.
+The success chime is synthesized in the browser (no file).
