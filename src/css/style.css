@@ -8178,21 +8178,49 @@ li {
 /* فقاعة دعم الموقع (رابط كازاسوق بالعمولة) */
 .support-bubble {
   position: fixed; inset-inline-start: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 900;
-  width: 52px; height: 52px; border-radius: 50%; border: 0; cursor: pointer;
-  font-size: 26px; background: var(--color-primary-fill); color: #fff;
-  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  width: 54px; height: 54px; border-radius: 50%; border: 0; cursor: pointer; font-size: 26px; color: #fff;
+  background: linear-gradient(135deg, oklch(0.55 0.2 300), var(--color-primary-fill));
+  box-shadow: 0 8px 24px oklch(0.45 0.2 300 / 0.45);
+  animation: support-pulse 2.4s ease-in-out infinite;
 }
 .support-bubble[hidden] { display: none; }
+@keyframes support-pulse { 50% { transform: scale(1.08); box-shadow: 0 10px 32px oklch(0.45 0.2 300 / 0.6); } }
+@media (prefers-reduced-motion: reduce) { .support-bubble { animation: none; } }
 .support-card {
-  width: calc(100vw - 48px); max-width: 1100px; height: calc(100dvh - 48px); max-height: none;
-  border: 0; border-radius: var(--radius); padding: 32px 24px 24px;
+  width: calc(100vw - 48px); max-width: 960px; height: calc(100dvh - 48px); max-height: none;
+  border: 0; border-radius: 28px; padding: 0; overflow: hidden;
   background: var(--color-surface); color: var(--color-text); text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,.35);
 }
-.support-card::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-.support-close { position: absolute; top: 12px; inset-inline-end: 12px; border: 0; background: none; font-size: 22px; color: inherit; cursor: pointer; }
-.support-emoji { font-size: 56px; }
-.support-card p { line-height: 1.8; margin: 0 0 12px; }
-.support-go { display: inline-block; margin: 8px 0 16px; }
-.support-note { font-size: .85em; color: var(--color-text-muted); }
-.support-card[open] { display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; }
-.support-card > p { max-width: 640px; }
+.support-card[open] { display: flex; flex-direction: column; overflow-y: auto; animation: support-in .35s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes support-in { from { opacity: 0; transform: translateY(24px) scale(.96); } }
+.support-card::backdrop { background: rgba(0,0,0,.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.support-close {
+  position: absolute; top: 14px; inset-inline-end: 14px; z-index: 1; width: 40px; height: 40px; border-radius: 50%;
+  border: 0; background: rgba(255,255,255,.18); color: #fff; font-size: 18px; cursor: pointer;
+}
+.support-hero {
+  flex: 1 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  padding: 48px 24px 32px; color: #fff;
+  background: radial-gradient(circle at 20% 0%, oklch(0.62 0.2 300 / .9), transparent 60%),
+              linear-gradient(160deg, oklch(0.4 0.16 290), var(--color-primary-fill));
+}
+.support-emoji { font-size: 72px; line-height: 1; filter: drop-shadow(0 10px 24px rgba(0,0,0,.35)); }
+.support-tag { padding: 4px 14px; border-radius: 999px; background: rgba(255,255,255,.18); font-size: .85em; font-weight: 700; }
+.support-hero h2 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.3rem); color: #fff; }
+.support-hero p { margin: 0; max-width: 620px; line-height: 1.9; opacity: .95; }
+.support-body { flex: 0 0 auto; padding: 28px 24px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.support-features { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; width: 100%; max-width: 720px; }
+.support-features li {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 12px; border-radius: 18px;
+  background: var(--color-bg); font-weight: 700; font-size: .95em;
+}
+.support-features span { font-size: 28px; }
+.support-quote { margin: 0; font-style: italic; color: var(--color-text-muted); }
+.support-go {
+  display: inline-block; padding: 14px 36px; border-radius: 999px; font-weight: 800; font-size: 1.1em; color: #fff; text-decoration: none;
+  background: linear-gradient(135deg, oklch(0.5 0.2 300), var(--color-primary-fill));
+  box-shadow: 0 10px 28px oklch(0.45 0.2 300 / .4); transition: transform .15s;
+}
+.support-go:hover { transform: translateY(-2px); }
+.support-note { margin: 0; font-size: .8em; color: var(--color-text-muted); }
