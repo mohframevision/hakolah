@@ -11,5 +11,5 @@ coords: 26.16096, 50.54027
 links:
   website: https://668cafe.com/
   maps: https://maps.app.goo.gl/AztHuWtwdcYBEo1w8
-  instagram: ''
+  instagram: https://www.instagram.com/668cafe/
 ---
