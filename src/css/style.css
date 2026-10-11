@@ -2540,6 +2540,7 @@ img {
 }
 
 .trip-bar {
+  -webkit-tap-highlight-color: transparent;
   position: absolute;
   inset: auto 0 0 0;
   z-index: 21;
@@ -2617,6 +2618,8 @@ img {
 .trip-result-actions .btn {
   flex: 1 1 40%;
   justify-content: center;
+  padding-inline: 12px;
+  white-space: nowrap;
 }
 .trip-result-actions .btn.secondary {
   background: transparent;
@@ -2624,6 +2627,7 @@ img {
   border: 2px solid var(--color-primary);
 }
 .trip-again {
+  -webkit-tap-highlight-color: transparent;
   display: block;
   margin: 0 auto 14px;
   padding: 6px 12px;
