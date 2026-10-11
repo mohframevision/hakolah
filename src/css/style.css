@@ -1975,6 +1975,38 @@ img {
   color: var(--color-primary-dark);
 }
 
+/* جداول المنيو والأسعار بصفحات التفاصيل */
+.prose table {
+  width: 100%;
+  margin: 16px 0 24px;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  overflow: hidden;
+  font-size: .95em;
+}
+.prose th,
+.prose td {
+  padding: 10px 14px;
+  text-align: start;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-border);
+}
+.prose th {
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  font-weight: 800;
+}
+.prose td { color: var(--color-text-muted); }
+.prose td:first-child { color: var(--color-text); font-weight: 700; }
+.prose tr:last-child td { border-bottom: 0; }
+.prose tbody tr:nth-child(even) { background: color-mix(in srgb, var(--color-text) 3%, transparent); }
+/* الأسعار ما تنكسر على سطرين: أي خلية فيها «د.ب» أو BHD */
+.prose td:is(:last-child, :nth-last-child(2):not(:first-child)) { white-space: nowrap; }
+@media (max-width: 600px) {
+  .prose table { display: block; overflow-x: auto; }
+}
+
 .banner-note {
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
