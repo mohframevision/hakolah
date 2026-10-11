@@ -1,0 +1,9 @@
+{
+  "layout": "detail-item.njk",
+  "lang": "en",
+  "navActive": "cafes",
+  "sectionSlug": "cafes",
+  "sectionTitle": "Cafes",
+  "permalink": "en/cafes/{{ page.fileSlug }}.html",
+  "eleventyExcludeFromCollections": true
+}
