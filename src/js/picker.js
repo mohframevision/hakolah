@@ -233,8 +233,9 @@ function initRandomPicker() {
   const stage = document.getElementById("pickerStage");
   if (!categoriesWrap || !spinBtn || !stage) return;
 
-  const sectionKeys = Object.keys(SITE_DATA).filter(
-    (key) => (SITE_DATA[key].items || []).length > 0
+  // أقسام "وين أروح" بس، بترتيب الأهم — المقالات والتجارب ما لها معنى بالقرعة
+  const sectionKeys = ["restaurants", "cafes", "bakeries", "places", "stores", "car-shops"].filter(
+    (key) => (SITE_DATA[key]?.items || []).length > 0
   );
   let selectedSection = null;
   const helix = createPickerHelix(stage, (item) => {

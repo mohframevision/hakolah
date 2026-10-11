@@ -8209,7 +8209,7 @@ li {
 
 /* فقاعة دعم الموقع (رابط كازاسوق بالعمولة) */
 .support-bubble {
-  position: fixed; inset-inline-start: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 900;
+  position: fixed; inset-inline-start: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 85;
   width: 54px; height: 54px; border-radius: 50%; border: 0; cursor: pointer; font-size: 26px; color: #fff;
   background: linear-gradient(135deg, oklch(0.55 0.2 300), var(--color-primary-fill));
   box-shadow: 0 8px 24px oklch(0.45 0.2 300 / 0.45);

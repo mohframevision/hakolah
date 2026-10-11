@@ -2245,20 +2245,6 @@ function burstPieces(item, container, onDone) {
     pieces.push(photoEl);
   }
 
-  if (item.links?.phone) {
-    const chip = document.createElement("span");
-    chip.className = "burst-chip";
-    chip.textContent = `📞 ${item.links.phone}`;
-    pieces.push(chip);
-  }
-
-  if (item.links?.maps) {
-    const chip = document.createElement("span");
-    chip.className = "burst-chip";
-    chip.textContent = `📍 ${t("link_maps")}`;
-    pieces.push(chip);
-  }
-
   (item.tags || []).slice(0, 4).forEach((tag) => {
     const chip = document.createElement("span");
     chip.className = "burst-chip";
