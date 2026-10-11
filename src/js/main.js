@@ -1731,7 +1731,10 @@ function renderSection(section, typeFilter) {
   const sharedQuery = new URLSearchParams(location.search).get("q");
   if (sharedQuery && searchInput) searchInput.value = sharedQuery;
 
-  if (nearMeBtn) {
+  // قسم ما فيه ولا عنصر بموقع (روابط، مقالات…): الزر يطلب صلاحية الموقع بلا فايدة — نشيله
+  const hasLocations = items.some((item) => (item.lat != null && item.lng != null) || item.branches?.length);
+  if (nearMeBtn && !hasLocations) nearMeBtn.remove();
+  else if (nearMeBtn) {
     nearMeBtn.addEventListener("click", () => {
       if (sortByDistance) {
         sortByDistance = false;
@@ -1756,6 +1759,11 @@ function renderSection(section, typeFilter) {
           nearMeBtn.textContent = t("near_me_active");
           renderGrid();
           playSound("on");
+          // بالجوال القائمة تحت الشاشة: ننزل لأول بطاقة ونقول كم وحدة ترتّبت، عشان يبان إن شي تغيّر
+          const sorted = grid.querySelectorAll(".distance-tag").length;
+          showToast(t("near_me_sorted").replace("{n}", sorted));
+          const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          window.scrollTo({ top: grid.getBoundingClientRect().top + window.scrollY - 140, behavior: reduce ? "auto" : "smooth" });
         },
         () => {
           showToast(t("geolocation_denied"));
