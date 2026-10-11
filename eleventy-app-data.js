@@ -144,6 +144,8 @@ function buildSiteData(data, options = {}) {
       if (meta.hasDetailPages || entry.data.hasDetailPage) {
         item.detailUrl = `${meta.slug}/${entry.fileSlug}.html`;
         item.detailUrlEn = `${meta.slug}/${entry.data.slug_en || entry.fileSlug}.html`;
+        // زر الخريطة بجنب "اقرأ التفاصيل" بنتيجة "اختار لي"
+        if (entry.data.links?.maps) item.mapsUrl = entry.data.links.maps;
         // app-data.json فقط (لا data.js اللي يحمّله كل زائر متصفح) — تطبيق
         // الأندرويد يحتاج نص المقال الفعلي ليعرضه محلياً بدل فتح رابط خارجي
         if (includeContent) {

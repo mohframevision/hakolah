@@ -2129,6 +2129,12 @@ function openPickerReveal(item, { onRetry, onClose } = {}) {
     const actions = document.createElement("div");
     actions.className = "picker-reveal-actions";
     actions.innerHTML = buildActionsHtml(item);
+    if (item.mapsUrl) {
+      actions.insertAdjacentHTML(
+        "beforeend",
+        `<a class="btn secondary" href="${item.mapsUrl}" target="_blank" rel="noopener noreferrer">${LINK_META.maps.icon} ${t("link_maps")}</a>`
+      );
+    }
     overlay.appendChild(actions);
 
     actions.querySelectorAll(".phone-copy-btn").forEach((phoneBtn) => {
