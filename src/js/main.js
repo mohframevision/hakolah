@@ -2560,3 +2560,19 @@ function initAboutBadge() {
   );
 }
 document.addEventListener("DOMContentLoaded", initAboutBadge);
+
+// فقاعة الدعم: تختفي عند الضغط وتفتح البطاقة؛ تبقى مخفية بقية الجلسة
+(() => {
+  const bubble = document.getElementById("supportBubble");
+  const card = document.getElementById("supportCard");
+  if (!bubble || !card) return;
+  try { if (sessionStorage.getItem("supportSeen")) bubble.hidden = true; } catch { /* تخزين محجوب */ }
+  bubble.addEventListener("click", () => {
+    bubble.hidden = true;
+    try { sessionStorage.setItem("supportSeen", "1"); } catch { /* تخزين محجوب */ }
+    card.showModal();
+  });
+  card.addEventListener("click", (e) => {
+    if (e.target.closest("[data-close]")) card.close();
+  });
+})();

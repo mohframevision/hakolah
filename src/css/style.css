@@ -8174,3 +8174,25 @@ li {
 :root[data-theme="dark"] .liked-badge {
   color: #f472b6;
 }
+
+/* فقاعة دعم الموقع (رابط كازاسوق بالعمولة) */
+.support-bubble {
+  position: fixed; inset-inline-start: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 900;
+  width: 52px; height: 52px; border-radius: 50%; border: 0; cursor: pointer;
+  font-size: 26px; background: var(--color-primary-fill); color: #fff;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+.support-bubble[hidden] { display: none; }
+.support-card {
+  width: calc(100vw - 48px); max-width: 1100px; height: calc(100dvh - 48px); max-height: none;
+  border: 0; border-radius: var(--radius); padding: 32px 24px 24px;
+  background: var(--color-surface); color: var(--color-text); text-align: center;
+}
+.support-card::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.support-close { position: absolute; top: 12px; inset-inline-end: 12px; border: 0; background: none; font-size: 22px; color: inherit; cursor: pointer; }
+.support-emoji { font-size: 56px; }
+.support-card p { line-height: 1.8; margin: 0 0 12px; }
+.support-go { display: inline-block; margin: 8px 0 16px; }
+.support-note { font-size: .85em; color: var(--color-text-muted); }
+.support-card[open] { display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; }
+.support-card > p { max-width: 640px; }
