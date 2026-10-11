@@ -2561,18 +2561,22 @@ function initAboutBadge() {
 }
 document.addEventListener("DOMContentLoaded", initAboutBadge);
 
-// فقاعة الدعم: تختفي عند الضغط وتفتح البطاقة؛ تبقى مخفية بقية الجلسة
+// فقاعة الدعم: كل ضغطة تنقلها لزاوية أخرى؛ تختفي للأبد فقط إذا طلب المستخدم ذلك من البطاقة
 (() => {
   const bubble = document.getElementById("supportBubble");
   const card = document.getElementById("supportCard");
   if (!bubble || !card) return;
-  try { if (sessionStorage.getItem("supportSeen")) bubble.hidden = true; } catch { /* تخزين محجوب */ }
+  if (lsGet("supportHidden")) { bubble.remove(); return; }
+  let pos = Number(lsGet("supportPos")) % 4 || 0;
+  bubble.dataset.pos = pos;
   bubble.addEventListener("click", () => {
-    bubble.hidden = true;
-    try { sessionStorage.setItem("supportSeen", "1"); } catch { /* تخزين محجوب */ }
+    pos = (pos + 1) % 4;
+    lsSet("supportPos", pos);
     card.showModal();
   });
+  card.addEventListener("close", () => { bubble.dataset.pos = pos; });
   card.addEventListener("click", (e) => {
-    if (e.target.closest("[data-close]")) card.close();
+    if (e.target.closest("[data-hide]")) { lsSet("supportHidden", "1"); bubble.remove(); card.close(); }
+    else if (e.target.closest("[data-close]")) card.close();
   });
 })();
