@@ -1539,12 +1539,16 @@ function flyInCards(grid) {
   const cards = [...grid.querySelectorAll(".item-card")];
   if (!cards.length) return;
 
+  // قراءة كل أبعاد البطاقات أولاً (دفعة واحدة) قبل أي كتابة style/class — تفادياً
+  // لإعادة تخطيط قسري متكرر (layout thrashing) لو تداخلت القراءة والكتابة بكل تكرار
   const gridBox = grid.getBoundingClientRect();
   const gridCx = gridBox.left + gridBox.width / 2;
-  cards.forEach((card) => {
+  const offsets = cards.map((card) => {
     const r = card.getBoundingClientRect();
-    const dx = r.left + r.width / 2 - gridCx;
-    card.style.setProperty("--fx", `${Math.max(-350, Math.min(350, dx))}px`);
+    return Math.max(-350, Math.min(350, r.left + r.width / 2 - gridCx));
+  });
+  cards.forEach((card, i) => {
+    card.style.setProperty("--fx", `${offsets[i]}px`);
     card.classList.add("fly-pending");
   });
 
