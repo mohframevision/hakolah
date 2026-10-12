@@ -95,6 +95,39 @@ function parseBranches(raw) {
     .filter(Boolean);
 }
 
+/*
+  مستوى السعر يُحسب تلقائياً من أسعار المنيو (menuItems) — ما يُكتب يدوياً.
+  المعادلة: الوسيط (مو المتوسط، عشان صينية عائلية بـ١٣ د.ب ما تخرّب صورة
+  مطعم وجباته بدينار) لأول رقم بكل صنف (الحجم الأساسي بـ"1.500 / 0.900").
+  ≤ ١٫٥ د.ب اقتصادي، ≤ ٤ متوسط، وفوقها مرتفع. أقل من ٣ أسعار = ما نحكم.
+  يُضاف كتصنيف عادي، فيطلع بالبطاقة ويصير فلتر بلا أي كود إضافي.
+*/
+const PRICE_TAGS = ["سعر اقتصادي", "سعر متوسط", "سعر مرتفع"];
+const PRICE_LIMITS = [1.5, 4];
+
+function priceBD(raw) {
+  const s = String(raw || "")
+    .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+    .replace("٫", ".");
+  const m = s.match(/\d+(?:\.\d+)?/);
+  if (!m) return null;
+  const n = Number(m[0]);
+  // "250 فلس" = ربع دينار؛ "0.250 فلس" غلطة كتابة قيمتها بالدينار أصلاً
+  return /fils|فلس/i.test(s) && n >= 10 ? n / 1000 : n;
+}
+
+function priceLevel(menuItems) {
+  const p = (menuItems || [])
+    .map((mi) => priceBD(mi && mi.price))
+    .filter((n) => n > 0)
+    .sort((a, b) => a - b);
+  if (p.length < 3) return null;
+  const h = p.length / 2;
+  const median = p.length % 2 ? p[Math.floor(h)] : (p[h - 1] + p[h]) / 2;
+  const level = PRICE_LIMITS.filter((lim) => median > lim).length;
+  return { median, tag: PRICE_TAGS[level] };
+}
+
 function buildSiteData(data, options = {}) {
   const includeContent = Boolean(options.includeContent);
   const sections = data.sections;
@@ -131,6 +164,8 @@ function buildSiteData(data, options = {}) {
         tags: [...(entry.data.categories || []), ...(entry.data.categoriesCustom || [])],
       };
       if (branches.length > 1) item.branches = branches;
+      const price = priceLevel(item.menuItems);
+      if (price && !item.tags.includes(price.tag)) item.tags.push(price.tag);
 
       const meat = entry.data.meatSource;
       if (meat && meat.text) {
@@ -175,4 +210,15 @@ function buildSiteData(data, options = {}) {
   return out;
 }
 
-module.exports = { buildSiteData };
+module.exports = { buildSiteData, priceLevel, PRICE_TAGS };
+
+// فحص سريع: node eleventy-app-data.js
+if (require.main === module) {
+  const assert = require("assert");
+  const m = (...ps) => ps.map((price) => ({ name: "x", price }));
+  assert.equal(priceLevel(m("1.000 BD", "1.500 / 0.900 BD")), null);
+  assert.equal(priceLevel(m("0.330 BD", "0.500 BD", "13.500 BD")).tag, PRICE_TAGS[0]);
+  assert.equal(priceLevel(m("250 فلس", "2.000 BD", "3.000 BD", "6.000 BD")).tag, PRICE_TAGS[1]);
+  assert.equal(priceLevel(m("٥٫٥٠٠ د.ب", "6 BD", "4.100 BD")).tag, PRICE_TAGS[2]);
+  console.log("priceLevel OK");
+}

@@ -37,6 +37,8 @@ module.exports = [
         SITE_DATA: "readonly",
         TAGS_EN: "readonly",
         TAG_ICONS: "readonly",
+        AREA_NAMES: "readonly",
+        PRICE_TAGS: "readonly",
       },
     },
     rules: {
@@ -61,7 +63,7 @@ module.exports = [
     files: ["src/js/picker.js", "src/js/converter.js", "src/js/expense.js", "src/js/typing.js"],
     languageOptions: {
       globals: Object.fromEntries(
-        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder"].map((n) => [n, "readonly"])
+        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "showToast", "nearestBranch", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder"].map((n) => [n, "readonly"])
       ),
     },
   },

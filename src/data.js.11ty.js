@@ -3,7 +3,7 @@ exports.data = {
   eleventyExcludeFromCollections: true,
 };
 
-const { buildSiteData } = require("../eleventy-app-data.js");
+const { buildSiteData, PRICE_TAGS } = require("../eleventy-app-data.js");
 
 exports.render = function (data) {
   const out = buildSiteData(data);
@@ -16,6 +16,9 @@ exports.render = function (data) {
     "   بالقوالب وقت البناء، فما تصير نسختان تنحرفان عن بعض */\n" +
     `const TAGS_EN = ${JSON.stringify(data.tags_en, null, 2)};\n` +
     "/* أيقونات التصنيفات — مصدره src/_data/tag_icons.js، نفس مبدأ TAGS_EN */\n" +
-    `const TAG_ICONS = ${JSON.stringify(data.tag_icons, null, 2)};\n`
+    `const TAG_ICONS = ${JSON.stringify(data.tag_icons, null, 2)};\n` +
+    "/* أسماء المناطق ومستويات السعر — تفرّق فلتر المنطقة والسعر عن فلتر النوع */\n" +
+    `const AREA_NAMES = ${JSON.stringify(Object.keys(data.areas))};\n` +
+    `const PRICE_TAGS = ${JSON.stringify(PRICE_TAGS)};\n`
   );
 };

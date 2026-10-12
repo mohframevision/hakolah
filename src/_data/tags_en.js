@@ -8,6 +8,11 @@ module.exports = {
   // كل مناطق البحرين تأتي من areas.js — لا تكتب منطقة هنا يدوياً
   ...AREAS,
 
+  // مستوى السعر: يضيفه eleventy-app-data.js تلقائياً من أسعار المنيو
+  "سعر اقتصادي": "Budget",
+  "سعر متوسط": "Mid-range",
+  "سعر مرتفع": "Pricey",
+
   "برجر": "Burger",
   "سندويشات": "Sandwiches",
   "وجبات سريعة": "Fast Food",

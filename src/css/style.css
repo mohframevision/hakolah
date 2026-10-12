@@ -2155,6 +2155,28 @@ img {
   }
 }
 
+.picker-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: -14px auto 22px;
+  font-weight: 700;
+}
+
+.picker-area select {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  max-width: 70vw;
+}
+
 .picker-category-icon {
   font-size: 1.8rem;
 }

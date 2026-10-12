@@ -12,7 +12,8 @@
 
 // مسار السكربت نفسه — منه نبني مسار الأصوات بغض النظر عن مسار الموقع الأساسي
 const PICKER_SCRIPT_URL = document.currentScript?.src || location.href;
-const PICKER_AUDIO = (name) => new URL(`../assets/audio/picker/${name}.mp3`, PICKER_SCRIPT_URL).href;
+const PICKER_AUDIO = (name) =>
+  new URL(`../assets/audio/picker/${name}.mp3`, PICKER_SCRIPT_URL).href;
 
 // كل مركبة لها طريقة وقوف: over = كم تتعدى الهدف (بكسل) قبل ما ترجع له، settle = مدة
 // الرجوع. القارب ينزلق أطول ويتمايل، والطيارة تبطأ بنعومة بلا رجوع تقريباً.
@@ -305,7 +306,8 @@ function createTrip(stage, { onStart, onDone }) {
     "M0 100 L0 80 Q60 60 120 78 L180 82 Q260 40 330 76 L520 84 Q600 55 680 80 L760 86 Q860 50 930 78 L1000 82 L1000 100Z",
     "var(--isl)"
   );
-  const wave = "M0 50 Q62 20 125 50 T250 50 T375 50 T500 50 T625 50 T750 50 T875 50 T1000 50 L1000 100 L0 100Z";
+  const wave =
+    "M0 50 Q62 20 125 50 T250 50 T375 50 T500 50 T625 50 T750 50 T875 50 T1000 50 L1000 100 L0 100Z";
   bands.waves1.innerHTML = tripStrip(wave, "var(--wv1)");
   bands.waves2.innerHTML = tripStrip(wave, "var(--wv2)");
   stage.style.setProperty("--trip-grain", `url(${tripGrainTexture()})`);
@@ -320,7 +322,13 @@ function createTrip(stage, { onStart, onDone }) {
       el.className = "trip-cloud";
       el.innerHTML = TRIP_CLOUD_SVG;
       box.append(el);
-      clouds.push({ el, x0: (i + Math.random() * 0.6) / n, depth, y: y0 + Math.random() * (y1 - y0), s: s0 + Math.random() * (s1 - s0) });
+      clouds.push({
+        el,
+        x0: (i + Math.random() * 0.6) / n,
+        depth,
+        y: y0 + Math.random() * (y1 - y0),
+        s: s0 + Math.random() * (s1 - s0),
+      });
     }
   }
   addClouds($("cfar"), 6, 0.18, 0.1, 0.42, 0.5, 1);
@@ -340,7 +348,8 @@ function createTrip(stage, { onStart, onDone }) {
   function drawForeground() {
     let d = "";
     if (vehicle === "train") {
-      d = "M247 0 h5 v100 h-5z M747 0 h5 v100 h-5z M0 9 Q250 15 500 9 T1000 9 v1.2 Q750 16.2 500 10.2 T0 10.2z";
+      d =
+        "M247 0 h5 v100 h-5z M747 0 h5 v100 h-5z M0 9 Q250 15 500 9 T1000 9 v1.2 Q750 16.2 500 10.2 T0 10.2z";
     } else if (vehicle === "car") {
       d = "M0 68 h1000 v2.4 h-1000z M0 75 h1000 v1.6 h-1000z";
       for (let x = 0; x < 1000; x += 40) d += ` M${x} 68 h3 v32 h-3z`;
@@ -357,7 +366,18 @@ function createTrip(stage, { onStart, onDone }) {
     const sh = document.createElement("div");
     sh.className = "trip-shadow";
     cardsBox.append(sh, el);
-    return { el, sh, item, lane, x, hue, z, phase: Math.random() * 6.28, dy: (Math.random() - 0.5) * 0.08, trail: -1 };
+    return {
+      el,
+      sh,
+      item,
+      lane,
+      x,
+      hue,
+      z,
+      phase: Math.random() * 6.28,
+      dy: (Math.random() - 0.5) * 0.08,
+      trail: -1,
+    };
   }
 
   const pick = () => items[Math.floor(Math.random() * items.length)];
@@ -370,7 +390,11 @@ function createTrip(stage, { onStart, onDone }) {
     cards = [];
     TRIP_LANES.forEach((lane, z) => {
       const span = (TRIP_DIST + W * 2) * lane.depth + W;
-      for (let x = -W * 0.2 + Math.random() * lane.gap; x < span; x += lane.gap * (0.8 + Math.random() * 0.5)) {
+      for (
+        let x = -W * 0.2 + Math.random() * lane.gap;
+        x < span;
+        x += lane.gap * (0.8 + Math.random() * 0.5)
+      ) {
         cards.push(makeCard(pick(), lane, x, z));
       }
     });
@@ -392,7 +416,9 @@ function createTrip(stage, { onStart, onDone }) {
     const H = stage.clientHeight;
     // تمايل القارب/الطيارة: transform واحد للمنظر كله داخل الشباك
     const rock = TRIP_VEHICLES[vehicle].rock || 0;
-    view.style.transform = rock ? `rotate(${Math.sin(time / 1400) * 0.8 * rock}deg) translateY(${Math.sin(time / 1100) * 4 * rock}px)` : "";
+    view.style.transform = rock
+      ? `rotate(${Math.sin(time / 1400) * 0.8 * rock}deg) translateY(${Math.sin(time / 1100) * 4 * rock}px)`
+      : "";
     const horizon = H * 0.62;
     for (const c of cards) {
       const sx = c.x - cam * c.lane.depth;
@@ -538,7 +564,8 @@ function createTrip(stage, { onStart, onDone }) {
             win.style.transform = `scale(${1 + 0.9 * e})`;
             win.style.opacity = 1 - e;
             fg.style.opacity = 1 - e;
-            for (const c of cards) if (c !== winner) c.el.style.opacity = c.sh.style.opacity = 1 - 0.7 * e;
+            for (const c of cards)
+              if (c !== winner) c.el.style.opacity = c.sh.style.opacity = 1 - 0.7 * e;
             winner.el.style.transform = `translate3d(${W / 2}px, ${y0 + (H * 0.46 - y0) * e}px, 0) scale(${1 + 0.7 * e})`;
           },
           () => reveal(winner)
@@ -592,11 +619,17 @@ function createTrip(stage, { onStart, onDone }) {
   const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
   const applyTheme = () => {
     const pref = document.documentElement.dataset.theme;
-    stage.classList.toggle("trip-night", pref === "dark" || (pref !== "light" && darkQuery.matches));
+    stage.classList.toggle(
+      "trip-night",
+      pref === "dark" || (pref !== "light" && darkQuery.matches)
+    );
   };
   applyTheme();
   darkQuery.addEventListener?.("change", applyTheme);
-  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  new MutationObserver(applyTheme).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
 
   return { setVehicle, setItems, go, isRunning: () => running };
 }
@@ -607,7 +640,8 @@ function initRandomPicker() {
   const vehicleBtn = document.getElementById("pickerVehicleBtn");
   const soundBtn = document.getElementById("pickerSoundBtn");
   const stage = document.getElementById("pickerStage");
-  if (!categoriesWrap || !spinBtn || !stage) return;
+  const areaSelect = document.getElementById("pickerArea");
+  if (!categoriesWrap || !spinBtn || !stage || !areaSelect) return;
 
   // أقسام "وين أروح" بس، بترتيب الأهم — المقالات والتجارب ما لها معنى بالقرعة
   const sectionKeys = ["restaurants", "cafes", "bakeries", "places", "stores", "car-shops"].filter(
@@ -617,10 +651,12 @@ function initRandomPicker() {
     onStart: () => {
       spinBtn.disabled = true;
       vehicleBtn.disabled = true;
+      areaSelect.disabled = true;
     },
     onDone: () => {
       spinBtn.disabled = false;
       vehicleBtn.disabled = false;
+      areaSelect.disabled = false;
     },
   });
 
@@ -639,9 +675,67 @@ function initRandomPicker() {
       b.classList.toggle("active", b === btn);
       b.setAttribute("aria-pressed", String(b === btn));
     });
-    trip.setItems(SITE_DATA[btn.dataset.section].items);
+    section = btn.dataset.section;
+    fillAreas();
+    applyPool();
+  }
+
+  // المنطقة: «اختار لي» يختار من منطقتك أو من أقرب الأماكن لك، مو من كل البحرين
+  const NEAR_COUNT = 8;
+  let section = null;
+  let nearPool = [];
+  function fillAreas() {
+    const items = SITE_DATA[section].items;
+    const counts = {};
+    items.forEach((it) =>
+      (it.tags || []).forEach(
+        (tg) => AREA_NAMES.includes(tg) && (counts[tg] = (counts[tg] || 0) + 1)
+      )
+    );
+    const hasLoc = items.some((it) => (it.lat != null && it.lng != null) || it.branches?.length);
+    areaSelect.innerHTML = [
+      `<option value="">${t("picker_area_all").replace("{n}", items.length)}</option>`,
+      hasLoc ? `<option value="near">${t("picker_area_near")}</option>` : "",
+      ...Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([area, n]) => `<option value="${area}">${tagLabel(area)} (${n})</option>`),
+    ].join("");
+  }
+  function applyPool() {
+    const items = SITE_DATA[section].items;
+    const v = areaSelect.value;
+    trip.setItems(
+      v === "near" ? nearPool : v ? items.filter((it) => (it.tags || []).includes(v)) : items
+    );
     spinBtn.disabled = trip.isRunning();
   }
+  function resetArea(msg) {
+    showToast(msg);
+    areaSelect.value = "";
+    applyPool();
+  }
+  areaSelect.addEventListener("change", () => {
+    playClickSound();
+    if (areaSelect.value !== "near") return applyPool();
+    if (!navigator.geolocation) return resetArea(t("geolocation_unsupported"));
+    spinBtn.disabled = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (areaSelect.value !== "near") return;
+        const me = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        nearPool = SITE_DATA[section].items
+          .map((it) => ({ it, near: nearestBranch(it, me) }))
+          .filter((x) => x.near)
+          .sort((a, b) => a.near.km - b.near.km)
+          .slice(0, NEAR_COUNT)
+          .map((x) => x.it);
+        applyPool();
+        showToast(t("picker_area_near_done").replace("{n}", nearPool.length));
+      },
+      () => resetArea(t("geolocation_denied")),
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  });
   categoriesWrap.querySelectorAll(".picker-category").forEach((btn) => {
     btn.addEventListener("click", () => {
       if (trip.isRunning()) return;
@@ -650,7 +744,9 @@ function initRandomPicker() {
     });
   });
   // قانون هيك: الزر يشتغل من أول لحظة — المطاعم مختارة افتراضياً (أكثر قسم يُسأل عنه)
-  const preset = categoriesWrap.querySelector('[data-section="restaurants"]') || categoriesWrap.querySelector(".picker-category");
+  const preset =
+    categoriesWrap.querySelector('[data-section="restaurants"]') ||
+    categoriesWrap.querySelector(".picker-category");
 
   // المركبة: يختارها الزائر بنفسه، وتنحفظ له
   const vehicles = Object.keys(TRIP_VEHICLES);

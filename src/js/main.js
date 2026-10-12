@@ -61,7 +61,10 @@ const ssSet = (key, value) => storageCall("sessionStorage", "setItem", key, valu
 // نص من بيانات المحتوى داخل HTML مبني كسلسلة: علامة " بعنوان (موجودة فعلاً بعناوين
 // بعض الأدلة) كانت تقطع سمة alt وتكسر وسم الصورة
 function escapeHtml(text) {
-  return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  return String(text ?? "").replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
+  );
 }
 
 /* ===== بحث ذكي متسامح مع الأخطاء الإملائية ===== */
@@ -318,7 +321,11 @@ function getSfxBus(ctx) {
 }
 
 // نغمة واحدة: بداية ناعمة (attack) ثم خفوت أُسّي، مع انحدار نبرة (glide) اختياري
-function voice(ctx, bus, { freq, at = 0, attack = 0.004, decay = 0.08, gain = 0.06, glide = 1, pan = 0 }) {
+function voice(
+  ctx,
+  bus,
+  { freq, at = 0, attack = 0.004, decay = 0.08, gain = 0.06, glide = 1, pan = 0 }
+) {
   const t0 = ctx.currentTime + at;
   const end = t0 + attack + decay;
   const osc = ctx.createOscillator();
@@ -389,7 +396,14 @@ const SOUNDS = {
   // فتح نافذة/قائمة: وتر ري الكبير يتفتّح نوتة نوتة
   open(ctx, bus) {
     [NOTE.D5, NOTE["F#5"], NOTE.A5].forEach((freq, i) =>
-      voice(ctx, bus, { freq, at: i * 0.045, attack: 0.01, decay: 0.6, gain: 0.03, pan: (i - 1) * 0.2 })
+      voice(ctx, bus, {
+        freq,
+        at: i * 0.045,
+        attack: 0.01,
+        decay: 0.6,
+        gain: 0.03,
+        pan: (i - 1) * 0.2,
+      })
     );
     voice(ctx, bus, { freq: NOTE.D3, decay: 0.5, gain: 0.03 });
   },
@@ -410,7 +424,14 @@ const SOUNDS = {
   // نتيجة (اختار لي/خطة اليوم): وتر كامل يرن ويتوزع يمين/يسار
   success(ctx, bus) {
     [NOTE.D5, NOTE["F#5"], NOTE.A5, NOTE.D6].forEach((freq, i) =>
-      voice(ctx, bus, { freq, at: i * 0.06, attack: 0.02, decay: 1.0, gain: 0.03, pan: -0.3 + i * 0.2 })
+      voice(ctx, bus, {
+        freq,
+        at: i * 0.06,
+        attack: 0.02,
+        decay: 1.0,
+        gain: 0.03,
+        pan: -0.3 + i * 0.2,
+      })
     );
     voice(ctx, bus, { freq: NOTE.D3, decay: 0.8, gain: 0.04 });
   },
@@ -458,7 +479,8 @@ function initSoundToggle() {
    تتغيّر وقت التشغيل لا وقت البناء. fill="currentColor" يخلّيها تتبع لون
    الزر تلقائياً بدل لون إيموجي ثابت لا يتجاوب مع hover/active. */
 const TOGGLE_ICON_SVG = {
-  light: '<svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-360q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35Zm0 80q-83 0-141.5-58.5T280-480q0-83 58.5-141.5T480-680q83 0 141.5 58.5T680-480q0 83-58.5 141.5T480-280ZM200-440H40v-80h160v80Zm720 0H760v-80h160v80ZM440-760v-160h80v160h-80Zm0 720v-160h80v160h-80ZM256-650l-101-97 57-59 96 100-52 56Zm492 496-97-101 53-55 101 97-57 59Zm-98-550 97-101 59 57-100 96-56-52ZM154-212l101-97 55 53-97 101-59-57Zm326-268Z"/></svg>',
+  light:
+    '<svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-360q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35Zm0 80q-83 0-141.5-58.5T280-480q0-83 58.5-141.5T480-680q83 0 141.5 58.5T680-480q0 83-58.5 141.5T480-280ZM200-440H40v-80h160v80Zm720 0H760v-80h160v80ZM440-760v-160h80v160h-80Zm0 720v-160h80v160h-80ZM256-650l-101-97 57-59 96 100-52 56Zm492 496-97-101 53-55 101 97-57 59Zm-98-550 97-101 59 57-100 96-56-52ZM154-212l101-97 55 53-97 101-59-57Zm326-268Z"/></svg>',
   dark: '<svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"/></svg>',
   auto: '<svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M312-320h64l32-92h146l32 92h62L512-680h-64L312-320Zm114-144 52-150h4l52 150H426Zm54 436L346-160H160v-186L28-480l132-134v-186h186l134-132 134 132h186v186l132 134-132 134v186H614L480-28Zm0-112 100-100h140v-140l100-100-100-100v-140H580L480-820 380-720H240v140L140-480l100 100v140h140l100 100Zm0-340Z"/></svg>',
   volumeOn:
@@ -478,8 +500,7 @@ const ICON_SVG = {
     '<svg width="16" height="16" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Zm0-480Z"/></svg>',
   language:
     '<svg width="16" height="16" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 31.5-155.5t86-127Q252-817 325-848.5T480-880q83 0 155.5 31.5t127 86q54.5 54.5 86 127T880-480q0 82-31.5 155t-86 127.5q-54.5 54.5-127 86T480-80Zm0-82q26-36 45-75t31-83H404q12 44 31 83t45 75Zm-104-16q-18-33-31.5-68.5T322-320H204q29 50 72.5 87t99.5 55Zm208 0q56-18 99.5-55t72.5-87H638q-9 38-22.5 73.5T584-178ZM170-400h136q-3-20-4.5-39.5T300-480q0-21 1.5-40.5T306-560H170q-5 20-7.5 39.5T160-480q0 21 2.5 40.5T170-400Zm216 0h188q3-20 4.5-39.5T580-480q0-21-1.5-40.5T574-560H386q-3 20-4.5 39.5T380-480q0 21 1.5 40.5T386-400Zm268 0h136q5-20 7.5-39.5T800-480q0-21-2.5-40.5T790-560H654q3 20 4.5 39.5T660-480q0 21-1.5 40.5T654-400Zm-16-240h118q-29-50-72.5-87T584-782q18 33 31.5 68.5T638-640Zm-234 0h152q-12-44-31-83t-45-75q-26 36-45 75t-31 83Zm-200 0h118q9-38 22.5-73.5T376-782q-56 18-99.5 55T204-640Z"/></svg>',
-  call:
-    '<svg width="16" height="16" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M798-120q-125 0-247-54.5T329-329Q229-429 174.5-551T120-798q0-18 12-30t30-12h162q14 0 25 9.5t13 22.5l26 140q2 16-1 27t-11 19l-97 98q20 37 47.5 71.5T387-386q31 31 65 57.5t72 48.5l94-94q9-9 23.5-13.5T670-390l138 28q14 4 23 14.5t9 23.5v162q0 18-12 30t-30 12ZM241-600l66-66-17-94h-89q5 41 14 81t26 79Zm358 358q39 17 79.5 27t81.5 13v-88l-94-19-67 67ZM241-600Zm358 358Z"/></svg>',
+  call: '<svg width="16" height="16" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M798-120q-125 0-247-54.5T329-329Q229-429 174.5-551T120-798q0-18 12-30t30-12h162q14 0 25 9.5t13 22.5l26 140q2 16-1 27t-11 19l-97 98q20 37 47.5 71.5T387-386q31 31 65 57.5t72 48.5l94-94q9-9 23.5-13.5T670-390l138 28q14 4 23 14.5t9 23.5v162q0 18-12 30t-30 12ZM241-600l66-66-17-94h-89q5 41 14 81t26 79Zm358 358q39 17 79.5 27t81.5 13v-88l-94-19-67 67ZM241-600Zm358 358Z"/></svg>',
   "photo-camera":
     '<svg width="16" height="16" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-260q75 0 127.5-52.5T660-440q0-75-52.5-127.5T480-620q-75 0-127.5 52.5T300-440q0 75 52.5 127.5T480-260Zm0-80q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29ZM160-120q-33 0-56.5-23.5T80-200v-480q0-33 23.5-56.5T160-760h126l74-80h240l74 80h126q33 0 56.5 23.5T880-680v480q0 33-23.5 56.5T800-120H160Zm0-80h640v-480H638l-73-80H395l-73 80H160v480Zm320-240Z"/></svg>',
   "menu-book":
@@ -492,7 +513,11 @@ function initThemeToggle() {
   if (!btn) return;
 
   const KEY = "site_theme_pref";
-  const ICONS = { auto: TOGGLE_ICON_SVG.auto, light: TOGGLE_ICON_SVG.light, dark: TOGGLE_ICON_SVG.dark };
+  const ICONS = {
+    auto: TOGGLE_ICON_SVG.auto,
+    light: TOGGLE_ICON_SVG.light,
+    dark: TOGGLE_ICON_SVG.dark,
+  };
   const NEXT = { auto: "light", light: "dark", dark: "auto" };
 
   function getPref() {
@@ -554,7 +579,9 @@ function initCookieConsent() {
   });
 
   // رابط الفوتر يفتح الشريط من جديد ليغيّر الزائر قراره بأي وقت
-  document.getElementById("cookie-settings")?.addEventListener("click", () => banner.classList.add("open"));
+  document
+    .getElementById("cookie-settings")
+    ?.addEventListener("click", () => banner.classList.add("open"));
 }
 
 /* ===== تذكير "اختيار اليوم" (بديل خفيف عن الإشعارات لا يعتمد على أي خدمة
@@ -621,7 +648,9 @@ function initSectionFilter() {
     const btn = event.target.closest(".section-filter-btn");
     if (!btn) return;
     const group = btn.dataset.group;
-    filter.querySelectorAll(".section-filter-btn").forEach((b) => b.classList.toggle("active", b === btn));
+    filter
+      .querySelectorAll(".section-filter-btn")
+      .forEach((b) => b.classList.toggle("active", b === btn));
     grid.querySelectorAll(".section-card").forEach((card) => {
       const cardGroup = card.dataset.group;
       card.hidden = Boolean(cardGroup) && group !== "all" && cardGroup !== group;
@@ -678,7 +707,8 @@ function initHeaderScroll() {
      المستخدم إن فيه بقية. يشتغل تلقائياً مع أي قسم يُضاف مستقبلاً */
   const nav = header.querySelector(".main-nav");
   if (nav) {
-    const syncNavOverflow = () => nav.classList.toggle("is-scrollable", nav.scrollWidth > nav.clientWidth + 1);
+    const syncNavOverflow = () =>
+      nav.classList.toggle("is-scrollable", nav.scrollWidth > nav.clientWidth + 1);
     syncNavOverflow();
     window.addEventListener("resize", syncNavOverflow, { passive: true });
   }
@@ -695,12 +725,19 @@ function initAutoUpdateCheck() {
   // يترك التبويب، فيلقى النسخة الجديدة لما يرجع بلا ما يحس بشي
   let pending = false;
   const hasTypedText = () =>
-    [...document.querySelectorAll("textarea, input[type=text], input[type=email], input[type=tel], input[type=number], input:not([type])")].some(
-      (el) => el.value && el.value !== el.defaultValue
-    );
+    [
+      ...document.querySelectorAll(
+        "textarea, input[type=text], input[type=email], input[type=tel], input[type=number], input:not([type])"
+      ),
+    ].some((el) => el.value && el.value !== el.defaultValue);
   // .recording = تسجيل جارٍ باستوديو الصوتيات (يستمر والتبويب بالخلفية)
   function reloadWhenSafe() {
-    if (pending && document.visibilityState === "hidden" && !hasTypedText() && !document.querySelector(".recording"))
+    if (
+      pending &&
+      document.visibilityState === "hidden" &&
+      !hasTypedText() &&
+      !document.querySelector(".recording")
+    )
       location.reload();
   }
 
@@ -944,7 +981,8 @@ function initArticleShare() {
     const text = `${document.title}\n${location.href}`;
     // العنوان بالصفحة مكتوب "أيقونة + عنوان" بنص واحد (h1) — نفصل الإيموجي
     // الأول عن باقي النص عشان نرسمهم منفصلين بصورة الستوري
-    const heading = document.querySelector(".page-header h1")?.textContent?.trim() || document.title;
+    const heading =
+      document.querySelector(".page-header h1")?.textContent?.trim() || document.title;
     const match = heading.match(/^(\p{Extended_Pictographic}(?:️)?)\s*/u);
     const icon = match ? match[1] : "🧭";
     const title = match ? heading.slice(match[0].length).trim() : heading;
@@ -962,7 +1000,8 @@ function initArticleListen() {
     // كل مقال لزائر ما بيسمعه أصلاً
     if (!player.src) player.src = btn.dataset.audioSrc;
     player.classList.remove("hidden");
-    if (player.paused) player.play(); else player.pause();
+    if (player.paused) player.play();
+    else player.pause();
     playClickSound();
   });
 }
@@ -1252,12 +1291,15 @@ function buildMeatSourceHtml(item) {
   if (!meat || !meat.text) return "";
   const isEn = window.SITE_LANG === "en";
   const text = (isEn && meat.text_en) || meat.text;
-  const viaKey = { asked: "meat_source_via_asked", instagram: "meat_source_via_instagram", menu: "meat_source_via_menu" }[
-    meat.via
-  ];
+  const viaKey = {
+    asked: "meat_source_via_asked",
+    instagram: "meat_source_via_instagram",
+    menu: "meat_source_via_menu",
+  }[meat.via];
   const parts = [];
   if (viaKey) parts.push(t(viaKey));
-  if (meat.checked) parts.push(`${t("meat_source_checked")}: <span dir="ltr">${meat.checked}</span>`);
+  if (meat.checked)
+    parts.push(`${t("meat_source_checked")}: <span dir="ltr">${meat.checked}</span>`);
   const age = meatSourceAgeLabel(meat.checked);
   if (age) parts.push(age);
   return `
@@ -1452,12 +1494,16 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
   shareBtn.addEventListener("click", () => {
     const text = buildShareText(section, item);
     const subtitle = (item.tags || []).map((tag) => tagLabel(tag)).join(" · ");
-    shareText(text, { section, item_name: itemTitle(item) }, {
-      icon: item.icon,
-      title,
-      subtitle,
-      photo: item.image,
-    });
+    shareText(
+      text,
+      { section, item_name: itemTitle(item) },
+      {
+        icon: item.icon,
+        title,
+        subtitle,
+        photo: item.image,
+      }
+    );
     playSound("share");
   });
 
@@ -1601,7 +1647,10 @@ function renderSection(section, typeFilter) {
     })
   );
 
-  let activeTag = "all";
+  // فلتر لكل نوع (منطقة، سعر، الباقي) يشتغلون مع بعض: «المحرق + مشاوي + اقتصادي»
+  const active = {};
+  const tagKind = (tag) =>
+    AREA_NAMES.includes(tag) ? "area" : PRICE_TAGS.includes(tag) ? "price" : "type";
   let filtersExpanded = false;
   // قانون هيك: الجوال يعرض أهم ٥ فلاتر بس (الشاشة الأولى كانت ١٣ زراً)، والباقي ورا «عرض المزيد»
   const FILTER_CHIP_LIMIT = matchMedia("(max-width: 700px)").matches ? 5 : 10;
@@ -1617,7 +1666,7 @@ function renderSection(section, typeFilter) {
     allChip.dataset.tag = "all";
     allChip.setAttribute("aria-pressed", "true");
     allChip.addEventListener("click", () => {
-      activeTag = "all";
+      for (const k in active) delete active[k];
       updateActiveChip();
       renderGrid();
       playClickSound();
@@ -1635,7 +1684,9 @@ function renderSection(section, typeFilter) {
       chip.dataset.tag = tag;
       chip.setAttribute("aria-pressed", "false");
       chip.addEventListener("click", () => {
-        activeTag = tag;
+        const kind = tagKind(tag);
+        if (active[kind] === tag) delete active[kind];
+        else active[kind] = tag;
         updateActiveChip();
         renderGrid();
         playClickSound();
@@ -1663,7 +1714,9 @@ function renderSection(section, typeFilter) {
   function updateActiveChip() {
     if (!filtersWrap) return;
     [...filtersWrap.children].forEach((chip) => {
-      const isActive = chip.dataset.tag === activeTag;
+      const tag = chip.dataset.tag;
+      if (!tag) return;
+      const isActive = tag === "all" ? !Object.keys(active).length : active[tagKind(tag)] === tag;
       chip.classList.toggle("active", isActive);
       chip.setAttribute("aria-pressed", String(isActive));
     });
@@ -1674,7 +1727,7 @@ function renderSection(section, typeFilter) {
     grid.innerHTML = "";
 
     const filtered = items.filter((item) => {
-      const matchesTag = activeTag === "all" || (item.tags || []).includes(activeTag);
+      const matchesTag = Object.values(active).every((tag) => (item.tags || []).includes(tag));
       // الاسم والوصف باللغتين: زائر الصفحة الإنجليزية يبحث بالإنجليزي، ورابط مشاركة
       // إنجليزي (?q=الاسم الإنجليزي) كان يفتح على "لا نتائج"
       const haystack = [
@@ -1736,7 +1789,9 @@ function renderSection(section, typeFilter) {
   if (sharedQuery && searchInput) searchInput.value = sharedQuery;
 
   // قسم ما فيه ولا عنصر بموقع (روابط، مقالات…): الزر يطلب صلاحية الموقع بلا فايدة — نشيله
-  const hasLocations = items.some((item) => (item.lat != null && item.lng != null) || item.branches?.length);
+  const hasLocations = items.some(
+    (item) => (item.lat != null && item.lng != null) || item.branches?.length
+  );
   if (nearMeBtn && !hasLocations) nearMeBtn.remove();
   else if (nearMeBtn) {
     nearMeBtn.addEventListener("click", () => {
@@ -1767,7 +1822,10 @@ function renderSection(section, typeFilter) {
           const sorted = grid.querySelectorAll(".distance-tag").length;
           showToast(t("near_me_sorted").replace("{n}", sorted));
           const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-          window.scrollTo({ top: grid.getBoundingClientRect().top + window.scrollY - 140, behavior: reduce ? "auto" : "smooth" });
+          window.scrollTo({
+            top: grid.getBoundingClientRect().top + window.scrollY - 140,
+            behavior: reduce ? "auto" : "smooth",
+          });
         },
         () => {
           showToast(t("geolocation_denied"));
@@ -1908,7 +1966,8 @@ function renderNewestItems(container) {
   Object.keys(SITE_DATA).forEach((section) => {
     (SITE_DATA[section].items || []).forEach((item) => {
       if (item.hideFromNewest) return;
-      if (item.addedAt && `${section}:${item.id}` !== FEATURED_PICK_KEY) all.push({ section, item });
+      if (item.addedAt && `${section}:${item.id}` !== FEATURED_PICK_KEY)
+        all.push({ section, item });
     });
   });
   if (!all.length) return;
@@ -1933,7 +1992,10 @@ function renderSiteStats() {
   const el = document.getElementById("siteStatsLine");
   if (!el) return;
 
-  const total = Object.values(SITE_DATA).reduce((sum, section) => sum + (section.items || []).length, 0);
+  const total = Object.values(SITE_DATA).reduce(
+    (sum, section) => sum + (section.items || []).length,
+    0
+  );
   if (total === 0) return;
 
   el.textContent = `${t("site_stats_prefix")} ${total} ${t("site_stats_suffix")}`;
@@ -2238,11 +2300,15 @@ function renderDayPlan() {
     shareBtn.addEventListener("click", () => {
       const lines = current.map((s) => `${s.icon} ${t("plan_" + s.key)}: ${itemTitle(s.item)}`);
       const text = `${t("plan_share_title")}\n\n${lines.join("\n")}\n\n${SITE_ORIGIN}${window.SITE_LANG === "en" ? "en/" : ""}plan.html`;
-      shareText(text, { section: "plan" }, {
-        icon: "🗓️",
-        title: t("plan_title"),
-        subtitle: current.map((s) => itemTitle(s.item)).join(" · "),
-      });
+      shareText(
+        text,
+        { section: "plan" },
+        {
+          icon: "🗓️",
+          title: t("plan_title"),
+          subtitle: current.map((s) => itemTitle(s.item)).join(" · "),
+        }
+      );
       playSound("share");
     });
   }
@@ -2365,7 +2431,15 @@ function initAboutBadge() {
 
   holder.addEventListener("pointerdown", (e) => {
     if (e.button > 0) return;
-    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, phi0: pointerAngle(e), theta0: theta, target: theta, moved: false };
+    drag = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      phi0: pointerAngle(e),
+      theta0: theta,
+      target: theta,
+      moved: false,
+    };
     kick();
   });
   holder.addEventListener("pointermove", (e) => {
@@ -2423,7 +2497,10 @@ document.addEventListener("DOMContentLoaded", initAboutBadge);
   const bubble = document.getElementById("supportBubble");
   const card = document.getElementById("supportCard");
   if (!bubble || !card) return;
-  if (lsGet("supportHidden")) { bubble.remove(); return; }
+  if (lsGet("supportHidden")) {
+    bubble.remove();
+    return;
+  }
   let pos = Number(lsGet("supportPos")) % 4 || 0;
   bubble.dataset.pos = pos;
   bubble.addEventListener("click", () => {
@@ -2431,9 +2508,14 @@ document.addEventListener("DOMContentLoaded", initAboutBadge);
     lsSet("supportPos", pos);
     card.showModal();
   });
-  card.addEventListener("close", () => { bubble.dataset.pos = pos; });
+  card.addEventListener("close", () => {
+    bubble.dataset.pos = pos;
+  });
   card.addEventListener("click", (e) => {
-    if (e.target.closest("[data-hide]")) { lsSet("supportHidden", "1"); bubble.remove(); card.close(); }
-    else if (e.target.closest("[data-close]")) card.close();
+    if (e.target.closest("[data-hide]")) {
+      lsSet("supportHidden", "1");
+      bubble.remove();
+      card.close();
+    } else if (e.target.closest("[data-close]")) card.close();
   });
 })();
