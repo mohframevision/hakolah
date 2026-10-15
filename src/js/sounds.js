@@ -831,7 +831,10 @@ function initBeepMelodyExperiment() {
         return { midi, buffer, skip: start / sr, norm, loop: LOOPED_SETS.has(set) ? makeLoop(data, sr, start) : null };
       })
     )
-      .then((list) => (sampleBank[set] = list))
+      .then((list) => {
+        sampleBank[set] = list;
+        window.chrome?.webview?.postMessage({ t: "load", set, names: SAMPLE_SETS[set].split(" "), loops: list.map((x) => x.loop) });
+      })
       .catch(() => {
         sampleLoading[set] = null; // بلا اتصال مثلاً — نحاول مرة ثانية لاحقاً، والمركّب يغطّي
       });
@@ -866,7 +869,7 @@ function initBeepMelodyExperiment() {
       const t = (i / xf) * (Math.PI / 2);
       data[to - xf + i] = data[to - xf + i] * Math.cos(t) + data[from - xf + i] * Math.sin(t);
     }
-    return { start: from / sr, end: to / sr };
+    return { start: from / sr, end: to / sr, ratio };
   }
 
   // يجهّز آلات قبل تشغيل/تصدير (بحدّ أقصى للانتظار: بلا اتصال يكمل بالتخليق)
@@ -879,15 +882,24 @@ function initBeepMelodyExperiment() {
   /* نغمة من العيّنات: أقرب عيّنة بسرعة تشغيل تعدّل النغمة. القوة تتحكم بالشدة وبسطوع
      الصوت معاً — الآلة الحقيقية تلمع أكثر لما تضغط/تنفخ أقوى. duration = مدة الإمساك،
      وبعدها الرفع. يرجّع null لو النغمة أبعد من مدى الآلة بكثير (التخليق يعزفها). */
-  function playSampled(target, instrument, freq, startTime, duration, peakGain, pan) {
-    const { ctx, dry, wet, live } = target;
-    const set = instrument.sampled;
+  // أقرب عيّنة للنغمة وسرعتها وذيلها — المتصفح ومحرك تطبيق الكمبيوتر يختاران بنفس الطريقة
+  function pickSample(set, freq) {
     const list = sampleBank[set];
     const midiF = 69 + 12 * Math.log2(freq / 440);
-    const s = list.reduce((best, x) => (Math.abs(x.midi - midiF) < Math.abs(best.midi - midiF) ? x : best));
+    const i = list.reduce((b, x, k) => (Math.abs(x.midi - midiF) < Math.abs(list[b].midi - midiF) ? k : b), 0);
+    const s = list[i];
     if (Math.abs(s.midi - midiF) > 19) return null;
-    const rate = 2 ** ((midiF - s.midi) / 12);
-    const tau = SAMPLE_RELEASE[set] || (s.loop ? 0.12 : 0.09);
+    return { s, i, rate: 2 ** ((midiF - s.midi) / 12), tau: SAMPLE_RELEASE[set] || (s.loop ? 0.12 : 0.09) };
+  }
+  const sampleLevel = (instrument, s, peakGain) => Math.max(peakGain * s.norm * 1.5 * (instrument.felt ? 0.8 : 1), 0.0001);
+  const sampleCutoff = (instrument, peakGain) =>
+    instrument.felt ? clamp(500 + 2200 * (peakGain / 0.3), 500, 2800) : clamp(1400 + 9000 * (peakGain / 0.3), 1400, 12000);
+
+  function playSampled(target, instrument, freq, startTime, duration, peakGain, pan) {
+    const { ctx, dry, wet, live } = target;
+    const pick = pickSample(instrument.sampled, freq);
+    if (!pick) return null;
+    const { s, rate, tau } = pick;
     const src = ctx.createBufferSource();
     src.buffer = s.buffer;
     src.playbackRate.value = rate;
@@ -899,15 +911,14 @@ function initBeepMelodyExperiment() {
     const available = s.loop ? Infinity : (s.buffer.duration - s.skip) / rate;
     const end = Math.min(available, duration + tau * 7);
     // البيانو الهادئ (Felt): نفس البيانو الكبير بلباد على المطارق — أعتم وأنعم بكثير
-    const felt = instrument.felt;
-    const level = Math.max(peakGain * s.norm * 1.5 * (felt ? 0.8 : 1), 0.0001);
+    const level = sampleLevel(instrument, s, peakGain);
     const env = ctx.createGain();
     env._tau = tau;
     env.gain.setValueAtTime(level, startTime);
     if (duration < available) env.gain.setTargetAtTime(0.0001, startTime + duration, tau);
     const tone = ctx.createBiquadFilter();
     tone.type = "lowpass";
-    tone.frequency.value = felt ? clamp(500 + 2200 * (peakGain / 0.3), 500, 2800) : clamp(1400 + 9000 * (peakGain / 0.3), 1400, 12000);
+    tone.frequency.value = sampleCutoff(instrument, peakGain);
     src.connect(tone).connect(env);
     let out = env;
     if (pan && ctx.createStereoPanner) {
@@ -3013,14 +3024,21 @@ function initBeepMelodyExperiment() {
   // الآلة المسجّلة ترنّ بطول عيّنتها (والممدودة تتكرر) ما دامت ممسوكة أو الدواسة نازلة.
   const holdSeconds = (id) => (sampleBank[INSTRUMENTS[id].sampled] ? 30 : INSTRUMENTS[id].sustainRatio > 0 ? 12 : 2.4);
 
-  /* تطبيق هكوله للكمبيوتر (WebView2): البيانو يعزفه محرك التطبيق الأصلي (~3ms)
-     بدل محرك المتصفح، وباقي الآلات والمقامات (ربع الصوت) تبقى هنا. بالمتصفح desktop فاضي. */
+  /* تطبيق هكوله للكمبيوتر (WebView2): الآلات المسجّلة يعزفها محرك التطبيق الأصلي (~3ms)
+     بدل محرك المتصفح — الصفحة تختار العيّنة والسرعة والشدة والتطبيق ينفّذ. المركّبة وصوتك
+     والماندولين (ذيل وتر مخلّق) تبقى هنا. بالمتصفح desktop فاضي. */
   const desktop = window.chrome?.webview;
   let nativeSeq = 0;
-  const nativePiano = (cents) => {
+  function nativeNote(freq, gain) {
     const ins = INSTRUMENTS[currentInstrument];
-    return !!desktop && ins.sampled === "piano" && !ins.felt && !ins.sample && !cents;
-  };
+    const set = ins.sampled;
+    if (!desktop || ins.sample || set === "mandolin" || !sampleBank[set]) return null;
+    const peak = gain * dynamicsGain;
+    const pick = pickSample(set, freq);
+    if (!pick) return null;
+    const { s, i, rate, tau } = pick;
+    return { t: "on", id: ++nativeSeq, set, i, rate, tau, skip: s.skip, gain: sampleLevel(ins, s, peak) * volumeLevel * volumeLevel, lp: sampleCutoff(ins, peak) };
+  }
 
   function keyRelease(env) {
     if (!env) return;
@@ -3049,18 +3067,18 @@ function initBeepMelodyExperiment() {
     releaseSustained(id);
     sustained.forEach((s, other) => s.midi === midi && releaseSustained(other));
     const cents = centsOf(midi);
-    const native = nativePiano(cents);
-    if (!native) await ensureContext(); // محرك التطبيق ما يحتاج سياق المتصفح (ولا ننتظره وكرت الصوت مشغول)
     const freq = freqOf(midi, cents);
     const gain = velGain(velocity);
+    const native = nativeNote(freq, gain);
+    if (!native) await ensureContext(); // محرك التطبيق ما يحتاج سياق المتصفح (ولا ننتظره وكرت الصوت مشغول)
     if (rec?.kind === "notes") {
       const ev = { ...makeNoteEvent(midi, cents, (pressedAt - rec.t0) / 1000, 0, 0, gain), id, velocity };
       rec.open.set(id, ev);
       rec.events.push(ev);
     }
     if (native) {
-      entry.env = { native: ++nativeSeq };
-      desktop.postMessage({ t: "on", id: entry.env.native, midi, gain: gain * volumeLevel * volumeLevel });
+      entry.env = { native: native.id };
+      desktop.postMessage(native);
     } else {
       desktop?.postMessage({ t: "web" }); // التطبيق يفك كرت الصوت (Exclusive) لمحرك الصفحة
       const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: false };
