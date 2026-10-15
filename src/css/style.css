@@ -8522,3 +8522,123 @@ li {
   background: var(--kb);
   box-shadow: 0 0 16px var(--kb);
 }
+
+/* ===== رسوم المقالات المصنوعة بالكود (SVG) =====
+   ألوانها من متغيّرات الموقع نفسها، فتتبع الوضع الفاتح والداكن تلقائياً. الاتجاه داخل
+   الرسم من اليسار لليمين دائماً لأن مواضع النصوص (text-anchor) محسوبة عليه */
+.viz {
+  margin: var(--space-5) 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-4);
+  background: var(--color-surface);
+}
+.viz svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  direction: ltr;
+  font-family: inherit;
+  font-size: 13px;
+}
+.viz figcaption {
+  margin-top: var(--space-2);
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+.viz-t {
+  fill: var(--color-text);
+}
+.viz-s {
+  fill: var(--color-text-muted);
+  font-size: 11.5px;
+}
+.viz-b {
+  font-weight: 700;
+}
+.viz-hi {
+  fill: var(--color-primary);
+  font-weight: 700;
+}
+.viz-on {
+  fill: #fff;
+  font-size: 12.5px;
+}
+.viz-inv {
+  fill: var(--color-surface);
+  font-size: 13px;
+}
+.viz-accent {
+  fill: var(--color-primary);
+}
+.viz-muted {
+  fill: color-mix(in oklch, var(--color-text) 22%, transparent);
+}
+.viz-ink {
+  fill: var(--color-text);
+}
+.viz-card {
+  fill: color-mix(in oklch, var(--color-primary) 8%, var(--color-surface));
+  stroke: color-mix(in oklch, var(--color-primary) 55%, transparent);
+}
+.viz-card-on {
+  fill: color-mix(in oklch, var(--color-primary) 20%, var(--color-surface));
+  stroke: var(--color-primary);
+}
+.viz-line {
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+.viz-water {
+  fill: color-mix(in oklch, oklch(0.7 0.09 220) 30%, var(--color-surface));
+  stroke: oklch(0.6 0.08 220);
+}
+.viz-axis {
+  stroke: var(--color-text-muted);
+}
+.viz-thick {
+  stroke-width: 4;
+}
+.viz-beam {
+  stroke: var(--color-text);
+  stroke-width: 4;
+}
+.viz-curve {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 3;
+}
+.viz-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.viz-compare > div {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--space-3);
+  line-height: 1.9;
+}
+.viz-compare b {
+  display: block;
+}
+.viz-no {
+  background: color-mix(in oklch, var(--color-danger) 10%, var(--color-surface));
+}
+.viz-yes {
+  background: color-mix(in oklch, var(--color-primary) 12%, var(--color-surface));
+}
+@media (max-width: 600px) {
+  .viz-compare {
+    grid-template-columns: 1fr;
+  }
+}
+/* الجوال: الرسم يصغر بالـ viewBox فيصغر نصّه حتى ما ينقرأ — حد أدنى للعرض وتمرير أفقي */
+@media (max-width: 600px) {
+  .viz:has(svg) {
+    overflow-x: auto;
+  }
+  .viz svg {
+    min-width: 480px;
+  }
+}
