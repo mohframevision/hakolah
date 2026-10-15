@@ -3013,8 +3013,18 @@ function initBeepMelodyExperiment() {
   // الآلة المسجّلة ترنّ بطول عيّنتها (والممدودة تتكرر) ما دامت ممسوكة أو الدواسة نازلة.
   const holdSeconds = (id) => (sampleBank[INSTRUMENTS[id].sampled] ? 30 : INSTRUMENTS[id].sustainRatio > 0 ? 12 : 2.4);
 
+  /* تطبيق هكوله للكمبيوتر (WebView2): البيانو يعزفه محرك التطبيق الأصلي (~3ms)
+     بدل محرك المتصفح، وباقي الآلات والمقامات (ربع الصوت) تبقى هنا. بالمتصفح desktop فاضي. */
+  const desktop = window.chrome?.webview;
+  let nativeSeq = 0;
+  const nativePiano = (cents) => {
+    const ins = INSTRUMENTS[currentInstrument];
+    return !!desktop && ins.sampled === "piano" && !ins.felt && !ins.sample && !cents;
+  };
+
   function keyRelease(env) {
     if (!env) return;
+    if (env.native) return desktop.postMessage({ t: "off", id: env.native });
     const now = audioCtx.currentTime;
     env.gain.cancelScheduledValues(now);
     env.gain.setTargetAtTime(0.0001, now, env._tau || 0.09); // مخمّد البيانو: ذيل قصير ناعم مو قطع (الهارب يرنّ أطول)
@@ -3038,8 +3048,9 @@ function initBeepMelodyExperiment() {
     // نفس المصدر أو نفس النغمة ترنّ بالدواسة: الضربة الجديدة تخمد القديمة (مثل البيانو)
     releaseSustained(id);
     sustained.forEach((s, other) => s.midi === midi && releaseSustained(other));
-    await ensureContext();
     const cents = centsOf(midi);
+    const native = nativePiano(cents);
+    if (!native) await ensureContext(); // محرك التطبيق ما يحتاج سياق المتصفح (ولا ننتظره وكرت الصوت مشغول)
     const freq = freqOf(midi, cents);
     const gain = velGain(velocity);
     if (rec?.kind === "notes") {
@@ -3047,8 +3058,14 @@ function initBeepMelodyExperiment() {
       rec.open.set(id, ev);
       rec.events.push(ev);
     }
-    const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: false };
-    entry.env = playNote(target, pseudoDegree(midi), audioCtx.currentTime + 0.005, holdSeconds(currentInstrument), gain, 0, 0, freq);
+    if (native) {
+      entry.env = { native: ++nativeSeq };
+      desktop.postMessage({ t: "on", id: entry.env.native, midi, gain: gain * volumeLevel * volumeLevel });
+    } else {
+      desktop?.postMessage({ t: "web" }); // التطبيق يفك كرت الصوت (Exclusive) لمحرك الصفحة
+      const target = { ctx: audioCtx, dry: masterInput, wet: delayNode, live: false };
+      entry.env = playNote(target, pseudoDegree(midi), audioCtx.currentTime + 0.005, holdSeconds(currentInstrument), gain, 0, 0, freq);
+    }
     if (held.get(id) !== entry) {
       // انرفع قبل ما يجهز الصوت
       if (pedalDown()) sustained.set(id, entry);
@@ -7731,6 +7748,7 @@ function initBeepMelodyExperiment() {
       // البيانو لتبويبي "اعزف" و"تدرّب" فقط — بغيرهما (تأليف/تعلّم) الحروف ما تعزف نغمات مفاجئة
       if (pianoHidden()) return;
       const code = physicalCode(e);
+      if (desktop && (code in KEY_MAP || code === "KeyZ" || code === "KeyX")) return e.preventDefault(); // التطبيق يرسلها مع رقم الكيبورد
       if (code === "KeyZ" || code === "KeyX") {
         shiftOctave(code === "KeyZ" ? -1 : 1);
       } else if (code in KEY_MAP) {
@@ -7744,6 +7762,21 @@ function initBeepMelodyExperiment() {
         releasePedal();
       }
       keyOff(physicalCode(e));
+    });
+    /* التطبيق يقرأ كل كيبورد بروحه (Raw Input) ويرسل { kb, code, down }:
+       الكيبورد الأول (أول واحد ينضغط) يحرّك الأوكتاف العام بـZ/X مثل الموقع،
+       وكل كيبورد بعده يبدأ أوكتافاً فوق اللي قبله وZ/X تحرّكه هو بس */
+    const kbOct = [];
+    desktop?.addEventListener("message", ({ data: m }) => {
+      if (m?.t !== "key") return;
+      const id = `k${m.kb}:${m.code}`;
+      if (!m.down) return noteOff(id);
+      if (document.activeElement?.closest("input, textarea, select, [contenteditable]") || pianoHidden()) return;
+      kbOct[m.kb] ??= m.kb;
+      if (m.code === "KeyZ" || m.code === "KeyX") {
+        if (m.kb === 0) shiftOctave(m.code === "KeyZ" ? -1 : 1);
+        else kbOct[m.kb] = clamp(kbOct[m.kb] + (m.code === "KeyZ" ? -1 : 1), -4, 4);
+      } else if (m.code in KEY_MAP) noteOn(id, clamp(windowBase() + 12 * kbOct[m.kb] + KEY_MAP[m.code], 21, 108));
     });
     // الصفحة فقدت التركيز والمفتاح ممسوك: ما بيوصلنا keyup، نسكّت الكل
     window.addEventListener("blur", () => {
