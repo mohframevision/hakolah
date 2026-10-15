@@ -8491,3 +8491,34 @@ li {
   .support-features li { padding: 10px 6px; font-size: .78em; }
   .support-features span { font-size: 22px; }
 }
+
+/* تطبيق الكمبيوتر: شريط الكيبوردات المتعددة، وكل كيبورد يلوّن مفاتيحه بلونه */
+.kb-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 6px 0 10px;
+  font-size: 0.85rem;
+}
+.kb-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 2px solid var(--kb);
+  background: color-mix(in oklch, var(--kb) 14%, transparent);
+}
+.kb-hint {
+  opacity: 0.75;
+}
+[data-kb="0"] { --kb: oklch(0.78 0.12 165); }
+[data-kb="1"] { --kb: oklch(0.7 0.14 250); }
+[data-kb="2"] { --kb: oklch(0.75 0.15 60); }
+[data-kb="3"] { --kb: oklch(0.7 0.17 350); }
+.pk-white.down[data-kb] {
+  background: linear-gradient(180deg, color-mix(in oklch, var(--kb) 45%, white), var(--kb));
+  box-shadow: 0 0 18px var(--kb);
+}
+.pk-black.down[data-kb] {
+  background: var(--kb);
+  box-shadow: 0 0 16px var(--kb);
+}

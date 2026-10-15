@@ -7766,17 +7766,64 @@ function initBeepMelodyExperiment() {
     /* التطبيق يقرأ كل كيبورد بروحه (Raw Input) ويرسل { kb, code, down }:
        الكيبورد الأول (أول واحد ينضغط) يحرّك الأوكتاف العام بـZ/X مثل الموقع،
        وكل كيبورد بعده يبدأ أوكتافاً فوق اللي قبله وZ/X تحرّكه هو بس */
-    const kbOct = [];
+    // أوكتاف كل كيبورد نسبةً للأوكتاف العام يُحفظ، والتطبيق يحفظ ترتيب الأجهزة نفسها
+    const kbOct = (() => {
+      try {
+        return JSON.parse(store.get("beepKbOct")) || [];
+      } catch {
+        return [];
+      }
+    })();
+    const kbStrip = desktop && document.createElement("div");
+    function paintKbStrip() {
+      const ar = document.documentElement.lang === "ar";
+      const chips = kbOct
+        .map((o, kb) => {
+          const lo = clamp(windowBase() + 12 * o, 21, 108);
+          return `<span class="kb-chip" data-kb="${kb}">⌨️ ${kb + 1}: <b dir="ltr">${noteName(lo, noteStyle)}${octaveOf(lo)}–${noteName(Math.min(108, lo + 17), noteStyle)}${octaveOf(Math.min(108, lo + 17))}</b></span>`;
+        })
+        .join("");
+      kbStrip.innerHTML =
+        (chips || `<span class="kb-hint">${ar ? "اضغط زراً في كل كيبورد بالترتيب من اليسار إلى اليمين" : "Press a key on each keyboard, left to right"}</span>`) +
+        `<button type="button" class="filter-chip" id="kbReset">↺ ${ar ? "أعد ترتيب الكيبوردات" : "Re-order keyboards"}</button>`;
+    }
+    if (desktop) {
+      kbStrip.className = "kb-strip";
+      document.querySelector(".piano-head")?.after(kbStrip);
+      paintKbStrip();
+      kbStrip.addEventListener("click", (e) => {
+        if (!e.target.closest("#kbReset")) return;
+        kbOct.length = 0;
+        store.set("beepKbOct", "[]");
+        desktop.postMessage({ t: "kbreset" });
+        paintKbStrip();
+      });
+      ["beepOctDown", "beepOctUp"].forEach((b) => document.getElementById(b)?.addEventListener("click", paintKbStrip));
+    }
     desktop?.addEventListener("message", ({ data: m }) => {
       if (m?.t !== "key") return;
       const id = `k${m.kb}:${m.code}`;
       if (!m.down) return noteOff(id);
       if (document.activeElement?.closest("input, textarea, select, [contenteditable]") || pianoHidden()) return;
-      kbOct[m.kb] ??= m.kb;
+      if (kbOct[m.kb] == null) {
+        for (let k = 0; k <= m.kb; k++) kbOct[k] ??= k;
+        store.set("beepKbOct", JSON.stringify(kbOct));
+        paintKbStrip();
+        if (m.kb > 0) document.querySelector('[data-board="full"]:not(.active)')?.click(); // كيبورد ثاني: اللوحة الكاملة عشان تبين نغماته
+      }
       if (m.code === "KeyZ" || m.code === "KeyX") {
         if (m.kb === 0) shiftOctave(m.code === "KeyZ" ? -1 : 1);
-        else kbOct[m.kb] = clamp(kbOct[m.kb] + (m.code === "KeyZ" ? -1 : 1), -4, 4);
-      } else if (m.code in KEY_MAP) noteOn(id, clamp(windowBase() + 12 * kbOct[m.kb] + KEY_MAP[m.code], 21, 108));
+        else {
+          kbOct[m.kb] = clamp(kbOct[m.kb] + (m.code === "KeyZ" ? -1 : 1), -4, 4);
+          store.set("beepKbOct", JSON.stringify(kbOct));
+        }
+        paintKbStrip();
+      } else if (m.code in KEY_MAP) {
+        const midi = clamp(windowBase() + 12 * kbOct[m.kb] + KEY_MAP[m.code], 21, 108);
+        noteOn(id, midi);
+        const key = playBox?.querySelector(`[data-midi="${midi}"]`);
+        if (key) key.dataset.kb = m.kb; // لون الكيبورد اللي ضغطه
+      }
     });
     // الصفحة فقدت التركيز والمفتاح ممسوك: ما بيوصلنا keyup، نسكّت الكل
     window.addEventListener("blur", () => {
