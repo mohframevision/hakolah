@@ -31,7 +31,7 @@ dish:
 
 Lunch has many dishes. What we usually order:
 
-- A **whole grilled chicken** for about **5 BHD**
+- A **whole grilled chicken** for **4 BHD**
 - A **mixed mezze plate**: hummus, tabbouleh, mutabbal, something spicy, a
   salad, olives and more. The big plate is about **2.500 BHD** and the small
   one about **1.800 BHD**
@@ -39,21 +39,22 @@ Lunch has many dishes. What we usually order:
 
 Everything is generous, so it makes a great lunch with the family.
 
-> Prices are from our own experience on our latest visit and may change.
+> Prices are from the printed menu at the Jid Hafs branch (October 2026) and may change.
 
 ## The Menu
 
-These dishes are from the restaurant's printed menu at the Jid Hafs branch. The menu may change:
+From the printed menu at the Jid Hafs branch (October 2026). Full prices are under the “Menu” button:
 
-- **Shawarma:** chicken, meat or mixed shawarma plates, and the **Arabic shawarma** (meat or chicken)
-- **Sandwiches:** chicken and meat shawarma, malgoom, sarokh, tikka, kabab and a Roosi sandwich
-- **Grills:** a whole or half chicken, grilled breast, tikka and kabab (chicken and meat), chicken wings, reish, chelo kabab and mixed grills
-- **Lunch:** biryani, machboos, bukhari, mandi and kuzi (chicken and meat), raqaba, musaqqa'a, harees, lentil soup, macaroni, béchamel, salona (chicken, meat and vegetable) and bamia with meat
-- **Fish:** grilled (buri, tilapia, supreme), plus safi, shari and hamour with rice
-- **Pizza:** many kinds, including labna, spinach, murtadella and the Al Shoala pizza
-- **Pastries:** meat and chicken pies, cheese, labna in many forms, spinach, zaatar and a mixed dozen
-- **Other:** chicken and beef burgers, broasted chicken, drumsticks and wings
-- **Special orders:** meat or chicken with rice by the kilo, for feasts and gatherings
+- **Starters:** hummus, tabbouleh, mutabal, yogurt with cucumber, hot salad, olive salad, Turkish salad, fattoush, mixed mezze, pickles, fries and vine leaves
+- **Grills:** a whole or half chicken, grilled breast, tikka and kebab (chicken and meat), chicken wings, lamb chops (reash), chelo kebab and the mixed grill in six sizes
+- **Lunch:** biryani, machboos, bukhari, mandi and ghouzi (chicken and meat), raqaba, harees, curry (meat, chicken and vegetable), okra with meat and lentil soup
+- **Thursday and Friday only:** eggplant with meat, and macaroni
+- **Fish with rice:** hamour fillet, shari, safi and fish supreme
+- **Shawarma:** plates (chicken, meat and mixed), the Arabic shawarma, and shawarma, malgoom, sarookh, tikka and kebab sandwiches, a Roosi sandwich and Turkish kebab
+- **Burgers:** chicken and beef
+- **Pastries:** meat, chicken and cheese pies, with cheese, cheese with zaatar, and zaatar
+- **Pizza (medium):** meat, chicken, vegetable, mixed and margherita
+- **Special orders for feasts:** meat ghouzi and chicken biryani
 
 ## Branches
 
@@ -64,7 +65,6 @@ These dishes are from the restaurant's printed menu at the Jid Hafs branch. The 
   - 📞 17683378
 - **Muharraq** — we haven't tried it yet
   - 📞 17333676
-  - According to the Jid Hafs menu, **pasta** is only available at the Muharraq branch
 
 ## Delivery and Contact
 
