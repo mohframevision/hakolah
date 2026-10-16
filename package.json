@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:ux": "node scripts/check-ux.js",
-    "check:data": "node scripts/check-data-quality.js"
+    "check:data": "node scripts/check-data-quality.js",
+    "check:icons": "node scripts/check-tag-icons.js"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",
