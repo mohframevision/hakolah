@@ -9,6 +9,7 @@ langSwitchUrl: "/en/search.html"
 ---
 {% from "icon.njk" import icon %}
 <div class="search-page">
+  <h1 class="sr-only">🔍 {{ i18n.ar.nav_search }}</h1>
   <form class="search-box" id="searchForm" role="search" action="{{ '/search.html' | url }}">
     <span class="search-box-icon">{{ icon("search", 20) }}</span>
     <input type="search" name="q" id="searchInput" placeholder="{{ i18n.ar.search_placeholder }}" aria-label="{{ i18n.ar.search_aria }}" autocomplete="off" enterkeyhint="search" />
