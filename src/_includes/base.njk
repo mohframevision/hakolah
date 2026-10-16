@@ -172,6 +172,9 @@
         <a class="nav-only-mobile{% if navActive == "favorites" %} active{% endif %}"{% if navActive == "favorites" %} aria-current="page"{% endif %} href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}">{{ icon("heart-fill", 16) }} {{ t.nav_favorites }}</a>
       </nav>
       <div class="header-actions">
+        {# البحث ظاهر كحقل لا أيقونة فقط (Baymard وNielsen Norman: الحقل المكشوف يُستخدم أكثر بكثير)؛
+           على الشاشات الضيقة يصير أيقونة لأن تبويب «بحث» موجود بالشريط السفلي #}
+        <a class="header-search{% if navActive == "search" %} active{% endif %}" href="{{ (('/en/search.html' if lang == 'en' else '/search.html')) | url }}" aria-label="{{ t.search_aria }}">{{ icon("search", 18) }}<span class="header-search-text">{{ t.search_placeholder }}</span><kbd class="header-search-kbd" aria-hidden="true">/</kbd></a>
         {# المفضلة و"اختار لي" أدوات مو أقسام محتوى — نقلناها من القائمة لهنا
            كأيقونات، عشان القائمة تضل بسطر واحد حتى لما تُضاف أقسام جديدة #}
         <a class="icon-btn{% if navActive == "favorites" %} active{% endif %}"{% if navActive == "favorites" %} aria-current="page"{% endif %} href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}" title="{{ t.nav_favorites }}" aria-label="{{ t.nav_favorites }}">{{ icon("heart-fill") }}</a>
@@ -216,18 +219,18 @@
     <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}"{% if navActive == "home" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("home", 22) }}</span><span>{{ t.nav_home }}</span>
     </a>
-    <a href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}"{% if navActive == "favorites" %} class="active" aria-current="page"{% endif %}>
-      <span class="bottom-nav-icon">{{ icon("heart-fill", 22) }}</span><span>{{ t.nav_favorites }}</span>
+    <a href="{{ (('/en/search.html' if lang == 'en' else '/search.html')) | url }}"{% if navActive == "search" %} class="active" aria-current="page"{% endif %}>
+      <span class="bottom-nav-icon">{{ icon("search", 22) }}</span><span>{{ t.nav_search }}</span>
     </a>
     <a href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}"{% if navActive == "picker" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("dice", 22) }}</span><span>{{ t.nav_picker | replace("🎲 ", "") }}</span>
     </a>
+    <a href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}"{% if navActive == "favorites" %} class="active" aria-current="page"{% endif %}>
+      <span class="bottom-nav-icon">{{ icon("heart-fill", 22) }}</span><span>{{ t.nav_favorites }}</span>
+    </a>
     <a href="{{ (('/en/sounds.html' if lang == 'en' else '/sounds.html')) | url }}"{% if navActive == "sounds" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("music", 22) }}</span><span>{{ t.nav_sounds_short }}</span>
     </a>
-    <button type="button" class="nav-toggle bottom-nav-menu" aria-label="{{ t.nav_toggle_open }}" aria-expanded="false" aria-controls="main-nav">
-      <span class="bottom-nav-icon">{{ icon("menu", 22) }}</span><span>{{ t.nav_toggle_open }}</span>
-    </button>
   </nav>
 
   <div class="cookie-banner" id="cookie-banner" role="region" aria-label="{{ t.cookie_accept }}">

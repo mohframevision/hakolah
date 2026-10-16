@@ -1,0 +1,49 @@
+---
+layout: base.njk
+lang: "en"
+permalink: "en/search.html"
+title: "Search | Hakolah"
+description: "Search Hakolah for a restaurant, a dish, a café or a garage: across place names, menus and prices, in Arabic or English."
+navActive: "search"
+pageScript: "search"
+langSwitchUrl: "/search.html"
+---
+{% from "icon.njk" import icon %}
+<div class="search-page">
+  <form class="search-box" id="searchForm" role="search" action="{{ '/en/search.html' | url }}">
+    <span class="search-box-icon">{{ icon("search", 20) }}</span>
+    <input type="search" name="q" id="searchInput" placeholder="{{ i18n.en.search_placeholder }}" aria-label="{{ i18n.en.search_aria }}" autocomplete="off" enterkeyhint="search" />
+    <button type="button" class="search-mic" id="searchMic" hidden aria-label="{{ i18n.en.search_mic }}" title="{{ i18n.en.search_mic }}">{{ icon("mic", 20) }}</button>
+  </form>
+  <p class="search-status" id="searchStatus" role="status" aria-live="polite"></p>
+
+  <div id="searchEmpty">
+    <div class="search-block" id="searchRecentBlock" hidden>
+      <div class="search-head"><h2>{{ i18n.en.search_recent }}</h2><button type="button" class="link-btn" id="searchRecentClear">{{ i18n.en.search_clear }}</button></div>
+      <ul class="search-recent" id="searchRecent"></ul>
+      <p class="search-note">{{ i18n.en.search_recent_note }}</p>
+    </div>
+    <div class="search-block">
+      <h2>{{ i18n.en.search_popular }}</h2>
+      <div class="chip-row" id="searchPopular"></div>
+    </div>
+    <div class="search-block">
+      <h2>{{ i18n.en.search_try }}</h2>
+      <div class="chip-row" id="searchTry"></div>
+    </div>
+    <div class="search-block">
+      <h2>{{ i18n.en.search_browse }}</h2>
+      <div class="mini-sections">
+        {% for entry in sections %}
+        <a class="mini-section" href="{{ ('/en/' + entry.slug + '.html') | url }}"><span>{{ entry.icon }}</span>{{ entry.navLabel_en }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div id="searchResults" hidden>
+    <div class="search-tabs" role="tablist" id="searchTabs"></div>
+    <div class="chip-row" id="searchSort"></div>
+    <div id="searchList"></div>
+  </div>
+</div>

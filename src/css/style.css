@@ -8642,3 +8642,481 @@ li {
     min-width: 480px;
   }
 }
+
+/* ===== البحث: حقل الهيدر =====
+   حقل ظاهر (لا أيقونة فقط) على الشاشات العريضة؛ يتحول لأيقونة على الضيقة لأن تبويب
+   «بحث» موجود بالشريط السفلي هناك */
+.header-search {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--control-height);
+  width: var(--control-height);
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.header-search:hover,
+.header-search.active {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+.header-search-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+}
+.header-search-kbd {
+  font-size: 0.75rem;
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  color: var(--color-text-muted);
+}
+/* أيقونة افتراضياً (القائمة تأخذ عرض الهيدر كله)، وحقل كامل بنصّه على الشاشات العريضة فقط */
+.header-search-text,
+.header-search-kbd {
+  display: none;
+}
+@media (min-width: 1920px) {
+  .header-search {
+    width: auto;
+    min-width: 230px;
+    padding: 0 var(--space-3);
+    justify-content: flex-start;
+  }
+  .header-search-text,
+  .header-search-kbd {
+    display: inline;
+  }
+}
+
+/* ===== صندوق البحث (الرئيسية وصفحة البحث) ===== */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px;
+  padding-inline-start: var(--space-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.search-box:focus-within {
+  border-color: var(--color-primary);
+}
+.search-box-icon {
+  display: inline-flex;
+  color: var(--color-text-muted);
+}
+.search-box input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.02rem;
+  padding: 10px 0;
+}
+.search-mic,
+.search-go {
+  flex: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.search-mic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+.search-mic[hidden] {
+  display: none;
+}
+.search-mic.listening {
+  background: var(--color-danger);
+  color: #fff;
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-danger) 25%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .search-mic.listening {
+    animation: none;
+  }
+}
+.search-go {
+  height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: 12px;
+  background: var(--color-primary-fill);
+  color: #fff;
+  font-weight: 700;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.chip-row .filter-chip {
+  text-decoration: none;
+}
+.link-btn {
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ===== صفحة البحث ===== */
+.search-page {
+  max-width: 760px;
+  margin: var(--space-4) auto var(--space-6);
+}
+.search-status {
+  min-height: 1.4em;
+  margin: var(--space-2) var(--space-1);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.search-block {
+  margin-top: var(--space-5);
+}
+.search-block[hidden],
+#searchEmpty[hidden],
+#searchResults[hidden] {
+  display: none;
+}
+.search-block h2,
+.search-group h2 {
+  font-size: 1.02rem;
+  margin: 0 0 var(--space-3);
+}
+.search-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.search-recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.search-recent li {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+.search-recent-q {
+  flex: 1;
+  text-align: start;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--color-text);
+  padding: 10px 2px;
+  cursor: pointer;
+}
+.search-recent-x {
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 10px;
+}
+.search-note {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin: var(--space-2) 0 0;
+}
+.mini-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: var(--space-2);
+}
+.mini-section {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: var(--space-3) var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  text-align: center;
+  text-decoration: none;
+}
+.mini-section span {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.mini-section:hover {
+  border-color: var(--color-primary);
+}
+.search-tabs {
+  display: flex;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.search-tab {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+  padding: var(--space-2) 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.search-tab.on {
+  color: var(--color-primary);
+  font-weight: 700;
+  border-bottom-color: var(--color-primary);
+}
+.search-tab span {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+#searchSort:not(:empty) {
+  margin-bottom: var(--space-3);
+}
+.search-group {
+  margin-bottom: var(--space-5);
+}
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.search-row:hover {
+  border-color: var(--color-primary);
+}
+.search-row-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1.45rem;
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface));
+}
+.search-row-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.search-row-text small {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-row mark {
+  background: color-mix(in srgb, #f5c542 45%, transparent);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.search-price {
+  flex: none;
+  padding: 5px 9px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.8rem;
+  direction: ltr;
+}
+.search-more {
+  margin: var(--space-1) var(--space-1) 0;
+}
+.search-none {
+  text-align: center;
+  padding: var(--space-5) var(--space-3);
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+}
+.search-none-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0;
+}
+.search-none p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+.search-none .chip-row {
+  justify-content: center;
+}
+
+/* ===== الرئيسية الجديدة ===== */
+.home-title {
+  font-size: 1.15rem;
+  margin: var(--space-4) 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+.home-search {
+  max-width: 760px;
+}
+.home-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: var(--space-2) var(--space-1) var(--space-3);
+}
+.home-chips {
+  margin-bottom: var(--space-4);
+}
+.home-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--color-primary-fill), color-mix(in srgb, var(--color-primary-fill) 70%, #5fbf95));
+  color: #fff;
+  text-decoration: none;
+  max-width: 760px;
+}
+.home-pick-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+.home-pick-text {
+  display: grid;
+}
+.home-pick-text small {
+  opacity: 0.88;
+}
+.home-pick-go {
+  margin-inline-start: auto;
+  background: #fff;
+  color: var(--color-primary-fill);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.home-row {
+  margin-top: var(--space-5);
+}
+.home-row[hidden] {
+  display: none;
+}
+.home-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-3);
+}
+.home-row-head h2 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+.home-row-head a {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+.home-cards {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+.home-card {
+  position: relative;
+  flex: none;
+  width: 160px;
+  scroll-snap-align: start;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  overflow: hidden;
+  color: var(--color-text);
+  text-decoration: none;
+}
+.home-card:hover {
+  border-color: var(--color-primary);
+}
+.home-card-icon {
+  display: grid;
+  place-items: center;
+  height: 88px;
+  font-size: 2.2rem;
+  background: var(--tint, #eee);
+}
+:root[data-theme="dark"] .home-card-icon {
+  background: color-mix(in srgb, var(--tint, #eee) 14%, var(--color-surface));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .home-card-icon {
+    background: color-mix(in srgb, var(--tint, #eee) 14%, var(--color-surface));
+  }
+}
+.home-card-text {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  font-size: 0.88rem;
+}
+.home-card-text b,
+.home-card-text small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-card-text small {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.home-card-badge {
+  position: absolute;
+  inset-inline-start: 8px;
+  top: 8px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: #e8743b;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}

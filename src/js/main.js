@@ -2519,3 +2519,14 @@ document.addEventListener("DOMContentLoaded", initAboutBadge);
     } else if (e.target.closest("[data-close]")) card.close();
   });
 })();
+
+/* ===== «/» يفتح البحث من أي صفحة (عُرف Google وGitHub)؛ بصفحة البحث نفسها يركّز على الحقل ===== */
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest("input, textarea, select, [contenteditable]")) return;
+  if (document.getElementById("piano") || document.querySelector(".sounds-tool")) return; // صفحة الصوتيات: المفاتيح للعزف
+  e.preventDefault();
+  const field = document.getElementById("searchInput");
+  if (field) return field.focus();
+  location.href = (window.SITE_LANG === "en" ? "/en/" : "/") + "search.html";
+});

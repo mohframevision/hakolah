@@ -19,6 +19,8 @@ exports.render = function (data) {
     `const TAG_ICONS = ${JSON.stringify(data.tag_icons, null, 2)};\n` +
     "/* أسماء المناطق ومستويات السعر — تفرّق فلتر المنطقة والسعر عن فلتر النوع */\n" +
     `const AREA_NAMES = ${JSON.stringify(Object.keys(data.areas))};\n` +
-    `const PRICE_TAGS = ${JSON.stringify(PRICE_TAGS)};\n`
+    `const PRICE_TAGS = ${JSON.stringify(PRICE_TAGS)};\n` +
+    "/* قاموس البحث (مرادفات ولهجة) والكلمات المقترحة — مصدره src/_data/search.js */\n" +
+    `const SEARCH_DATA = ${JSON.stringify(data.search)};\n`
   );
 };

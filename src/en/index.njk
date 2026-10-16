@@ -5,51 +5,44 @@ permalink: "en/index.html"
 title: "Hakolah | Bahrain Guide — Restaurants, Cafes, Stores & Places"
 description: "A guide to Bahrain in one place: hand-picked restaurants, cafes, bakeries, stores and places, plus useful links, tools and practical articles."
 navActive: "home"
+pageScript: "home"
 langSwitchUrl: "/index.html"
 ---
-{# قوالب المحتوى تُعرض قبل القالب الأب (base.njk)، فمتغيّر t المعرّف هناك مو
-   متاح هنا — لازم كل قالب يحتاج t يعرّفه بنفسه #}
-{% set t = i18n[lang or "ar"] %}
-<section class="hero">
-  <h1>Your guide to places in Bahrain</h1>
-  <p>Find where to eat, shop and go out in Bahrain without digging through dozens of accounts: restaurants, cafes, stores and places, with phone numbers and map locations, for free.</p>
-  <p class="hero-stats" id="siteStatsLine"></p>
-  <a class="btn hero-cta" href="{{ '/en/picker.html' | url }}">🎲 Can't decide? Pick for me</a>
+{% from "icon.njk" import icon %}
+<h1 class="home-title">Your guide to places in Bahrain</h1>
+
+<form class="search-box home-search" role="search" action="{{ '/en/search.html' | url }}">
+  <span class="search-box-icon">{{ icon("search", 20) }}</span>
+  <input type="search" name="q" placeholder="{{ i18n.en.search_placeholder }}" aria-label="{{ i18n.en.search_aria }}" autocomplete="off" enterkeyhint="search" />
+  <button type="submit" class="search-go">{{ i18n.en.search_submit }}</button>
+</form>
+<p class="home-hint">{{ i18n.en.search_hint }}</p>
+<div class="chip-row home-chips" id="homeChips"></div>
+
+<a class="home-pick" href="{{ '/en/picker.html' | url }}">
+  <span class="home-pick-icon">🎲</span>
+  <span class="home-pick-text"><b>{{ i18n.en.home_pick_title }}</b><small>{{ i18n.en.home_pick_desc }}</small></span>
+  <span class="home-pick-go">{{ i18n.en.home_pick_btn }}</span>
+</a>
+
+<section class="home-row" id="homeTime" hidden>
+  <div class="home-row-head"><h2 id="homeTimeTitle"></h2><a id="homeTimeAll" href="{{ '/en/search.html' | url }}">{{ i18n.en.home_see_all }} ›</a></div>
+  <div class="home-cards" id="homeTimeRow"></div>
 </section>
 
-<section class="home-carousel-section">
-  <div class="home-carousel" id="homeCarousel"></div>
-  <div class="text-center">
-    <button type="button" class="btn secondary notify-toggle hidden" id="notifyToggle">
-      🔕 Notify me daily
-    </button>
+<section class="home-row" id="homeNew" hidden>
+  <div class="home-row-head"><h2>{{ i18n.en.home_new }}</h2></div>
+  <div class="home-cards" id="homeNewRow"></div>
+</section>
+
+<section class="home-row">
+  <div class="home-row-head"><h2>{{ i18n.en.home_sections }}</h2></div>
+  <div class="mini-sections">
+    {% for entry in sections %}
+    <a class="mini-section" href="{{ ('/en/' + entry.slug + '.html') | url }}"><span>{{ entry.icon }}</span>{{ entry.navLabel_en }}</a>
+    {% endfor %}
+    <a class="mini-section" href="{{ '/en/sounds.html' | url }}"><span>🎹</span>{{ i18n.en.nav_sounds_short }}</a>
   </div>
-</section>
-
-<div class="explore-progress" id="exploreProgress"></div>
-
-<div class="section-filter" id="sectionFilter">
-  <button type="button" class="filter-chip section-filter-btn active" data-group="all">All</button>
-  <button type="button" class="filter-chip section-filter-btn" data-group="places">📍 Places in Bahrain</button>
-  <button type="button" class="filter-chip section-filter-btn" data-group="tools">🔧 Tools & content</button>
-</div>
-
-<section class="section-grid" id="sectionGrid">
-  {% for entry in sections %}
-  <a class="section-card" data-section="{{ entry.slug }}" data-group="{{ 'places' if entry.isPlace else 'tools' }}" href="{{ ('/en/' + entry.slug + '.html') | url }}">
-    <span class="icon">{{ entry.icon }}</span>
-    <h3>{{ entry.title_en }}</h3>
-    <p>{{ entry.description_en }}</p>
-  </a>
-  {% endfor %}
-  {# "Day Plan" card hidden for now — the feature needs a better algorithm
-     (see the note at the top of src/plan.njk). The page itself still works
-     via its direct URL for testing. #}
-  <a class="section-card" data-group="tools" href="{{ '/en/sounds.html' | url }}">
-    <span class="icon">🎹</span>
-    <h3>{{ t.home_sounds_title }}</h3>
-    <p>{{ t.home_sounds_desc }}</p>
-  </a>
 </section>
 
 {% include "cazasouq-promo.njk" %}

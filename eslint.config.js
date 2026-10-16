@@ -39,6 +39,7 @@ module.exports = [
         TAG_ICONS: "readonly",
         AREA_NAMES: "readonly",
         PRICE_TAGS: "readonly",
+        SEARCH_DATA: "readonly",
       },
     },
     rules: {
@@ -60,10 +61,10 @@ module.exports = [
     languageOptions: { globals: { initRandomPicker: "readonly" } },
   },
   {
-    files: ["src/js/picker.js", "src/js/converter.js", "src/js/expense.js", "src/js/typing.js"],
+    files: ["src/js/picker.js", "src/js/converter.js", "src/js/expense.js", "src/js/typing.js", "src/js/search.js", "src/js/home.js"],
     languageOptions: {
       globals: Object.fromEntries(
-        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "showToast", "nearestBranch", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder"].map((n) => [n, "readonly"])
+        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "showToast", "nearestBranch", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder", "itemDesc", "escapeHtml", "levenshtein"].map((n) => [n, "readonly"])
       ),
     },
   },
