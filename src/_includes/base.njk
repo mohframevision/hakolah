@@ -233,13 +233,13 @@
     </a>
   </nav>
 
-  <div class="cookie-banner" id="cookie-banner" role="region" aria-label="{{ t.cookie_accept }}">
+  <div class="cookie-banner" id="cookie-banner" role="region" aria-label="{{ t.footer_cookies }}">
     <p>{{ t.cookie_text_html | replace("{privacyUrl}", (('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url)) | safe }}</p>
     <button type="button" class="btn secondary cookie-decline" id="cookie-decline">{{ t.cookie_decline }}</button>
     <button type="button" class="btn cookie-accept" id="cookie-accept">{{ t.cookie_accept }}</button>
   </div>
 
-  <div class="daily-pick-reminder" id="dailyPickReminder" role="region" aria-label="{{ t.daily_pick_close }}">
+  <div class="daily-pick-reminder" id="dailyPickReminder" role="region" aria-label="{{ t.daily_pick_label }}">
     <button type="button" class="daily-pick-reminder-close" id="dailyPickReminderClose" aria-label="{{ t.daily_pick_close }}">✕</button>
     <p>{{ t.daily_pick_text_html | replace("{homeUrl}", (('/en/index.html' if lang == 'en' else '/index.html') | url)) | safe }}</p>
   </div>

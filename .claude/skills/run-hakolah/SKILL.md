@@ -3,8 +3,8 @@ name: run-hakolah
 description: Build, run, and drive the hakolah Eleventy site. Use when asked to start hakolah, build it, check i18n parity, take a screenshot of its UI, or interact with the running site (search, filters, favorites, the "اختار لي" picker, etc.).
 ---
 
-Eleventy static site (bilingual AR/EN Bahrain directory), served under the
-`/hakolah/` base path and deployed to GitHub Pages. Drive it by starting the
+Eleventy static site (bilingual AR/EN Bahrain directory), served from the
+root (`/`) of hakolah.com via GitHub Pages. Drive it by starting the
 dev server (`npm start`) then piping commands to
 `.claude/skills/run-hakolah/driver.mjs`, a small Playwright-based REPL
 (same command style as `chromium-cli`: `nav` / `wait-for` / `click` /
@@ -68,8 +68,8 @@ quit
 EOF
 ```
 
-Verified interactive flow (the "اختار لي" random-picker full-screen reveal —
-the most JS-heavy feature on the site):
+Verified interactive flow (the "اختار لي" random picker — the result card
+`.trip-result` lands inside `#pickerStage` after the reel spin, ~3–6s):
 
 ```bash
 node .claude/skills/run-hakolah/driver.mjs <<'EOF'
@@ -78,9 +78,8 @@ nav http://localhost:8080/picker.html
 wait-for .picker-category
 click .picker-category
 click #pickerSpinBtn
-wait-for .picker-reveal-overlay
-sleep 2500
-screenshot picker-reveal
+wait-for .trip-result
+screenshot picker-result
 console --errors
 quit
 EOF
@@ -145,12 +144,14 @@ clean (verified this session: `npm run lint` → no output/errors,
   The driver is plain Node.js (uses `console`/`process`/`setTimeout` with no
   browser globals) and would otherwise fail CI's `npm run lint` step with
   `no-undef` errors — hit this, fixed it by adding the ignore.
-- **Reveal animations aren't instant.** The picker's full-screen reveal
-  (`.picker-reveal-overlay`) appears in the DOM as soon as the button is
-  clicked, but its info pieces fly in staggered over ~1.5–2s. `wait-for`
-  only waits for the overlay element to exist — screenshot right after that
-  catches it mid-animation (which is a legitimate proof-of-life shot, but
-  add `sleep 2500` first if you want the settled end state).
+- **The picker no longer uses a full-screen reveal.** It spins a reel of
+  names in `#pickerStage`, then appends a `.trip-result` card (with
+  «جرّب مرة ثانية» = `.trip-again`). `.picker-reveal-overlay` is now only the
+  class of the restaurant *menu* overlay (`openMenuOverlay`), not the picker.
+- **Section cards are `.card-grid .item-card`**, favourites `.fav-btn`,
+  near-me `.near-me-btn` (mock geolocation to test it).
+- **Git Bash rewrites a leading-slash argument** (`node x.mjs /en/` becomes a
+  Windows path). Pass filters without the leading slash (`en/`).
 - **Driver command ordering**: `readline`'s `line` event does not wait for
   an async handler before firing the next line — a naive per-line `async`
   handler runs all piped commands almost concurrently (hit this: `launch`
