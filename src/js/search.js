@@ -180,7 +180,7 @@
       ["more", t("search_tab_more"), groups.more.length],
     ];
     tabsBox.innerHTML = TABS.filter(([k, , n]) => k === "all" || n)
-      .map(([k, label, n]) => `<button type="button" role="tab" aria-selected="${k === tab}" class="search-tab${k === tab ? " on" : ""}" data-tab="${k}">${label} <span>${n.toLocaleString(isEn ? "en" : "ar")}</span></button>`)
+      .map(([k, label, n]) => `<button type="button" role="tab" aria-selected="${k === tab}" aria-controls="searchList" class="search-tab${k === tab ? " on" : ""}" data-tab="${k}">${label} <span>${n.toLocaleString(isEn ? "en" : "ar")}</span></button>`)
       .join("");
     sortBox.innerHTML = groups.menu.length > 1 && (tab === "all" || tab === "menu") ? `<button type="button" class="filter-chip${cheapFirst ? " active" : ""}" data-sort="cheap">${t("search_sort_cheap")}</button>` : "";
     const block = (key, head) => {
