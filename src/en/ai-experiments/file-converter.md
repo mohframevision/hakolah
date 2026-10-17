@@ -106,7 +106,7 @@ noThirdParty: true
   </p>
   <p class="conv-option-note">
     Video conversion runs in real time: a two-minute clip takes about two minutes, because it is re-encoded on your
-    device rather than on a server. Keep the page open until it finishes.
+    device rather than on a server. Keep the page open and in front until it finishes (browsers slow down background tabs).
   </p>
 </div>
 

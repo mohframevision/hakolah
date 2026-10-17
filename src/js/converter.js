@@ -93,16 +93,28 @@ function initFileConverter() {
     });
   });
 
-  kindButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      kind = button.dataset.kind;
-      kindButtons.forEach((b) => b.classList.toggle("active", b === button));
-      Object.entries(panels).forEach(([name, panel]) => {
-        if (panel) panel.hidden = name !== kind;
-      });
-      input.setAttribute("accept", ACCEPT[kind]);
+  function selectKind(next) {
+    kind = next;
+    kindButtons.forEach((b) => b.classList.toggle("active", b.dataset.kind === kind));
+    Object.entries(panels).forEach(([name, panel]) => {
+      if (panel) panel.hidden = name !== kind;
     });
-  });
+    input.setAttribute("accept", ACCEPT[kind]);
+  }
+  kindButtons.forEach((button) => button.addEventListener("click", () => selectKind(button.dataset.kind)));
+
+  /* نوع الملف من المتصفح، وإلا من امتداده (HEIC و m4a أحياناً يجون بلا نوع بويندوز) */
+  const EXT_KIND = { heic: "image", heif: "image", avif: "image", m4a: "audio", aac: "audio", flac: "audio", opus: "audio", ogg: "audio", oga: "audio", wav: "audio", mp3: "audio", mov: "video", mkv: "video", mp4: "video", webm: "video", avi: "video", "3gp": "video" };
+  const fileKind = (file) => (file.type && file.type.split("/")[0]) || EXT_KIND[(file.name.split(".").pop() || "").toLowerCase()] || "";
+  /* كان اختيار القسم الغلط يعطي «الملف ليس صورة». الحين نعرف الملف بنفسنا:
+     فيديو بقسم الصوت = طلّع صوته، وصوت بقسم الفيديو = فيديو بموجات (هذي مقصودة)،
+     وغير كذا ننقل القسم لنوع الملف نفسه */
+  function kindFor(file) {
+    const fk = fileKind(file);
+    if (fk === kind || (kind === "audio" && fk === "video") || (kind === "video" && fk === "audio")) return kind;
+    if (panels[fk]) selectKind(fk);
+    return kind;
+  }
   input.setAttribute("accept", ACCEPT[kind]);
 
   /* الصفحة توعد إنك تقدر تفصل الإنترنت وتشتغل عادي — ومرمّز MP3 كان يُنزَّل
@@ -213,7 +225,7 @@ function initFileConverter() {
 
   /* ===== صور ===== */
   async function convertImage(file, parts) {
-    if (!file.type.startsWith("image/")) return fail(parts, say("الملف ليس صورة", "Not an image file"));
+    if (fileKind(file) !== "image") return fail(parts, say("الملف ليس صورة", "Not an image file"));
 
     let bitmap;
     try {
@@ -225,7 +237,14 @@ function initFileConverter() {
 
     const format = chosen.image;
     const limit = Number(maxWidthInput && maxWidthInput.value) || 0;
-    const scale = limit > 0 && bitmap.width > limit ? limit / bitmap.width : 1;
+    let scale = limit > 0 && bitmap.width > limit ? limit / bitmap.width : 1;
+    /* سفاري بالآيفون ما يرسم كانفس أكبر من ~١٦٫٧ مليون بكسل (٤٠٩٦×٤٠٩٦)، وصور
+       الآيفون العادية ٢٤–٤٨ ميغابكسل — كانت تطلع «تعذّر التحويل». نصغّرها لين الحد
+       بس بالأجهزة اللي فيها الحد (iOS/iPadOS)، والكمبيوتر يحتفظ بالدقة كاملة */
+    const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const MAX_PX = 16000000;
+    const shrunk = IOS && bitmap.width * scale * bitmap.height * scale > MAX_PX;
+    if (shrunk) scale = Math.sqrt(MAX_PX / (bitmap.width * bitmap.height));
     const width = Math.max(1, Math.round(bitmap.width * scale));
     const height = Math.max(1, Math.round(bitmap.height * scale));
 
@@ -255,7 +274,7 @@ function initFileConverter() {
       outName: `${baseNameOf(file)}.${IMAGE_EXT[format]}`,
       blob,
       beforeSize: file.size,
-      meta: `${width}×${height}`,
+      meta: `${width}×${height}${shrunk ? say(" (صُغّرت لحد الآيفون)", " (downsized to iPhone's limit)") : ""}`,
       thumbUrl: url,
     });
   }
@@ -269,11 +288,17 @@ function initFileConverter() {
 
     const data = await file.arrayBuffer();
     const nativeRate = sniffSampleRate(new Uint8Array(data, 0, Math.min(data.byteLength, 65536)));
+    const AC = window.AudioContext || window.webkitAudioContext;
     let ctx;
     try {
-      ctx = new (window.AudioContext || window.webkitAudioContext)(nativeRate ? { sampleRate: nativeRate } : undefined);
+      ctx = new AC(nativeRate ? { sampleRate: nativeRate } : undefined);
     } catch {
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        ctx = new AC();
+      } catch {
+        // كان يعلق على «يفكّ ترميز الصوت…» للأبد
+        return fail(parts, say("متصفحك ما يدعم معالجة الصوت", "Your browser doesn't support audio processing"));
+      }
     }
 
     let buffer;
@@ -326,8 +351,10 @@ function initFileConverter() {
     const wanted = chosen.video;
     const candidates = wanted
       ? [wanted]
-      : ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
-    return candidates.find((type) => window.MediaRecorder && MediaRecorder.isTypeSupported(type)) || "";
+      : ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"]; // سفاري يقبل "video/mp4" بلا تفاصيل الترميز
+    const found = candidates.find((type) => window.MediaRecorder && MediaRecorder.isTypeSupported(type));
+    // MP4 مختار وسفاري ما يعرف الصيغة بتفاصيلها: نجرب "video/mp4" العامة
+    return found || (wanted.startsWith("video/mp4") && window.MediaRecorder && MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4" : "");
   }
 
   function queueVideo(file, parts) {
@@ -340,6 +367,8 @@ function initFileConverter() {
     const video = document.createElement("video");
     video.preload = "metadata";
     video.playsInline = true;
+    // «احذف الصوت»: الفيديو ما ينربط بسياق الصوت فكان يطلع صوته من السماعات وقت التحويل
+    video.muted = !!(muteInput && muteInput.checked);
     video.src = URL.createObjectURL(file);
 
     video.addEventListener("error", () =>
@@ -401,7 +430,11 @@ function initFileConverter() {
       }
     }
 
-    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2500000 });
+    /* كان ثابت ٢٫٥ ميغابت: فيديو صغير أصلاً يطلع أكبر من الأصل. الحين ٠٫٠٨ بت للبكسل
+       (١٠٨٠p ≈ ٥ ميغابت، ٧٢٠p ≈ ٢٫٢) وما يتعدّى ٧٠٪ من معدّل الملف الأصلي */
+    const sourceBps = video.duration ? (file.size * 8) / video.duration : Infinity;
+    const videoBitsPerSecond = Math.round(Math.max(300000, Math.min(width * height * 30 * 0.08, sourceBps * 0.7)));
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond });
     const chunks = [];
     recorder.ondataavailable = (event) => {
       if (event.data.size > 0) chunks.push(event.data);
@@ -459,7 +492,12 @@ function initFileConverter() {
      (AnalyserNode) واسم الملف، ونسجّله بنفس أسلوب تحويل الفيديو. */
   async function queueAudioToVideo(file, parts, mimeType) {
     parts.state.textContent = say("يفكّ ترميز الصوت…", "Decoding audio…");
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let ctx;
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch {
+      return fail(parts, say("متصفحك ما يدعم معالجة الصوت", "Your browser doesn't support audio processing"));
+    }
     let buffer;
     try {
       buffer = await ctx.decodeAudioData(await file.arrayBuffer());
@@ -586,6 +624,7 @@ function initFileConverter() {
 
   async function convertFile(file) {
     const parts = addRow(file);
+    kindFor(file);
     if (kind === "image") return convertImage(file, parts);
     if (kind === "audio") return convertAudio(file, parts);
     return queueVideo(file, parts);
@@ -637,6 +676,10 @@ function sniffSampleRate(bytes) {
   if (bytes.length > 10 && text(0, 3) === "ID3") {
     at = 10 + ((bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9]);
   }
+  /* حاويات ثانية (m4a/mp4/mov = "ftyp" بالبايت ٤، ogg، flac، webm): كان المسح يلقى
+     بايتات تشبه إطار MP3 بالصدفة ويبني السياق على ١٢ أو ٣٢ كيلو — صوت مكتوم.
+     لها نرجع للتردّد الافتراضي */
+  if (text(4, 4) === "ftyp" || ["OggS", "fLaC", "\x1aE\xdf\xa3"].includes(text(0, 4))) return 0;
   const RATES = {
     3: [44100, 48000, 32000], // MPEG 1
     2: [22050, 24000, 16000], // MPEG 2
@@ -647,7 +690,10 @@ function sniffSampleRate(bytes) {
     if (bytes[i] !== 0xff || (bytes[i + 1] & 0xe0) !== 0xe0) continue;
     const table = RATES[(bytes[i + 1] >> 3) & 0x03];
     const rate = table && table[(bytes[i + 2] >> 2) & 0x03];
-    if (rate) return rate;
+    // إطار حقيقي: الطبقة مو ٠٠، ومعدّل البت مو ٠ ولا ١٥ — وإلا بايتات عشوائية
+    const layer = (bytes[i + 1] >> 1) & 0x03;
+    const bitrate = bytes[i + 2] >> 4;
+    if (rate && layer && bitrate && bitrate !== 15) return rate;
   }
   return 0;
 }
