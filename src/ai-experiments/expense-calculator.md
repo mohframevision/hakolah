@@ -1,16 +1,16 @@
 ---
 pageScript: "expense"
-title: "التجربة الثالثة: حاسبة المصروفات والدخل"
+title: "حاسبة المصروفات والدخل"
 icon: 🧮
 desc: تسجّل دخلك ومصروفاتك بفئات تختارها، وشوف رصيدك وتوزيع مصروفاتك فوراً — بلا سيرفر ولا حساب، كل شي محفوظ بمتصفحك بس.
-title_en: "Experiment Three: An Income & Expense Calculator"
+title_en: "Income & Expense Calculator"
 desc_en: Log your income and expenses with categories you choose, and see your balance and spending breakdown instantly — no server, no account, everything stays in your browser.
 categories:
   - مال
 dateAdded: 2026-09-06
 langSwitchUrl: "/en/ai-experiments/expense-calculator.html"
 wideLayout: true
-aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة الذكاء الاصطناعي، بس للاستكشاف والمرح."
+aiDisclosure: "أداة صنعها صاحب الموقع بمساعدة الذكاء الاصطناعي، وتعمل كاملةً داخل متصفحك."
 noThirdParty: true
 ---
 

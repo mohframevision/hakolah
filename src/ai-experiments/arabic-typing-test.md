@@ -1,16 +1,16 @@
 ---
 pageScript: "typing"
-title: "التجربة الرابعة: اختبار سرعة الكتابة بالعربية"
+title: "اختبار سرعة الكتابة بالعربية"
 icon: ⌨️
 desc: "تحدٍّ حقيقي لسرعتك ودقتك — جمل بفصحى أدبية فيها همزات وتاء مربوطة وألف مقصورة، لا لغة مبسّطة. العدّاد يبدأ مع أول حرف، والنتيجة تُحفظ بجهازك."
-title_en: "Experiment Four: Arabic Typing Speed Test"
+title_en: "Arabic Typing Speed Test"
 desc_en: "A real challenge to your speed and accuracy — sentences in literary Arabic, rich in hamzas and hard letter forms, not simplified language. The timer starts with your first keystroke."
 categories:
   - نص
 dateAdded: 2026-09-06
 langSwitchUrl: "/en/ai-experiments/arabic-typing-test.html"
 wideLayout: true
-aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة الذكاء الاصطناعي، بس للاستكشاف والمرح."
+aiDisclosure: "أداة صنعها صاحب الموقع بمساعدة الذكاء الاصطناعي، وتعمل كاملةً داخل متصفحك."
 noThirdParty: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 pageScript: "converter"
-title: "Experiment Two: A Serverless File Converter"
+title: "Serverless File Converter"
 icon: 🔄
 desc: Convert images, audio and video — compress a photo, pull the audio out of a clip, shrink a video. Everything happens inside your browser, and your file never leaves your device.
 categories:
@@ -9,7 +9,7 @@ categories:
   - فيديو
 dateAdded: 2026-09-05
 langSwitchUrl: "/ai-experiments/file-converter.html"
-aiDisclosure: "🧪 An experiment built by the site's owner with the help of AI, just for exploration and fun."
+aiDisclosure: "A tool built by the site's owner with the help of AI. It runs entirely in your browser."
 noThirdParty: true
 ---
 
@@ -23,6 +23,22 @@ noThirdParty: true
   <button type="button" class="filter-chip conv-kind" data-kind="audio">🎵 Audio</button>
   <button type="button" class="filter-chip conv-kind" data-kind="video">🎬 Video</button>
 </div>
+
+<details class="calc-intro conv-formats">
+  <summary>📄 Supported formats: what it accepts and what it converts to</summary>
+  <dl class="conv-fmt-list">
+    <dt>🖼️ Images</dt>
+    <dd><span class="conv-fmt-label">Accepts</span><span class="conv-fmt">JPG</span><span class="conv-fmt">PNG</span><span class="conv-fmt">WebP</span><span class="conv-fmt">GIF</span><span class="conv-fmt">BMP</span><span class="conv-fmt">AVIF</span><span class="conv-fmt">HEIC</span></dd>
+    <dd><span class="conv-fmt-label">Converts to</span><span class="conv-fmt">WebP</span><span class="conv-fmt">JPG</span><span class="conv-fmt">PNG</span><span class="conv-fmt">BMP</span></dd>
+    <dt>🎵 Audio</dt>
+    <dd><span class="conv-fmt-label">Accepts</span><span class="conv-fmt">MP3</span><span class="conv-fmt">WAV</span><span class="conv-fmt">M4A</span><span class="conv-fmt">AAC</span><span class="conv-fmt">OGG</span><span class="conv-fmt">Opus</span><span class="conv-fmt">FLAC</span> and the sound of any video clip</dd>
+    <dd><span class="conv-fmt-label">Converts to</span><span class="conv-fmt">MP3</span><span class="conv-fmt">WAV</span></dd>
+    <dt>🎬 Video</dt>
+    <dd><span class="conv-fmt-label">Accepts</span><span class="conv-fmt">MP4</span><span class="conv-fmt">MOV</span><span class="conv-fmt">WebM</span> and audio files (turned into a video with moving waves)</dd>
+    <dd><span class="conv-fmt-label">Converts to</span><span class="conv-fmt">MP4</span><span class="conv-fmt">WebM</span></dd>
+  </dl>
+  <p>Some formats depend on your browser: HEIC photos open in Safari, and MP4 is exported where the browser supports it, otherwise WebM.</p>
+</details>
 
 <div class="conv-drop" id="convDrop">
   <p class="conv-drop-text">Drag files here, or</p>

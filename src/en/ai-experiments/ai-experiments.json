@@ -3,7 +3,7 @@
   "lang": "en",
   "navActive": "ai-experiments",
   "sectionSlug": "ai-experiments",
-  "sectionTitle": "AI Experiments",
+  "sectionTitle": "Tools",
   "permalink": "en/ai-experiments/{{ page.fileSlug }}.html",
   "eleventyExcludeFromCollections": true
 }

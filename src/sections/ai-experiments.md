@@ -1,14 +1,14 @@
 ---
 slug: ai-experiments
-title: "تجارب الذكاء الاصطناعي"
-navLabel: تجاربي
-icon: 🧪
-description: "ركن شخصي أجرّب فيه أفكار وأدوات ذكاء اصطناعي مختلفة — موسيقى، صوت، وغيرها. تجارب حقيقية، بعضها ينجح وبعضها لأ."
-title_en: "AI Experiments"
-navLabel_en: "My Experiments"
-description_en: "A personal corner where I try out different AI ideas and tools — music, sound, and more. Real experiments, some work out and some don't."
-searchPlaceholder_en: "Search experiments…"
-searchPlaceholder: "ابحث بين التجارب…"
+title: "أدوات"
+navLabel: أدوات
+icon: 🛠️
+description: "أدوات مجانية تعمل داخل متصفحك: تحويل الملفات، وحساب المصروفات، واختبار سرعة الكتابة. لا حساب ولا تسجيل، وملفاتك لا تغادر جهازك."
+title_en: "Tools"
+navLabel_en: "Tools"
+description_en: "Free tools that run right in your browser: convert files, track expenses, test your typing speed. No account, no sign-up, and your files never leave your device."
+searchPlaceholder_en: "Search tools…"
+searchPlaceholder: "ابحث بين الأدوات…"
 order: 8
 hasDetailPages: true
 iconOptions:

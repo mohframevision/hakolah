@@ -1,6 +1,6 @@
 ---
 pageScript: "typing"
-title: "Experiment Four: Arabic Typing Speed Test"
+title: "Arabic Typing Speed Test"
 icon: ⌨️
 desc: "A real challenge to your speed and accuracy — sentences in literary Arabic, rich in hamzas and hard letter forms, not simplified language. The timer starts with your first keystroke."
 categories:
@@ -8,7 +8,7 @@ categories:
 dateAdded: 2026-09-06
 langSwitchUrl: "/ai-experiments/arabic-typing-test.html"
 wideLayout: true
-aiDisclosure: "🧪 An experiment built by the site's owner with the help of AI, just for exploration and fun."
+aiDisclosure: "A tool built by the site's owner with the help of AI. It runs entirely in your browser."
 noThirdParty: true
 ---
 

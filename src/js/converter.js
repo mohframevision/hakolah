@@ -74,7 +74,7 @@ function initFileConverter() {
   function changeText(before, after) {
     const change = Math.round((1 - after / before) * 100);
     const label =
-      change > 0 ? say(`أصغر بـ ${change}%`, `${change}% smaller`) : say(`أكبر بـ ${Math.abs(change)}%`, `${Math.abs(change)}% larger`);
+      change > 0 ? say(`أصغر بـ <bdi>${change}%</bdi>`, `${change}% smaller`) : say(`أكبر بـ <bdi>${Math.abs(change)}%</bdi>`, `${Math.abs(change)}% larger`);
     return { change, label };
   }
 
@@ -169,9 +169,10 @@ function initFileConverter() {
     outEl.textContent = outName;
     const metaEl = document.createElement("div");
     metaEl.className = "conv-row-meta";
-    metaEl.innerHTML = `${meta ? `<span dir="ltr">${meta}</span> · ` : ""}<span dir="ltr">${formatBytes(
+    // سطران: إعدادات الناتج، ثم الحجم قبل ← بعد وشارة الفرق (الأرقام معزولة عن اتجاه الجملة العربية)
+    metaEl.innerHTML = `${meta ? `<span class="conv-meta-line"><bdi dir="ltr">${meta}</bdi></span>` : ""}<span class="conv-meta-line"><bdi dir="ltr">${formatBytes(
       beforeSize
-    )} → ${formatBytes(blob.size)}</span> · <span class="${change > 0 ? "conv-good" : "conv-warn"}">${label}</span>`;
+    )} → ${formatBytes(blob.size)}</bdi><span class="conv-badge ${change > 0 ? "conv-good" : "conv-warn"}">${label}</span></span>`;
     info.append(outEl, metaEl);
 
     const link = document.createElement("a");

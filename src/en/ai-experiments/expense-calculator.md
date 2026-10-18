@@ -1,6 +1,6 @@
 ---
 pageScript: "expense"
-title: "Experiment Three: An Income & Expense Calculator"
+title: "Income & Expense Calculator"
 icon: 🧮
 desc: Log your income and expenses with categories you choose, and see your balance and spending breakdown instantly — no server, no account, everything stays in your browser.
 categories:
@@ -8,7 +8,7 @@ categories:
 dateAdded: 2026-09-06
 langSwitchUrl: "/ai-experiments/expense-calculator.html"
 wideLayout: true
-aiDisclosure: "🧪 An experiment built by the site's owner with the help of AI, just for exploration and fun."
+aiDisclosure: "A tool built by the site's owner with the help of AI. It runs entirely in your browser."
 noThirdParty: true
 ---
 

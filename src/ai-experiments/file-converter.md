@@ -1,9 +1,9 @@
 ---
 pageScript: "converter"
-title: "التجربة الثانية: محوّل الملفات بدون سيرفر"
+title: "محوّل الملفات بدون سيرفر"
 icon: 🔄
 desc: حوّل الصور والصوت والفيديو — اضغط صورة، طلّع صوت مقطع فيديو، صغّر حجم فيديو. كل شي يصير داخل متصفحك، وملفك ما يغادر جهازك ولا يُرفع لأي مكان.
-title_en: "Experiment Two: A Serverless File Converter"
+title_en: "Serverless File Converter"
 desc_en: Convert images, audio and video — compress a photo, pull the audio out of a clip, shrink a video. Everything happens inside your browser, and your file never leaves your device.
 categories:
   - صورة
@@ -11,7 +11,7 @@ categories:
   - فيديو
 dateAdded: 2026-09-05
 langSwitchUrl: "/en/ai-experiments/file-converter.html"
-aiDisclosure: "🧪 تجربة سوّاها صاحب الموقع بمساعدة الذكاء الاصطناعي، بس للاستكشاف والمرح."
+aiDisclosure: "أداة صنعها صاحب الموقع بمساعدة الذكاء الاصطناعي، وتعمل كاملةً داخل متصفحك."
 # لا إعلانات ولا تحليلات بهذي الصفحة: وعدها إن الملف ما يغادر الجهاز، وأي
 # طلب لطرف ثالث — ولو ما يمسّ الملف — يُضعف الوعد أمام من يفتح أدوات المطوّر
 # ليتأكد بنفسه.
@@ -28,6 +28,22 @@ noThirdParty: true
   <button type="button" class="filter-chip conv-kind" data-kind="audio">🎵 صوت</button>
   <button type="button" class="filter-chip conv-kind" data-kind="video">🎬 فيديو</button>
 </div>
+
+<details class="calc-intro conv-formats">
+  <summary>📄 الصيغ المدعومة: ماذا يقبل المحوّل وإلى ماذا يحوّل</summary>
+  <dl class="conv-fmt-list">
+    <dt>🖼️ صور</dt>
+    <dd><span class="conv-fmt-label">يقبل</span><span class="conv-fmt">JPG</span><span class="conv-fmt">PNG</span><span class="conv-fmt">WebP</span><span class="conv-fmt">GIF</span><span class="conv-fmt">BMP</span><span class="conv-fmt">AVIF</span><span class="conv-fmt">HEIC</span></dd>
+    <dd><span class="conv-fmt-label">يحوّل إلى</span><span class="conv-fmt">WebP</span><span class="conv-fmt">JPG</span><span class="conv-fmt">PNG</span><span class="conv-fmt">BMP</span></dd>
+    <dt>🎵 صوت</dt>
+    <dd><span class="conv-fmt-label">يقبل</span><span class="conv-fmt">MP3</span><span class="conv-fmt">WAV</span><span class="conv-fmt">M4A</span><span class="conv-fmt">AAC</span><span class="conv-fmt">OGG</span><span class="conv-fmt">Opus</span><span class="conv-fmt">FLAC</span> وصوت أي مقطع فيديو</dd>
+    <dd><span class="conv-fmt-label">يحوّل إلى</span><span class="conv-fmt">MP3</span><span class="conv-fmt">WAV</span></dd>
+    <dt>🎬 فيديو</dt>
+    <dd><span class="conv-fmt-label">يقبل</span><span class="conv-fmt">MP4</span><span class="conv-fmt">MOV</span><span class="conv-fmt">WebM</span> وملفات الصوت (تتحوّل إلى فيديو بموجات متحركة)</dd>
+    <dd><span class="conv-fmt-label">يحوّل إلى</span><span class="conv-fmt">MP4</span><span class="conv-fmt">WebM</span></dd>
+  </dl>
+  <p>بعض الصيغ يعتمد على متصفحك: صور HEIC تُفتح في سفاري، وMP4 يُصدَّر من المتصفحات التي تدعمه، وإلا يُصدَّر WebM.</p>
+</details>
 
 <div class="conv-drop" id="convDrop">
   <p class="conv-drop-text">اسحب الملفات هنا، أو</p>
