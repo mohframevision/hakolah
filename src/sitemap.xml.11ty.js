@@ -38,6 +38,10 @@ exports.render = function (data) {
     ["favorites.html", "en/favorites.html"],
     ["picker.html", "en/picker.html"],
     ["sounds.html", "en/sounds.html"],
+    // صفحة البحث (search.njk/en/search.njk) كانت مفقودة من الخريطة منذ إضافتها
+    // بكومِت ed9eecf — نفس فئة فجوة car-shop-type: صفحة ثابتة جديدة لم تُضَف
+    // لهذي القائمة اليدوية. اكتُشف بزاوية SEO، راجع سجل المشاكل.
+    ["search.html", "en/search.html"],
     // plan.html مخفية مؤقتاً (تحتاج خوارزمية أفضل) — خارج الخريطة وعليها
     // noindex حتى لا تُفهرَس وهي ناقصة
     ["about.html", "en/about.html"],
