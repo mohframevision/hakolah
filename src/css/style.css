@@ -9228,3 +9228,35 @@ a.conv-download {
   font-weight: 600;
   direction: ltr;
 }
+
+/* أشرطة التمرير: هوية واحدة لكل الموقع (كانت بعض الأشرطة تظهر بيضاء بالوضع الداكن
+   لأنها تضبط scrollbar-width فقط بدون لون). القواعد الخاصة بكل عنصر أعلاه تتغلب
+   على هذي لأنها أعلى تخصيصاً. */
+:root {
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-primary) 70%, transparent) transparent;
+}
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-primary) 70%, transparent);
+    border-radius: 999px;
+  }
+}
