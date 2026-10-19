@@ -9347,6 +9347,48 @@ a.conv-download {
   .item-card .tag {
     font-size: 0.74rem;
   }
+
+  /* نقطة تركيز واحدة لكل بطاقة: كانت كل الأشياء «حبة» بنفس الوزن (وسوم + ٤ أزرار
+     معبّاة + أزرار الإعجاب) فما تعرف العين وين تبدأ. هرمية بصرية: الاسم ← الزر
+     الأساسي ← الباقي هادئ. لا شي انشال — بس خفّ وزنه */
+  .item-card .item-meta {
+    gap: 4px 10px;
+  }
+  .item-card .item-meta .tag:not(.new-tag, .distance-tag) {
+    background: none;
+    padding: 0;
+    font-weight: 500;
+  }
+  .item-card .item-actions .btn.secondary {
+    background: transparent;
+    border-color: transparent;
+    flex: 0 1 auto;
+    padding-inline: 8px;
+  }
+  .item-card .item-actions .btn.secondary:hover,
+  .item-card .item-actions .btn.secondary:focus-visible {
+    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+    color: var(--color-text);
+  }
+  .item-card .item-actions .btn:not(.secondary) {
+    flex: 1 1 100%;
+  }
+  .item-card .item-top-actions {
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .item-card:hover .item-top-actions,
+  .item-card .item-top-actions:focus-within {
+    opacity: 1;
+  }
+
+  /* الصفحة كلها: قياس أساسي ١٦px على الحاسوب (كان ١٧) ورأس صفحة أقل ارتفاعاً */
+  html {
+    font-size: 100%;
+  }
+  .page-header {
+    padding: 32px 0 14px;
+  }
 }
 
 /* وقت ما يكون حاجز (منيو/اختار لي) مفتوح، كل ما خلفه inert — نوقف حركاته: أي حركة
