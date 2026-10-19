@@ -10,9 +10,10 @@ categories:
   - وجبات سريعة
   - جد علي
 links:
-  maps: https://maps.app.goo.gl/m1kyKmWBfP9gAM1Z7
+  maps: https://maps.app.goo.gl/YopQ528TnsSgEggq6
+  phone: '17680525'
   instagram: https://www.instagram.com/alkarama_bh/
-  website: ''
+  website: 'https://fooddelivery-eu.mykeeta.com/mpweb/shop_golden?useShopPoi=1&channel=googlemap&shopId=100772348&cityId=101200019&locale=ar&region=BH'
 lat: 26.173804053941716
 lng: 50.558844126288
 ---
