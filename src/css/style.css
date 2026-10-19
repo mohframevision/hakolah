@@ -2557,12 +2557,6 @@ img {
     transform: translate(-53px, -11px);
   }
 }
-/* الجوال: بلا حبيبات الفيلم (طبقة بحجم الشاشة كلها تتحرك دائماً) */
-@media (pointer: coarse), (max-width: 760px) {
-  .trip-grain {
-    display: none;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .trip-grain {
     animation: none;
@@ -2738,8 +2732,12 @@ img {
   animation: overlayIn 0.3s ease both;
 }
 
-/* بلا backdrop-filter: تغبيش 28px بملء الشاشة فوق مشهد متحرك يثقّل الجوال كثيراً،
-   والخلفية أصلاً معتّمة 90% فما يتغير الشكل تقريباً */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .picker-reveal-overlay {
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+  }
+}
 
 @keyframes overlayIn {
   from {
