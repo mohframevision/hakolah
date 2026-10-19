@@ -453,11 +453,17 @@ function createTrip(stage, { onStart, onDone }) {
   }
 
   // وقت الانتظار المشهد يمشي ببطء (حي بس هادي) — ويتوقف لما يطلع من الشاشة
+  // الجوال: 30 إطار بالثانية بوقت الانتظار يكفي (المشهد بطيء) ويوفر بطارية وحرارة
+  const idleGap = window.matchMedia("(pointer: coarse)").matches ? 33 : 0;
+  let idleLast = 0;
   function idle(now) {
     idleFrame = 0;
     if (running || !visible) return;
-    cam += 0.25;
-    render(now, 0);
+    if (now - idleLast >= idleGap) {
+      idleLast = now;
+      cam += 0.25 * (idleGap ? 2 : 1);
+      render(now, 0);
+    }
     idleFrame = requestAnimationFrame(idle);
   }
   function resumeIdle() {
