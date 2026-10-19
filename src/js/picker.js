@@ -25,6 +25,7 @@ const TRIP_VEHICLES = {
   plane: { icon: "✈️", dur: 4400, over: 8, settle: 900, rock: 0.5, stopAt: 0 },
 };
 const TRIP_VEHICLE_KEY = "pickerVehicle";
+const TRIP_BOB_MS = 900 * 2 * Math.PI; // دورة تمايل البطاقات: نفس sin(t/900)
 const TRIP_DIST = 5200; // مسافة الرحلة بوحدات الطبقة القريبة
 // ثلاث طبقات عمق: البعيد صغير وبطيء وقريب من الأفق، القريب كبير وسريع
 const TRIP_LANES = [
@@ -292,6 +293,7 @@ function createTrip(stage, { onStart, onDone }) {
       <div class="trip-clouds trip-cnear"></div>
       <div class="trip-band trip-fg"></div>
     </div>
+    <svg class="trip-frame" aria-hidden="true"><path fill-rule="evenodd"/></svg>
     <div class="trip-window"></div>
     <div class="trip-grain"></div>`;
   stage.prepend(scene);
@@ -299,6 +301,7 @@ function createTrip(stage, { onStart, onDone }) {
   const view = $("view");
   const cardsBox = $("cards");
   const win = $("window");
+  const frame = $("frame");
   const fg = $("fg");
   const bands = { islands: $("islands"), waves1: $("waves1"), waves2: $("waves2") };
 
@@ -343,6 +346,16 @@ function createTrip(stage, { onStart, onDone }) {
   let idleFrame = 0;
   let visible = true;
   let result = null;
+  // المقاس محفوظ (ResizeObserver) بدل قراءة clientWidth كل إطار — القراءة بعد كتابة
+  // transform تجبر المتصفح يعيد التخطيط (forced synchronous layout) بكل إطار
+  let W = stage.clientWidth;
+  let H = stage.clientHeight;
+  // "حارات": كل طبقة عمق حاوية وحدة تتحرك (transform واحد)، والبطاقات ثابتة داخلها —
+  // بدل ما نحرك كل بطاقة وظلها لوحدهم بكل إطار (60+ كتابة ← 6)
+  let lanes = [];
+  // البطاقات اللي تتحرك وقت الانتظار هي نفسها بطاقات الرحلة الجاية (مبنية ومرسومة
+  // مسبقاً) — فالضغطة ما تبني 45 عنصر وترسمهم بنفس اللحظة، والمشهد ما "ينط" لورا
+  let deckWinner = null;
 
   // أقرب طبقة للعين (تمر أسرع من البطاقات): أعمدة وسلك القطار، أو سياج جسر السيارة
   function drawForeground() {
@@ -365,7 +378,11 @@ function createTrip(stage, { onStart, onDone }) {
     el.innerHTML = `<span class="trip-card-icon">${item.icon || "⭐"}</span><span class="trip-card-title">${itemTitle(item)}</span>`;
     const sh = document.createElement("div");
     sh.className = "trip-shadow";
-    cardsBox.append(sh, el);
+    lanes[z].sh.append(sh);
+    lanes[z].el.append(el);
+    const phase = Math.random() * 6.28;
+    // التمايل نفسه (sin بدورة 900ms×2π) لكن كـCSS animation يشغّلها المعالج الرسومي
+    el.style.animationDelay = `${Math.round((-phase / 6.28) * TRIP_BOB_MS)}ms`;
     return {
       el,
       sh,
@@ -374,20 +391,60 @@ function createTrip(stage, { onStart, onDone }) {
       x,
       hue,
       z,
-      phase: Math.random() * 6.28,
+      phase,
       dy: (Math.random() - 0.5) * 0.08,
-      trail: -1,
     };
   }
 
   const pick = () => items[Math.floor(Math.random() * items.length)];
 
+  // الفائز: عدالة + "عشوائية يحسّها الناس عشوائية" —
+  // 1) بالمحل مو بالفرع: محل له 5 فروع كان حظه 5 أضعاف محل بفرع واحد. نجمع الفروع
+  //    باسم المحل (اللي قبل " - " بالعنوان) ونختار محل ثم فرع منه.
+  // 2) كيس خلط (shuffle bag): كل المحلات تطلع مرة قبل ما يتكرر أي محل، وما يطلع نفس
+  //    المحل مرتين ورا بعض حتى بين كيس وكيس.
+  let bag = [];
+  let lastBrand = null;
+  const brandOf = (it) => (it.title || "").split(" - ")[0].trim();
+  function pickWinner() {
+    const groups = new Map();
+    for (const it of items) {
+      const k = brandOf(it);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(it);
+    }
+    bag = bag.filter((k) => groups.has(k));
+    if (!bag.length) {
+      bag = [...groups.keys()];
+      for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+      if (bag.length > 1 && bag[bag.length - 1] === lastBrand) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+    }
+    lastBrand = bag.pop();
+    const g = groups.get(lastBrand);
+    return g[Math.floor(Math.random() * g.length)];
+  }
+
   // يبني البطاقات على طول الرحلة؛ الفائزة بالطبقة القريبة، موقعها يجيها بالضبط بنص الشباك
   // آخر الرحلة، وأي بطاقة قريبة تغطيها تنشال
   function build() {
-    const W = stage.clientWidth;
     cardsBox.textContent = "";
     cards = [];
+    const shWrap = document.createElement("div");
+    shWrap.className = "trip-lane-shadows";
+    cardsBox.append(shWrap);
+    lanes = TRIP_LANES.map((lane, z) => {
+      const sh = document.createElement("div");
+      const el = document.createElement("div");
+      sh.className = el.className = "trip-lane";
+      el.style.zIndex = z;
+      el.dataset.z = z;
+      shWrap.append(sh);
+      cardsBox.append(el);
+      return { lane, sh, el, trail: -1 };
+    });
     TRIP_LANES.forEach((lane, z) => {
       const span = (TRIP_DIST + W * 2) * lane.depth + W;
       for (
@@ -399,7 +456,7 @@ function createTrip(stage, { onStart, onDone }) {
       }
     });
     const near = TRIP_LANES[2];
-    const winner = makeCard(pick(), near, W / 2 + TRIP_DIST, 2);
+    const winner = makeCard(pickWinner(), near, W / 2 + TRIP_DIST, 2);
     winner.dy = 0;
     cards = cards.filter((c) => {
       if (c.lane !== near || Math.abs(c.x - winner.x) > near.gap * 0.7) return true;
@@ -408,34 +465,107 @@ function createTrip(stage, { onStart, onDone }) {
       return false;
     });
     cards.push(winner);
+    placeCards();
     return winner;
   }
 
+  // مكان كل بطاقة داخل حارتها: يتحسب مرة (وعند تغيّر المقاس)، مو كل إطار
+  function placeCards() {
+    const horizon = H * 0.62;
+    for (const c of cards) {
+      if (c.free) continue;
+      const s = 0.45 + 0.55 * c.lane.depth;
+      c.el.style.transform = `translate3d(${W - c.x}px, ${H * (c.lane.y + c.dy)}px, 0) scale(${s})`;
+      c.sh.style.transform = `translate3d(${W - c.x}px, ${horizon + (H - horizon) * (0.15 + 0.5 * c.lane.depth)}px, 0) scale(${s})`;
+    }
+  }
+
+  // جدار المركبة: شكل SVG واحد بحجم المشهد فيه فتحة بشكل الشباك بالضبط (من
+  // border-radius المحسوب نفسه). كان box-shadow بانتشار 2000px = طبقة 4300×4450px
+  // (~19 ميجابكسل، ٨٠ ضعف المشهد) تكبر 1.9× لحظة الكشف
+  function drawFrame() {
+    const st = stage.getBoundingClientRect();
+    const r = win.getBoundingClientRect();
+    if (!st.width || !r.width) return;
+    const cs = getComputedStyle(win);
+    // كل شي بإحداثيات المستطيل الظاهر (بالكسور) و viewBox بنفس المقاس مع
+    // preserveAspectRatio=none — فالفتحة تنطبق على الشباك بالبكسل. z = تكبير الصفحة
+    // (CSS zoom) لأن border-radius المحسوب بوحدات ما قبل التكبير
+    const z = st.width / (stage.offsetWidth || st.width);
+    let x = r.left - st.left;
+    let y = r.top - st.top;
+    let w = r.width;
+    let h = r.height;
+    const px = (u, side) => (u.endsWith("%") ? (parseFloat(u) / 100) * side : (parseFloat(u) || 0) * z);
+    const rad = (v) => {
+      const [a, b = a] = v.split(" ");
+      return [px(a, w), px(b, h)];
+    };
+    let corners = [
+      cs.borderTopLeftRadius,
+      cs.borderTopRightRadius,
+      cs.borderBottomRightRadius,
+      cs.borderBottomLeftRadius,
+    ].map(rad);
+    const [tl0, tr0, br0, bl0] = corners;
+    // نفس قاعدة CSS: لو مجموع نصفي قطرين أكبر من الضلع، كل الأنصاف تصغر بنفس النسبة
+    const f = Math.min(
+      1,
+      w / (tl0[0] + tr0[0] || 1),
+      w / (bl0[0] + br0[0] || 1),
+      h / (tl0[1] + bl0[1] || 1),
+      h / (tr0[1] + br0[1] || 1)
+    );
+    // الفتحة أصغر بـ2px من الشباك من كل جهة: حافتها (anti-aliasing) تنطبق تحت الحافة
+    // المعتمة للشباك (inset 10px)، فما يطلع خط شعري من المنظر بين الجدار والحافة
+    const d = 2 * z;
+    corners = corners.map(([a, b]) => [Math.max(0, a * f - d), Math.max(0, b * f - d)]);
+    const [tl, tr, br, bl] = corners;
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    x += d;
+    y += d;
+    w -= 2 * d;
+    h -= 2 * d;
+    frame.setAttribute("viewBox", `0 0 ${st.width} ${st.height}`);
+    frame.setAttribute("preserveAspectRatio", "none");
+    frame.style.transformOrigin = `${cx / z}px ${cy / z}px`;
+    frame.firstChild.setAttribute(
+      "d",
+      `M0 0H${st.width}V${st.height}H0Z` +
+        `M${x + tl[0]} ${y}H${x + w - tr[0]}A${tr[0]} ${tr[1]} 0 0 1 ${x + w} ${y + tr[1]}` +
+        `V${y + h - br[1]}A${br[0]} ${br[1]} 0 0 1 ${x + w - br[0]} ${y + h}` +
+        `H${x + bl[0]}A${bl[0]} ${bl[1]} 0 0 1 ${x} ${y + h - bl[1]}` +
+        `V${y + tl[1]}A${tl[0]} ${tl[1]} 0 0 1 ${x + tl[0]} ${y}Z`
+    );
+  }
+
   function render(time, speed) {
-    const W = stage.clientWidth;
-    const H = stage.clientHeight;
     // تمايل القارب/الطيارة: transform واحد للمنظر كله داخل الشباك
     const rock = TRIP_VEHICLES[vehicle].rock || 0;
     view.style.transform = rock
       ? `rotate(${Math.sin(time / 1400) * 0.8 * rock}deg) translateY(${Math.sin(time / 1100) * 4 * rock}px)`
       : "";
-    const horizon = H * 0.62;
+    // الحركة من اليمين لليسار؛ ذيل السرعة يطول مع السرعة (اتجاهه عكس الحركة)
+    for (const L of lanes) {
+      L.el.style.transform = L.sh.style.transform = `translate3d(${cam * L.lane.depth}px,0,0)`;
+      const trail = Math.round(Math.min(0.8, speed * L.lane.depth) * 20) / 20;
+      if (trail !== L.trail) {
+        L.trail = trail;
+        L.el.style.setProperty("--trail", trail);
+      }
+    }
+    // البطاقات برا الشاشة تنشال من الرسم (display:none) — نكتب بس لما تتغير حالتها،
+    // فما في كتابة كل إطار، والبعيدة ما تاخذ طبقة ولا حركة تمايل
     for (const c of cards) {
+      if (c.free) continue;
       const sx = c.x - cam * c.lane.depth;
       const out = sx < -200 || sx > W + 200;
-      c.el.style.visibility = c.sh.style.visibility = out ? "hidden" : "";
-      if (out) continue;
-      const s = 0.45 + 0.55 * c.lane.depth;
-      const bob = Math.sin(time / 900 + c.phase) * 7 * c.lane.depth;
-      // الحركة من اليمين لليسار؛ ذيل السرعة يطول مع السرعة (اتجاهه عكس الحركة)
-      c.el.style.transform = `translate3d(${W - sx}px, ${H * (c.lane.y + c.dy) + bob}px, 0) scale(${s})`;
-      const trail = Math.round(Math.min(0.8, speed * c.lane.depth) * 20) / 20;
-      if (trail !== c.trail) {
-        c.trail = trail;
-        c.el.style.setProperty("--trail", trail);
+      if (out !== c.out) {
+        c.out = out;
+        c.el.classList.toggle("off", out);
+        c.sh.classList.toggle("off", out);
       }
-      c.el.style.zIndex = c.z;
-      c.sh.style.transform = `translate3d(${W - sx}px, ${horizon + (H - horizon) * (0.15 + 0.5 * c.lane.depth)}px, 0) scale(${s})`;
     }
     // الطبقات: كل وحدة بسرعة مختلفة حسب بعدها (parallax)
     const loop = (v) => -(((v % W) + W) % W);
@@ -467,11 +597,19 @@ function createTrip(stage, { onStart, onDone }) {
     visible = entry.isIntersecting;
     resumeIdle();
   }).observe(stage);
+  new ResizeObserver(() => {
+    W = stage.clientWidth;
+    H = stage.clientHeight;
+    placeCards();
+    if (!win.style.transform) drawFrame();
+    render(performance.now(), 0);
+  }).observe(stage);
 
   function clearResult() {
     result?.remove();
     result = null;
     win.style.cssText = "";
+    frame.style.transform = frame.style.opacity = "";
     fg.style.opacity = "";
   }
 
@@ -479,15 +617,23 @@ function createTrip(stage, { onStart, onDone }) {
     vehicle = v;
     stage.dataset.vehicle = v;
     drawForeground();
+    drawFrame();
     render(performance.now(), 0);
   }
 
   function setItems(list) {
     items = list;
+    bag = [];
     if (running) return;
     clearResult();
     cam = 0;
-    build();
+    deckWinner = null;
+    if (items.length) deckWinner = build();
+    else {
+      cardsBox.textContent = "";
+      cards = [];
+      lanes = [];
+    }
     render(performance.now(), 0);
     resumeIdle();
   }
@@ -497,10 +643,16 @@ function createTrip(stage, { onStart, onDone }) {
     running = true;
     cancelAnimationFrame(idleFrame);
     idleFrame = 0;
-    clearResult();
-    cam = 0;
     over = TRIP_VEHICLES[vehicle].over;
-    const winner = build();
+    // نكمل من مكان المشهد الحالي لو بطاقات الانتظار لسا ما وصلت نص الطريق
+    const fresh = deckWinner && !result && cam < TRIP_DIST * 0.3;
+    if (!fresh) {
+      clearResult();
+      cam = 0;
+    }
+    const winner = fresh ? deckWinner : build();
+    deckWinner = null;
+    const cam0 = cam;
     onStart();
     TripSound.start(vehicle, () => running);
     if (reduceMotion) {
@@ -516,7 +668,7 @@ function createTrip(stage, { onStart, onDone }) {
     (function frame(now) {
       const t = Math.min(1, (now - t0) / V.dur);
       const [p, v] = TRIP_CURVE(t);
-      cam = (TRIP_DIST + over) * p;
+      cam = cam0 + (TRIP_DIST + over - cam0) * p;
       render(now, v);
       TripSound.speed(v);
       if (!braked && V.stopAt && t > 0.3 && v < V.stopAt) {
@@ -524,7 +676,7 @@ function createTrip(stage, { onStart, onDone }) {
         TripSound.play(`${vehicle}-stop`, 0.8);
       }
       // "ووش" لما بطاقة قريبة تعدّي نص الشباك — بحد أدنى 140ms بينها
-      const mid = stage.clientWidth / 2;
+      const mid = W / 2;
       for (const c of cards) {
         if (c.lane.depth !== 1) continue;
         const side = c.x - cam > mid;
@@ -550,9 +702,16 @@ function createTrip(stage, { onStart, onDone }) {
       () => {
         // "طلّة الراس": الشباك يكبر ويطلع برا المشهد (ومعه الأعمدة/السياج)، باقي
         // البطاقات تبهت، والفائزة تقرّب للنص
-        const W = stage.clientWidth;
-        const H = stage.clientHeight;
         const y0 = H * winner.lane.y;
+        // الفائزة تطلع من حارتها لطبقة فوق الكل (مكانها بالشاشة نفسه)، فالحارات
+        // تبهت كلها مرة وحدة بدل بطاقة بطاقة
+        winner.free = true;
+        winner.el.style.zIndex = 3;
+        winner.el.style.setProperty("--trail", 0);
+        winner.el.style.transform = `translate3d(${W / 2}px, ${y0}px, 0)`;
+        cardsBox.append(winner.el);
+        winner.sh.style.transform = `translate3d(${W / 2}px, ${H * 0.62 + H * 0.38 * 0.65}px, 0)`;
+        cardsBox.firstChild.append(winner.sh);
         if (TRIP_VEHICLES[vehicle].stopAt === 0) TripSound.play(`${vehicle}-stop`, 0.7);
         TripSound.stopLoop(1.5);
         TripSound.play("headout", 0.6);
@@ -561,11 +720,10 @@ function createTrip(stage, { onStart, onDone }) {
           850,
           (t) => {
             const e = tripEase(t);
-            win.style.transform = `scale(${1 + 0.9 * e})`;
-            win.style.opacity = 1 - e;
+            win.style.transform = frame.style.transform = `scale(${1 + 0.9 * e})`;
+            win.style.opacity = frame.style.opacity = 1 - e;
             fg.style.opacity = 1 - e;
-            for (const c of cards)
-              if (c !== winner) c.el.style.opacity = c.sh.style.opacity = 1 - 0.7 * e;
+            for (const L of lanes) L.el.style.opacity = L.sh.style.opacity = 1 - 0.7 * e;
             winner.el.style.transform = `translate3d(${W / 2}px, ${y0 + (H * 0.46 - y0) * e}px, 0) scale(${1 + 0.7 * e})`;
           },
           () => reveal(winner)
@@ -704,10 +862,10 @@ function initRandomPicker() {
   function applyPool() {
     const items = SITE_DATA[section].items;
     const v = areaSelect.value;
-    trip.setItems(
-      v === "near" ? nearPool : v ? items.filter((it) => (it.tags || []).includes(v)) : items
-    );
-    spinBtn.disabled = trip.isRunning();
+    const pool =
+      v === "near" ? nearPool : v ? items.filter((it) => (it.tags || []).includes(v)) : items;
+    trip.setItems(pool);
+    spinBtn.disabled = trip.isRunning() || !pool.length;
   }
   function resetArea(msg) {
     showToast(msg);

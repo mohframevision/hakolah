@@ -2385,9 +2385,18 @@ img {
   display: block;
 }
 
-.trip-cards {
+.trip-cards,
+.trip-lane-shadows,
+.trip-lane {
   position: absolute;
   inset: 0;
+}
+.trip-lane .off {
+  display: none;
+}
+/* كل حارة (طبقة عمق) تتحرك كوحدة وحدة؛ البطاقات ثابتة داخلها */
+.trip-lane {
+  will-change: transform;
 }
 .trip-card {
   position: absolute;
@@ -2409,7 +2418,40 @@ img {
   box-shadow:
     0 10px 24px rgba(0, 40, 60, 0.25),
     0 0 16px 2px var(--halo);
-  will-change: transform;
+  /* التمايل: نفس sin(t/900) بخاصية translate المستقلة — على المعالج الرسومي بلا JS */
+  animation: tripBob 2827ms cubic-bezier(0.37, 0, 0.63, 1) infinite alternate both;
+}
+/* قيم ثابتة لكل حارة (7px × عمقها): var() داخل keyframes يمنع تشغيلها على المعالج
+   الرسومي ويرجعها للخيط الرئيسي كل إطار */
+.trip-lane[data-z="0"] .trip-card {
+  animation-name: tripBob0;
+}
+.trip-lane[data-z="1"] .trip-card {
+  animation-name: tripBob1;
+}
+@keyframes tripBob {
+  from {
+    translate: 0 -7px;
+  }
+  to {
+    translate: 0 7px;
+  }
+}
+@keyframes tripBob1 {
+  from {
+    translate: 0 -4.34px;
+  }
+  to {
+    translate: 0 4.34px;
+  }
+}
+@keyframes tripBob0 {
+  from {
+    translate: 0 -2.45px;
+  }
+  to {
+    translate: 0 2.45px;
+  }
 }
 /* أثر السرعة: ذيل شفاف خلف البطاقة بدل filter: blur */
 .trip-card::after {
@@ -2443,7 +2485,6 @@ img {
   margin: -7px 0 0 -60px;
   border-radius: 50%;
   background: radial-gradient(rgba(0, 30, 50, 0.35), rgba(0, 30, 50, 0) 70%);
-  will-change: transform;
 }
 
 /* مشهد الطيارة: غيوم وبساط غيوم بدل البحر */
@@ -2485,14 +2526,25 @@ img {
   fill: var(--cl1);
 }
 
-/* إطار الشباك: box-shadow ضخم حول فتحة مدورة = جدار المركبة */
+/* جدار المركبة: SVG بحجم المشهد فيه فتحة بشكل الشباك بالضبط (picker.js يرسمها من
+   border-radius الشباك نفسه). كان box-shadow بانتشار 2000px = طبقة ~4300×4450px */
+.trip-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  fill: var(--frame);
+  will-change: transform, opacity;
+}
+
+/* إطار الشباك: الحافة والظل الداخلي (inset، ما يكبّر الطبقة) */
 .trip-window {
   position: absolute;
   inset: 7% 5% 17% 5%;
   border-radius: 42px;
   pointer-events: none;
   box-shadow:
-    0 0 0 2000px var(--frame),
     inset 0 0 0 10px var(--rim),
     inset 0 8px 30px rgba(0, 0, 0, 0.25);
   will-change: transform, opacity;
@@ -2558,7 +2610,8 @@ img {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .trip-grain {
+  .trip-grain,
+  .trip-card {
     animation: none;
   }
 }
