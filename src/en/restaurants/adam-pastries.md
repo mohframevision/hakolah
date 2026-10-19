@@ -1,7 +1,7 @@
 ---
-title: Adam Pastries
+title: Adam Pastries - Jidhafs Branch
 icon: 🍽️
-desc: A well-known Bahraini restaurant chain with several branches across Bahrain (Manama, Riffa West, Busaiteen, Nuwaidrat, and more), Lebanese cuisine offering a variety of fresh pastries alongside fried chicken and shawarma. Popular as a quick and beloved local option.
+desc: A well-known Bahraini restaurant chain with several branches across Bahrain (Jidhafs, Busaiteen, Riffa, Hamad Town), Lebanese cuisine offering a variety of fresh pastries alongside fried chicken and shawarma. Popular as a quick and beloved local option.
 langSwitchUrl: "/restaurants/معجنات-آدم.html"
 recommendation: Its reach across many areas makes it a practical pick when you want something quick near you, wherever you are in Bahrain.
 ---
@@ -9,8 +9,7 @@ recommendation: Its reach across many areas makes it a practical pick when you w
 ## About the Restaurant
 
 Adam Pastries is a well-known, widespread Bahraini restaurant chain with
-several branches across Bahrain — Manama, Riffa West, Busaiteen, Nuwaidrat,
-and more. It's classified under Lebanese cuisine.
+several branches across Bahrain — Jidhafs, Busaiteen, Riffa, and Hamad Town. It's classified under Lebanese cuisine.
 
 ## What It Offers
 
@@ -23,7 +22,7 @@ local option.
 
 ## Branches
 
-Manama, Riffa West, Busaiteen, Nuwaidrat, and other locations.
+Jidhafs (two branches), Busaiteen, Riffa, and Hamad Town.
 
 ## Location
 
