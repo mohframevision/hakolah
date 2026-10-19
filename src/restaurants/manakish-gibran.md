@@ -17,7 +17,7 @@ links:
   website: https://www.manaeesh-jubran.com/
   maps: https://maps.app.goo.gl/WFGnufH4JEzcxaCd7
   phone: '17323217'
-  instagram: ''
+  instagram: https://www.instagram.com/manaeesh.jubran/
 menuItems:
   - name: "منقوشة زعتر"
     name_en: "Zaatar Manousheh"
