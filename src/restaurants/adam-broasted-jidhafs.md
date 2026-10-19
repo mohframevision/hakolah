@@ -17,5 +17,5 @@ links:
   website: ''
   phone: '17552277'
   maps: https://maps.app.goo.gl/Yah3MJfFbBrXKYUe7
-  instagram: 
+  instagram: https://www.instagram.com/adampastries_busaiteen/
 ---

@@ -4,8 +4,8 @@ icon: 🥙
 desc: فرع الرفاع للبروستد والشاورما والمعجنات والبيتزا.
 title_en: Adam Pastries - Riffa Branch
 desc_en: Riffa branch for broasted chicken, shawarma, pastries and pizza.
-hours: "يومياً ٩ص - ١٢:٣٠ص"
-hours_en: "Daily 9am - 12:30am"
+hours: "يومياً ٨ص - ١٢ص (الجمعة من ١٢ ظهراً)"
+hours_en: "Daily 8am - 12am (Friday from 12pm)"
 categories:
   - معجنات
   - شاورما
@@ -17,7 +17,7 @@ links:
   website: ''
   phone: '17660069'
   maps: https://maps.app.goo.gl/AJ4iaCza5CJUEnLu8
-  instagram: 
+  instagram: https://www.instagram.com/adampastries_busaiteen/
 menuItems:
   - name: "بيتزا سلطان"
     name_en: "Pizza Sultan"

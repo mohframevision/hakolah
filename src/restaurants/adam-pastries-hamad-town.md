@@ -4,6 +4,8 @@ icon: 🥙
 desc: فرع مدينة حمد للمعجنات والبروستد.
 title_en: Adam Pastries - Hamad Town Branch
 desc_en: Hamad Town branch for pastries and broasted chicken.
+hours: "يومياً ٨ص - ١٢ص"
+hours_en: "Daily 8am - 12am"
 categories:
   - معجنات
   - شاورما
@@ -15,5 +17,5 @@ links:
   website: ''
   phone: '17414211'
   maps: https://maps.app.goo.gl/Zjzc3tpaEpp1GjkaA
-  instagram: 
+  instagram: https://www.instagram.com/adampastries_busaiteen/
 ---
