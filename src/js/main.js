@@ -88,6 +88,53 @@ function levenshtein(a, b) {
   return prevRow[n];
 }
 
+/* توحيد النص للبحث: أشكال الألف والتاء المربوطة والياء والتشكيل، و«ال» بأول الكلمة
+   («الشعلة» = «شعلة») — نفس قواعد صفحة البحث (search.js) */
+function searchNorm(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[ً-ٰٟـ]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.replace(/^(و?ال)(?=\S{2,})/, ""))
+    .join(" ");
+}
+
+// كلمات عامة قبل الاسم الحقيقي: «مطعم المحور» يُبحث عنه بـ«المحور»
+const SEARCH_GENERIC = new Set(
+  ["مطعم", "مطاعم", "مقهي", "مقهى", "كافيه", "كافي", "كوفي", "مخبز", "مخابز", "محل", "محلات", "مطبخ", "فرع", "restaurant", "cafe", "coffee", "bakery", "kitchen", "the", "branch"].map((w) => searchNorm(w))
+);
+
+/* مدى تطابق العنصر مع البحث (٠ = ما يطابق): الاسم أولاً، وبالذات بدايته بعد الكلمات
+   العامة، ثم الكلمات الكاملة، ثم التصنيفات والوصف، ثم الأخطاء الإملائية آخر شي */
+function searchScore(item, query) {
+  const q = searchNorm(query);
+  if (!q) return 1;
+  const title = searchNorm(`${item.title || ""} ${item.title_en || ""}`);
+  const names = [item.title, item.title_en].map((tt) => searchNorm(tt).split(" ").filter((w) => !SEARCH_GENERIC.has(w)).join(" "));
+  const words = title.split(" ");
+  const qWords = q.split(" ").filter((w) => !SEARCH_GENERIC.has(w));
+  const core = qWords.join(" ") || q;
+  if (names.some((n) => n === core)) return 100;
+  if (names.some((n) => n.startsWith(core))) return 90;
+  if (qWords.length && qWords.every((w) => words.includes(w))) return 80;
+  if (qWords.length && qWords.every((w) => words.some((tw) => tw.startsWith(w)))) return 70;
+  if (title.includes(q)) return 60;
+  const rest = searchNorm(
+    [item.desc, item.desc_en, ...(item.tags || []).flatMap((tag) => [tag, tagLabel(tag)])].filter(Boolean).join(" ")
+  );
+  const restWords = rest.split(" ");
+  if (qWords.length && qWords.every((w) => restWords.includes(w))) return 40;
+  if (rest.includes(q)) return 30;
+  return fuzzyIncludes(`${title} ${rest}`, q) ? 10 : 0;
+}
+
 function fuzzyIncludes(haystack, query) {
   const hay = (haystack || "").toLowerCase();
   const q = (query || "").trim().toLowerCase();
@@ -136,8 +183,11 @@ function initSearchSuggestions(searchInput, items, onSelect) {
     }
 
     const matches = items
-      .filter((item) => fuzzyIncludes(`${item.title} ${item.title_en || ""}`, query))
-      .slice(0, 6);
+      .map((item) => ({ item, score: searchScore({ title: item.title, title_en: item.title_en }, query) }))
+      .filter((r) => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
+      .map((r) => r.item);
 
     if (matches.length === 0) {
       close();
@@ -1311,9 +1361,11 @@ function buildMeatSourceHtml(item) {
 }
 
 function buildActionsHtml(item) {
+  // صفحة التفاصيل زر أساسي، والباقي (هاتف/خريطة/منيو...) يبقى ثانوي جنبه
+  let detailHtml = "";
   if (item.detailUrl) {
     const href = window.SITE_LANG === "en" && item.detailUrlEn ? item.detailUrlEn : item.detailUrl;
-    return `<a class="btn" href="${href}">${ICON_SVG["menu-book"]} ${t("read_details")}</a>`;
+    detailHtml = `<a class="btn" href="${href}">${ICON_SVG["menu-book"]} ${t("read_details")}</a>`;
   }
   // قائمة الطعام التفاعلية تحل محل زر صورة المنيو العادي، لا تظهران معاً
   const hasStructuredMenu = Array.isArray(item.menuItems) && item.menuItems.length > 0;
@@ -1327,7 +1379,7 @@ function buildActionsHtml(item) {
       const url = links[key];
       const meta = LINK_META[key] || { icon: "🔗", labelKey: "link_generic" };
       const metaLabel = t(meta.labelKey);
-      const cls = i === 0 ? "btn" : "btn secondary";
+      const cls = i === 0 && !detailHtml ? "btn" : "btn secondary";
       if (key === "phone") {
         // يدعم أكثر من رقم بالحقل الواحد (مفصولة بفاصلة) — مثل رقم واتساب
         // ورقم اتصال عادي مختلفين — بزر مستقل لكل رقم بدل ما نجبر عنصر واحد بس
@@ -1348,10 +1400,10 @@ function buildActionsHtml(item) {
     })
     .join("");
   if (hasStructuredMenu) {
-    const cls = orderedKeys.length ? "btn secondary" : "btn";
+    const cls = orderedKeys.length || detailHtml ? "btn secondary" : "btn";
     html += `<button type="button" class="${cls} menu-open-btn">${ICON_SVG["menu-book"]} ${t("link_menu")}</button>`;
   }
-  return html;
+  return detailHtml + html;
 }
 
 /* ===== رسالة تأكيد عابرة (Toast) ===== */
@@ -1726,21 +1778,14 @@ function renderSection(section, typeFilter) {
     const query = (searchInput?.value || "").trim();
     grid.innerHTML = "";
 
+    // الاسم والوصف والتصنيفات باللغتين (رابط مشاركة إنجليزي ?q= يشتغل بالصفحة العربية)
+    const relevance = new Map();
     const filtered = items.filter((item) => {
       const matchesTag = Object.values(active).every((tag) => (item.tags || []).includes(tag));
-      // الاسم والوصف باللغتين: زائر الصفحة الإنجليزية يبحث بالإنجليزي، ورابط مشاركة
-      // إنجليزي (?q=الاسم الإنجليزي) كان يفتح على "لا نتائج"
-      const haystack = [
-        item.title,
-        item.title_en,
-        item.desc,
-        item.desc_en,
-        ...(item.tags || []).flatMap((tag) => [tag, tagLabel(tag)]),
-      ]
-        .filter(Boolean)
-        .join(" ");
-      const matchesQuery = fuzzyIncludes(haystack, query);
-      return matchesTag && matchesQuery;
+      if (!matchesTag) return false;
+      const score = searchScore(item, query);
+      relevance.set(item, score);
+      return score > 0;
     });
 
     let ranked = filtered.map((item) => {
@@ -1760,7 +1805,10 @@ function renderSection(section, typeFilter) {
             if (b.distanceKm === null) return -1;
             return a.distanceKm - b.distanceKm;
           })
-        : ranked.sort((a, b) => pinRank(b.item) - pinRank(a.item));
+        : ranked.sort(
+            (a, b) =>
+              (query ? relevance.get(b.item) - relevance.get(a.item) : 0) || pinRank(b.item) - pinRank(a.item)
+          );
 
     if (ranked.length === 0) {
       const isSectionEmpty = items.length === 0;

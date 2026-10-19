@@ -192,7 +192,9 @@
       }</section>`;
     };
     // المنيو أولاً لما يكون البحث عن طبق (أغلب النتائج منيو)، وإلا الأماكن أولاً
-    const menuFirst = groups.menu.length >= groups.place.length;
+    // …إلا لو اسم مكان يطابق البحث بقوة الطبق نفسها («الجابرية» = المطعم، مو «بيتزا الجابرية»)
+    const top = (rows) => (rows.length ? Math.max(...rows.map((r) => r.score)) : 0);
+    const menuFirst = groups.menu.length >= groups.place.length && top(groups.menu) > top(groups.place);
     const order = menuFirst ? ["menu", "place", "more"] : ["place", "menu", "more"];
     const heads = { menu: t("search_in_menu"), place: t("search_places_head"), more: t("search_more_head") };
     list.innerHTML = order.map((k) => block(k, heads[k])).join("");

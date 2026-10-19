@@ -187,11 +187,12 @@ function buildSiteData(data, options = {}) {
           item.contentHtml = entry.templateContent || "";
           item.contentHtml_en = englishContentHtml(meta.slug, entry.data.slug_en || entry.fileSlug);
         }
-      } else {
-        item.links = entry.data.links || {};
-        item.cta = entry.data.cta || null;
-        item.cta_en = entry.data.cta_en || null;
       }
+      // الروابط لكل العناصر — حتى اللي لها صفحة تفاصيل، فتطلع أزرار الهاتف والخريطة
+      // والمنيو جنب "اقرأ التفاصيل" بالبطاقة
+      item.links = entry.data.links || {};
+      item.cta = entry.data.cta || null;
+      item.cta_en = entry.data.cta_en || null;
       return item;
     });
 

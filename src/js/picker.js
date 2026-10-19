@@ -746,9 +746,11 @@ function createTrip(stage, { onStart, onDone }) {
       .map((tag) => tagLabel(tag))
       .join(" · ");
     // "اقرأ التفاصيل" + الخريطة للعناصر اللي لها صفحة تفاصيل، وإلا أزرار العنصر العادية
-    const maps = item.mapsUrl
-      ? `<a class="btn secondary" href="${item.mapsUrl}" target="_blank" rel="noopener noreferrer">${LINK_META.maps.icon} ${t("link_maps")}</a>`
-      : "";
+    // الخريطة صارت ضمن buildActionsHtml لكل العناصر؛ هنا بس لو ما لها رابط بالبيانات
+    const maps =
+      item.mapsUrl && !item.links?.maps
+        ? `<a class="btn secondary" href="${item.mapsUrl}" target="_blank" rel="noopener noreferrer">${LINK_META.maps.icon} ${t("link_maps")}</a>`
+        : "";
     box.innerHTML = `
       <div class="trip-result-top"><span class="trip-result-icon">${item.icon || "⭐"}</span><h2>${itemTitle(item)}</h2></div>
       ${meta ? `<p class="trip-result-meta">${meta}</p>` : ""}

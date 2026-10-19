@@ -9313,3 +9313,38 @@ a.conv-download {
     border-radius: 999px;
   }
 }
+
+/* الحاسوب: بطاقات أصغر وأكثف (كانت ضخمة على الشاشة الكبيرة وتربك العين).
+   الجوال واللمس ما يتغيرون — أزرار ٤٤px للإصبع تبقى كما هي */
+@media (min-width: 1024px) and (pointer: fine) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+    gap: 16px;
+  }
+  .item-card .item-body {
+    padding: 15px 16px;
+    gap: 6px;
+  }
+  .item-card .item-icon {
+    font-size: 1.45rem;
+  }
+  .item-card h3 {
+    font-size: 0.98rem;
+  }
+  .item-card .item-desc {
+    font-size: 0.84rem;
+    line-height: 1.6;
+  }
+  .item-card .item-actions {
+    gap: 6px;
+  }
+  .item-card .item-actions .btn {
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 0.84rem;
+  }
+  .item-card .filter-chip,
+  .item-card .tag {
+    font-size: 0.74rem;
+  }
+}
