@@ -4,15 +4,103 @@ icon: 🥖
 desc: مناقيش ومعجنات بمنطقة جنوسان.
 title_en: Manakish Gibran
 desc_en: Manakish and pastries in Janusan.
+hours: "يومياً ٧ص - ١ص"
+hours_en: "Daily 7am - 1am"
 categories:
   - معجنات
   - جنوسان
 dateAdded: 2026-08-04
-coords: 26.22086468329321, 50.500478074787516
+coords: 26.2208786, 50.5004754
 cta: ''
 cta_en: ''
 links:
-  website: ''
-  maps: https://maps.app.goo.gl/Cdg8aZ5DGZ6KSm2g7
+  website: https://www.manaeesh-jubran.com/
+  maps: https://maps.app.goo.gl/WFGnufH4JEzcxaCd7
+  phone: '17323217'
   instagram: ''
+menuItems:
+  - name: "منقوشة زعتر"
+    name_en: "Zaatar Manousheh"
+    price: "0.750 BD"
+  - name: "منقوشة جبنة عكاوي"
+    name_en: "Akkawi Cheese Manousheh"
+    price: "1.000 BD"
+  - name: "منقوشة لحم بعجين"
+    name_en: "Lahma Bel Ajeen Manousheh"
+    price: "1.250 BD"
+  - name: "منقوشة دبلكس"
+    name_en: "Duplex Manousheh"
+    price: "1.650 BD"
+  - name: "فطيرة سبانخ"
+    name_en: "Spinach Pastry"
+    price: "1.000 BD"
+  - name: "كعك زعتر"
+    name_en: "Kaak Zaatar"
+    price: "1.100 BD"
+  - name: "حمص"
+    name_en: "Hummus"
+    price: "1.275 BD"
+  - name: "متبل"
+    name_en: "Mutabbal"
+    price: "1.525 BD"
+  - name: "تبولة"
+    name_en: "Tabbouleh"
+    price: "1.525 BD"
+  - name: "فتوش"
+    name_en: "Fattoush"
+    price: "1.875 BD"
+  - name: "لفة شاورما دجاج"
+    name_en: "Chicken Shawarma Wrap"
+    price: "1.000 BD"
+  - name: "لفة شاورما لحم"
+    name_en: "Beef Shawarma Wrap"
+    price: "1.000 BD"
+  - name: "لفة شيش طاووق"
+    name_en: "Shish Tawook Wrap"
+    price: "1.525 BD"
+  - name: "لفة فلافل مشوية"
+    name_en: "Grilled Falafel Wrap"
+    price: "1.000 BD"
+  - name: "فول مدمس"
+    name_en: "Foul Medames"
+    price: "1.525 BD"
+  - name: "بطاطس مقلية"
+    name_en: "French Fries"
+    price: "1.000 BD"
+  - name: "فتة دجاج"
+    name_en: "Fatteh Chicken"
+    price: "1.975 BD"
+  - name: "بيتزا مارغريتا"
+    name_en: "Margherita Pizza"
+    price: "2.375 BD"
+  - name: "بيتزا بيبروني"
+    name_en: "Pepperoni Pizza"
+    price: "3.075 BD"
+  - name: "بوكس شاورما دجاج"
+    name_en: "Chicken Shawarma Box"
+    price: "2.875 BD"
+  - name: "مشاوي مشكلة"
+    name_en: "Mix Grills"
+    price: "5.000 BD"
+  - name: "شيش طاووق"
+    name_en: "Shish Tawook"
+    price: "3.200 BD"
+  - name: "فطور بحريني"
+    name_en: "Bahraini Breakfast"
+    price: "6.500 BD"
+  - name: "١٢ ميني زعتر مخبوز"
+    name_en: "12 Baked Mini Zaatar"
+    price: "1.750 BD"
+  - name: "قطايف قشطة"
+    name_en: "Atayef Ishta"
+    price: "1.750 BD"
+  - name: "عصير أفوكادو"
+    name_en: "Avocado Juice"
+    price: "1.650 BD"
+  - name: "لبن عيران"
+    name_en: "Laban Ayran"
+    price: "0.850 BD"
+  - name: "جلاب"
+    name_en: "Jellab"
+    price: "0.850 BD"
 ---
