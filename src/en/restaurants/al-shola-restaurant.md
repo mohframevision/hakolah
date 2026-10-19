@@ -1,5 +1,5 @@
 ---
-title: Al Shoala Restaurant
+title: Al Shoala Restaurant - Jidhafs Branch
 icon: 🍽️
 desc: Shawarma and the “Arabi” plate for dinner, grilled chicken and mezze with hot Turkish bread for lunch — with three branches.
 langSwitchUrl: "/restaurants/مطعم-الشعلة.html"
