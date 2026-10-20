@@ -8,7 +8,7 @@ layout: base.njk
 <div class="breadcrumb"><a href="{{ homeUrl | url }}">{{ t.nav_home }}</a> / <a href="{{ sectionUrl | url }}">{{ sectionTitle }}</a> / {{ title }}</div>
 {% if image %}<img class="detail-hero-photo" src="{{ image }}" alt="{{ title }}" />{% endif %}
 <section class="page-header">
-  <h1>{{ icon }} {{ title }}</h1>
+  <h1><span aria-hidden="true">{{ icon }}</span> {{ title }}</h1>
   {# الدليل عند لحظة القرار: نفس شارات البطاقة، فوق زر الخريطة #}
   {% set src = page if (verified or liked) else ((collections.all | pageByUrl(langSwitchUrl)).data if lang == 'en' else page) %}
   {% set v = verified or (src and src.verified) %}{% set lk = liked or (src and src.liked) %}
@@ -16,7 +16,7 @@ layout: base.njk
   <div class="page-header-actions">
     {# الهدف الأول لزائر صفحة مكان: يروح له — فالخريطة الزر الأساسي والباقي ثانوي #}
     {% set mapsLink = links.maps if (links and links.maps) else (content | mapsUrl) %}
-    {% if mapsLink %}<a class="btn" href="{{ mapsLink }}" target="_blank" rel="noopener">📍 {{ t.link_maps }}</a>{% endif %}
+    {% if mapsLink %}<a class="btn" href="{{ mapsLink }}" target="_blank" rel="noopener"><span aria-hidden="true">📍</span> {{ t.link_maps }}</a>{% endif %}
     {% if audio %}
     <button type="button" class="btn secondary article-listen-btn" data-audio-src="{{ audio | url }}">🔊 {{ t.article_listen }}</button>
     <audio class="article-audio-player hidden" controls preload="none"></audio>

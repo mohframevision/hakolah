@@ -22,7 +22,7 @@ langSwitchUrl: "/en/index.html"
 <div class="chip-row home-chips" id="homeChips"></div>
 
 <a class="home-pick" href="{{ '/picker.html' | url }}">
-  <span class="home-pick-icon">🎲</span>
+  <span class="home-pick-icon" aria-hidden="true">🎲</span>
   <span class="home-pick-text"><b>{{ i18n.ar.home_pick_title }}</b><small>{{ i18n.ar.home_pick_desc }}</small></span>
   <span class="home-pick-go">{{ i18n.ar.home_pick_btn }}</span>
 </a>
@@ -41,9 +41,9 @@ langSwitchUrl: "/en/index.html"
   <div class="home-row-head"><h2>{{ i18n.ar.home_sections }}</h2></div>
   <div class="mini-sections">
     {% for entry in sections %}
-    <a class="mini-section" href="{{ ('/' + entry.slug + '.html') | url }}"><span>{{ entry.icon }}</span>{{ entry.navLabel }}</a>
+    <a class="mini-section" href="{{ ('/' + entry.slug + '.html') | url }}"><span aria-hidden="true">{{ entry.icon }}</span>{{ entry.navLabel }}</a>
     {% endfor %}
-    <a class="mini-section" href="{{ '/sounds.html' | url }}"><span>🎹</span>{{ i18n.ar.nav_sounds_short }}</a>
+    <a class="mini-section" href="{{ '/sounds.html' | url }}"><span aria-hidden="true">🎹</span>{{ i18n.ar.nav_sounds_short }}</a>
   </div>
 </section>
 

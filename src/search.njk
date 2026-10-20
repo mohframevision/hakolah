@@ -35,7 +35,7 @@ langSwitchUrl: "/en/search.html"
       <h2>{{ i18n.ar.search_browse }}</h2>
       <div class="mini-sections">
         {% for entry in sections %}
-        <a class="mini-section" href="{{ ('/' + entry.slug + '.html') | url }}"><span>{{ entry.icon }}</span>{{ entry.navLabel }}</a>
+        <a class="mini-section" href="{{ ('/' + entry.slug + '.html') | url }}"><span aria-hidden="true">{{ entry.icon }}</span>{{ entry.navLabel }}</a>
         {% endfor %}
       </div>
     </div>

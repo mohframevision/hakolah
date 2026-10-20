@@ -147,5 +147,6 @@ module.exports = {
   "موسيقى": "Music",
   "نص": "Text",
   "صورة": "Image",
-  "مال": "Finance"
+  "مال": "Finance",
+  "صحة": "Health"
 };

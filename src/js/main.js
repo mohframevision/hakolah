@@ -1494,7 +1494,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     <div class="item-body">
       ${sectionBadge(section)}
       <div class="item-top">
-        <span class="item-icon">${item.icon || "⭐"}</span>
+        <span class="item-icon" aria-hidden="true">${item.icon || "⭐"}</span>
         <div class="item-top-actions">
           <button class="like-btn ${liked ? "active" : ""}" data-section="${section}" data-id="${item.id}" title="${t("like_action")}" aria-label="${t("like_action")}" aria-pressed="${liked}">
             <span class="like-icon">${liked ? "♥" : "♡"}</span> <span class="like-count">${likeCount}</span>
@@ -1512,7 +1512,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       <div class="item-meta">
         ${item.isNew ? `<span class="tag new-tag">${t("new_badge")}</span>` : ""}
         ${distanceKm !== null ? `<span class="tag distance-tag">${ICON_SVG["location-pin"]} ${formatDistance(distanceKm)}${branchLabel ? ` — ${t("nearest_branch")} ${branchLabel}` : ""}</span>` : ""}
-        ${(item.tags || []).map((tag) => `<span class="tag">${tagIcon(tag) ? `<span class="tag-icon">${tagIcon(tag)}</span>` : ""}${tagLabel(tag)}</span>`).join("")}
+        ${(item.tags || []).map((tag) => `<span class="tag">${tagIcon(tag) ? `<span class="tag-icon" aria-hidden="true">${tagIcon(tag)}</span>` : ""}${tagLabel(tag)}</span>`).join("")}
       </div>
       ${buildMeatSourceHtml(item)}
       <div class="item-actions">
