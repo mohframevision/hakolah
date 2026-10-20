@@ -7,4 +7,6 @@ desc_en: "Learn languages with short 5–10 minute daily lessons; builds habit a
 categories: ["تعليم"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.duolingo.com"}
+group: learning
+keywords: "تعلم لغة إنجليزي learn language english"
 ---

@@ -7,4 +7,6 @@ desc_en: "Free, open-source Office alternative: documents, spreadsheets and pres
 categories: ["مستندات", "إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.libreoffice.org"}
+group: documents
+keywords: "وورد إكسل باوربوينت أوفيس مجاني word excel powerpoint office alternative"
 ---

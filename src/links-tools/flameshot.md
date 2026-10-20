@@ -7,4 +7,6 @@ desc_en: "Screenshots with instant annotation (arrows, boxes, text, blur) before
 categories: ["صور", "إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://flameshot.org"}
+group: photo
+keywords: "لقطة شاشة سكرين شوت تصوير الشاشة screenshot annotate"
 ---

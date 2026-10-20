@@ -6,4 +6,6 @@ title_en: "Coolors"
 desc_en: "Quickly generate and browse harmonious color palettes for your designs."
 categories: ["تصميم", "ألوان"]
 links: {"website": "https://coolors.co"}
+group: design
+keywords: "ألوان باليت تنسيق ألوان color palette generator"
 ---

@@ -7,4 +7,6 @@ desc_en: "A professional colorist and official Blackmagic-certified trainer, spe
 categories: ["قنوات يوتيوب","ألوان"]
 dateAdded: 2026-10-11
 links: {"website": "https://www.youtube.com/@CullenKelly"}
+group: communities
+keywords: "قناة يوتيوب تلوين youtube color grading"
 ---

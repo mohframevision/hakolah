@@ -7,4 +7,6 @@ desc_en: "Free, open-source image editor with layers, masks, filters and brushes
 categories: ["صور", "تصميم"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.gimp.org"}
+group: photo
+keywords: "تعديل صور فوتوشوب مجاني photo editor photoshop alternative"
 ---

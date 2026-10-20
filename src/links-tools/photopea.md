@@ -7,4 +7,6 @@ desc_en: "Photoshop-like image editor that runs in the browser — no install, n
 categories: ["صور", "تصميم"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.photopea.com"}
+group: photo
+keywords: "فوتوشوب أونلاين تعديل صور بدون تثبيت psd online photo editor photoshop"
 ---

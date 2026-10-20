@@ -7,4 +7,6 @@ desc_en: "Connects blind and low-vision users by video call to a sighted volunte
 categories: ["صحة"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.bemyeyes.com"}
+group: learning
+keywords: "مكفوفين ضعاف البصر تطوع blind low vision volunteer accessibility"
 ---

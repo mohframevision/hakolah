@@ -7,4 +7,6 @@ desc_en: "Free, open-source recording and live streaming with scenes (screen, we
 categories: ["فيديو"]
 dateAdded: 2026-10-20
 links: {"website": "https://obsproject.com"}
+group: video
+keywords: "تسجيل الشاشة بث مباشر ستريم screen recording record screen live stream"
 ---

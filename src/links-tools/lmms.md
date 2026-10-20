@@ -7,4 +7,6 @@ desc_en: "Free, open-source music production app similar to FL Studio: piano rol
 categories: ["صوت"]
 dateAdded: 2026-10-20
 links: {"website": "https://lmms.io"}
+group: audio
+keywords: "صناعة موسيقى إيقاعات بيت إف إل ستوديو تصميم صوت music production beats fl studio sound design"
 ---

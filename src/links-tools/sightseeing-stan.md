@@ -7,4 +7,6 @@ desc_en: "A channel about filmmaking and camera gear: cinematography and photogr
 categories: ["قنوات يوتيوب","فيديو"]
 dateAdded: 2026-10-11
 links: {"website": "https://www.youtube.com/@SightseeingStan/featured"}
+group: communities
+keywords: "قناة يوتيوب تصوير youtube filmmaking"
 ---

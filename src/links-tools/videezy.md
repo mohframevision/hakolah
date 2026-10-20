@@ -10,4 +10,6 @@ links:
   website: https://www.videezy.com
   maps: ''
   instagram: ''
+group: stock
+keywords: "فيديوهات مجانية بدون حقوق free stock footage"
 ---

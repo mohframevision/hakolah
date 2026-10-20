@@ -7,4 +7,6 @@ desc_en: "Free, open-source video editor a step above Shotcut: multi-track editi
 categories: ["فيديو", "مونتاج"]
 dateAdded: 2026-10-20
 links: {"website": "https://kdenlive.org"}
+group: video
+keywords: "مونتاج تعديل فيديو video editor premiere alternative"
 ---

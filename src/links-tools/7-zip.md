@@ -7,4 +7,6 @@ desc_en: "Free archiver that opens ZIP, RAR, ISO and more, with password-protect
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.7-zip.org"}
+group: files
+keywords: "ضغط فك ضغط ملف مضغوط زيب رار unzip zip rar extract archive compress"
 ---

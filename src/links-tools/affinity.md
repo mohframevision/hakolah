@@ -7,4 +7,6 @@ desc_en: "Professional design software now completely free: photo editing, vecto
 categories: ["تصميم", "صور"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.affinity.studio"}
+group: design
+keywords: "تصميم فوتوشوب إليستريتور إن ديزاين بديل أدوبي adobe alternative photoshop illustrator"
 ---

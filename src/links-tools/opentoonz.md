@@ -7,4 +7,6 @@ desc_en: "Free, open-source 2D animation software, based on the version Studio G
 categories: ["تصميم", "فيديو"]
 dateAdded: 2026-10-20
 links: {"website": "https://opentoonz.github.io"}
+group: design
+keywords: "أنيميشن رسوم متحركة كرتون animation 2d cartoon"
 ---

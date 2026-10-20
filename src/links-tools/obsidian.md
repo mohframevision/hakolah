@@ -7,4 +7,6 @@ desc_en: "Note-taking app that stores notes as local files on your device, with 
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://obsidian.md"}
+group: productivity
+keywords: "ملاحظات تدوين notes markdown second brain"
 ---

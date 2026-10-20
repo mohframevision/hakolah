@@ -7,4 +7,6 @@ desc_en: "Free, open-source video editor with a simple interface beginners learn
 categories: ["فيديو", "مونتاج"]
 dateAdded: 2026-10-20
 links: {"website": "https://shotcut.org"}
+group: video
+keywords: "مونتاج سهل تعديل فيديو مبتدئ easy video editor beginner"
 ---

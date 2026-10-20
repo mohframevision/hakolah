@@ -7,4 +7,6 @@ desc_en: "Links your phone and computer on the same Wi-Fi: shared clipboard, sen
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://kdeconnect.kde.org"}
+group: files
+keywords: "ربط الجوال بالكمبيوتر نسخ ولصق ريموت phone to pc clipboard remote"
 ---

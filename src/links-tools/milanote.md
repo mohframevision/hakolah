@@ -11,4 +11,6 @@ links:
   website: https://milanote.com
   maps: ''
   instagram: ''
+group: design
+keywords: "لوحة أفكار تنظيم أفكار mood board ideas board"
 ---

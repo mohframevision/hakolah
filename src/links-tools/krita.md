@@ -7,4 +7,6 @@ desc_en: "Free, open-source digital painting app built for artists: customizable
 categories: ["تصميم"]
 dateAdded: 2026-10-20
 links: {"website": "https://krita.org"}
+group: design
+keywords: "رسم رقمي رسام تابلت قلم digital painting drawing illustration"
 ---

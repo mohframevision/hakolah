@@ -7,4 +7,6 @@ desc_en: "Free, open-source vector design app — an Illustrator alternative for
 categories: ["تصميم"]
 dateAdded: 2026-10-20
 links: {"website": "https://inkscape.org"}
+group: design
+keywords: "تصميم شعار لوجو فيكتور svg logo vector illustrator alternative"
 ---

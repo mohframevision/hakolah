@@ -7,4 +7,6 @@ desc_en: "The best-known Windows archiver, opens RAR, ZIP and more. A trial that
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.win-rar.com"}
+group: files
+keywords: "ضغط فك ضغط ملف مضغوط رار زيب unzip rar zip extract archive"
 ---

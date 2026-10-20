@@ -18,4 +18,6 @@ links:
   website: 'https://www.cinetemp.com/'
   maps: ''
   instagram: ''
+group: video
+keywords: "تطبيق تصوير حرارة اللون كاميرا color temperature filmmaking app"
 ---

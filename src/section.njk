@@ -37,6 +37,18 @@ eleventyComputed:
 </div>
 {% else %}
 <input type="text" class="search-box" placeholder="{{ sectionEntry.searchPlaceholder }}" aria-label="البحث في {{ sectionEntry.title }}" />
+{% if sectionEntry.slug == "links-tools" %}
+{# بعد البحث مباشرة: الزائر المستعجل يكتب، والمتردد يختار مجموعة. كل مجموعة
+   صفحة مستقلة (tool-group.njk) بعنوان على طريقة بحث قوقل #}
+<div class="hub-grid tool-hub">
+{%- for g in toolGroups %}
+  <a class="hub-card" href="{{ ('/links-tools/' + g.slug + '.html') | url }}">
+    <span class="hub-card-icon" aria-hidden="true">{{ g.icon }}</span>
+    <h3 class="hub-card-label">{{ g.label }}</h3>
+  </a>
+{%- endfor %}
+</div>
+{% endif %}
 <button type="button" class="near-me-btn" aria-pressed="false">{{ t.near_me }}</button>
 <div class="filters"></div>
 

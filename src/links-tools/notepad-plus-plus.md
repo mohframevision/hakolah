@@ -7,4 +7,6 @@ desc_en: "Free text and code editor for Windows: syntax highlighting, tabs and p
 categories: ["برمجة"]
 dateAdded: 2026-10-20
 links: {"website": "https://notepad-plus-plus.org"}
+group: code
+keywords: "محرر نصوص كود notepad text editor"
 ---

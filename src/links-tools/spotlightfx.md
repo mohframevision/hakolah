@@ -7,4 +7,6 @@ desc_en: "Free templates and plugins for Premiere Pro and After Effects."
 categories: ["مونتاج","فيديو"]
 dateAdded: 2026-10-11
 links: {"website": "https://spotlightfx.com/free"}
+group: video
+keywords: "إضافة افتر افكت مؤثرات after effects plugin effects"
 ---

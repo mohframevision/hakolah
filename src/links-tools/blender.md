@@ -7,4 +7,6 @@ desc_en: "Free, open-source software for 3D modeling, animation and rendering."
 categories: ["ثلاثي الأبعاد","تصميم"]
 dateAdded: 2026-10-11
 links: {"website": "https://www.blender.org"}
+group: code
+keywords: "ثلاثي الأبعاد مجسمات 3d نمذجة أنيميشن 3d modeling animation render"
 ---

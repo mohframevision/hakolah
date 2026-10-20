@@ -10,4 +10,6 @@ links:
   website: https://chatllm.abacus.ai
   maps: ''
   instagram: ''
+group: ai
+keywords: "ذكاء اصطناعي شات chatgpt ai chat"
 ---

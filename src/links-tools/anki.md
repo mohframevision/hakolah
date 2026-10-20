@@ -7,4 +7,6 @@ desc_en: "Smart flashcards that bring a card back right before you forget it —
 categories: ["تعليم"]
 dateAdded: 2026-10-20
 links: {"website": "https://apps.ankiweb.net"}
+group: learning
+keywords: "حفظ مذاكرة بطاقات امتحان flashcards study memorize exam"
 ---

@@ -127,7 +127,9 @@ function searchScore(item, query) {
   if (qWords.length && qWords.every((w) => words.some((tw) => tw.startsWith(w)))) return 70;
   if (title.includes(q)) return 60;
   const rest = searchNorm(
-    [item.desc, item.desc_en, ...(item.tags || []).flatMap((tag) => [tag, tagLabel(tag)])].filter(Boolean).join(" ")
+    [item.desc, item.desc_en, item.keywords, ...(item.tags || []).flatMap((tag) => [tag, tagLabel(tag)])]
+      .filter(Boolean)
+      .join(" ")
   );
   const restWords = rest.split(" ");
   if (qWords.length && qWords.every((w) => restWords.includes(w))) return 40;
@@ -1505,7 +1507,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
           </button>
         </div>
       </div>
-      <h3>${title}${item.verified ? ` <span class="verified-badge" title="${t("verified_badge")}">${t("verified_badge")}</span>` : ""}${item.liked ? ` <span class="liked-badge" title="${t("liked_badge")}">${t("liked_badge")}</span>` : ""}</h3>
+      <h3><bdi>${title}</bdi>${item.verified ? ` <span class="verified-badge" title="${t("verified_badge")}">${t("verified_badge")}</span>` : ""}${item.liked ? ` <span class="liked-badge" title="${t("liked_badge")}">${t("liked_badge")}</span>` : ""}</h3>
       <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
       ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">${t("read_more")}</button>` : ""}
       ${itemHours(item) ? `<p class="item-hours">${ICON_SVG.schedule} ${itemHours(item)}</p>` : ""}
@@ -1688,7 +1690,7 @@ function renderSection(section, typeFilter) {
   if (!grid) return;
 
   const items = typeFilter
-    ? data.items.filter((item) => (item.tags || []).includes(typeFilter))
+    ? data.items.filter((item) => item.group === typeFilter || (item.tags || []).includes(typeFilter))
     : data.items;
 
   // بناء الفلاتر من التاجات المتوفرة

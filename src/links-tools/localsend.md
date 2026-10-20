@@ -7,4 +7,6 @@ desc_en: "Like AirDrop between any devices (Windows, Mac, Android, iPhone) on th
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://localsend.org"}
+group: files
+keywords: "نقل ملفات إرسال ملف من الجوال للكمبيوتر ايردروب airdrop transfer files share phone pc"
 ---

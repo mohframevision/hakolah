@@ -1,0 +1,59 @@
+---
+pagination:
+  data: "toolGroups"
+  size: 1
+  alias: "group"
+layout: "base.njk"
+lang: "en"
+eleventyComputed:
+  permalink: "en/links-tools/{{ group.slug }}.html"
+  title: "{{ group.title_en | safe }} | Hakolah"
+  description: "{{ group.intro_en | safe }}"
+  navActive: "links-tools"
+  section: "links-tools"
+  typeFilter: "{{ group.label | safe }}"
+  langSwitchUrl: "/links-tools/{{ group.slug }}.html"
+---
+{% set t = i18n[lang or "ar"] %}
+{% import "item-card.njk" as cards %}
+<div class="breadcrumb">
+  <a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> /
+  <a href="{{ '/en/links-tools.html' | url }}">Links &amp; Tools</a> /
+  {{ group.label_en }}
+</div>
+<section class="page-header">
+  <h1><span aria-hidden="true">{{ group.icon }}</span> {{ group.title_en }}</h1>
+  <p>{{ group.intro_en }}</p>
+  {% if group.guide %}<p class="tool-guide-link">📖 <a href="{{ ('/en/guides/' + group.guide + '.html') | url }}">Read the guide: how to pick the right app</a></p>{% endif %}
+</section>
+
+{% if group.picks_en.length %}
+<section class="tool-picks" aria-label="Quick picks">
+  <h2>Quick picks</h2>
+  <ul>
+  {%- for p in group.picks_en %}
+    <li>{{ p[0] }} <b><bdi>{{ p[1] }}</bdi></b></li>
+  {%- endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<input type="text" class="search-box" placeholder="Search {{ group.label_en }}…" aria-label="Search {{ group.label_en }}" />
+<div class="filters"></div>
+
+<div class="card-grid">
+{%- for entry in (collections['links-tools'] or []) %}
+{%- if entry.data.group == group.slug %}
+{{ cards.card(entry, "links-tools", "en", false, tags_en, i18n, tag_icons, loop.index0) }}
+{%- endif %}
+{%- endfor %}
+</div>
+
+<nav class="tool-groups-more" aria-label="More groups">
+  <h2>More groups</h2>
+  <div class="chip-row">
+  {%- for g in toolGroups %}{% if g.slug != group.slug %}
+    <a class="filter-chip" href="{{ ('/en/links-tools/' + g.slug + '.html') | url }}"><span aria-hidden="true">{{ g.icon }}</span> {{ g.label_en }}</a>
+  {%- endif %}{% endfor %}
+  </div>
+</nav>

@@ -7,4 +7,6 @@ desc_en: "Free, open-source engine for 2D and 3D games — sell your game with n
 categories: ["برمجة", "ثلاثي الأبعاد"]
 dateAdded: 2026-10-20
 links: {"website": "https://godotengine.org"}
+group: code
+keywords: "صناعة ألعاب محرك ألعاب يونتي game engine game development unity alternative"
 ---

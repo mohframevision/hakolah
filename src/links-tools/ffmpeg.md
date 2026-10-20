@@ -7,4 +7,6 @@ desc_en: "Free command-line tool to convert, compress and trim video/audio and e
 categories: ["فيديو", "صوت"]
 dateAdded: 2026-10-20
 links: {"website": "https://ffmpeg.org"}
+group: files
+keywords: "تحويل فيديو صوت محول سطر أوامر استخراج صوت convert video audio command line extract"
 ---

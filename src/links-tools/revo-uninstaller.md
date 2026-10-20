@@ -7,4 +7,6 @@ desc_en: "Uninstalls Windows programs, then scans for and removes their leftover
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.revouninstaller.com"}
+group: files
+keywords: "حذف برنامج إزالة برنامج بقايا تنظيف الكمبيوتر uninstall remove program cleanup"
 ---

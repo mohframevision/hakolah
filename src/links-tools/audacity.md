@@ -11,4 +11,6 @@ links:
   website: https://www.audacityteam.org
   maps: ''
   instagram: ''
+group: audio
+keywords: "تسجيل صوت تعديل صوت إزالة الضجة بودكاست record audio noise removal podcast voice"
 ---

@@ -6,4 +6,6 @@ title_en: "DeepL Translate"
 desc_en: "High-accuracy text translation between Arabic, English, and other languages."
 categories: ["ترجمة"]
 links: {"website": "https://deepl.com"}
+group: ai
+keywords: "ترجمة مترجم translate translation translator"
 ---

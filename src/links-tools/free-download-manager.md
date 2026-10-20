@@ -7,4 +7,6 @@ desc_en: "Free download manager that splits files into segments for speed, with 
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.freedownloadmanager.org"}
+group: files
+keywords: "مدير تحميل تسريع التحميل تنزيل download manager idm alternative"
 ---

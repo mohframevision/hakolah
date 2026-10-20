@@ -7,4 +7,6 @@ desc_en: "Free, fully encrypted messaging and calling app that doesn't even coll
 categories: ["أمان"]
 dateAdded: 2026-10-20
 links: {"website": "https://signal.org"}
+group: security
+keywords: "مراسلة خاصة شات مشفر بديل واتساب private messaging whatsapp alternative"
 ---

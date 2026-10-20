@@ -74,7 +74,7 @@
         secName,
         item,
         title: norm(item.title + " " + (item.title_en || "")),
-        tags: norm(tagText(item.tags)),
+        tags: norm(tagText(item.tags) + " " + (item.keywords || "")),
         desc: norm((item.desc || "") + " " + (item.desc_en || "")),
       });
       (item.menuItems || []).forEach((m) => {

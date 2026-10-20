@@ -7,4 +7,6 @@ desc_en: "Free, open-source email app from the makers of Firefox that unifies al
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.thunderbird.net"}
+group: productivity
+keywords: "بريد إيميل جيميل أوتلوك email mail gmail outlook"
 ---

@@ -7,4 +7,6 @@ desc_en: "A professional video editing and color grading program, completely fre
 categories: ["مونتاج","فيديو","ألوان"]
 dateAdded: 2026-10-11
 links: {"website": "https://www.blackmagicdesign.com/products/davinciresolve"}
+group: video
+keywords: "مونتاج تلوين برنامج مونتاج احترافي video editor color grading premiere alternative"
 ---

@@ -7,4 +7,6 @@ desc_en: "Free media player that plays almost any video or audio format, plus fi
 categories: ["فيديو", "صوت"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.videolan.org/vlc/"}
+group: files
+keywords: "مشغل فيديو ملف ما يشتغل تشغيل mkv ترجمة video player media player subtitles"
 ---

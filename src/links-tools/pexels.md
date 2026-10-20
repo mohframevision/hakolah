@@ -11,4 +11,6 @@ links:
   website: https://www.pexels.com/videos/
   maps: ''
   instagram: ''
+group: stock
+keywords: "صور مجانية فيديوهات مجانية بدون حقوق free stock photos videos"
 ---

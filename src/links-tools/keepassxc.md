@@ -7,4 +7,6 @@ desc_en: "Free, open-source password manager that keeps passwords encrypted in a
 categories: ["أمان"]
 dateAdded: 2026-10-20
 links: {"website": "https://keepassxc.org"}
+group: security
+keywords: "كلمات السر باسورد offline password manager"
 ---

@@ -7,4 +7,6 @@ desc_en: "The same VS Code editor built from the open-source code, without Micro
 categories: ["برمجة"]
 dateAdded: 2026-10-20
 links: {"website": "https://vscodium.com"}
+group: code
+keywords: "محرر كود برمجة vs code editor"
 ---

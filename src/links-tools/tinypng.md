@@ -6,4 +6,6 @@ title_en: "TinyPNG"
 desc_en: "Compress images with no noticeable quality loss before uploading to your site."
 categories: ["تصميم", "صور"]
 links: {"website": "https://tinypng.com"}
+group: photo
+keywords: "تصغير حجم الصورة ضغط صور compress image reduce size png jpg"
 ---

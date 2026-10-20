@@ -32,7 +32,7 @@
     <div class="item-top">
       <span class="item-icon" aria-hidden="true">{{ d.icon or "⭐" }}</span>
     </div>
-    <h3>{{ title }}{% if d.verified %} <span class="verified-badge">{{ t.verified_badge }}</span>{% endif %}{% if d.liked %} <span class="liked-badge">{{ t.liked_badge }}</span>{% endif %}{% if d.video %} <span class="video-badge">{{ t.video_badge }}</span>{% endif %}</h3>
+    <h3><bdi>{{ title }}</bdi>{% if d.verified %} <span class="verified-badge">{{ t.verified_badge }}</span>{% endif %}{% if d.liked %} <span class="liked-badge">{{ t.liked_badge }}</span>{% endif %}{% if d.video %} <span class="video-badge">{{ t.video_badge }}</span>{% endif %}</h3>
     <p class="item-desc">{{ desc }}</p>
     {%- set hours = (d.hours_en or d.hours) if isEn else d.hours %}
     {%- if hours %}<p class="item-hours">{{ icon("schedule", 16) }} {{ hours }}</p>{%- endif %}

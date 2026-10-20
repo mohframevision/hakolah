@@ -7,4 +7,6 @@ desc_en: "Free, open-source e-book library manager: organize books, convert form
 categories: ["تعليم", "إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://calibre-ebook.com"}
+group: learning
+keywords: "كتب إلكترونية كيندل epub تحويل كتب ebooks kindle"
 ---

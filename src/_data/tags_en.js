@@ -148,5 +148,18 @@ module.exports = {
   "نص": "Text",
   "صورة": "Image",
   "مال": "Finance",
-  "صحة": "Health"
+  "صحة": "Health",
+  "الملفات والكمبيوتر": "Files & PC Utilities",
+  "المونتاج والفيديو": "Video Editing",
+  "التصميم والرسم": "Design & Drawing",
+  "الصور ولقطات الشاشة": "Photos & Screenshots",
+  "الصوت والموسيقى": "Audio & Music",
+  "مكتبات مجانية": "Free Stock Libraries",
+  "المستندات وملفات PDF": "Documents & PDF",
+  "الملاحظات والتنظيم": "Notes & Organization",
+  "الأمان والخصوصية": "Security & Privacy",
+  "البرمجة والألعاب وثلاثي الأبعاد": "Coding, Games & 3D",
+  "الذكاء الاصطناعي والترجمة": "AI & Translation",
+  "التعلّم والحياة اليومية": "Learning & Everyday",
+  "مجتمعات وقنوات للتعلّم": "Communities & Channels"
 };

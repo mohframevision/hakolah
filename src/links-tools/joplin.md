@@ -7,4 +7,6 @@ desc_en: "Free, open-source notes app with notebooks, tags, end-to-end encryptio
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://joplinapp.org"}
+group: productivity
+keywords: "ملاحظات مشفرة إيفرنوت notes encrypted evernote alternative"
 ---

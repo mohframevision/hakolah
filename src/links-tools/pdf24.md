@@ -7,4 +7,6 @@ desc_en: "Completely free PDF toolkit that works offline on your computer: merge
 categories: ["مستندات"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.pdf24.org"}
+group: documents
+keywords: "دمج pdf تقسيم ضغط تحويل merge split compress convert pdf"
 ---

@@ -7,4 +7,6 @@ desc_en: "Free video converter with a real interface, built on FFmpeg, supportin
 categories: ["فيديو"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.shutterencoder.com"}
+group: files
+keywords: "محول فيديو تحويل صيغة ضغط فيديو video converter prores mp4 convert"
 ---

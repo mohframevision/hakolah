@@ -7,4 +7,6 @@ desc_en: "Syncs files directly between your own devices, encrypted, with no midd
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://syncthing.net"}
+group: files
+keywords: "مزامنة ملفات نسخ احتياطي بين الأجهزة sync files backup dropbox alternative"
 ---

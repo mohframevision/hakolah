@@ -10,4 +10,6 @@ links:
   website: https://www.canva.com
   maps: ''
   instagram: ''
+group: design
+keywords: "تصميم سوشال ميديا بوستر انستقرام قوالب design social media poster templates"
 ---

@@ -7,4 +7,6 @@ desc_en: "Free, very light and minimal video player, excellent for 4K and HDR; c
 categories: ["فيديو"]
 dateAdded: 2026-10-20
 links: {"website": "https://mpv.io"}
+group: files
+keywords: "مشغل فيديو خفيف 4k hdr video player lightweight"
 ---

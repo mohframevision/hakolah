@@ -164,6 +164,13 @@ function buildSiteData(data, options = {}) {
         tags: [...(entry.data.categories || []), ...(entry.data.categoriesCustom || [])],
       };
       if (branches.length > 1) item.branches = branches;
+      // مجموعة "روابط وأدوات" (_data/toolGroups.js) — عليها تفلتر صفحة المجموعة.
+      // حقل مستقل مو تاج: البوابة تعرض المجموعات، فتكرارها بشرائح الفلتر زحمة
+      const group = (data.toolGroups || []).find((g) => g.slug === entry.data.group);
+      if (group) item.group = group.label;
+      // مرادفات بحث مخفية (ما تنعرض): "ملف ضايع"، "convert mp4"... + اسم المجموعة
+      const kw = [entry.data.keywords, group && group.label, group && group.label_en].filter(Boolean).join(" ");
+      if (kw) item.keywords = kw;
       const price = priceLevel(item.menuItems);
       if (price && !item.tags.includes(price.tag)) item.tags.push(price.tag);
 

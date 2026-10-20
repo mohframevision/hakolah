@@ -12,4 +12,6 @@ links:
   website: https://pixabay.com
   maps: ''
   instagram: ''
+group: stock
+keywords: "صور مجانية موسيقى مجانية مؤثرات صوتية free stock music sound effects"
 ---

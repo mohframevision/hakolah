@@ -7,4 +7,6 @@ desc_en: "Stunning motion graphics made in DaVinci Resolve, worth following if y
 categories: ["قنوات يوتيوب","مونتاج"]
 dateAdded: 2026-10-11
 links: {"website": "https://www.youtube.com/@zanehoyer"}
+group: communities
+keywords: "قناة يوتيوب مونتاج youtube editing"
 ---

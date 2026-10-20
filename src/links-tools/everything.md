@@ -7,4 +7,6 @@ desc_en: "Instant search for any file or folder on Windows by name — far faste
 categories: ["إنتاجية"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.voidtools.com"}
+group: files
+keywords: "بحث عن ملف ملف ضايع مفقود البحث في الكمبيوتر find file search lost file windows search"
 ---

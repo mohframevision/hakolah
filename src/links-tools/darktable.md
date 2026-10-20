@@ -7,4 +7,6 @@ desc_en: "Free, open-source Lightroom alternative: sort, rate and non-destructiv
 categories: ["صور"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.darktable.org"}
+group: photo
+keywords: "صور raw لايتروم تعديل صور كاميرا lightroom alternative raw photos"
 ---

@@ -33,6 +33,12 @@ exports.render = function (data) {
     `en/car-shops/${t.slug}.html`,
   ]);
 
+  // صفحات مجموعات "روابط وأدوات" (tool-group.njk) — نفس فجوة car-shop-type
+  const toolGroupPairs = (data.toolGroups || []).map((g) => [
+    `links-tools/${g.slug}.html`,
+    `en/links-tools/${g.slug}.html`,
+  ]);
+
   const bilingualPairs = [
     ["", "en/index.html"],
     ["favorites.html", "en/favorites.html"],
@@ -51,6 +57,7 @@ exports.render = function (data) {
     ...EN_SECTION_SLUGS.map((slug) => [`${slug}.html`, `en/${slug}.html`]),
     ...detailPagePairs,
     ...carShopTypePairs,
+    ...toolGroupPairs,
   ];
 
   /*

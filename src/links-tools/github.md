@@ -6,4 +6,6 @@ title_en: "GitHub"
 desc_en: "Host and collaborate on coding projects for free."
 categories: ["برمجة"]
 links: {"website": "https://github.com"}
+group: code
+keywords: "برمجة كود مشاريع git code repository"
 ---

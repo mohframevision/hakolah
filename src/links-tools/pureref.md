@@ -7,4 +7,6 @@ desc_en: "Keep all your reference images in one place, and organize your inspira
 categories: ["تصميم","إنتاجية"]
 dateAdded: 2026-10-11
 links: {"website": "https://www.pureref.com/"}
+group: design
+keywords: "صور مرجعية لوحة إلهام reference images mood board"
 ---

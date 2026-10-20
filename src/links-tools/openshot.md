@@ -7,4 +7,6 @@ desc_en: "The easiest free drag-and-drop video editor for beginners: unlimited t
 categories: ["فيديو", "مونتاج"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.openshot.org"}
+group: video
+keywords: "مونتاج سهل للمبتدئين أول فيديو easy video editor beginners"
 ---

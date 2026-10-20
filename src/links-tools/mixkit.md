@@ -10,4 +10,6 @@ links:
   website: https://mixkit.co
   maps: ''
   instagram: ''
+group: stock
+keywords: "فيديوهات مجانية موسيقى مؤثرات free stock video music"
 ---

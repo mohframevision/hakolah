@@ -7,4 +7,6 @@ desc_en: "Identifies any song playing around you with one tap, even in noisy pla
 categories: ["موسيقى", "صوت"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.shazam.com"}
+group: audio
+keywords: "اسم الأغنية التعرف على أغنية وش هالأغنية identify song music recognition"
 ---

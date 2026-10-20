@@ -7,4 +7,6 @@ desc_en: "Learn filmmaking and video editing in DaVinci Resolve."
 categories: ["قنوات يوتيوب","مونتاج"]
 dateAdded: 2026-10-11
 links: {"website": "https://www.youtube.com/@creatorsergeant/featured"}
+group: communities
+keywords: "قناة يوتيوب مونتاج youtube editing"
 ---

@@ -7,4 +7,6 @@ desc_en: "Password manager from Switzerland's Proton; the free plan has unlimite
 categories: ["أمان"]
 dateAdded: 2026-10-20
 links: {"website": "https://proton.me/pass"}
+group: security
+keywords: "كلمات السر باسورد إيميل بديل password manager email alias"
 ---

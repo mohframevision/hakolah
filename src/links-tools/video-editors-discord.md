@@ -7,4 +7,6 @@ desc_en: "The largest Discord server for editors, with paid job opportunities, h
 categories: ["مجتمعات","مونتاج"]
 dateAdded: 2026-10-11
 links: {"website": "https://discord.com/invite/videoeditors"}
+group: communities
+keywords: "ديسكورد مجتمع مونتاج discord community editing"
 ---

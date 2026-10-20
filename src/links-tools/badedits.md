@@ -7,4 +7,6 @@ desc_en: "A free plugin for After Effects and Premiere Pro, with extra tools and
 categories: ["مونتاج","فيديو"]
 dateAdded: 2026-10-11
 links: {"website": "https://badedits.com/plugin"}
+group: video
+keywords: "إضافات بريمير افتر افكت plugin premiere after effects assets"
 ---

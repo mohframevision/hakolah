@@ -24,4 +24,6 @@ cta: جرّبه مجاناً
 cta_en: Try it free
 links:
   website: "https://wisprflow.ai/r?MHMD700"
+group: ai
+keywords: "كتابة بالصوت تحويل الصوت لنص voice typing dictation speech to text"
 ---

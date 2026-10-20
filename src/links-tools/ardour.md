@@ -7,4 +7,6 @@ desc_en: "Professional open-source audio workstation for recording vocals and re
 categories: ["صوت"]
 dateAdded: 2026-10-20
 links: {"website": "https://ardour.org"}
+group: audio
+keywords: "استوديو تسجيل مكس daw recording mixing studio"
 ---

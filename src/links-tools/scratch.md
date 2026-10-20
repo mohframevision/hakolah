@@ -7,4 +7,6 @@ desc_en: "Learn programming by snapping blocks instead of typing code — from M
 categories: ["تعليم", "برمجة"]
 dateAdded: 2026-10-20
 links: {"website": "https://scratch.mit.edu"}
+group: code
+keywords: "تعلم البرمجة للأطفال مبتدئين coding for kids learn programming"
 ---

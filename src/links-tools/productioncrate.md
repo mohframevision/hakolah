@@ -7,4 +7,6 @@ desc_en: "30+ professional plugins for editing and visual effects."
 categories: ["مونتاج","فيديو"]
 dateAdded: 2026-10-11
 links: {"website": "https://www.productioncrate.com/plugins"}
+group: video
+keywords: "مؤثرات فيديو إضافات vfx assets plugins effects"
 ---

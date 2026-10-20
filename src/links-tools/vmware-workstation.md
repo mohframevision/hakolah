@@ -7,4 +7,6 @@ desc_en: "Runs a full operating system in a window isolated from your PC — try
 categories: ["برمجة", "أمان"]
 dateAdded: 2026-10-20
 links: {"website": "https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion"}
+group: code
+keywords: "جهاز افتراضي تشغيل نظام لينكس ويندوز وهمي virtual machine vm linux"
 ---

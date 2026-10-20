@@ -7,4 +7,6 @@ desc_en: "Free, open-source UI design and prototyping tool — a Figma alternati
 categories: ["تصميم"]
 dateAdded: 2026-10-20
 links: {"website": "https://penpot.app"}
+group: design
+keywords: "تصميم واجهات تطبيقات مواقع فيقما ui ux figma alternative prototype"
 ---

@@ -7,4 +7,6 @@ desc_en: "Virtual audio mixer for Windows: route each app's audio to a different
 categories: ["صوت"]
 dateAdded: 2026-10-20
 links: {"website": "https://vb-audio.com/Voicemeeter/"}
+group: audio
+keywords: "خلاط صوت توجيه الصوت بث mixer audio routing stream"
 ---
