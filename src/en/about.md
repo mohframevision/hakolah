@@ -70,4 +70,8 @@ The "Pick for me" page uses music and sound effects licensed from Uppbeat. Here 
 
 The train, car, boat, plane and wind sounds come from the Uppbeat sound effects library. Full details are in the [credits file](/assets/audio/CREDITS.txt).
 
+<h2 id="osm">Where some place data comes from</h2>
+
+Some places (whose details are still being completed) took their names, locations and some contact details from <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a>, an open map built by volunteers and licensed under the ODbL. © OpenStreetMap contributors. We review and complete this data gradually, and some of it may be out of date, so if you spot a mistake, please tell us.
+
 </article>
