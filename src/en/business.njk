@@ -1,0 +1,28 @@
+---
+layout: "base.njk"
+lang: "en"
+permalink: "en/business.html"
+title: "List Your Business on Hakolah: Digital Menu and Guide Listing | Hakolah"
+description: "For restaurant and cafe owners in Bahrain: a QR digital menu in Arabic and English with a WhatsApp order button, plus a listing in the Hakolah guide."
+navActive: "business"
+langSwitchUrl: "/business.html"
+pageScript: "reveal"
+---
+{% set t = i18n[lang or "ar"] %}
+<div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> / List your business</div>
+<section class="page-header">
+  <h1><span aria-hidden="true">🏪</span> List Your Business on Hakolah</h1>
+  <p>For restaurant and cafe owners in Bahrain: a simple, fast digital menu that opens with a scan and sends the order to your WhatsApp, ready to read.</p>
+</section>
+<div class="biz-grid">
+  <div class="biz-card"><span aria-hidden="true">📱</span><h3>QR digital menu</h3><p>A page in Arabic and English with your items and prices; customers open it from their phone with no download and no account.</p></div>
+  <div class="biz-card"><span aria-hidden="true">💬</span><h3>Order on WhatsApp</h3><p>The customer picks their items and you receive a tidy, ready message with quantities and the total.</p></div>
+  <div class="biz-card"><span aria-hidden="true">📍</span><h3>A listing in the guide</h3><p>Your place appears in the Hakolah guide with map, hours and phone, found by people searching your name or your kind of food.</p></div>
+</div>
+<p class="biz-note">Transparency: any place that pays to be featured is clearly labelled "Ad", and doesn't rise in search or in "Pick for me" because of it.</p>
+<p><a class="btn secondary" href="{{ '/en/menu/demo-cafe.html' | url }}">See a demo menu</a></p>
+<section class="biz-contact" data-reveal-contact data-wa="Contact on WhatsApp" data-msg="Hello Hakolah, I'd like to know more about the digital menu for my place. Business name: ">
+  <h2>Ready to start?</h2>
+  <p>Press the button to reveal how to reach us. We don't show the number publicly, to protect the site owner from spam.</p>
+  <button type="button" class="btn">Reveal contact</button>
+</section>

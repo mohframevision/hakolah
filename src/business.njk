@@ -1,0 +1,27 @@
+---
+layout: "base.njk"
+permalink: "business.html"
+title: "اعرض محلك في هكوله: منيو رقمي وبطاقة في الدليل | هكوله"
+description: "لأصحاب المطاعم والكافيهات في البحرين: منيو رقمي برمز QR بالعربي والإنجليزي مع زر طلب عبر واتساب، وبطاقة في دليل هكوله."
+navActive: "business"
+langSwitchUrl: "/en/business.html"
+pageScript: "reveal"
+---
+{% set t = i18n[lang or "ar"] %}
+<div class="breadcrumb"><a href="{{ '/index.html' | url }}">{{ t.nav_home }}</a> / اعرض محلك</div>
+<section class="page-header">
+  <h1><span aria-hidden="true">🏪</span> اعرض محلك في هكوله</h1>
+  <p>لأصحاب المطاعم والكافيهات في البحرين: منيو رقمي بسيط وسريع، يفتح بمسح رمز، ويرسل الطلب إلى واتساب محلك جاهزاً.</p>
+</section>
+<div class="biz-grid">
+  <div class="biz-card"><span aria-hidden="true">📱</span><h3>منيو رقمي برمز QR</h3><p>صفحة بالعربي والإنجليزي فيها أصنافك وأسعارك، يفتحها الزبون من الجوال بلا تحميل ولا حساب.</p></div>
+  <div class="biz-card"><span aria-hidden="true">💬</span><h3>طلب عبر واتساب</h3><p>الزبون يختار أصنافه فتصلك رسالة مرتبة جاهزة فيها الكميات والإجمالي.</p></div>
+  <div class="biz-card"><span aria-hidden="true">📍</span><h3>بطاقة في الدليل</h3><p>مكانك يظهر في دليل هكوله مع الخريطة والساعات والهاتف، ويلقاه من يبحث عن اسمك أو نوع أكلك.</p></div>
+</div>
+<p class="biz-note">الشفافية: أي مكان دفع للظهور يُكتب عليه «إعلان» بوضوح، ولا يرتفع بسبب ذلك في البحث أو في «اختار لي».</p>
+<p><a class="btn secondary" href="{{ '/menu/demo-cafe.html' | url }}">شاهد منيو تجريبياً</a></p>
+<section class="biz-contact" data-reveal-contact data-wa="تواصل عبر واتساب" data-msg="مرحباً هكوله، أرغب بمعرفة المزيد عن المنيو الرقمي لمحلي. اسم المحل: ">
+  <h2>تبي تبدأ؟</h2>
+  <p>اضغط الزر لتظهر وسيلة التواصل. لا نعرض الرقم علناً لحماية صاحب الموقع من الرسائل المزعجة.</p>
+  <button type="button" class="btn">أظهر وسيلة التواصل</button>
+</section>

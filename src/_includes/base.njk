@@ -206,6 +206,7 @@
       <div class="footer-links">
         <a href="{{ ('/en/about.html' if lang == 'en' else '/about.html') | url }}">{{ t.footer_about }}</a>
         <a href="{{ ('/en/contact.html' if lang == 'en' else '/contact.html') | url }}">{{ t.footer_contact }}</a>
+        <a href="{{ ('/en/business.html' if lang == 'en' else '/business.html') | url }}">{{ 'List your business' if lang == 'en' else 'اعرض محلك' }}</a>
         <a href="{{ ('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url }}">{{ t.footer_privacy }}</a>
         <a href="{{ ('/en/terms.html' if lang == 'en' else '/terms.html') | url }}">{{ t.footer_terms }}</a>
         <button type="button" class="footer-link-btn" id="cookie-settings">{{ t.footer_cookies }}</button>
