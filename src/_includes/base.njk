@@ -250,6 +250,8 @@
   {# إعدادات الصفحة كبيانات JSON (نوع application/json لا يُنفَّذ إطلاقاً، فما
      يحتاج أي استثناء بسياسة CSP). bootstrap.js يقرأها، وmain.js يشغّل دوال
      الصفحة المناسبة حسب page — بدل السكربتات المضمّنة اللي كانت هنا #}
+  {# فقاعة الدعم (كازاسوق: معدّات ألعاب) تظهر بس بصفحات المبدعين — زائر دليل المطاعم/الكرك/الكراجات ما تناسب نيّته #}
+  {% if navActive in ["creators", "links-tools", "ai-experiments"] %}
   {% if lang == "en" %}
   <button type="button" class="support-bubble" id="supportBubble" aria-label="Support Hakolah">🎮</button>
   <dialog class="support-card" id="supportCard" aria-labelledby="supportTitle">
@@ -294,6 +296,7 @@
       <button type="button" class="support-hide" data-hide>لا تظهر هذا مجدداً</button>
     </div>
   </dialog>
+  {% endif %}
   {% endif %}
   <script type="application/json" id="site-config">
     {
