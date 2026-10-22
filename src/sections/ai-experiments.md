@@ -1,4 +1,5 @@
 ---
+creators: true
 slug: ai-experiments
 title: "أدوات"
 navLabel: أدوات

@@ -211,6 +211,7 @@ function buildSiteData(data, options = {}) {
       title_en: meta.title_en,
       icon: meta.icon,
       hasDetailPages: Boolean(meta.hasDetailPages),
+      creators: Boolean(meta.creators),
       items,
     };
   }

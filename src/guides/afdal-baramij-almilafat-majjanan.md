@@ -6,6 +6,7 @@ title_en: "Best Free Apps to Find, Convert and Compress Files on Your PC"
 desc_en: A lost file, a huge video, or a file that won't open? A practical guide to the best free apps that solve everyday file problems in minutes.
 categories:
   - تقنية وبرمجيات
+hideFromNewest: true
 dateAdded: 2026-10-21
 langSwitchUrl: "/en/guides/afdal-baramij-almilafat-majjanan.html"
 aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي، واعتمد على مراجعة صاحب الموقع لقائمة البرامج."

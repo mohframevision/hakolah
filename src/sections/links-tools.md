@@ -1,4 +1,5 @@
 ---
+creators: true
 slug: "links-tools"
 title: "روابط وأدوات مفيدة"
 icon: "🔗"

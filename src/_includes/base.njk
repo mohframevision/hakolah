@@ -163,9 +163,11 @@
       <nav class="main-nav" id="main-nav">
         {% set homeUrl = '/en/index.html' if lang == 'en' else '/index.html' %}
         <a href="{{ homeUrl | url }}" class="nav-home{% if navActive == "home" %} active{% endif %}"{% if navActive == "home" %} aria-current="page"{% endif %}>{{ t.nav_home }}</a>
-        {% for entry in sections %}
+        {% for entry in sections %}{% if not entry.creators %}
         <a href="{{ (('/en/' if lang == 'en' else '/') + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active" aria-current="page"{% endif %}>{{ entry.navLabel_en if lang == 'en' else entry.navLabel }}</a>
-        {% endfor %}
+        {% endif %}{% endfor %}
+        {% set onCreators = navActive in ["creators", "links-tools", "ai-experiments"] %}
+        <a href="{{ (('/en/creators.html' if lang == 'en' else '/creators.html')) | url }}"{% if onCreators %} class="active" aria-current="page"{% endif %}>{{ 'For Creators' if lang == 'en' else 'للمبدعين' }}</a>
         {# على الجوال تختفي أيقونة المفضلة من الهيدر (ضيق) وتظهر هنا داخل
            القائمة المنسدلة بدل ما تزدحم مع الشعار. "اختار لي" ما تحتاج نسخة
            هنا لأنها تبقى ظاهرة بالهيدر حتى على أضيق الشاشات (انظر icon-btn-picker) #}

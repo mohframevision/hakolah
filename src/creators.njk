@@ -1,0 +1,27 @@
+---
+layout: "base.njk"
+permalink: "creators.html"
+title: "للمبدعين: أدوات وبرامج وتجارب | هكوله"
+description: "بوابة المبدعين في هكوله: برامج مجانية للمونتاج والتصميم والصوت، وتجارب الذكاء الاصطناعي، وصوتيات هكوله، بعيداً عن دليل البحرين."
+navActive: "creators"
+langSwitchUrl: "/en/creators.html"
+---
+{% set t = i18n[lang or "ar"] %}
+<div class="breadcrumb"><a href="{{ '/index.html' | url }}">{{ t.nav_home }}</a> / للمبدعين</div>
+<section class="page-header">
+  <h1><span aria-hidden="true">🎨</span> للمبدعين</h1>
+  <p>برامج وأدوات مجانية للمونتاج والتصميم والصوت، وتجارب الذكاء الاصطناعي. دليل البحرين ينتظرك في <a href="{{ '/index.html' | url }}">الرئيسية</a>.</p>
+</section>
+<div class="hub-grid">
+  <a class="hub-card" href="{{ '/links-tools.html' | url }}"><span class="hub-card-icon" aria-hidden="true">🛠️</span><h3 class="hub-card-label">روابط وأدوات</h3></a>
+  <a class="hub-card" href="{{ '/ai-experiments.html' | url }}"><span class="hub-card-icon" aria-hidden="true">🤖</span><h3 class="hub-card-label">تجارب الذكاء الاصطناعي</h3></a>
+  <a class="hub-card" href="{{ '/sounds.html' | url }}"><span class="hub-card-icon" aria-hidden="true">🎹</span><h3 class="hub-card-label">صوتيات هكوله</h3></a>
+</div>
+<section class="tool-groups-more">
+  <h2>تصفّح الأدوات حسب الحاجة</h2>
+  <div class="chip-row">
+  {%- for g in toolGroups %}
+    <a class="filter-chip" href="{{ ('/links-tools/' + g.slug + '.html') | url }}"><span aria-hidden="true">{{ g.icon }}</span> {{ g.label }}</a>
+  {%- endfor %}
+  </div>
+</section>

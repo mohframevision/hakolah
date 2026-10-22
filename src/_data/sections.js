@@ -55,6 +55,8 @@ module.exports = () => {
          وتجارب) — نستعمل نفس القائمة المعرّفة أصلاً للمناطق بدل حقل جديد
          بكل ملف قسم. تُستخدم لفلترة الرئيسية بين النوعين */
       isPlace: SECTIONS_WITH_AREAS.includes(slug),
+      // قسم للمبدعين (أدوات/تجارب): يطلع من الهيدر والرئيسية وصفحته /creators.html تجمعه
+      creators: Boolean(data.creators),
       hasDetailPages: Boolean(data.hasDetailPages),
       iconOptions:
         Array.isArray(data.iconOptions) && data.iconOptions.length

@@ -6,6 +6,7 @@ title_en: "Best Free Audio and Music Apps, From Recording to Sound Design"
 desc_en: A guide to choosing the right free audio app, whether you're recording a podcast, starting music production, recording real instruments, or routing audio while streaming.
 categories:
   - تقنية وبرمجيات
+hideFromNewest: true
 dateAdded: 2026-10-21
 langSwitchUrl: "/en/guides/afdal-baramij-alsawt-walmusiqa.html"
 aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي، واعتمد على مراجعة صاحب الموقع لقائمة البرامج."

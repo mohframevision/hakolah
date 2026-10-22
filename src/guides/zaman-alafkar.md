@@ -7,6 +7,7 @@ desc_en: "Modern tools removed most of the barriers between an idea and building
 categories:
   - تقنية وبرمجيات
   - نصائح
+hideFromNewest: true
 dateAdded: 2026-10-21
 langSwitchUrl: "/en/guides/zaman-alafkar.html"
 aiDisclosure: "هذا المقال بمساعدة الذكاء الاصطناعي (Claude). مستوى المساهمة البشرية: الفكرة الأساسية والقصة لصاحب الموقع، وهو من عاش التجربة وطلب كتابتها، فصاغها الذكاء الاصطناعي بالعربية وأضاف المراجع المذكورة."

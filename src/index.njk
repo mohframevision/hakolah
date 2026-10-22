@@ -40,9 +40,10 @@ langSwitchUrl: "/en/index.html"
 <section class="home-row">
   <div class="home-row-head"><h2>{{ i18n.ar.home_sections }}</h2></div>
   <div class="mini-sections">
-    {% for entry in sections %}
+    {% for entry in sections %}{% if not entry.creators %}
     <a class="mini-section" href="{{ ('/' + entry.slug + '.html') | url }}"><span aria-hidden="true">{{ entry.icon }}</span>{{ entry.navLabel }}</a>
-    {% endfor %}
+    {% endif %}{% endfor %}
+    <a class="mini-section" href="{{ '/creators.html' | url }}"><span aria-hidden="true">🎨</span>للمبدعين</a>
     <a class="mini-section" href="{{ '/sounds.html' | url }}"><span aria-hidden="true">🎹</span>{{ i18n.ar.nav_sounds_short }}</a>
   </div>
 </section>

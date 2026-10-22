@@ -7,6 +7,7 @@ desc_en: Free apps don't replace a whole Adobe app — they replace pieces of it
 categories:
   - تقنية وبرمجيات
   - تصميم ومونتاج
+hideFromNewest: true
 dateAdded: 2026-10-21
 langSwitchUrl: "/en/guides/uddat-almubdi-almajjaniya.html"
 aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي، واعتمد على مراجعة صاحب الموقع لقائمة البرامج."

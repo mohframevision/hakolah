@@ -105,7 +105,7 @@
   // جديد في هكوله: آخر ما أُضيف بكل الأقسام (المقالات تأخذ شارة «مقال»)
   const newest = [];
   Object.entries(SITE_DATA).forEach(([s, sec]) =>
-    (sec.items || []).forEach((item) => {
+    (sec.creators ? [] : sec.items || []).forEach((item) => {
       if (item.addedAt && !item.hideFromNewest) newest.push([s, item]);
     })
   );

@@ -1,0 +1,28 @@
+---
+layout: "base.njk"
+permalink: "en/creators.html"
+lang: "en"
+title: "For Creators: Tools, Apps and Experiments | Hakolah"
+description: "Hakolah's creators portal: free apps for video editing, design and audio, AI experiments, and Hakolah Sounds, kept apart from the Bahrain guide."
+navActive: "creators"
+langSwitchUrl: "/creators.html"
+---
+{% set t = i18n[lang or "ar"] %}
+<div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> / For Creators</div>
+<section class="page-header">
+  <h1><span aria-hidden="true">🎨</span> For Creators</h1>
+  <p>Free apps and tools for video editing, design and audio, plus AI experiments. The Bahrain guide is waiting on the <a href="{{ '/en/index.html' | url }}">home page</a>.</p>
+</section>
+<div class="hub-grid">
+  <a class="hub-card" href="{{ '/en/links-tools.html' | url }}"><span class="hub-card-icon" aria-hidden="true">🛠️</span><h3 class="hub-card-label">Links &amp; Tools</h3></a>
+  <a class="hub-card" href="{{ '/en/ai-experiments.html' | url }}"><span class="hub-card-icon" aria-hidden="true">🤖</span><h3 class="hub-card-label">AI Experiments</h3></a>
+  <a class="hub-card" href="{{ '/en/sounds.html' | url }}"><span class="hub-card-icon" aria-hidden="true">🎹</span><h3 class="hub-card-label">Hakolah Sounds</h3></a>
+</div>
+<section class="tool-groups-more">
+  <h2>Browse tools by need</h2>
+  <div class="chip-row">
+  {%- for g in toolGroups %}
+    <a class="filter-chip" href="{{ ('/en/links-tools/' + g.slug + '.html') | url }}"><span aria-hidden="true">{{ g.icon }}</span> {{ g.label_en }}</a>
+  {%- endfor %}
+  </div>
+</section>
