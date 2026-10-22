@@ -1,7 +1,5 @@
 /* منيو رقمي: سلة خفيفة بالمتصفح + زر «اطلب عبر واتساب» برسالة جاهزة. بلا خادم ولا حفظ. */
-(() => {
-  const root = document.querySelector("[data-menu]");
-  if (!root) return;
+document.querySelectorAll("[data-menu]").forEach((root) => {
   const d = root.dataset;
   const qty = new Map();
   const items = [...root.querySelectorAll("[data-item]")];
@@ -34,4 +32,4 @@
     render();
   });
   render();
-})();
+});

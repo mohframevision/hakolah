@@ -9,11 +9,28 @@ langSwitchUrl: "/business.html"
 pageScript: "reveal"
 ---
 {% set t = i18n[lang or "ar"] %}
+{% set m = demoMenu %}
+{% set ar = false %}
 <div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> / List your business</div>
 <section class="page-header">
   <h1><span aria-hidden="true">🏪</span> List Your Business on Hakolah</h1>
   <p>For restaurant and cafe owners in Bahrain: a simple, fast digital menu that opens with a scan and sends the order to your WhatsApp, ready to read.</p>
 </section>
+<div class="biz-demo">
+  <div class="biz-demo-text">
+    <h2>See how it works</h2>
+    <p>This menu plays itself, and it is the real product. When it finishes you can try it yourself.</p>
+    <button type="button" class="btn secondary" data-demo-replay hidden>↻ Replay</button>
+  </div>
+  <div class="demo-phone" data-demo aria-label="Digital menu demo">
+    <div class="demo-screen">
+      <div class="demo-qr"><div class="demo-qr-box"><i></i></div><small>Scan the code to open the menu</small></div>
+      <div class="demo-menu hid">{% include "menu-body.njk" %}</div>
+      <div class="demo-msg" hidden><b>Ready WhatsApp message</b><pre></pre></div>
+      <div class="demo-cursor" hidden></div>
+    </div>
+  </div>
+</div>
 <div class="biz-grid">
   <div class="biz-card"><span aria-hidden="true">📱</span><h3>QR digital menu</h3><p>A page in Arabic and English with your items and prices; customers open it from their phone with no download and no account.</p></div>
   <div class="biz-card"><span aria-hidden="true">💬</span><h3>Order on WhatsApp</h3><p>The customer picks their items and you receive a tidy, ready message with quantities and the total.</p></div>
@@ -26,3 +43,5 @@ pageScript: "reveal"
   <p>Press the button and reach us directly.</p>
   <button type="button" class="btn">Contact us</button>
 </section>
+<script src="{{ ('/js/menu.js') | url }}?v={{ buildVersion }}"></script>
+<script src="{{ ('/js/demo.js') | url }}?v={{ buildVersion }}"></script>

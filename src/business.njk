@@ -8,11 +8,28 @@ langSwitchUrl: "/en/business.html"
 pageScript: "reveal"
 ---
 {% set t = i18n[lang or "ar"] %}
+{% set m = demoMenu %}
+{% set ar = true %}
 <div class="breadcrumb"><a href="{{ '/index.html' | url }}">{{ t.nav_home }}</a> / اعرض محلك</div>
 <section class="page-header">
   <h1><span aria-hidden="true">🏪</span> اعرض محلك في هكوله</h1>
   <p>لأصحاب المطاعم والكافيهات في البحرين: منيو رقمي بسيط وسريع، يفتح بمسح رمز، ويرسل الطلب إلى واتساب محلك جاهزاً.</p>
 </section>
+<div class="biz-demo">
+  <div class="biz-demo-text">
+    <h2>شاهد كيف يشتغل</h2>
+    <p>هذا المنيو يلعب بنفسه، وهو المنتج الحقيقي. وبعد ما يخلص تقدر تجرّبه أنت.</p>
+    <button type="button" class="btn secondary" data-demo-replay hidden>↻ أعد العرض</button>
+  </div>
+  <div class="demo-phone" data-demo aria-label="عرض توضيحي للمنيو الرقمي">
+    <div class="demo-screen">
+      <div class="demo-qr"><div class="demo-qr-box"><i></i></div><small>امسح الرمز لفتح المنيو</small></div>
+      <div class="demo-menu hid">{% include "menu-body.njk" %}</div>
+      <div class="demo-msg" hidden><b>رسالة واتساب جاهزة</b><pre></pre></div>
+      <div class="demo-cursor" hidden></div>
+    </div>
+  </div>
+</div>
 <div class="biz-grid">
   <div class="biz-card"><span aria-hidden="true">📱</span><h3>منيو رقمي برمز QR</h3><p>صفحة بالعربي والإنجليزي فيها أصنافك وأسعارك، يفتحها الزبون من الجوال بلا تحميل ولا حساب.</p></div>
   <div class="biz-card"><span aria-hidden="true">💬</span><h3>طلب عبر واتساب</h3><p>الزبون يختار أصنافه فتصلك رسالة مرتبة جاهزة فيها الكميات والإجمالي.</p></div>
@@ -25,3 +42,5 @@ pageScript: "reveal"
   <p>اضغط الزر وتواصل معنا مباشرة.</p>
   <button type="button" class="btn">تواصل معنا</button>
 </section>
+<script src="{{ ('/js/menu.js') | url }}?v={{ buildVersion }}"></script>
+<script src="{{ ('/js/demo.js') | url }}?v={{ buildVersion }}"></script>

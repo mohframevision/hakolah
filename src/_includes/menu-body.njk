@@ -1,0 +1,19 @@
+<div data-menu data-wa="{{ m.data.whatsapp }}" data-cur="{{ 'د.ب' if ar else 'BD' }}" data-intro="{{ ('مرحباً، أريد الطلب من ' + m.data.title + ':') if ar else ('Hello, I would like to order from ' + m.data.title_en + ':') }}" data-total-label="{{ 'الإجمالي' if ar else 'Total' }}">
+  {% set groups = [] %}{% for it in m.data.items %}{% if (it.group_en if not ar else it.group) not in groups %}{% set groups = (groups.push(it.group_en if not ar else it.group), groups) %}{% endif %}{% endfor %}
+  {% for g in groups %}
+  <h2 class="menu-group">{{ g }}</h2>
+  <div class="menu-grid">
+    {% for it in m.data.items %}{% if (it.group_en if not ar else it.group) == g %}
+    <div class="menu-item" data-item data-name="{{ it.name if ar else it.name_en }}" data-price="{{ it.price }}">
+      <div class="menu-item-text"><b>{{ it.name if ar else it.name_en }}</b><small>{{ it.price }} {{ 'د.ب' if ar else 'BD' }}</small></div>
+      <div class="menu-step"><button type="button" data-step="-1" aria-label="{{ 'إنقاص' if ar else 'Remove one' }}">−</button><span class="qty-n">0</span><button type="button" data-step="1" aria-label="{{ 'إضافة' if ar else 'Add one' }}">+</button></div>
+    </div>
+    {% endif %}{% endfor %}
+  </div>
+  {% endfor %}
+  <div class="cart-bar" hidden>
+    <span>{{ 'سلتك' if ar else 'Your order' }} (<b class="cart-count">0</b>) · <b class="cart-total"></b></span>
+    <a class="btn cart-order" href="#" target="_blank" rel="noopener">{{ 'اطلب عبر واتساب' if ar else 'Order on WhatsApp' }}</a>
+  </div>
+  {% if m.data.demo %}<p class="menu-demo-note">{{ 'هذا منيو تجريبي: الزر يفتح واتساب برسالة جاهزة لتختار لمن ترسلها.' if ar else 'This is a demo menu: the button opens WhatsApp with a ready message so you pick who to send it to.' }}</p>{% endif %}
+</div>
