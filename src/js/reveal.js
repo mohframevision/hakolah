@@ -1,28 +1,54 @@
-/* زر «أظهر وسيلة التواصل»: رقم صاحب الموقع ما يطلع بالـHTML ولا يتكتب كنص واضح بالمستودع — يتركّب من
-   أجزاء مشفّرة لحظة ضغطة حقيقية من الزائر (isTrusted)، فالسكربتات اللي تجمع الأرقام من الصفحات ما تلقاه.
-   ملاحظة: حماية ضد الجمع الآلي العادي، مو سرّية مطلقة (من يفكّ الكود يقدر يطلّعه). */
+/* بطاقة التواصل: تُبنى لحظة ضغطة حقيقية (isTrusted) من أجزاء مشفّرة، فما تظهر بالـHTML ولا بالمستودع كنص واضح،
+   وخلفها تغبيش الصفحة. الأوصاف تجي من data-* بالقالب (عربي/إنجليزي). */
 (() => {
-  const A = [175, 91, 149, 73, 219, 45, 13, 242, 211, 62, 59];
-  const B = [150, 108, 166, 122, 226, 29, 61, 196, 235, 12, 15];
-  const num = () => A.map((k, i) => String.fromCharCode(k ^ B[i])).join("");
+  const dec = (a, b) => a.map((k, i) => String.fromCharCode(k ^ b[i])).join("");
+  const D = {
+    n: () => dec([175, 91, 149, 73, 219, 45, 13, 242, 211, 62, 59], [150, 108, 166, 122, 226, 29, 61, 196, 235, 12, 15]),
+    e: () => dec([61, 1, 183, 212, 140, 34, 16, 51, 50, 79, 164, 180, 213, 169, 160, 28, 190, 50, 194, 39, 131, 30, 56, 152], [80, 110, 223, 181, 225, 71, 116, 1, 2, 127, 145, 133, 231, 155, 224, 123, 211, 83, 171, 75, 173, 125, 87, 245]),
+    i: () => dec([116, 2, 151, 30, 95, 37], [18, 55, 229, 48, 43, 87]),
+  };
   document.querySelectorAll("[data-reveal-contact]").forEach((box) => {
     const btn = box.querySelector("button");
     if (!btn) return;
-    btn.addEventListener("click", (e) => {
-      if (!e.isTrusted) return;
-      const n = num();
-      const msg = box.dataset.msg || "";
-      const a = document.createElement("a");
-      a.className = "btn";
-      a.href = `https://wa.me/${n}?text=${encodeURIComponent(msg)}`;
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.textContent = box.dataset.wa || "WhatsApp";
-      const num_ = document.createElement("span");
-      num_.className = "reveal-num";
-      num_.dir = "ltr";
-      num_.textContent = `+${n.slice(0, 3)} ${n.slice(3, 7)} ${n.slice(7)}`;
-      btn.replaceWith(a, num_);
+    const d = box.dataset;
+    btn.addEventListener("click", (ev) => {
+      if (!ev.isTrusted) return;
+      const num = D.n(), mail = D.e(), ig = D.i();
+      const dlg = document.createElement("dialog");
+      dlg.className = "contact-card";
+      const row = (icon, label, href, text, ltr) => {
+        const a = document.createElement("a");
+        a.className = "contact-row";
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.innerHTML = '<span class="contact-ic"></span><span class="contact-tx"><small></small><b></b></span>';
+        a.querySelector(".contact-ic").textContent = icon;
+        a.querySelector("small").textContent = label;
+        const b = a.querySelector("b");
+        b.textContent = text;
+        if (ltr) b.dir = "ltr";
+        return a;
+      };
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "contact-close";
+      close.setAttribute("aria-label", d.close || "Close");
+      close.textContent = "✕";
+      const h = document.createElement("h2");
+      h.textContent = d.title || "";
+      dlg.append(
+        close,
+        h,
+        row("💬", d.wa || "WhatsApp", `https://wa.me/${num}?text=${encodeURIComponent(d.msg || "")}`, `+${num.slice(0, 3)} ${num.slice(3, 7)} ${num.slice(7)}`, true),
+        row("✉️", d.mail || "Email", `mailto:${mail}`, mail, true),
+        row("📸", d.ig || "Instagram", `https://www.instagram.com/${ig}/`, `@${ig}`, true)
+      );
+      close.addEventListener("click", () => dlg.close());
+      dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+      dlg.addEventListener("close", () => dlg.remove());
+      document.body.append(dlg);
+      dlg.showModal();
     });
   });
 })();
