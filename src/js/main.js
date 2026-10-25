@@ -1370,7 +1370,7 @@ function buildActionsHtml(item) {
     detailHtml = `<a class="btn" href="${href}">${ICON_SVG["menu-book"]} ${t("read_details")}</a>`;
   }
   // قائمة الطعام التفاعلية تحل محل زر صورة المنيو العادي، لا تظهران معاً
-  const hasStructuredMenu = Array.isArray(item.menuItems) && item.menuItems.length > 0;
+  const hasStructuredMenu = item.menuCount > 0 || (Array.isArray(item.menuItems) && item.menuItems.length > 0);
   const links = { ...(item.links || (item.url ? { website: item.url } : {})) };
   if (hasStructuredMenu) delete links.menu;
   const orderedKeys = Object.keys(links)
@@ -2253,17 +2253,25 @@ function openMenuOverlay(item) {
 
   const card = document.createElement("div");
   card.className = "menu-card";
-  const rows = (item.menuItems || [])
-    .map((mi) => {
-      const name = window.SITE_LANG === "en" && mi.name_en ? mi.name_en : mi.name;
-      return `<li><span class="menu-item-name">${name}</span>${mi.price ? `<span class="menu-item-price">${mi.price}</span>` : ""}</li>`;
-    })
-    .join("");
   card.innerHTML = `
     <h3>${item.icon || "🍽️"} ${itemTitle(item)}</h3>
-    <ul class="menu-items">${rows}</ul>
+    <ul class="menu-items"><li aria-busy="true">…</li></ul>
   `;
   overlay.appendChild(card);
+  // الأصناف تتحمّل عند الفتح (js/menus.js) — القائمة تظهر فوراً بنقاط تحميل ثم تتعبّى
+  window
+    .loadMenus()
+    .catch(() => {})
+    .then(() => {
+      const rows = window
+        .menuOf(item)
+        .map((mi) => {
+          const name = window.SITE_LANG === "en" && mi.name_en ? mi.name_en : mi.name;
+          return `<li><span class="menu-item-name">${name}</span>${mi.price ? `<span class="menu-item-price">${mi.price}</span>` : ""}</li>`;
+        })
+        .join("");
+      card.querySelector(".menu-items").innerHTML = rows;
+    });
 }
 
 /* ===== خطة اليوم =====

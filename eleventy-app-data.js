@@ -219,7 +219,30 @@ function buildSiteData(data, options = {}) {
   return out;
 }
 
-module.exports = { buildSiteData, priceLevel, PRICE_TAGS };
+/* data.js يتحمّل بكل صفحة، والمنيو أكبر جزء فيه (وفروع نفس المحل تكرّره حرفياً). نفصله لـjs/menus.js
+   (يتحمّل عند الحاجة فقط: فتح قائمة طعام، أو صفحة البحث): كل منيو فريد يُخزَّن مرة وحدة بـMENU_POOL،
+   والعنصر يحمل menuRef (رقمه) وmenuCount. تطبيق الأندرويد يأخذ app-data.json كاملاً ولا يمرّ من هنا */
+function splitMenus(out) {
+  const pool = [];
+  const seen = new Map();
+  for (const sec of Object.values(out)) {
+    for (const item of sec.items || []) {
+      if (!item.menuItems || !item.menuItems.length) {
+        delete item.menuItems;
+        continue;
+      }
+      const rows = item.menuItems.map((m) => [m.name, m.name_en || "", m.price || ""]);
+      const key = JSON.stringify(rows);
+      if (!seen.has(key)) seen.set(key, pool.push(rows) - 1);
+      item.menuRef = seen.get(key);
+      item.menuCount = rows.length;
+      delete item.menuItems;
+    }
+  }
+  return pool;
+}
+
+module.exports = { buildSiteData, priceLevel, PRICE_TAGS, splitMenus };
 
 // فحص سريع: node eleventy-app-data.js
 if (require.main === module) {

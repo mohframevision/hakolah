@@ -3,10 +3,11 @@ exports.data = {
   eleventyExcludeFromCollections: true,
 };
 
-const { buildSiteData, PRICE_TAGS } = require("../eleventy-app-data.js");
+const { buildSiteData, PRICE_TAGS, splitMenus } = require("../eleventy-app-data.js");
 
 exports.render = function (data) {
   const out = buildSiteData(data);
+  splitMenus(out); // المنيو بملف مستقل: js/menus.js
 
   return (
     "/* هذا الملف يُنشأ تلقائياً من محتوى src/<section>/*.md عبر Eleventy — لا تعدّله يدوياً هنا،" +

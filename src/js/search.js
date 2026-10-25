@@ -77,22 +77,29 @@
         tags: norm(tagText(item.tags) + " " + (item.keywords || "")),
         desc: norm((item.desc || "") + " " + (item.desc_en || "")),
       });
-      (item.menuItems || []).forEach((m) => {
-        if (!m.name) return;
-        entries.push({
-          kind: "menu",
-          section,
-          secName,
-          item,
-          menu: m,
-          title: norm(m.name + " " + (m.name_en || "")),
-          tags: "",
-          desc: "",
-          price: priceNum(m.price),
-        });
-      });
     });
   });
+  // أصناف المنيو تنضاف بعد تحميل js/menus.js (بملف مستقل عن data.js)، ثم نعيد البحث الحالي
+  const addMenuEntries = () =>
+    Object.entries(SITE_DATA).forEach(([section, sec]) => {
+      const secName = isEn ? sec.title_en || sec.title : sec.title;
+      (sec.items || []).forEach((item) =>
+        window.menuOf(item).forEach((m) => {
+          if (!m.name) return;
+          entries.push({
+            kind: "menu",
+            section,
+            secName,
+            item,
+            menu: m,
+            title: norm(m.name + " " + (m.name_en || "")),
+            tags: "",
+            desc: "",
+            price: priceNum(m.price),
+          });
+        })
+      );
+    });
 
   /* ===== المطابقة والتقييم ===== */
   function fieldScore(field, term) {
@@ -349,4 +356,11 @@
   }
   run();
   if (!start) input.focus();
+  window
+    .loadMenus()
+    .then(() => {
+      addMenuEntries();
+      run();
+    })
+    .catch(() => {});
 })();

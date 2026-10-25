@@ -301,6 +301,7 @@
   <script type="application/json" id="site-config">
     {
       "lang": {{ lang | json | safe }},
+      "menusUrl": {{ (('/js/menus.js' | url) + '?v=' + buildVersion) | json | safe }},
       "gaId": {{ (null if noThirdParty else analytics.measurementId) | json | safe }},
       "push": { "workerUrl": {{ push.workerUrl | json | safe }}, "vapidPublicKey": {{ push.vapidPublicKey | json | safe }} },
       "page": {
