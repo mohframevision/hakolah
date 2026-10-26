@@ -6,6 +6,7 @@ image: /assets/uploads/DSC04127-Enhanced-NR.jpg
 langSwitchUrl: "/places/ممشى-توبلي.html"
 links:
   maps: https://maps.app.goo.gl/tVXApWhfJWWD5Tht9
+imageCredit: "Mohamed"
 ---
 
 **About**
