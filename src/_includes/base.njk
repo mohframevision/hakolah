@@ -109,6 +109,8 @@
      لأن سياسة CSP (style-src) ما تسمح بوسم <style> مضمّن، بس تسمح بملف من
      نفس الموقع. يُحمَّل بعد style.css مباشرة فيتغلّب على قيمته الافتراضية. #}
   <link rel="stylesheet" href="{{ '/theme.css' | url }}?v={{ buildVersion }}" />
+  {# ملف تنسيق خاص بصفحة (مثل menu.css لقوالب المنيو وخطوطها) — بس بالصفحات اللي تطلبه #}
+  {% if pageCss %}<link rel="stylesheet" href="{{ ('/css/' + pageCss + '.css') | url }}?v={{ buildVersion }}" />{% endif %}
   {% if adsense.publisherId and not noThirdParty %}
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense.publisherId }}" crossorigin="anonymous"></script>
   {% endif %}

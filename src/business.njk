@@ -1,11 +1,12 @@
 ---
 layout: "base.njk"
 permalink: "business.html"
-title: "اعرض محلك في هكوله: منيو رقمي وبطاقة في الدليل | هكوله"
-description: "لأصحاب المطاعم والكافيهات في البحرين: منيو رقمي برمز QR بالعربي والإنجليزي مع زر طلب عبر واتساب، وبطاقة في دليل هكوله."
+title: "اعرض محلك في هكوله: منيو بهوية محلك، رقمي وللجوال والطباعة | هكوله"
+description: "لأصحاب المطاعم والكافيهات في البحرين: منيو بالعربي والإنجليزي بهوية محلك، رقمي برمز QR مع طلب عبر واتساب، ونسخة للجوال والستوري، ونسخة جاهزة للطباعة."
 navActive: "business"
 langSwitchUrl: "/en/business.html"
 pageScript: "reveal"
+pageCss: "menu"
 ---
 {% set t = i18n[lang or "ar"] %}
 {% set m = demoMenu %}
@@ -13,12 +14,14 @@ pageScript: "reveal"
 <div class="breadcrumb"><a href="{{ '/index.html' | url }}">{{ t.nav_home }}</a> / اعرض محلك</div>
 <section class="page-header">
   <h1><span aria-hidden="true">🏪</span> اعرض محلك في هكوله</h1>
-  <p>لأصحاب المطاعم والكافيهات في البحرين: منيو رقمي بسيط وسريع، يفتح بمسح رمز، ويرسل الطلب إلى واتساب محلك جاهزاً.</p>
+  <p>لأصحاب المطاعم والكافيهات في البحرين: منيو واضح بالعربي والإنجليزي وبهوية محلك. صفحة رقمية تفتح بمسح رمز وترسل الطلب إلى واتساب محلك، ونسخة للجوال والستوري، ونسخة جاهزة للطباعة.</p>
 </section>
 <div class="biz-demo">
   <div class="biz-demo-text">
     <h2>شاهد كيف يشتغل</h2>
     <p>هذا المنيو يلعب بنفسه، وهو المنتج الحقيقي. وبعد ما يخلص تقدر تجرّبه أنت.</p>
+    <p>اختر الستايل الأقرب لمحلك. الأصناف والأسعار تبقى كما هي، والهوية تتغيّر:</p>
+    <div class="hm-themes" role="group" aria-label="ستايل المنيو"><button type="button" data-hm-theme="classic" aria-pressed="true">شعبي</button><button type="button" data-hm-theme="cafe" aria-pressed="false">كافيه</button><button type="button" data-hm-theme="luxe" aria-pressed="false">فاخر</button></div>
     <button type="button" class="btn secondary" data-demo-replay hidden>↻ أعد العرض</button>
   </div>
   <div class="demo-phone" data-demo aria-label="عرض توضيحي للمنيو الرقمي">
@@ -30,13 +33,16 @@ pageScript: "reveal"
     </div>
   </div>
 </div>
+<figure class="biz-before"><img src="{{ '/assets/menu-demo/before-after.jpg' | url }}" alt="مقارنة بين منيو مزدحم قبل التصميم ومنيو مرتب بعده: أقسام وأسعار واضحة، وعربي وإنجليزي جنباً إلى جنب" width="720" height="900" loading="lazy" /><figcaption>مثال توضيحي: المنيو نفسه قبل التصميم وبعده.</figcaption></figure>
 <div class="biz-grid">
-  <div class="biz-card"><span aria-hidden="true">📱</span><h3>منيو رقمي برمز QR</h3><p>صفحة بالعربي والإنجليزي فيها أصنافك وأسعارك، يفتحها الزبون من الجوال بلا تحميل ولا حساب.</p></div>
-  <div class="biz-card"><span aria-hidden="true">💬</span><h3>طلب عبر واتساب</h3><p>الزبون يختار أصنافه فتصلك رسالة مرتبة جاهزة فيها الكميات والإجمالي.</p></div>
-  <div class="biz-card"><span aria-hidden="true">📍</span><h3>بطاقة في الدليل</h3><p>مكانك يظهر في دليل هكوله مع الخريطة والساعات والهاتف، ويلقاه من يبحث عن اسمك أو نوع أكلك.</p></div>
+  <div class="biz-card"><span aria-hidden="true">📱</span><h3>منيو رقمي برمز QR</h3><p>صفحة بأصنافك وأسعارك يفتحها الزبون من الجوال بلا تحميل ولا حساب. يختار أصنافه فتصلك رسالة واتساب مرتبة فيها الكميات والإجمالي.</p></div>
+  <div class="biz-card"><span aria-hidden="true">🖼️</span><h3>نسخة للجوال والستوري</h3><p>صور جاهزة بمقاس ستوري إنستقرام وحالة واتساب، تنشرها أو تثبّتها في الهايلايت.</p></div>
+  <div class="biz-card"><span aria-hidden="true">🖨️</span><h3>نسخة للطباعة</h3><p>ملف PDF بخلفية بيضاء، رخيص في الطباعة ويبقى مقروءاً حتى لو طُبع بالأبيض والأسود.</p></div>
+  <div class="biz-card"><span aria-hidden="true">📍</span><h3>بطاقة في الدليل</h3><p>مكانك يظهر في دليل هكوله مع الخريطة والساعات والهاتف، ويجده من يبحث عن اسمك أو نوع أكلك.</p></div>
 </div>
+<p class="biz-note">نكتب المنيو بأصنافك وأسعارك الحقيقية فقط، ونرتّبه بأقسام واضحة مع علامة 🔥 للأكثر طلباً.</p>
 <p class="biz-note">الشفافية: أي مكان دفع للظهور يُكتب عليه «إعلان» بوضوح، ولا يرتفع بسبب ذلك في البحث أو في «اختار لي».</p>
-<p><a class="btn secondary" href="{{ '/menu/demo-cafe.html' | url }}">شاهد منيو تجريبياً</a></p>
+<div class="hm-demos"><a class="btn secondary" href="{{ '/menu/demo-classic.html' | url }}">منيو شعبي تجريبي</a><a class="btn secondary" href="{{ '/menu/demo-cafe.html' | url }}">منيو كافيه تجريبي</a><a class="btn secondary" href="{{ '/menu/demo-luxe.html' | url }}">منيو فاخر تجريبي</a></div>
 <section class="biz-contact" data-reveal-contact data-title="تواصل معنا" data-wa="واتساب" data-mail="البريد" data-ig="إنستقرام" data-close="إغلاق" data-msg="مرحباً هكوله، أرغب بمعرفة المزيد عن المنيو الرقمي لمحلي. اسم المحل: ">
   <h2>تبي تبدأ؟</h2>
   <p>اضغط الزر وتواصل معنا مباشرة.</p>

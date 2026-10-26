@@ -78,6 +78,13 @@
     if (ph.classList.contains("playing")) e.preventDefault();
   });
   if (replay) replay.addEventListener("click", play);
+  // اختيار الستايل (شعبي/كافيه/فاخر): نفس الأصناف والأسعار، والهوية تتغيّر
+  document.querySelectorAll("[data-hm-theme]").forEach((b, _, all) =>
+    b.addEventListener("click", () => {
+      root.dataset.theme = b.dataset.hmTheme;
+      all.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    })
+  );
 
   if (reduce) {
     menu.classList.remove("hid");

@@ -2,11 +2,12 @@
 layout: "base.njk"
 lang: "en"
 permalink: "en/business.html"
-title: "List Your Business on Hakolah: Digital Menu and Guide Listing | Hakolah"
-description: "For restaurant and cafe owners in Bahrain: a QR digital menu in Arabic and English with a WhatsApp order button, plus a listing in the Hakolah guide."
+title: "List Your Business on Hakolah: A Menu in Your Own Style, for Phone and Print | Hakolah"
+description: "For restaurant and cafe owners in Bahrain: an Arabic and English menu in your own style, as a QR digital menu with WhatsApp ordering, a phone and story version, and a print-ready version."
 navActive: "business"
 langSwitchUrl: "/business.html"
 pageScript: "reveal"
+pageCss: "menu"
 ---
 {% set t = i18n[lang or "ar"] %}
 {% set m = demoMenu %}
@@ -14,12 +15,14 @@ pageScript: "reveal"
 <div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> / List your business</div>
 <section class="page-header">
   <h1><span aria-hidden="true">🏪</span> List Your Business on Hakolah</h1>
-  <p>For restaurant and cafe owners in Bahrain: a simple, fast digital menu that opens with a scan and sends the order to your WhatsApp, ready to read.</p>
+  <p>For restaurant and cafe owners in Bahrain: a clear menu in Arabic and English, in your own style. A digital page that opens with a scan and sends orders to your WhatsApp, a phone and story version, and a print-ready version.</p>
 </section>
 <div class="biz-demo">
   <div class="biz-demo-text">
     <h2>See how it works</h2>
     <p>This menu plays itself, and it is the real product. When it finishes you can try it yourself.</p>
+    <p>Pick the style closest to your place. Your items and prices stay the same, and the look changes:</p>
+    <div class="hm-themes" role="group" aria-label="Menu style"><button type="button" data-hm-theme="classic" aria-pressed="true">Casual</button><button type="button" data-hm-theme="cafe" aria-pressed="false">Cafe</button><button type="button" data-hm-theme="luxe" aria-pressed="false">Fine dining</button></div>
     <button type="button" class="btn secondary" data-demo-replay hidden>↻ Replay</button>
   </div>
   <div class="demo-phone" data-demo aria-label="Digital menu demo">
@@ -31,13 +34,16 @@ pageScript: "reveal"
     </div>
   </div>
 </div>
+<figure class="biz-before"><img src="{{ '/assets/menu-demo/before-after.jpg' | url }}" alt="A crowded menu before the redesign next to a tidy one after: clear sections and prices, Arabic and English side by side" width="720" height="900" loading="lazy" /><figcaption>An illustrative example: the same menu before and after.</figcaption></figure>
 <div class="biz-grid">
-  <div class="biz-card"><span aria-hidden="true">📱</span><h3>QR digital menu</h3><p>A page in Arabic and English with your items and prices; customers open it from their phone with no download and no account.</p></div>
-  <div class="biz-card"><span aria-hidden="true">💬</span><h3>Order on WhatsApp</h3><p>The customer picks their items and you receive a tidy, ready message with quantities and the total.</p></div>
+  <div class="biz-card"><span aria-hidden="true">📱</span><h3>QR digital menu</h3><p>A page with your items and prices that customers open from their phone, with no download and no account. They pick their items and you receive a tidy WhatsApp message with quantities and the total.</p></div>
+  <div class="biz-card"><span aria-hidden="true">🖼️</span><h3>Phone and story version</h3><p>Ready images sized for Instagram stories and WhatsApp status, to post or pin in your highlights.</p></div>
+  <div class="biz-card"><span aria-hidden="true">🖨️</span><h3>Print version</h3><p>A PDF on a white background, cheap to print and still readable in black and white.</p></div>
   <div class="biz-card"><span aria-hidden="true">📍</span><h3>A listing in the guide</h3><p>Your place appears in the Hakolah guide with map, hours and phone, found by people searching your name or your kind of food.</p></div>
 </div>
+<p class="biz-note">We write your menu with your real items and prices only, arranged in clear sections with a 🔥 for the most loved.</p>
 <p class="biz-note">Transparency: any place that pays to be featured is clearly labelled "Ad", and doesn't rise in search or in "Pick for me" because of it.</p>
-<p><a class="btn secondary" href="{{ '/en/menu/demo-cafe.html' | url }}">See a demo menu</a></p>
+<div class="hm-demos"><a class="btn secondary" href="{{ '/en/menu/demo-classic.html' | url }}">Casual demo menu</a><a class="btn secondary" href="{{ '/en/menu/demo-cafe.html' | url }}">Cafe demo menu</a><a class="btn secondary" href="{{ '/en/menu/demo-luxe.html' | url }}">Fine dining demo menu</a></div>
 <section class="biz-contact" data-reveal-contact data-title="Contact us" data-wa="WhatsApp" data-mail="Email" data-ig="Instagram" data-close="Close" data-msg="Hello Hakolah, I'd like to know more about the digital menu for my place. Business name: ">
   <h2>Ready to start?</h2>
   <p>Press the button and reach us directly.</p>

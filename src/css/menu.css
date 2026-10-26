@@ -1,0 +1,99 @@
+/* المنيو الرقمي بتصميم «مشروع المنيوهات» — ٣ ستايلات بنفس ألوان themes.css هناك (نسخة الشاشة الداكنة).
+   يتحمّل بصفحات المنيو وصفحة «اعرض محلك» فقط (pageCss: "menu")، فالخطوط الثلاثة ما تثقّل باقي الموقع.
+   المقاسات بـem: الحجم كله يتبع font-size حق .hm (أصغر داخل جوال العرض الحي). */
+@font-face { font-family: "Lalezar"; font-display: swap; src: url("/assets/fonts/lalezar-arabic.woff2") format("woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFC; }
+@font-face { font-family: "Lalezar"; font-display: swap; src: url("/assets/fonts/lalezar-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: "Reem Kufi"; font-weight: 600; font-display: swap; src: url("/assets/fonts/reemkufi-arabic.woff2") format("woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFC; }
+@font-face { font-family: "Reem Kufi"; font-weight: 600; font-display: swap; src: url("/assets/fonts/reemkufi-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: "Amiri"; font-display: swap; src: url("/assets/fonts/amiri-arabic.woff2") format("woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFC; }
+@font-face { font-family: "Amiri"; font-display: swap; src: url("/assets/fonts/amiri-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+
+.hm, .hm[data-theme="classic"] {
+  /* شعبي / وجبات سريعة */
+  --display: "Lalezar", "Cairo", sans-serif; --dw: 400; --lh: 1.05;
+  --accent: #C4231B; --hl: #F7C51E; --accent2: #F0A93A;
+  --bg: #23160C; --panel: #34220F; --cream: #FFF1D0; --muted: #CDB78F;
+}
+.hm[data-theme="cafe"] {
+  /* كافيه مختص */
+  --display: "Reem Kufi", "Cairo", sans-serif; --dw: 600; --lh: 1.1;
+  --accent: #2F5D50; --hl: #E8D5B5; --accent2: #D9A86C;
+  --bg: #1F2A26; --panel: #2A3833; --cream: #F4EFE6; --muted: #A9B8AE;
+}
+.hm[data-theme="luxe"] {
+  /* مطعم فاخر — أميري ذيله طويل، يحتاج مسافة سطر أكبر */
+  --display: "Amiri", "Cairo", serif; --dw: 400; --lh: 1.4;
+  --accent: #8C6A2F; --hl: #D9C08A; --accent2: #D4AF37;
+  --bg: #121212; --panel: #1D1D1D; --cream: #F3EBDD; --muted: #A89F8A;
+}
+
+.hm { font-size: 16px; max-width: 620px; margin: 6px auto 30px; padding: 1.6em 1.4em 1.2em; border-radius: 28px; background: var(--bg); color: var(--cream); font-family: "Cairo", sans-serif; transition: background 0.4s, color 0.4s; }
+.hm * { transition: color 0.4s, background-color 0.4s, border-color 0.4s; }
+
+.hm-head { display: flex; align-items: center; gap: 0.9em; }
+.hm-logo { width: 3.2em; height: 2.8em; flex: none; }
+.hm-logo .a { fill: var(--accent); }
+.hm-logo .b { fill: none; stroke: var(--hl); stroke-width: 2.2; }
+.hm-logo .c { fill: var(--hl); }
+.hm-name { margin: 0; font-family: var(--display); font-weight: var(--dw); font-size: 2.3em; line-height: var(--lh); color: var(--hl); }
+.hm-sub { margin: 0.2em 0 0; font-size: 0.82em; font-weight: 600; color: var(--muted); text-align: start; }
+
+.hm-stars { margin-top: 1.3em; padding: 0.9em 1.1em 0.8em; border-radius: 20px; background: var(--panel); }
+.hm-stars h3 { margin: 0 0 0.4em; font-family: var(--display); font-weight: var(--dw); font-size: 1.55em; line-height: var(--lh); color: var(--hl); }
+.hm-stars h3 small { font-family: "Cairo", sans-serif; font-size: 0.5em; font-weight: 600; color: var(--muted); margin-inline-start: 0.4em; }
+.hm-star { display: flex; align-items: center; gap: 0.7em; padding: 0.45em 0; }
+.hm-star + .hm-star { border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.hm-star img { width: 2.6em; height: 2.6em; object-fit: cover; border-radius: 10px; flex: none; }
+.hm-star b { font-family: var(--display); font-weight: var(--dw); font-size: 1.3em; line-height: var(--lh); color: #fff; }
+.hm-star i { font-style: normal; font-size: 0.72em; color: var(--muted); }
+.hm-star span { margin-inline-start: auto; flex: none; padding: 0.25em 0.6em; border-radius: 8px; background: var(--accent2); color: var(--bg); font-weight: 700; font-size: 0.85em; }
+
+.hm-sec { margin-top: 1.6em; }
+.hm-banner { height: 6.5em; border-radius: 18px; overflow: hidden; margin-bottom: 0.9em; }
+.hm-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hm-sec h3 { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 0.3em; padding-bottom: 0.35em; border-bottom: 2px solid var(--hl); font-family: var(--display); font-weight: var(--dw); font-size: 1.7em; line-height: var(--lh); color: var(--hl); }
+.hm-sec h3 em { font-style: normal; font-family: "Cairo", sans-serif; font-weight: 700; font-size: 0.45em; color: var(--muted); }
+.hm-heads { display: flex; justify-content: flex-end; font-size: 0.75em; font-weight: 700; color: var(--muted); }
+.hm-heads span { width: 5.6em; text-align: end; }
+.hm ul { list-style: none; margin: 0; padding: 0; }
+.hm-row { display: flex; align-items: center; gap: 0.3em; padding: 0.35em 0; border-bottom: 1px dotted rgba(255, 255, 255, 0.16); }
+.hm-n { flex: 1; min-width: 0; font-weight: 700; font-size: 1.05em; line-height: 1.25; }
+.hm-n i { display: block; font-style: normal; font-weight: 400; font-size: 0.72em; color: var(--muted); text-align: start; }
+.hm-fire { font-size: 0.8em; }
+.hm-extras { margin-top: 0.4em; padding-top: 0.3em; border-top: 1px dashed rgba(255, 255, 255, 0.3); }
+.hm-row.extra .hm-n { color: var(--accent2); font-weight: 600; font-size: 0.95em; }
+
+/* السعر = زر الإضافة. لما ينطلب الصنف يطلع العدد وزر الإنقاص تحته */
+.hm-p { width: 4.6em; flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 0.15em; }
+.hm-gap { visibility: hidden; }
+.hm-add { min-width: 4.4em; min-height: 2.2em; padding: 0.15em 0.45em; border: 1px solid transparent; border-radius: 10px; background: none; color: var(--hl); font: 700 1.05em/1 "Cairo", sans-serif; font-variant-numeric: tabular-nums; text-align: end; cursor: pointer; }
+.hm-p + .hm-p .hm-add { color: var(--accent2); }
+.hm-add:hover, .hm-add:focus-visible { border-color: var(--hl); outline: none; }
+.hm-p.on .hm-add { background: var(--hl); color: var(--bg); }
+.hm-q { display: none; align-items: center; gap: 0.35em; font-size: 0.8em; color: var(--cream); }
+.hm-p.on .hm-q { display: flex; }
+.hm-q button { width: 1.9em; height: 1.9em; border-radius: 50%; border: 1px solid var(--muted); background: none; color: var(--cream); font-size: 1em; line-height: 1; cursor: pointer; }
+
+.hm-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 1em; margin-top: 1.6em; padding-top: 1em; border-top: 1px solid rgba(255, 255, 255, 0.2); }
+.hm-call { font-size: 0.8em; font-weight: 600; color: var(--muted); }
+.hm-call b { display: block; font-family: var(--display); font-weight: var(--dw); font-size: 2em; line-height: var(--lh); color: var(--hl); }
+.hm-meta { text-align: end; font-size: 0.75em; color: var(--muted); line-height: 1.5; }
+.hm-meta b { display: block; font-size: 1.1em; color: var(--cream); }
+.hm-tip { margin: 1em 0 0; font-size: 0.78em; color: var(--muted); text-align: center; }
+.hm .cart-bar { background: var(--panel); border-color: var(--hl); color: var(--cream); }
+.hm .cart-bar .btn { background: var(--hl); color: var(--bg); border-color: var(--hl); }
+.hm .menu-demo-note { color: var(--muted); }
+
+/* داخل جوال العرض الحي (صفحة «اعرض محلك»): المنيو يعبّي الشاشة، وفوق مسافة للنوتش */
+.demo-phone .demo-menu { padding: 0; }
+.demo-menu .hm { font-size: 11px; margin: 0; padding: 3.2em 1em 0.6em; border-radius: 0; min-height: 100%; max-width: none; }
+.demo-menu .hm .cart-bar { position: sticky; bottom: 0; }
+
+/* اختيار الستايل تحت العرض الحي */
+.hm-themes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.hm-themes button { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 0.9rem; cursor: pointer; }
+.hm-themes button[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
+.hm-demos { display: flex; gap: 10px; flex-wrap: wrap; }
+.biz-before { margin: 8px auto 28px; max-width: 520px; }
+.biz-before img { width: 100%; height: auto; border-radius: 20px; display: block; }
+.biz-before figcaption { margin-top: 8px; color: var(--color-text-muted); font-size: 0.85rem; text-align: center; }

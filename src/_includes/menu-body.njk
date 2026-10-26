@@ -1,19 +1,59 @@
-<div data-menu data-wa="{{ m.data.whatsapp }}" data-cur="{{ 'د.ب' if ar else 'BD' }}" data-intro="{{ ('مرحباً، أريد الطلب من ' + m.data.title + ':') if ar else ('Hello, I would like to order from ' + m.data.title_en + ':') }}" data-total-label="{{ 'الإجمالي' if ar else 'Total' }}">
-  {% set groups = [] %}{% for it in m.data.items %}{% if (it.group_en if not ar else it.group) not in groups %}{% set groups = (groups.push(it.group_en if not ar else it.group), groups) %}{% endif %}{% endfor %}
-  {% for g in groups %}
-  <h2 class="menu-group">{{ g }}</h2>
-  <div class="menu-grid">
-    {% for it in m.data.items %}{% if (it.group_en if not ar else it.group) == g %}
-    <div class="menu-item" data-item data-name="{{ it.name if ar else it.name_en }}" data-price="{{ it.price }}">
-      <div class="menu-item-text"><b>{{ it.name if ar else it.name_en }}</b><small>{{ it.price }} {{ 'د.ب' if ar else 'BD' }}</small></div>
-      <div class="menu-step"><button type="button" data-step="-1" aria-label="{{ 'إنقاص' if ar else 'Remove one' }}">−</button><span class="qty-n">0</span><button type="button" data-step="1" aria-label="{{ 'إضافة' if ar else 'Add one' }}">+</button></div>
+{#- المنيو الرقمي بتصميم «مشروع المنيوهات» (٣ ستايلات: classic شعبي، cafe كافيه، luxe فاخر — data.menuTheme؛ مو «theme»: بيانات عامة بالموقع).
+    نفس بنية data.js بالمشروع: stars (الأشهر عندنا) + menuSections (أقسام — مو «sections»: هذا اسم بيانات عامة بالموقع وEleventy يدمج المصفوفتين) بأعمدة أسعار اختيارية وإضافات).
+    كل سعر زر «أضف للطلب» ([data-item] + [data-step] + .qty-n — يعتمد عليها menu.js والعرض الحي demo.js).
+    بالعربي: الاسم عربي وتحته الإنجليزي. بالإنجليزي: الإنجليزي فقط (صفحات EN بلا عربي). -#}
+{%- set d = m.data -%}
+{%- set cur = 'د.ب' if ar else 'BD' -%}
+<div class="hm" data-theme="{{ d.menuTheme or 'classic' }}" data-menu data-wa="{{ d.whatsapp }}" data-cur="{{ cur }}" data-intro="{{ ('مرحباً، أريد الطلب من ' + d.title + ':') if ar else ('Hello, I would like to order from ' + d.title_en + ':') }}" data-total-label="{{ 'الإجمالي' if ar else 'Total' }}">
+  <header class="hm-head">
+    <svg class="hm-logo" viewBox="0 0 48 42" aria-hidden="true"><circle cx="24" cy="21" r="19" class="a" /><circle cx="24" cy="21" r="11" class="b" /><circle cx="24" cy="21" r="4" class="c" /></svg>
+    <div>
+      <{{ hmTag or "h2" }} class="hm-name">{{ d.title if ar else d.title_en }}</{{ hmTag or "h2" }}>
+      <p class="hm-sub" dir="ltr">{% if ar %}{{ d.title_en }}{% if d.tag_en %} · {% endif %}{% endif %}{{ d.tag_en }}</p>
     </div>
-    {% endif %}{% endfor %}
+  </header>
+  {%- if d.stars %}
+  <div class="hm-stars">
+    <h3>🔥 {{ 'الأشهر عندنا' if ar else 'Our most loved' }}{% if ar %} <small>Our most loved</small>{% endif %}</h3>
+    {%- for s in d.stars %}
+    <div class="hm-star">
+      {%- if s.img %}<img src="{{ s.img | url }}" alt="" loading="lazy" width="56" height="56" />{% endif %}
+      <b>{{ s.ar if ar else s.en }}</b>{% if ar %}<i dir="ltr">{{ s.en }}</i>{% endif %}
+      <span dir="ltr">{{ s.p }} BD</span>
+    </div>
+    {%- endfor %}
   </div>
-  {% endfor %}
+  {%- endif %}
+  {%- macro row(it, sec, extra, ar) -%}
+  <li class="hm-row{% if extra %} extra{% endif %}">
+    <span class="hm-n">{{ it.ar if ar else it.en }}{% if it.fire %} <span class="hm-fire" title="{{ 'حار أو الأكثر طلباً' if ar else 'Spicy or most loved' }}">🔥</span>{% endif %}{% if ar %}<i dir="ltr">{{ it.en }}</i>{% endif %}</span>
+    {%- for p in it.p %}
+    {%- set col = ((sec.cols[loop.index0] if ar else sec.cols_en[loop.index0]) if sec.cols and it.p.length > 1 else '') %}
+    <span class="hm-p" data-item data-name="{{ it.ar if ar else it.en }}{% if col %} ({{ col }}){% endif %}" data-price="{{ p | replace('+', '') }}">
+      <button type="button" class="hm-add" data-step="1" aria-label="{{ ('أضف ' if ar else 'Add ') + (it.ar if ar else it.en) }}{% if col %} {{ col }}{% endif %}"><span dir="ltr">{{ p }}</span></button>
+      <span class="hm-q"><button type="button" data-step="-1" aria-label="{{ 'إنقاص' if ar else 'Remove one' }}">−</button><b class="qty-n">0</b></span>
+    </span>
+    {%- endfor %}
+    {%- if sec.cols and it.p.length == 1 and not extra %}<span class="hm-p hm-gap" aria-hidden="true"></span>{% endif %}
+  </li>
+  {%- endmacro %}
+  {%- for sec in d.menuSections %}
+  <section class="hm-sec">
+    {%- if sec.img %}<div class="hm-banner"><img src="{{ sec.img | url }}" alt="" loading="lazy" /></div>{% endif %}
+    <h3><span>{{ sec.ar if ar else sec.en }}</span>{% if ar %} <em dir="ltr">{{ sec.en }}</em>{% endif %}</h3>
+    {%- if sec.cols %}<div class="hm-heads">{% for c in (sec.cols if ar else sec.cols_en) %}<span>{{ c }}</span>{% endfor %}</div>{% endif %}
+    <ul>{% for it in sec.items %}{{ row(it, sec, false, ar) }}{% endfor %}</ul>
+    {%- if sec.extras %}<ul class="hm-extras">{% for it in sec.extras %}{{ row(it, sec, true, ar) }}{% endfor %}</ul>{% endif %}
+  </section>
+  {%- endfor %}
+  <footer class="hm-foot">
+    {%- if d.phone %}<div class="hm-call">{{ 'يوجد توصيل · Delivery' if ar else 'Delivery' }}<b dir="ltr">{{ d.phone }}</b></div>{% endif %}
+    <div class="hm-meta">{% if d.instagram %}<b dir="ltr">{{ d.instagram }}</b>{% endif %}<span>{{ d.hours if ar else d.hours_en }}</span></div>
+  </footer>
+  <p class="hm-tip">{{ 'اضغط على أي سعر لإضافته إلى طلبك.' if ar else 'Tap any price to add it to your order.' }}</p>
   <div class="cart-bar" hidden>
-    <span>{{ 'سلتك' if ar else 'Your order' }} (<b class="cart-count">0</b>) · <b class="cart-total"></b></span>
+    <span>{{ 'طلبك' if ar else 'Your order' }} (<b class="cart-count">0</b>) · <b class="cart-total"></b></span>
     <a class="btn cart-order" href="#" target="_blank" rel="noopener">{{ 'اطلب عبر واتساب' if ar else 'Order on WhatsApp' }}</a>
   </div>
-  {% if m.data.demo %}<p class="menu-demo-note">{{ 'هذا منيو تجريبي: الزر يفتح واتساب برسالة جاهزة لتختار لمن ترسلها.' if ar else 'This is a demo menu: the button opens WhatsApp with a ready message so you pick who to send it to.' }}</p>{% endif %}
+  {%- if d.demo %}<p class="menu-demo-note">{{ 'هذا منيو تجريبي: الزر يفتح واتساب برسالة جاهزة لتختار لمن ترسلها.' if ar else 'This is a demo menu: the button opens WhatsApp with a ready message so you pick who to send it to.' }}</p>{% endif %}
 </div>

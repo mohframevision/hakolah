@@ -1,0 +1,5 @@
+خطوط قوالب المنيو (تتحمّل بصفحات المنيو وصفحة «اعرض محلك» فقط):
+- Lalezar — Copyright 2015 The Lalezar Project Authors
+- Reem Kufi — Copyright 2015 The Reem Kufi Project Authors
+- Amiri — Copyright 2010 The Amiri Project Authors
+كلها مرخّصة بـ SIL Open Font License, Version 1.1 (نفس نص Cairo-OFL.txt). مصدرها Google Fonts.
