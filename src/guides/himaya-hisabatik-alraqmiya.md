@@ -10,6 +10,8 @@ categories:
 dateAdded: 2026-10-22
 langSwitchUrl: "/en/guides/himaya-hisabatik-alraqmiya.html"
 aiDisclosure: "هذا المقال بمساعدة الذكاء الاصطناعي (Claude). مستوى المساهمة البشرية: أرسل صاحب الموقع مقطعاً عن الموضوع وطلب مقالاً مفيداً للقرّاء، ففرّغ الذكاء الاصطناعي المقطع وصاغ النصائح بالعربية وفحص إعدادات الموقع الفعلية للقسم الخاص بهكوله. أخبار الاختراقات الواردة في المقطع هي أقوال صاحبه ولم نتحقق منها بشكل مستقل."
+image: /assets/guides/himaya-hisabatik-alraqmiya.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## لماذا نكتب عن هذا؟

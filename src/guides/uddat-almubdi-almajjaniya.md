@@ -11,6 +11,8 @@ hideFromNewest: true
 dateAdded: 2026-10-21
 langSwitchUrl: "/en/guides/uddat-almubdi-almajjaniya.html"
 aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي، واعتمد على مراجعة صاحب الموقع لقائمة البرامج."
+image: /assets/guides/uddat-almubdi-almajjaniya.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## لماذا يترك كثيرون البرامج المجانية بعد يوم واحد؟

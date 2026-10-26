@@ -4,6 +4,8 @@ icon: "🎵"
 desc: A guide to choosing the right free audio app, whether you're recording a podcast, starting music production, recording real instruments, or routing audio while streaming.
 langSwitchUrl: "/guides/afdal-baramij-alsawt-walmusiqa.html"
 aiDisclosure: "This article was researched and written with AI assistance, based on the site owner's review of the app list."
+image: /assets/guides/afdal-baramij-alsawt-walmusiqa.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## Start With a Question: What Do You Want to Do With Audio?

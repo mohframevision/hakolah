@@ -4,6 +4,8 @@ icon: "🎬"
 desc: How the CineTemp app helps measure color temperature and exposure, and track the sun's path during location scouting and pre-production.
 langSwitchUrl: "/guides/cinetemp-app.html"
 aiDisclosure: "This article was researched and written with AI assistance. The level of human review wasn't documented in detail at the time of writing."
+image: /assets/guides/cinetemp-app.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## Why Do Filmmakers Need an App Like This?

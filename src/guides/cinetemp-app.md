@@ -10,6 +10,8 @@ categories:
 dateAdded: 2026-08-03
 langSwitchUrl: "/en/guides/cinetemp-app.html"
 aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي. لم يُوثَّق مستوى المراجعة البشرية بالتفصيل وقت الكتابة."
+image: /assets/guides/cinetemp-app.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## لماذا يحتاج المصوّرون إلى تطبيق كهذا؟

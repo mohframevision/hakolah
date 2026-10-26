@@ -4,6 +4,8 @@ icon: "💡"
 desc: "Modern tools removed most of the barriers between an idea and building it. So what still sets one maker apart from another? On the value of ideas, taste and persistence, with the true story of a keyboard that learned to light up to teach piano."
 langSwitchUrl: "/guides/zaman-alafkar.html"
 aiDisclosure: "This article was written with AI assistance (Claude). Human contribution: the core idea and the story are the site owner's, who lived the experience and asked for it to be written up; the AI drafted it and added the cited references."
+image: /assets/guides/zaman-alafkar.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## The Barrier That Disappeared

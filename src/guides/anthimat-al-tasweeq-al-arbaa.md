@@ -9,6 +9,8 @@ categories:
 dateAdded: 2026-08-03
 langSwitchUrl: "/en/guides/anthimat-al-tasweeq-al-arbaa.html"
 aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي. لم يُوثَّق مستوى المراجعة البشرية بالتفصيل وقت الكتابة."
+image: /assets/guides/anthimat-al-tasweeq-al-arbaa.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## خطأ شائع: البدء بالتكتيك قبل النظام

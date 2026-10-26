@@ -4,6 +4,8 @@ icon: "🧭"
 desc: A read of a video on how the most productive people work with AI — seven simple habits in how you talk to it, with examples, ways to apply them, and illustrations.
 langSwitchUrl: "/guides/ai-like-a-top-ceo.html"
 aiDisclosure: "This article was written with AI assistance (Claude). Human input level: the site owner sent the video and asked for it to be turned into an article; the AI transcribed the video's audio automatically, then summarized and rewrote it, and designed its illustrations in code. The figures quoted are the video creator's claims and were not independently verified."
+image: /assets/guides/ai-like-a-top-ceo.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 The creator of this video argues that the gap between the smartest people and everyone else in using AI isn't a better model or a different tool — it's almost entirely in **how they talk to it**. He lays out seven simple habits, which we summarize here in our own words, with examples of how to apply them.

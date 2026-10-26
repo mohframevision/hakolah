@@ -10,6 +10,8 @@ categories:
 dateAdded: 2026-09-02
 langSwitchUrl: "/en/guides/ai-cognitive-debt-mit-study.html"
 aiDisclosure: "هذا المقال بمساعدة الذكاء الاصطناعي (Claude وGemini). مستوى المساهمة البشرية: أرسل المستخدم صورة لمنشور متداول وسأل عن مدى دقته، فتولى الذكاء الاصطناعي البحث في الدراسة الأصلية والتحقق من الأرقام المتداولة، وكتابة المقال."
+image: /assets/guides/ai-cognitive-debt-mit-study.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## البداية: صدمة الأرقام وخرائط الدماغ

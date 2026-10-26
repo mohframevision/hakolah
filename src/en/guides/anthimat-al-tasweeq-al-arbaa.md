@@ -4,6 +4,8 @@ icon: "💡"
 desc: Most people think marketing just means ads and posts. In reality, tactics without a foundational system quickly collapse, just like a house built without a blueprint.
 langSwitchUrl: "/guides/anthimat-al-tasweeq-al-arbaa.html"
 aiDisclosure: "This article was researched and written with AI assistance. The level of human review wasn't documented in detail at the time of writing."
+image: /assets/guides/anthimat-al-tasweeq-al-arbaa.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## A Common Mistake: Starting With Tactics Before Systems

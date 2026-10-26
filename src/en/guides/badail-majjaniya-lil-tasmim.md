@@ -4,6 +4,8 @@ icon: "💻"
 desc: A comparison between the most popular paid design, motion graphics, and editing software and their free (or nearly free) alternatives, for anyone starting out without a professional studio budget.
 langSwitchUrl: "/guides/badail-majjaniya-lil-tasmim.html"
 aiDisclosure: "This article was researched and written with AI assistance. The level of human review wasn't documented in detail at the time of writing."
+image: /assets/guides/badail-majjaniya-lil-tasmim.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## No Adobe Subscriptions? That Doesn't Stop You From Starting

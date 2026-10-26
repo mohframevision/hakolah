@@ -10,6 +10,8 @@ categories:
 dateAdded: 2026-08-19
 langSwitchUrl: "/en/guides/aicameramovements.html"
 aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي. لم يُوثَّق مستوى المراجعة البشرية بالتفصيل وقت الكتابة."
+image: /assets/guides/aicameramovements.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## لماذا يحتاج صانعو الفيديو بالذكاء الاصطناعي أداة كهذه؟

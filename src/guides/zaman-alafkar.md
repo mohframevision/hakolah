@@ -11,6 +11,8 @@ hideFromNewest: true
 dateAdded: 2026-10-21
 langSwitchUrl: "/en/guides/zaman-alafkar.html"
 aiDisclosure: "هذا المقال بمساعدة الذكاء الاصطناعي (Claude). مستوى المساهمة البشرية: الفكرة الأساسية والقصة لصاحب الموقع، وهو من عاش التجربة وطلب كتابتها، فصاغها الذكاء الاصطناعي بالعربية وأضاف المراجع المذكورة."
+image: /assets/guides/zaman-alafkar.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## الحاجز الذي اختفى

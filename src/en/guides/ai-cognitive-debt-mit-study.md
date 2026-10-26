@@ -4,6 +4,8 @@ icon: "🧠"
 desc: A critical read on the viral claims around MIT's ChatGPT-and-the-brain study — where the real science ends and the distortion begins, what "cognitive debt" actually means, and how to use AI without dulling your thinking.
 langSwitchUrl: "/guides/ai-cognitive-debt-mit-study.html"
 aiDisclosure: "This article was written with AI assistance (Claude and Gemini). Human input level: the user shared an image of a viral post and asked how accurate it was; the AI researched the original study, verified the claimed figures, and wrote the article."
+image: /assets/guides/ai-cognitive-debt-mit-study.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## The Trigger: Shocking Numbers and Brain Scans

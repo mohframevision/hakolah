@@ -10,6 +10,8 @@ hideFromNewest: true
 dateAdded: 2026-10-21
 langSwitchUrl: "/en/guides/afdal-baramij-alsawt-walmusiqa.html"
 aiDisclosure: "هذا المقال بُحث وكُتب بمساعدة الذكاء الاصطناعي، واعتمد على مراجعة صاحب الموقع لقائمة البرامج."
+image: /assets/guides/afdal-baramij-alsawt-walmusiqa.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## ابدأ من سؤال: ماذا تريد أن تفعل بالصوت؟

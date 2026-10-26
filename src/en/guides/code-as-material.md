@@ -4,6 +4,8 @@ icon: "🧪"
 desc: "We read a popular idea going around — that code has become a shapeable material available to everyone, not just programmers. We actually tested it through Hakolah's Experiments section, and here's what we learned: speed wasn't the problem that got solved — judgment and testing are still entirely human work."
 langSwitchUrl: "/guides/code-as-material.html"
 aiDisclosure: "This article was written with AI assistance (Claude). Human input level: the site owner sent the AI a popular passage about the future of coding and AI, and asked for its opinion on it. He then asked to connect it to the site's actual experience with its Experiments section and turn it into an article. The AI wrote the piece drawing on real details from building the four experiments across earlier sessions."
+image: /assets/guides/code-as-material.jpg
+imageCredit: "AI illustration · Hakolah"
 ---
 
 ## A Popular Idea, and a Practical Question
