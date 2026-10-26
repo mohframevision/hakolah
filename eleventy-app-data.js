@@ -2,6 +2,7 @@
 // (يستهلكه تطبيق الأندرويد) — نفس المنطق بالضبط، مخرَج مرة كـJS ومرة كـJSON
 // نقي، بدل ما يتكرر ويصير له نسختان تنحرفان عن بعض بمرور الوقت.
 const NEW_BADGE_DAYS = 7;
+const { illusFor } = require("./src/_data/illus.js");
 
 // نص المقال الإنجليزي للتطبيق: صفحات src/en/** مستبعدة من المجموعات
 // (eleventyExcludeFromCollections) فما فيه templateContent لها هنا — نقرأ
@@ -147,6 +148,8 @@ function buildSiteData(data, options = {}) {
         title_en: entry.data.title_en || "",
         desc_en: entry.data.desc_en || "",
         image: entry.data.image || null,
+        // رسمة نوع المكان (ألوان مائية) بدل الإيموجي، بس لما ما فيه صورة حقيقية
+        illus: entry.data.image ? "" : illusFor(meta.slug, entry.data.categories),
         hours: entry.data.hours || "",
         hours_en: entry.data.hours_en || "",
         menuItems: (entry.data.menuItems || [])

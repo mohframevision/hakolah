@@ -1379,6 +1379,17 @@ img {
   line-height: 1;
 }
 
+/* رسمة نوع المكان (ألوان مائية على ورق أبيض) مكان الإيموجي */
+.item-card .item-illus {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: #fff;
+  object-fit: contain;
+  box-shadow: 0 0 0 1px var(--color-border);
+  flex: none;
+}
+
 .item-card h3 {
   margin: 0;
   font-size: 1.05rem;

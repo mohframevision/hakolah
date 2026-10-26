@@ -1496,7 +1496,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     <div class="item-body">
       ${sectionBadge(section)}
       <div class="item-top">
-        <span class="item-icon" aria-hidden="true">${item.icon || "⭐"}</span>
+        ${item.illus ? `<img class="item-illus" src="/assets/illus/${escapeHtml(item.illus)}.webp" alt="" width="56" height="56" loading="lazy" decoding="async" />` : `<span class="item-icon" aria-hidden="true">${item.icon || "⭐"}</span>`}
         <div class="item-top-actions">
           <button class="like-btn ${liked ? "active" : ""}" data-section="${section}" data-id="${item.id}" title="${t("like_action")}" aria-label="${t("like_action")}" aria-pressed="${liked}">
             <span class="like-icon">${liked ? "♥" : "♡"}</span> <span class="like-count">${likeCount}</span>

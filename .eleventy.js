@@ -80,6 +80,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
+  // رسمة نوع المكان لبطاقة عنصر (src/_data/illus.js) — فلتر لأن الماكرو ما يشوف البيانات العامة
+  eleventyConfig.addFilter("illusFor", (categories, section) => require("./src/_data/illus.js").illusFor(section, categories));
   // صفحة من مجموعة برابطها (العربي مكتوب أحياناً بلا ترميز) — الإنجليزية تقرا شارات صفحتها العربية منها
   eleventyConfig.addFilter("pageByUrl", (pages, url) => url && (pages || []).find((p) => decodeURI(p.url) === decodeURI(url)));
   // أول رابط خرائط قوقل داخل نص الصفحة — الصفحات الإنجليزية ما فيها links.maps بالبيانات
