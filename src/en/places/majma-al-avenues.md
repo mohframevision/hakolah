@@ -3,6 +3,9 @@ title: The Avenues Bahrain
 icon: 🛍️
 desc: The largest mall in Bahrain, on the waterfront in the heart of Manama — shopping, dining, and entertainment.
 langSwitchUrl: "/places/majma-al-avenues.html"
+image: /assets/uploads/avenues.jpg
+imageCredit: "Droodkin · CC BY-SA 4.0"
+imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Avenues_coastline,_Bahrain.jpg"
 ---
 
 ## About This Place

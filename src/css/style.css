@@ -1379,6 +1379,27 @@ img {
   line-height: 1;
 }
 
+/* إسناد الصورة الحقيقية (المصوّر والرخصة) — صغير وهادئ تحت الصورة */
+.photo-credit {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  text-align: end;
+}
+.photo-credit a,
+a.photo-credit {
+  color: inherit;
+  text-decoration: none;
+}
+.photo-credit a:hover,
+a.photo-credit:hover {
+  text-decoration: underline;
+}
+a.photo-credit.card {
+  display: block;
+  padding: 3px 12px 0;
+}
+
 /* رسمة نوع المكان (ألوان مائية على ورق أبيض) مكان الإيموجي */
 .item-card .item-illus {
   width: 56px;

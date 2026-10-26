@@ -3,6 +3,9 @@ title: Tree of Life
 icon: 🌳
 desc: A roughly 400-year-old tree standing alone in the desert of southern Bahrain, a free public natural site, lit at night, with cafes, restaurants and camps for rent around it.
 langSwitchUrl: "/places/tree-of-life.html"
+image: /assets/uploads/tree-of-life.jpg
+imageCredit: "Zairon · CC BY-SA 4.0"
+imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Bahrain_Tree_of_Life_15.jpg"
 ---
 
 ## About This Place

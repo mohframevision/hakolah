@@ -148,6 +148,8 @@ function buildSiteData(data, options = {}) {
         title_en: entry.data.title_en || "",
         desc_en: entry.data.desc_en || "",
         image: entry.data.image || null,
+        imageCredit: entry.data.imageCredit || "",
+        imageCreditUrl: entry.data.imageCreditUrl || "",
         // رسمة نوع المكان (ألوان مائية) بدل الإيموجي، بس لما ما فيه صورة حقيقية
         illus: entry.data.image ? "" : illusFor(meta.slug, entry.data.categories),
         hours: entry.data.hours || "",

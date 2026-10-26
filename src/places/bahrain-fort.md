@@ -4,7 +4,6 @@ icon: 🏛️
 desc: موقع أثري عمره أكثر من 4000 عام، عاصمة حضارة دلمون القديمة، ومُدرج على قائمة التراث العالمي لليونسكو.
 title_en: Bahrain Fort
 desc_en: An archaeological site over 4,000 years old, former capital of the ancient Dilmun civilization, and a UNESCO World Heritage Site.
-image: /assets/uploads/ondrej-bocek-hEPkfOY7ibY-unsplash.jpg
 categories:
   - تاريخي
   - إطلالة
@@ -13,6 +12,9 @@ dateAdded: 2026-08-02
 lat: 26.2334276
 lng: 50.5192457
 langSwitchUrl: "/en/places/bahrain-fort.html"
+image: /assets/uploads/ondrej-bocek-hEPkfOY7ibY-unsplash.jpg
+imageCredit: "Ondřej Boček · Unsplash"
+imageCreditUrl: "https://unsplash.com/photos/hEPkfOY7ibY"
 ---
 
 ## نبذة عن المكان

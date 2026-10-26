@@ -11,6 +11,9 @@ categories:
 lat: 26.2458146
 lng: 50.5847702
 langSwitchUrl: "/en/places/majma-al-avenues.html"
+image: /assets/uploads/avenues.jpg
+imageCredit: "Droodkin · CC BY-SA 4.0"
+imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Avenues_coastline,_Bahrain.jpg"
 ---
 
 ## نبذة عن المكان

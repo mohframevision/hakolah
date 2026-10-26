@@ -23,7 +23,7 @@
 {% set desc = (d.desc_en or d.desc) if isEn else d.desc %}
 {% set t = i18n[lang or "ar"] %}
 <div class="item-card{% if d.sponsored %} sponsored{% elif d.featured %} featured{% endif %}{% if d.verified %} verified{% endif %}">
-  {% set cardIndex = index if (index is defined and index is not none) else 999 %}{% if d.image %}<img class="item-photo" src="{{ d.image }}" alt="{{ title }}"{% if cardIndex < 4 %} loading="eager"{% else %} loading="lazy"{% endif %} decoding="async" />{% endif %}
+  {% set cardIndex = index if (index is defined and index is not none) else 999 %}{% if d.image %}<img class="item-photo" src="{{ d.image }}" alt="{{ title }}"{% if cardIndex < 4 %} loading="eager"{% else %} loading="lazy"{% endif %} decoding="async" />{% if d.imageCredit %}<a class="photo-credit card" dir="ltr" href="{{ d.imageCreditUrl }}" target="_blank" rel="noopener">📷 {{ d.imageCredit }}</a>{% endif %}{% endif %}
   {# شارة واحدة بس — الشارتان بنفس الموضع المطلق فتتراكبان. "ممول" لها
      الأولوية: الإفصاح عن الإعلان المدفوع أهم من وسم "مميز" #}
   {% if d.sponsored %}<span class="sponsored-badge">{{ t.sponsored_badge }}</span>
