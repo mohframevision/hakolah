@@ -82,7 +82,13 @@
     const sub = [typeOf(item), areaOf(item)].filter(Boolean).join(" · ") || (isEn ? SITE_DATA[section].title_en || SITE_DATA[section].title : SITE_DATA[section].title);
     return `<a class="home-card" href="${hrefOf(section, item)}">
       ${badge ? `<span class="home-card-badge">${badge}</span>` : ""}
-      <span class="home-card-icon" style="--tint:${tint(item.id || item.title)}">${escapeHtml(item.icon || "📍")}</span>
+      <span class="home-card-icon${item.image ? " photo" : item.illus ? " illus" : ""}" style="--tint:${tint(item.id || item.title)}">${
+        item.image
+          ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" decoding="async" />`
+          : item.illus
+            ? `<img src="/assets/illus/${escapeHtml(item.illus)}.webp" alt="" width="80" height="80" loading="lazy" decoding="async" />`
+            : escapeHtml(item.icon || "📍")
+      }</span>
       <span class="home-card-text"><b>${escapeHtml(itemTitle(item))}</b><small>${escapeHtml(sub)}</small></span>
     </a>`;
   };
