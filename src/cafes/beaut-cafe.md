@@ -1,9 +1,9 @@
 ---
 title: بيوت كافيه
 icon: "☕"
-desc: كافيه.
+desc: "كافيه فيه وجبات غداء وعشاء في سار."
 title_en: Beaut Cafe
-desc_en: A cafe.
+desc_en: "A cafe with lunch and dinner meals in Saar."
 categories:
   - سار
 links:
@@ -12,4 +12,6 @@ links:
   website: ''
 lat: 26.1979509
 lng: 50.4774329
+hours: "يومياً ١م - ١ص"
+hours_en: "Daily 1pm - 1am"
 ---

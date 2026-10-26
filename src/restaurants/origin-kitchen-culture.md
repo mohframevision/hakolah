@@ -1,10 +1,11 @@
 ---
 title: "Origin Kitchen & Culture"
 icon: "🍽️"
-desc: "Origin Kitchen & Culture: مطعم في الفاتح، البحرين."
+desc: "مطعم بوفيه داخل فندق هيلتون البحرين، يقدّم الفطور والغداء والعشاء."
 title_en: "Origin Kitchen & Culture"
-desc_en: "Origin Kitchen & Culture: restaurant in Al Fatih, Bahrain."
+desc_en: "A buffet restaurant inside the Hilton Bahrain hotel, serving breakfast, lunch and dinner."
 categories:
+  - بوفيه
   - الفاتح
 dateAdded: 2026-10-21
 coords: 26.2237194, 50.6091061
@@ -13,6 +14,7 @@ hours_en: "Daily 6:30am - 10:30am & 12:30pm - 3:30pm & 6:30pm - 10:30pm"
 incomplete: true
 source: "OpenStreetMap"
 links:
+  website: https://www.hilton.com/en/hotels/bahhhhi-hilton-bahrain/dining/
   phone: "33692013"
-  maps: https://www.google.com/maps/search/?api=1&query=26.223719,50.609106
+  maps: https://maps.app.goo.gl/tAfXjxRNKSJ295Um6
 ---

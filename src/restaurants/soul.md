@@ -1,10 +1,11 @@
 ---
 title: "Soul"
 icon: "🍽️"
-desc: "Soul: مطعم في مدينة عيسى، البحرين."
+desc: "مطعم برجر دجاج ولحم في مدينة عيسى."
 title_en: "Soul"
-desc_en: "Soul: restaurant in Isa Town, Bahrain."
+desc_en: "A chicken and beef burger restaurant in Isa Town."
 categories:
+  - برجر
   - مدينة عيسى
 dateAdded: 2026-10-21
 coords: 26.1655254, 50.5418159

@@ -1,10 +1,11 @@
 ---
 title: "Al Ahad Cafeteria"
 icon: "🍽️"
-desc: "Al Ahad Cafeteria: مطعم في الرفاع، البحرين."
+desc: "كافيتيريا في الرفاع، البحرين."
 title_en: "Al Ahad Cafeteria"
-desc_en: "Al Ahad Cafeteria: restaurant in Riffa, Bahrain."
+desc_en: "A cafeteria in Riffa, Bahrain."
 categories:
+  - كافيتيريا
   - الرفاع
 dateAdded: 2026-10-21
 coords: 26.1162714, 50.5723265

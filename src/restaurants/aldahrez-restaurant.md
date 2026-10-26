@@ -1,10 +1,12 @@
 ---
 title: "الدهريز"
 icon: "🍽️"
-desc: "الدهريز: مطعم في سند، البحرين."
-title_en: "aldahrez restaurant"
-desc_en: "aldahrez restaurant: restaurant in Sanad, Bahrain."
+desc: "مطعم عيوش وأكل شعبي في سند."
+title_en: "Aldhriz Restaurant"
+desc_en: "A rice and traditional Bahraini food restaurant in Sanad."
 categories:
+  - عيوش
+  - شعبي
   - سند
 dateAdded: 2026-10-21
 coords: 26.1428809, 50.5782850
