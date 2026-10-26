@@ -5,6 +5,7 @@ desc: "مخبز و مطعم القاهرة: مطعم في الماحوز، ال�
 title_en: "Cairo restaurant"
 desc_en: "Cairo restaurant: restaurant in Al Mahooz, Bahrain."
 categories:
+  - معجنات
   - الماحوز
 dateAdded: 2026-10-21
 coords: 26.2146588, 50.5873577

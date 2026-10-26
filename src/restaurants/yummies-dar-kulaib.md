@@ -5,6 +5,9 @@ desc: فرع دار كليب، مع طلب أونلاين عبر الموقع ا
 title_en: Yummies - Dar Kulaib Branch
 desc_en: Dar Kulaib branch, with online ordering through the official website.
 categories:
+  - برجر
+  - سندويشات
+  - وجبات سريعة
   - دار كليب
 dateAdded: 2026-10-19
 links:

@@ -5,6 +5,8 @@ desc: "منى للبيتزا و الباستا: مطعم في سفالة، ال�
 title_en: "Muna Pizza & Pasta"
 desc_en: "Muna Pizza & Pasta: restaurant in Sufala, Bahrain."
 categories:
+  - بيتزا
+  - إيطالي
   - سفالة
 dateAdded: 2026-10-21
 coords: 26.1652967, 50.6091434

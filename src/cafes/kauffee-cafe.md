@@ -5,6 +5,7 @@ desc: "kauffee cafe: مطعم برجر في بسيتين، البحرين."
 title_en: "kauffee cafe"
 desc_en: "kauffee cafe: burger restaurant in Busaiteen, Bahrain."
 categories:
+  - برجر
   - بسيتين
 dateAdded: 2026-10-21
 coords: 26.2830437, 50.6020959

@@ -7,6 +7,7 @@ desc_en: Desserts and drinks, with a truck in Al Sayah and branches in Al Dair a
 hours: "يومياً ٤:٣٠م - ١:٣٠ص"
 hours_en: "Daily 4:30pm - 1:30am"
 categories:
+  - حلويات
   - السايه
 coords: 26.266176, 50.594105
 dateAdded: 2026-10-11

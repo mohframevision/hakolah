@@ -7,6 +7,7 @@ desc_en: "A specialty tea cafeteria in Riffa (Shaikh Hamad Avenue), which says i
 hours: "السبت - الخميس ٦ص - ١ص، الجمعة ٤م - ١ص"
 hours_en: "Sat - Thu 6am - 1am, Fri 4pm - 1am"
 categories:
+  - كرك
   - الرفاع
 dateAdded: 2026-10-20
 coords: 26.127167, 50.545333

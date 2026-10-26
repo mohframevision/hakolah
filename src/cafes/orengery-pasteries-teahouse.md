@@ -5,6 +5,7 @@ desc: "اورانجيري: كافيه في الهملة، البحرين."
 title_en: "Orengery Pasteries & Teahouse"
 desc_en: "Orengery Pasteries & Teahouse: cafe in Hamala, Bahrain."
 categories:
+  - حلا ومعجنات
   - الهملة
 dateAdded: 2026-10-21
 coords: 26.1616540, 50.4698513

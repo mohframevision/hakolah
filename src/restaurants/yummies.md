@@ -7,6 +7,9 @@ desc_en: A restaurant in Zinj, offering direct online ordering through its offic
 hours: "يومياً ١٢ظ - ١ص"
 hours_en: "Daily 12pm - 1am"
 categories:
+  - برجر
+  - سندويشات
+  - وجبات سريعة
   - الزنج
 dateAdded: 2026-08-03
 links:

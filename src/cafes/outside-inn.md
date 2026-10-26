@@ -5,6 +5,7 @@ desc: "Outside Inn: مطعم بيتزا في الماحوز، البحرين."
 title_en: "Outside Inn"
 desc_en: "Outside Inn: pizza restaurant in Al Mahooz, Bahrain."
 categories:
+  - بيتزا
   - الماحوز
 dateAdded: 2026-10-21
 coords: 26.2058119, 50.5917232

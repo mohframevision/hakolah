@@ -5,6 +5,7 @@ desc: كافيه وعصائر.
 title_en: Cinq Juice Bar & Cafe
 desc_en: A cafe and juice bar.
 categories:
+  - عصائر
   - المقشع
 links:
   maps: https://maps.app.goo.gl/Nmfu6MCHbcZe4Jw76

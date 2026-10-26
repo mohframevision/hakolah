@@ -45,6 +45,8 @@ module.exports = {
   "شعبي": "Traditional",
   "قهوة مختصة": "Specialty Coffee",
   "كرك": "Karak Tea",
+  "عصائر": "Juices",
+  "مصري": "Egyptian",
   "مشروبات باردة": "Cold Drinks",
   "حلا ومعجنات": "Desserts & Pastries",
   "إفطار": "Breakfast",

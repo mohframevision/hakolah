@@ -5,6 +5,7 @@ desc: "مدينة الكشري: مطعم في الرفاع، البحرين."
 title_en: "Koshary Town"
 desc_en: "Koshary Town: restaurant in Riffa, Bahrain."
 categories:
+  - مصري
   - الرفاع
 dateAdded: 2026-10-21
 coords: 26.1312663, 50.5580587

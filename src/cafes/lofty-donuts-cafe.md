@@ -5,6 +5,7 @@ desc: "لوفتي دونت: كافيه في الزلاق، البحرين."
 title_en: "Lofty Donuts Cafe"
 desc_en: "Lofty Donuts Cafe: cafe in Zallaq, Bahrain."
 categories:
+  - حلويات
   - الزلاق
 dateAdded: 2026-10-21
 coords: 26.0499962, 50.4991858

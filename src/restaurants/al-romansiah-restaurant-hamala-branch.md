@@ -5,6 +5,7 @@ desc: "مطعم الرومانسية - فرع الهملة: مطعم في اله
 title_en: "Al-Romansiah Restaurant - Hamala Branch"
 desc_en: "Al-Romansiah Restaurant - Hamala Branch: restaurant in Hamala, Bahrain."
 categories:
+  - مندي
   - الهملة
 dateAdded: 2026-10-21
 coords: 26.1483754, 50.4875423

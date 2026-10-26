@@ -7,6 +7,9 @@ desc_en: Al Sayah branch, with online ordering through the official website.
 hours: "يومياً ١ظ - ١١:٣٠م"
 hours_en: "Daily 1pm - 11:30pm"
 categories:
+  - برجر
+  - سندويشات
+  - وجبات سريعة
   - المنامة
 dateAdded: 2026-10-19
 links:

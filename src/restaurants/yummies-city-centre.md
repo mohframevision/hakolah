@@ -5,6 +5,9 @@ desc: فرع سيتي سنتر البحرين، مع طلب أونلاين عب�
 title_en: Yummies - City Centre Branch
 desc_en: City Centre Bahrain branch, with online ordering through the official website.
 categories:
+  - برجر
+  - سندويشات
+  - وجبات سريعة
   - المنامة
 dateAdded: 2026-10-19
 links:

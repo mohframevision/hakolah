@@ -5,6 +5,7 @@ desc: "ANAJ Café: كافيه في الزلاق، البحرين."
 title_en: "ANAJ Café"
 desc_en: "ANAJ Café: cafe in Zallaq, Bahrain."
 categories:
+  - قهوة مختصة
   - الزلاق
 dateAdded: 2026-10-21
 coords: 26.0511293, 50.4875614

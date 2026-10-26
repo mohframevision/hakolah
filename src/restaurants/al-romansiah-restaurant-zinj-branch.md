@@ -5,6 +5,7 @@ desc: "مطعم الرومانسية - فرع الزنج: مطعم في الزن
 title_en: "Al-Romansiah Restaurant - Zinj Branch"
 desc_en: "Al-Romansiah Restaurant - Zinj Branch: restaurant in Zinj, Bahrain."
 categories:
+  - مندي
   - الزنج
 dateAdded: 2026-10-21
 coords: 26.2033962, 50.5687396

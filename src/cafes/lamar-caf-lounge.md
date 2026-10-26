@@ -5,6 +5,7 @@ desc: "Lamar Café & Lounge: محل معجنات في الفاتح، البحر�
 title_en: "Lamar Café & Lounge"
 desc_en: "Lamar Café & Lounge: pastry shop in Al Fatih, Bahrain."
 categories:
+  - حلا ومعجنات
   - الفاتح
 dateAdded: 2026-10-21
 coords: 26.2238335, 50.6090738
