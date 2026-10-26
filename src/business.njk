@@ -20,8 +20,8 @@ pageCss: "menu"
   <div class="biz-demo-text">
     <h2>شاهد كيف يشتغل</h2>
     <p>هذا المنيو يلعب بنفسه، وهو المنتج الحقيقي. وبعد ما يخلص تقدر تجرّبه أنت.</p>
-    <p>اختر الستايل الأقرب لمحلك. الأصناف والأسعار تبقى كما هي، والهوية تتغيّر:</p>
-    <div class="hm-themes" role="group" aria-label="ستايل المنيو"><button type="button" data-hm-theme="classic" aria-pressed="true">شعبي</button><button type="button" data-hm-theme="cafe" aria-pressed="false">كافيه</button><button type="button" data-hm-theme="luxe" aria-pressed="false">فاخر</button></div>
+    <p>اختر الثيم الأقرب لمحلك من سبعة ثيمات. الأصناف والأسعار تبقى كما هي، والشكل يتغيّر:</p>
+    <div class="hm-themes" role="group" aria-label="ثيم المنيو">{% for th in menuThemes %}<button type="button" data-hm-theme="{{ th.id }}" aria-pressed="{{ 'true' if loop.first else 'false' }}"><i style="--a: {{ th.a }}; --b: {{ th.b }}" aria-hidden="true"></i>{{ th.ar }}</button>{% endfor %}</div>
     <button type="button" class="btn secondary" data-demo-replay hidden>↻ أعد العرض</button>
   </div>
   <div class="demo-phone" data-demo aria-label="عرض توضيحي للمنيو الرقمي">

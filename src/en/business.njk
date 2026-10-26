@@ -21,8 +21,8 @@ pageCss: "menu"
   <div class="biz-demo-text">
     <h2>See how it works</h2>
     <p>This menu plays itself, and it is the real product. When it finishes you can try it yourself.</p>
-    <p>Pick the style closest to your place. Your items and prices stay the same, and the look changes:</p>
-    <div class="hm-themes" role="group" aria-label="Menu style"><button type="button" data-hm-theme="classic" aria-pressed="true">Casual</button><button type="button" data-hm-theme="cafe" aria-pressed="false">Cafe</button><button type="button" data-hm-theme="luxe" aria-pressed="false">Fine dining</button></div>
+    <p>Pick the theme closest to your place from seven. Your items and prices stay the same, and the look changes:</p>
+    <div class="hm-themes" role="group" aria-label="Menu theme">{% for th in menuThemes %}<button type="button" data-hm-theme="{{ th.id }}" aria-pressed="{{ 'true' if loop.first else 'false' }}"><i style="--a: {{ th.a }}; --b: {{ th.b }}" aria-hidden="true"></i>{{ th.en }}</button>{% endfor %}</div>
     <button type="button" class="btn secondary" data-demo-replay hidden>↻ Replay</button>
   </div>
   <div class="demo-phone" data-demo aria-label="Digital menu demo">
