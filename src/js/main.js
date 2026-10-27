@@ -2593,3 +2593,49 @@ document.addEventListener("keydown", (e) => {
   if (field) return field.focus();
   location.href = (window.SITE_LANG === "en" ? "/en/" : "/") + "search.html";
 });
+
+/* ===== صور صفحة المكان: الضغط يكبّر الصورة لملء الشاشة داخل الموقع، و✕ يرجعها لمكانها =====
+   View Transitions (لو مدعومة) تنقل الصورة نفسها من حجمها للشاشة وبالعكس */
+(function photoLightbox() {
+  const strip = document.querySelector(".photo-strip");
+  if (!strip) return;
+  const dlg = document.createElement("dialog");
+  dlg.className = "photo-lightbox";
+  dlg.innerHTML = '<button type="button" class="photo-lightbox-close">✕</button><img alt="" />';
+  dlg.firstChild.setAttribute("aria-label", window.SITE_LANG === "en" ? "Close" : "إغلاق");
+  document.body.append(dlg);
+  const big = dlg.querySelector("img");
+  let thumb = null;
+  const morph = (fn) => (document.startViewTransition ? document.startViewTransition(fn) : fn());
+
+  function open(img) {
+    thumb = img;
+    big.src = img.currentSrc || img.src;
+    big.alt = img.alt;
+    img.style.viewTransitionName = "photo";
+    morph(() => {
+      img.style.viewTransitionName = "";
+      big.style.viewTransitionName = "photo";
+      dlg.showModal();
+    });
+  }
+  function close() {
+    morph(() => {
+      big.style.viewTransitionName = "";
+      if (thumb) thumb.style.viewTransitionName = "photo";
+      dlg.close();
+    }).finished?.then(() => thumb && (thumb.style.viewTransitionName = ""));
+  }
+  document.addEventListener("click", (e) => {
+    const img = e.target.closest(".photo-strip img, .detail-hero-photo");
+    if (!img) return;
+    e.preventDefault();
+    open(img);
+  });
+  // ✕ أو الضغط خارج الصورة يقفل؛ Esc يقفل بنفسه (cancel) فنمرّره من نفس الطريق للحركة
+  dlg.addEventListener("click", (e) => e.target !== big && close());
+  dlg.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    close();
+  });
+})();
