@@ -2606,7 +2606,8 @@ document.addEventListener("keydown", (e) => {
   document.body.append(dlg);
   const big = dlg.querySelector("img");
   let thumb = null;
-  const morph = (fn) => (document.startViewTransition ? document.startViewTransition(fn) : fn());
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const morph = (fn) => (document.startViewTransition && !still ? document.startViewTransition(fn) : fn());
 
   function open(img) {
     thumb = img;
@@ -2624,7 +2625,7 @@ document.addEventListener("keydown", (e) => {
       big.style.viewTransitionName = "";
       if (thumb) thumb.style.viewTransitionName = "photo";
       dlg.close();
-    }).finished?.then(() => thumb && (thumb.style.viewTransitionName = ""));
+    })?.finished.then(() => thumb && (thumb.style.viewTransitionName = ""));
   }
   document.addEventListener("click", (e) => {
     const img = e.target.closest(".photo-strip img, .detail-hero-photo");

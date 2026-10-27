@@ -1404,8 +1404,11 @@ img {
   cursor: zoom-in;
 }
 .photo-lightbox {
-  width: 100vw;
-  height: 100dvh;
+  /* inset بدل 100vw/100dvh: الصفحة عليها zoom بالشاشات العريضة (--page-zoom) فـ100vw يطلع أكبر من الشاشة */
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
   max-width: none;
   max-height: none;
   margin: 0;
@@ -1416,10 +1419,30 @@ img {
 .photo-lightbox::backdrop {
   background: #000;
 }
+/* الصفحة ما تتمرر وراء الصورة المفتوحة — وإلا الصورة ترجع لمكان صار خارج الشاشة */
+html:has(.photo-lightbox[open]) {
+  overflow: hidden;
+}
+.photo-lightbox[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* صندوق الصورة = الصورة الظاهرة نفسها (مو الشاشة كلها بحواف سوداء)، عشان حركة
+   التكبير/التصغير تنتقل بين حجمين حقيقيين بلا تمطيط */
 .photo-lightbox img {
-  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}
+::view-transition-group(photo) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+/* الصورة الرئيسية مقصوصة (cover) بنسبة غير نسبة الصورة: نملأ الصندوق المتحرك بقصّ لا بتمطيط */
+::view-transition-old(photo),
+::view-transition-new(photo) {
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 .photo-lightbox-close {
   position: absolute;
