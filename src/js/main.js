@@ -2667,8 +2667,20 @@ document.addEventListener("keydown", (e) => {
     dlg.getAnimations({ subtree: true }).forEach((a) => a.cancel());
   }
 
+  // كيبورد: Enter على رابط المصغّرة يجي الحدث على <a> مو <img>؛ والصورة الرئيسية نخليها زر قابل للتركيز
+  const hero = document.querySelector(".detail-hero-photo");
+  if (hero) {
+    hero.tabIndex = 0;
+    hero.setAttribute("role", "button");
+    hero.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      open(hero);
+    });
+  }
   document.addEventListener("click", (e) => {
-    const img = e.target.closest(".photo-strip img, .detail-hero-photo");
+    const link = e.target.closest(".photo-strip a");
+    const img = link ? link.querySelector("img") : e.target.closest(".detail-hero-photo");
     if (!img) return;
     e.preventDefault();
     open(img);
