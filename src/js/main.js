@@ -1654,6 +1654,8 @@ function flyInCards(grid) {
 
   // المراقبة على البطاقة وهي مزاحة لتحت ومكبّرة، فالهامش السفلي يعوّض
   // الإزاحة — وإلا بطاقات أسفل الشاشة تبقى مخفية وقت فتح الصفحة
+  // البطاقة الطرفية مزاحة ±350px فتنقصّ بالكامل خارج حاوية مقصوصة ولا "تتقاطع" أبداً —
+  // فلما تظهر بطاقة نُظهر معها كل بطاقات صفّها وما فوقه (offsetTop لا يتأثر بالـtransform)
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach(({ target, isIntersecting }) => {
