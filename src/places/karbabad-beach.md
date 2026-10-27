@@ -4,6 +4,7 @@ icon: 🌅
 desc: ساحل يجمع عربات طعام متنوعة مع منظر بحري جميل — مكان رائع لتغيير الجو.
 title_en: Karbabad Beach
 desc_en: A coastal spot with a variety of food trucks and a beautiful sea view — a great place for a change of scenery.
+image: /assets/uploads/karbabad-DSC04756.jpg
 categories:
   - شاطئ
   - عربات طعام
@@ -11,6 +12,7 @@ categories:
 lat: 26.2424826
 lng: 50.5267773
 langSwitchUrl: "/en/places/karbabad-beach.html"
+imageCredit: "Mohamed"
 ---
 
 ## نبذة عن المكان
