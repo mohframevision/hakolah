@@ -1660,9 +1660,12 @@ function flyInCards(grid) {
     (entries) => {
       entries.forEach(({ target, isIntersecting }) => {
         if (!isIntersecting) return;
-        observer.unobserve(target);
-        target.classList.remove("fly-pending");
-        target.classList.add("card-in", "flown");
+        cards.forEach((card) => {
+          if (!card.classList.contains("fly-pending") || card.offsetTop > target.offsetTop + 1) return;
+          observer.unobserve(card);
+          card.classList.remove("fly-pending");
+          card.classList.add("card-in", "flown");
+        });
       });
     },
     { rootMargin: "0px 0px 250px 0px" }
