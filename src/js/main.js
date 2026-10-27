@@ -2595,7 +2595,8 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* ===== صور صفحة المكان: الضغط يكبّر الصورة لملء الشاشة داخل الموقع، و✕ يرجعها لمكانها =====
-   View Transitions (لو مدعومة) تنقل الصورة نفسها من حجمها للشاشة وبالعكس */
+   حركة FLIP: نحرّك الصورة الكبيرة نفسها بـtransform + clip-path + opacity فقط (على الـGPU)
+   — View Transitions كانت تصوّر الصفحة كاملة كل مرة فالحركة تقطّع على الشاشات السريعة */
 (function photoLightbox() {
   const strip = document.querySelector(".photo-strip");
   if (!strip) return;
@@ -2605,28 +2606,67 @@ document.addEventListener("keydown", (e) => {
   dlg.firstChild.setAttribute("aria-label", window.SITE_LANG === "en" ? "Close" : "إغلاق");
   document.body.append(dlg);
   const big = dlg.querySelector("img");
-  let thumb = null;
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const morph = (fn) => (document.startViewTransition && !still ? document.startViewTransition(fn) : fn());
+  const timing = { duration: 240, easing: "cubic-bezier(0.2, 0, 0, 1)" };
+  let thumb = null;
+  let busy = false;
 
-  function open(img) {
+  // من مكان المصغّرة لمكان الكبيرة: تكبير موحّد يغطي المصغّرة + قصّ الزائد (لو نسبتها مختلفة مثل الصورة الرئيسية)
+  function fromThumb() {
+    const t = thumb.getBoundingClientRect();
+    const b = big.getBoundingClientRect();
+    const z = b.width / big.offsetWidth || 1; // zoom الصفحة بالشاشات العريضة
+    const s = Math.max(t.width / b.width, t.height / b.height);
+    const dx = (t.left + t.width / 2 - (b.left + b.width / 2)) / z;
+    const dy = (t.top + t.height / 2 - (b.top + b.height / 2)) / z;
+    const cx = (b.width - t.width / s) / 2 / z;
+    const cy = (b.height - t.height / s) / 2 / z;
+    const r = parseFloat(getComputedStyle(thumb).borderTopLeftRadius) / s || 0;
+    return [
+      { transform: `translate(${dx}px, ${dy}px) scale(${s})`, clipPath: `inset(${cy}px ${cx}px round ${r}px)` },
+      { transform: "none", clipPath: "inset(0px 0px round 0px)" },
+    ];
+  }
+
+  async function open(img) {
+    if (busy) return;
     thumb = img;
     big.src = img.currentSrc || img.src;
     big.alt = img.alt;
-    img.style.viewTransitionName = "photo";
-    morph(() => {
-      img.style.viewTransitionName = "";
-      big.style.viewTransitionName = "photo";
-      dlg.showModal();
-    });
+    try {
+      await big.decode(); // فك ترميز الصورة قبل الحركة، مو في نصها
+    } catch {
+      /* نكمل حتى لو فشل */
+    }
+    dlg.showModal();
+    if (still) return;
+    busy = true;
+    thumb.style.visibility = "hidden";
+    dlg.animate({ opacity: [0, 1] }, { ...timing, pseudoElement: "::backdrop" });
+    dlg.animate({ backgroundColor: ["rgb(0 0 0 / 0)", "#000"] }, timing);
+    dlg.firstChild.animate({ opacity: [0, 1] }, timing);
+    await big.animate(fromThumb(), timing).finished.catch(() => {});
+    thumb.style.visibility = "";
+    busy = false;
   }
-  function close() {
-    morph(() => {
-      big.style.viewTransitionName = "";
-      if (thumb) thumb.style.viewTransitionName = "photo";
-      dlg.close();
-    })?.finished.then(() => thumb && (thumb.style.viewTransitionName = ""));
+
+  async function close() {
+    if (busy) return;
+    if (!still && thumb) {
+      busy = true;
+      thumb.style.visibility = "hidden";
+      const back = { ...timing, fill: "forwards" };
+      dlg.animate({ opacity: [1, 0] }, { ...back, pseudoElement: "::backdrop" });
+      dlg.animate({ backgroundColor: ["#000", "rgb(0 0 0 / 0)"] }, back);
+      dlg.firstChild.animate({ opacity: [1, 0] }, back);
+      await big.animate(fromThumb().reverse(), back).finished.catch(() => {});
+      thumb.style.visibility = "";
+      busy = false;
+    }
+    dlg.close();
+    dlg.getAnimations({ subtree: true }).forEach((a) => a.cancel());
   }
+
   document.addEventListener("click", (e) => {
     const img = e.target.closest(".photo-strip img, .detail-hero-photo");
     if (!img) return;
