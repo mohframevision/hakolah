@@ -5,6 +5,13 @@ desc: A coastal spot with a variety of food trucks and a beautiful sea view — 
 image: /assets/uploads/karbabad-DSC04756.jpg
 langSwitchUrl: "/places/karbabad-beach.html"
 imageCredit: "Mohamed"
+gallery:
+  - /assets/uploads/karbabad-DSC04760.jpg
+  - /assets/uploads/karbabad-DSC04766.jpg
+  - /assets/uploads/karbabad-DSC04765.jpg
+  - /assets/uploads/karbabad-DSC04750.jpg
+  - /assets/uploads/karbabad-DSC04771.jpg
+  - /assets/uploads/karbabad-DSC04734.jpg
 ---
 
 ## About This Place

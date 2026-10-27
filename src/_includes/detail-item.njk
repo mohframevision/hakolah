@@ -7,6 +7,7 @@ layout: base.njk
 {% set sectionUrl = (('/en/' if lang == 'en' else '/') + sectionSlug + '.html') %}
 <div class="breadcrumb"><a href="{{ homeUrl | url }}">{{ t.nav_home }}</a> / <a href="{{ sectionUrl | url }}">{{ sectionTitle }}</a> / {{ title }}</div>
 {% if image %}<img class="detail-hero-photo" src="{{ image }}" alt="{{ title }}" />{% if imageCredit %}<p class="photo-credit" dir="ltr">📷 {% if imageCreditUrl %}<a href="{{ imageCreditUrl }}" target="_blank" rel="noopener">{{ imageCredit }}</a>{% else %}{{ imageCredit }}{% endif %}</p>{% endif %}{% endif %}
+{% if gallery %}<div class="photo-strip">{% for g in gallery %}<a href="{{ g }}" target="_blank" rel="noopener"><img src="{{ g }}" alt="{{ title }} {{ loop.index + 1 }}" loading="lazy" decoding="async" /></a>{% endfor %}</div>{% endif %}
 <section class="page-header">
   <h1><span aria-hidden="true">{{ icon }}</span> {{ title }}</h1>
   {# الدليل عند لحظة القرار: نفس شارات البطاقة، فوق زر الخريطة #}

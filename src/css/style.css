@@ -1380,6 +1380,25 @@ img {
 }
 
 /* إسناد الصورة الحقيقية (المصوّر والرخصة) — صغير وهادئ تحت الصورة */
+.photo-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  margin-top: 8px;
+  padding-bottom: 4px;
+}
+.photo-strip a {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+.photo-strip img {
+  display: block;
+  height: 150px;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
 .photo-credit {
   margin: 4px 0 0;
   font-size: 0.72rem;
