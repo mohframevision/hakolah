@@ -4,7 +4,8 @@ icon: 🌅
 desc: A coastal spot with a variety of food trucks and a beautiful sea view — a great place for a change of scenery.
 image: /assets/uploads/karbabad-DSC04756.jpg
 langSwitchUrl: "/places/karbabad-beach.html"
-imageCredit: "Mohamed"
+imageCredit: "© Mohamed"
+imageLicense: "CC BY 4.0"
 gallery:
   - /assets/uploads/karbabad-DSC04760.jpg
   - /assets/uploads/karbabad-DSC04766.jpg

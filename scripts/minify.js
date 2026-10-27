@@ -14,6 +14,7 @@ const sharp = require("sharp");
 const SITE_DIR = path.join(__dirname, "..", "_site");
 const UPLOADS_DIR = path.join(SITE_DIR, "assets", "uploads");
 const IMAGE_MAX_WIDTH = 1600;
+const PHOTO_COPYRIGHT = "Copyright Mohamed - CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) - hakolah.com";
 const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
 function walk(dir) {
@@ -59,6 +60,10 @@ async function run() {
         pipeline = pipeline.webp({ quality: 80 });
       }
 
+      // صور صاحب الموقع: نُبقي الحقوق والرخصة داخل الملف (sharp يحذف الـEXIF افتراضياً)
+      if (before.includes(PHOTO_COPYRIGHT)) {
+        pipeline = pipeline.withExif({ IFD0: { Artist: "Mohamed", Copyright: PHOTO_COPYRIGHT } });
+      }
       const after = await pipeline.toBuffer();
       fs.writeFileSync(file, after);
       imageCount++;

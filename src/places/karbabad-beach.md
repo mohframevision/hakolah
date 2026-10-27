@@ -12,7 +12,8 @@ categories:
 lat: 26.2424826
 lng: 50.5267773
 langSwitchUrl: "/en/places/karbabad-beach.html"
-imageCredit: "Mohamed"
+imageCredit: "© Mohamed"
+imageLicense: "CC BY 4.0"
 gallery:
   - /assets/uploads/karbabad-DSC04760.jpg
   - /assets/uploads/karbabad-DSC04766.jpg
