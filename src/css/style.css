@@ -1434,8 +1434,12 @@ html:has(.photo-lightbox[open]) {
   max-width: 100%;
   max-height: 100%;
 }
-::view-transition-group(photo) {
-  animation-duration: 0.35s;
+::view-transition-group(photo),
+::view-transition-old(photo),
+::view-transition-new(photo),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 /* الصورة الرئيسية مقصوصة (cover) بنسبة غير نسبة الصورة: نملأ الصندوق المتحرك بقصّ لا بتمطيط */
