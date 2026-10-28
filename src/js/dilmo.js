@@ -93,10 +93,32 @@
     comeToPlayer: ["joy", ["قادمون يا {n}!", "ها نحن!", "حاضر يا {n}!"]],
     toPlayer: ["joy", ["يا {n}، هل نلعب؟", "{n}! تعال إلى هنا.", "أعجبني لونك يا {n}.", "هل أنت بخير يا {n}؟"]],
     replyHi: ["joy", ["أهلاً يا {n}!", "مرحباً بك!", "وعليك أجمل تحية يا {n}."]],
-    replyFood: ["joy", ["هل تريد أن أقترح لك مطعماً؟", "أنا أحب الكرك!", "الطعام موضوعي المفضّل!", "في الموقع ستجد مطاعم كثيرة."]],
-    replyLove: ["calm", ["وأنا أحب صحبتك يا {n}.", "أنت صديق رائع.", "صداقتك تسعدني."]],
-    replyQ: ["neutral", ["سؤال جميل!", "دعني أفكر…", "لا أعرف، ما رأيك أنت؟", "ربما!"]],
-    replyAny: ["neutral", ["فهمتك يا {n}.", "كلامك جميل.", "حقاً؟", "أكمل، أنا أسمعك."]],
+    cBye: ["plain", ["مع السلامة يا {n}!", "إلى اللقاء، عُد قريباً.", "سأنتظرك يا {n}."]],
+    cThanks: ["plain", ["العفو يا {n}.", "لا شكر على واجب.", "يسعدني ذلك!"]],
+    cHowGood: ["plain", ["أنا بخير، شكراً لسؤالك! وأنت؟", "بأفضل حال ما دمتَ هنا. وأنت؟", "سعيد جداً اليوم! وأنت؟"]],
+    cHowTired: ["plain", ["نعسان قليلاً… وأنت؟", "متعب بعض الشيء، لكني بخير. وأنت؟"]],
+    cHowGrumpy: ["plain", ["كنتُ منزعجاً قليلاً، لكن سؤالك أسعدني.", "أفضل الآن بعد أن سألت."]],
+    cName: ["plain", ["اسمي دلمو!", "أنا دلمو، رفيقك في هكوله.", "دلمو، وهؤلاء أصدقائي."]],
+    cAge: ["plain", ["عمري؟ وُلدتُ مع هكوله!", "صغير، لكني أعرف أماكن كثيرة.", "لا أعدّ السنين، أعدّ النجوم."]],
+    cHome: ["plain", ["أعيش هنا في هكوله، في البحرين.", "بيتي هذه الساحة، وأحياناً خلف الشجيرة."]],
+    cPraise: ["plain", ["شكراً! أحرجتني.", "وأنت ألطف يا {n}!", "كلامك جعل يومي أجمل."]],
+    cInsult: ["plain", ["هذا ليس لطيفاً.", "لماذا تقول هذا؟", "سأتظاهر أني لم أسمع."]],
+    cSad: ["plain", ["لا تحزن يا {n}، أنا هنا.", "أتمنى أن يتحسّن يومك.", "تعال نلعب قليلاً، قد يخفّف عنك."]],
+    cHappy: ["plain", ["رائع! فرحك يفرحني.", "هذا يسعدني يا {n}!", "هذا خبر جميل!"]],
+    cBored: ["plain", ["مللت؟ اركل الكرة أو اجمع النجوم!", "هيّا نلعب المطاردة!", "جرّب أن تطعمني شيئاً."]],
+    cHungry: ["plain", ["وأنا جائع أيضاً! هل أقترح لك مكاناً؟", "الجوع صعب! هل أساعدك في اختيار مطعم؟"]],
+    cWhereEat: ["plain", ["اضغط النرد في الأعلى، فيختار لك مكاناً.", "ابحث في هكوله، فيه مطاعم كثيرة متحقَّق منها.", "صفحة «اختار لي» تحلّ حيرتك!"]],
+    cPlay: ["plain", ["هيّا نلعب! اهرب قبل أن يمسكوك!", "لنلعب المطاردة!", "استعد، اللعب بدأ!"]],
+    cJoke: ["plain", ["لماذا لا أقف في الزاوية أبداً؟ لأني مستدير!", "سألتُ الكرة عن حالها فقالت: أنا أتدحرج!", "قالت الشجيرة: لا تقلقوا، أنا دائماً خضراء!"]],
+    cYesSuggest: ["plain", ["إذن اضغط النرد في الأعلى، وسيختار لك مكاناً!", "جرّب «اختار لي» من الشريط في الأعلى."]],
+    cNoSuggest: ["plain", ["حسناً، هل نلعب بدلاً من ذلك؟", "لا بأس، أنا هنا متى احتجتني."]],
+    cYes: ["plain", ["جميل!", "اتفقنا!", "رائع!"]],
+    cNo: ["plain", ["حسناً.", "كما تريد.", "لا بأس."]],
+    cFood: ["plain", ["{f}؟ لذيذ!", "أحبّ {f} كثيراً!", "ذكّرتني بـ{f}، جعتُ الآن!"]],
+    cFoodFav: ["plain", ["{f}؟ هذه أكلة {w} المفضّلة!", "{w} تحبّ {f} أكثر من أي شيء!"]],
+    cFriendCalled: ["plain", ["نعم يا {n}؟", "ناديتني؟ أنا هنا!", "أهلاً يا {n}!"]],
+    cHuh: ["plain", ["لم أفهم تماماً… هل تريد أن أقترح لك مكاناً تأكل فيه؟", "لم أفهم قصدك. هل تبحث عن مكان تأكل فيه؟"]],
+    cHuh2: ["plain", ["لم أفهم، لكن كلامك لطيف! هل نلعب؟", "لم أفهم جيداً… هل نلعب المطاردة؟"]],
     buddyReply: ["joy", ["أتفق معه!", "وأنا أيضاً يا {n}!", "كلام جميل يا {n}."]],
     sing: ["calm", ["أغنية هادئة لك.", "دعني أغنّي قليلاً.", "استرخِ واستمع.", "لحن للهدوء.", "أغنّي حين أرتاح.", "أغنية صغيرة قبل القيلولة.", "هذا لحني المفضّل."]],
     singEnd: ["calm", ["انتهت الأغنية.", "أتمنى أنها أراحتك.", "شكراً لأنك استمعت.", "كانت أغنية قصيرة.", "سأغنّي لك مرة أخرى لاحقاً."]]
@@ -181,10 +203,32 @@
     comeToPlayer: ["joy", ["Coming, {n}!", "Here we are!", "On our way, {n}!"]],
     toPlayer: ["joy", ["{n}, shall we play?", "{n}! Come over here.", "I like your colour, {n}.", "Are you okay, {n}?"]],
     replyHi: ["joy", ["Hi, {n}!", "Hello to you!", "Good to see you, {n}."]],
-    replyFood: ["joy", ["Want me to suggest a restaurant?", "I love karak!", "Food is my favourite topic!", "You'll find plenty of restaurants on the site."]],
-    replyLove: ["calm", ["I love your company too, {n}.", "You're a great friend.", "Your friendship makes me happy."]],
-    replyQ: ["neutral", ["Good question!", "Let me think…", "I don't know, what do you think?", "Maybe!"]],
-    replyAny: ["neutral", ["I hear you, {n}.", "Nicely said.", "Really?", "Go on, I'm listening."]],
+    cBye: ["plain", ["Bye, {n}!", "See you, come back soon.", "I'll wait for you, {n}."]],
+    cThanks: ["plain", ["You're welcome, {n}.", "Any time.", "Happy to help!"]],
+    cHowGood: ["plain", ["I'm good, thanks for asking! And you?", "Great, now that you're here. And you?", "Very happy today! And you?"]],
+    cHowTired: ["plain", ["A little sleepy… and you?", "A bit tired, but fine. And you?"]],
+    cHowGrumpy: ["plain", ["I was a bit grumpy, but your question cheered me up.", "Better now that you asked."]],
+    cName: ["plain", ["My name is Dilmo!", "I'm Dilmo, your Hakolah companion.", "Dilmo, and these are my friends."]],
+    cAge: ["plain", ["My age? I was born with Hakolah!", "Young, but I know lots of places.", "I don't count years, I count stars."]],
+    cHome: ["plain", ["I live here in Hakolah, in Bahrain.", "This playground is my home, and sometimes behind the bush."]],
+    cPraise: ["plain", ["Thank you! You're making me blush.", "You're even nicer, {n}!", "That made my day."]],
+    cInsult: ["plain", ["That's not nice.", "Why would you say that?", "I'll pretend I didn't hear that."]],
+    cSad: ["plain", ["Don't be sad, {n}, I'm here.", "I hope your day gets better.", "Let's play a little, it might help."]],
+    cHappy: ["plain", ["Great! Your happiness makes me happy.", "That's lovely, {n}!", "Good news!"]],
+    cBored: ["plain", ["Bored? Kick the ball or collect stars!", "Let's play tag!", "Try feeding me something."]],
+    cHungry: ["plain", ["I'm hungry too! Shall I suggest a place?", "Hunger is hard! Want help picking a restaurant?"]],
+    cWhereEat: ["plain", ["Tap the dice at the top and it picks a place for you.", "Search Hakolah, it has lots of checked restaurants.", "The «Pick for me» page will decide for you!"]],
+    cPlay: ["plain", ["Let's play! Run before they catch you!", "Tag time!", "Get ready, the game is on!"]],
+    cJoke: ["plain", ["Why do I never stand in a corner? Because I'm round!", "I asked the ball how it was. It said: just rolling along!", "The bush said: don't worry, I'm always green!"]],
+    cYesSuggest: ["plain", ["Then tap the dice at the top and it'll pick a place for you!", "Try «Pick for me» in the bar at the top."]],
+    cNoSuggest: ["plain", ["Okay, shall we play instead?", "No problem, I'm here when you need me."]],
+    cYes: ["plain", ["Nice!", "Deal!", "Great!"]],
+    cNo: ["plain", ["Okay.", "As you like.", "No problem."]],
+    cFood: ["plain", ["Ooh, {f}? Yum!", "I love {f}!", "You made me think of {f}, now I'm hungry!"]],
+    cFoodFav: ["plain", ["Ooh, {f}? That's {w}'s favourite!", "{w} loves {f} more than anything!"]],
+    cFriendCalled: ["plain", ["Yes, {n}?", "You called? I'm here!", "Hi, {n}!"]],
+    cHuh: ["plain", ["I didn't quite get that… want me to suggest a place to eat?", "Not sure what you mean. Looking for somewhere to eat?"]],
+    cHuh2: ["plain", ["I didn't get that, but it sounded nice! Shall we play?", "Didn't quite catch that… play tag?"]],
     buddyReply: ["joy", ["I agree with him!", "Me too, {n}!", "Well said, {n}."]],
     sing: ["calm", ["A calm song for you.", "Let me sing a little.", "Relax and listen.", "A tune to settle down.", "I sing when I'm relaxed.", "A little song before a nap.", "This is my favourite tune."]],
     singEnd: ["calm", ["That's the end of the song.", "I hope it relaxed you.", "Thanks for listening.", "A short one.", "I'll sing for you again later."]]
@@ -1105,18 +1149,139 @@
     pos.vx = Math.sign(player.x - pos.x) * 6; pos.vy = -6;
     setTimeout(function () { if (player) say(line("comeToPlayer", { n: player.f.name }), "call", 1500); }, 700);
   });
-  // chatting: your line appears over your character, he (and sometimes a friend) answers by topic
+  // chatting without AI: the message is normalised, then matched against keyword lists (fusha, Gulf dialect
+  // and English, tolerant of small typos) to find what it's about, plus any food or friend it mentions.
+  // He answers by topic and remembers his own last question, so "yes" / "no" get a fitting reply.
+  function norm(t) {
+    return t.toLowerCase().replace(/[ً-ْـ]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
+      .replace(/ؤ/g, "و").replace(/ئ/g, "ي").replace(/([ء-ي])\1+/g, "$1").replace(/([a-z])\1{2,}/g, "$1")
+      .replace(/[^a-z0-9ء-ي]+/g, " ").trim();
+  }
+  var INTENTS = {
+    sing: ["غني", "غن", "غنيلي", "انشد", "sing", "song"],
+    hi: ["مرحبا", "هلا", "اهلا", "السلام عليكم", "سلام", "صباح الخير", "مساء الخير", "هاي", "hi", "hello", "good morning", "good evening", "hey", "salam"],
+    bye: ["مع السلامه", "باي", "وداعا", "اشوفك", "فمان الله", "الى اللقاء", "bye", "goodbye", "see you", "cya"],
+    thanks: ["شكرا", "مشكور", "يعطيك العافيه", "تسلم", "thanks", "thank you", "thx", "ty"],
+    how: ["كيفك", "كيف حالك", "شلونك", "شخبارك", "شحالك", "علومك", "اخبارك", "how are you", "how r u", "hru", "how is it going"],
+    name: ["اسمك", "شنو اسمك", "ما اسمك", "من انت", "منو انت", "your name", "who are you"],
+    age: ["عمرك", "كم عمرك", "how old"],
+    home: ["وين ساكن", "اين تعيش", "وين بيتك", "من وين", "where do you live", "where are you from"],
+    praise: ["حلو", "جميل", "كيوت", "ظريف", "احبك", "احسن", "رهيب", "لطيف", "يجنن", "cute", "nice", "love you", "cool", "awesome", "sweet"],
+    insult: ["غبي", "سخيف", "اكرهك", "وخر", "ثقيل", "بايخ", "stupid", "hate you", "ugly", "dumb", "idiot"],
+    sad: ["حزين", "زعلان", "ضايق", "متضايق", "تعبان", "مكتئب", "sad", "upset", "tired", "depressed"],
+    happy: ["مبسوط", "فرحان", "سعيد", "وناسه", "تمام", "بخير", "زين", "happy", "great", "fine", "good"],
+    bored: ["طفشان", "ملل", "مليت", "زهقان", "طفش", "bored", "boring"],
+    hungry: ["جوعان", "جعان", "جوع", "جائع", "ابي اكل", "hungry", "starving"],
+    whereEat: ["وين اكل", "وين اروح", "مطعم", "مطاعم", "اقترح", "تنصحني", "اين اكل", "where to eat", "restaurant", "recommend", "suggest"],
+    play: ["نلعب", "العب", "لعبه", "play", "game", "tag"],
+    joke: ["نكته", "ضحكني", "سولف", "joke", "funny"],
+    yes: ["اي", "نعم", "ايه", "اكيد", "يب", "طيب", "اوكي", "yes", "yeah", "yep", "sure", "ok", "okay"],
+    no: ["لا", "لاء", "مب", "ما ابي", "no", "nope", "nah"]
+  };
+  var FOODS = { karak: ["كرك", "karak", "chai"], samosa: ["سمبوسه", "سنبوسه", "samosa"], burger: ["برجر", "برقر", "burger"],
+    shawarma: ["شاورما", "shawarma"], machboos: ["مجبوس", "مكبوس", "machboos"], coffee: ["قهوه", "coffee"], tea: ["شاي", "tea"], pizza: ["بيتزا", "pizza"], sweets: ["حلويات", "حلوى", "sweets", "dessert"] };
+  var FOOD_NAME = EN ? { karak: "karak", samosa: "samosa", burger: "burger", shawarma: "shawarma", machboos: "machboos", coffee: "coffee", tea: "tea", pizza: "pizza", sweets: "sweets" }
+    : { karak: "الكرك", samosa: "السمبوسة", burger: "البرجر", shawarma: "الشاورما", machboos: "المجبوس", coffee: "القهوة", tea: "الشاي", pizza: "البيتزا", sweets: "الحلويات" };
+  var CALLS = { main: ["دلمو", "dilmo"], shams: ["شمس", "shams"], mawja: ["موجه", "mawja"], jamra: ["جمره", "jamra"] };
+  [INTENTS, FOODS, CALLS].forEach(function (d) { for (var k in d) d[k] = d[k].map(norm); });
+  function lev(a, b, max) {  // edit distance, gives up once it's past max
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    var row = [], i, j;
+    for (j = 0; j <= b.length; j++) row[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      var prev = row[0], best = row[0] = i;
+      for (j = 1; j <= b.length; j++) {
+        var cur = row[j]; row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; best = Math.min(best, row[j]);
+      }
+      if (best > max) return max + 1;
+    }
+    return row[b.length];
+  }
+  // a word matches a keyword exactly, without its Arabic prefixes (و، ال، بال…), or with one typo (two for long words)
+  function wordHit(w, k) {
+    var forms = [w, w.replace(/^و/, ""), w.replace(/^(و|ف)?(ال|بال|كال|لل)/, "")];
+    for (var i = 0; i < forms.length; i++) {
+      var x = forms[i]; if (x.length < 2) continue;
+      if (x === k) return true;
+      if (k.length >= 4 && x.length >= 4 && lev(x, k, k.length >= 8 ? 2 : 1) <= (k.length >= 8 ? 2 : 1)) return true;
+    }
+    return false;
+  }
+  function hits(text, words, list) {
+    var n = 0;
+    list.forEach(function (k) {
+      if (k.indexOf(" ") >= 0) { if ((" " + text + " ").indexOf(" " + k + " ") >= 0) n += 2; }
+      else if (words.some(function (w) { return wordHit(w, k); })) n++;
+    });
+    return n;
+  }
+  function understand(msg) {
+    var text = norm(msg), words = text.split(" "), best = null, top = 0, k;
+    for (k in INTENTS) { var sc = hits(text, words, INTENTS[k]); if (sc > top) { top = sc; best = k; } }
+    var food = null, call = null;
+    for (k in FOODS) if (hits(text, words, FOODS[k])) { food = k; break; }
+    for (k in CALLS) if (hits(text, words, CALLS[k])) { call = k; break; }
+    return { intent: best, food: food, call: call, q: /[؟?]\s*$/.test(msg) };
+  }
+  var asked = null;  // his last question ("suggest" a place, "play", "how" are you), valid for a little while
+  function reply(u, n) {
+    var pend = asked && performance.now() < asked.until ? asked.k : null, key = null, v = { n: n };
+    asked = null;
+    if (u.intent === "yes" || u.intent === "no") {
+      if (pend === "suggest") key = u.intent === "yes" ? "cYesSuggest" : "cNoSuggest";
+      else if (pend === "play" && u.intent === "yes") u.intent = "play";
+      else key = u.intent === "yes" ? "cYes" : "cNo";
+      if (pend === "suggest" && u.intent === "no") asked = { k: "play" };
+    }
+    // a food beats weak, general topics ("I love karak" is about karak, not a compliment)
+    if (!key && u.food && /^(praise|happy|yes|no|hi)?$/.test(u.intent || "")) u.intent = null;
+    if (!key) switch (u.intent) {
+      case "hi": key = "replyHi"; break;
+      case "bye": key = "cBye"; break;
+      case "thanks": key = "cThanks"; break;
+      case "how": key = mood.sleepy > .5 ? "cHowTired" : mood.annoy > .4 ? "cHowGrumpy" : "cHowGood"; if (key !== "cHowGrumpy") asked = { k: "how" }; break;
+      case "name": key = "cName"; break;
+      case "age": key = "cAge"; break;
+      case "home": key = "cHome"; break;
+      case "praise": key = "cPraise"; mood.joy = 1; befriend(.01); break;
+      case "insult": key = "cInsult"; mood.annoy = Math.min(1, mood.annoy + .3); break;
+      case "sad": key = "cSad"; break;
+      case "happy": key = "cHappy"; mood.joy = Math.min(1, mood.joy + .3); break;
+      case "bored": key = "cBored"; break;
+      case "hungry": key = "cHungry"; asked = { k: "suggest" }; break;
+      case "whereEat": key = "cWhereEat"; break;
+      case "play": key = "cPlay"; startPlayerTag(); break;
+      case "joke": key = "cJoke"; break;
+    }
+    if (!key && u.food) {  // talked about a food: one of his friends may love it
+      var fan = FRIENDS.filter(function (f) { return f.fav === u.food; })[0];
+      v.f = FOOD_NAME[u.food]; key = fan ? "cFoodFav" : "cFood"; if (fan) v.w = fan.name;
+    }
+    if (!key && u.call) return null;  // only called someone by name: they answer instead
+    if (!key) { key = Math.random() < .6 ? "cHuh" : "cHuh2"; asked = { k: key === "cHuh" ? "suggest" : "play" }; }
+    if (asked) asked.until = performance.now() + 20000;
+    return line(key, v);
+  }
+  function startPlayerTag() {
+    var o = pick(others().filter(function (b) { return !b.drag && !b.asleep; }));
+    if (!o || !player) return;
+    o.mode = "tag"; o.other = player; player.mode = "flee"; player.other = o; o.next = performance.now() + 6500;
+  }
+  // your line appears over your character, and he (or whoever you named) answers
   document.getElementById("pp-chat").addEventListener("submit", function (e) {
     e.preventDefault();
     var inp = document.getElementById("pp-msg"), msg = inp.value.trim().slice(0, 60);
     if (!player || !msg) return;
     inp.value = ""; stir(); bsay(player, msg);
-    if (/(غني|غنّي|sing)/i.test(msg) && !song) { setTimeout(sing, 900); return; }
-    var n = player.f.name;
-    var kind = /مرحب|هلا|أهلا|اهلا|\bhi\b|hello|hey/i.test(msg) ? "replyHi" : /جوع|جائع|أكل|اكل|مطعم|كرك|برجر|hungry|food|eat|restaurant|karak|burger/i.test(msg) ? "replyFood" : /أحب|احب|صديق|love|friend/i.test(msg) ? "replyLove" : /[؟?]\s*$/.test(msg) ? "replyQ" : "replyAny";
-    setTimeout(function () { say(line(kind, { n: n }), "pchat", 300); }, 1300);
+    var u = understand(msg), n = player.f.name;
+    if (u.intent === "sing" && !song) { setTimeout(sing, 900); return; }
+    var called = u.call && u.call !== "main" ? others().filter(function (b) { return b.f.id === u.call; })[0] : null;
+    var text = reply(u, n);
+    if (called) setTimeout(function () { if (player) bsay(called, line("cFriendCalled", { n: n })); }, 900);
+    if (text) setTimeout(function () { say(text, "pchat", 300); }, called ? 2400 : 1300);
+    else if (!called) setTimeout(function () { say(line("cFriendCalled", { n: n }), "pchat", 300); }, 1300);
     var o = pick(others());
-    if (o && !mainAway && Math.random() < .5) setTimeout(function () { if (player) bsay(o, line("buddyReply", { n: n })); }, 2900);
+    if (!called && o && !mainAway && (u.intent === "hi" || u.intent === "praise") && Math.random() < .5) setTimeout(function () { if (player) bsay(o, line("buddyReply", { n: n })); }, 2900);
   });
 
   // ---- world life: Bahrain time of day, a ball, a bench, bushes, hide-and-seek, stars, a photo ----
