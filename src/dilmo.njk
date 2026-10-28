@@ -1,0 +1,94 @@
+---
+layout: base.njk
+permalink: "dilmo.html"
+title: "دلمو 🟢 | هكوله"
+description: "دلمو شخصية هكوله الصغيرة: داعبه واسحبه وأطعمه، والعب معه ومع أصدقائه بشخصيتك الخاصة، في عالم يتبع وقت البحرين."
+navActive: "dilmo"
+langSwitchUrl: "/en/dilmo.html"
+pageScript: "dilmo"
+pageCss: "dilmo"
+---
+<div class="dilmo">
+  <div class="dilmo-top">
+    <h1>دلمو</h1>
+    <div class="cast">
+      <span class="ctl-label" id="cast-label">الشخصيات</span>
+      <div class="seg" id="cast-list" role="group" aria-labelledby="cast-label"></div>
+      <button type="button" class="snd" id="cast-solo">أنا وحدي</button>
+      <button type="button" class="snd" id="cast-all">أرجِع الكل</button>
+    </div>
+    <div class="cast">
+      <button type="button" class="snd" id="snd" aria-pressed="true">الصوت: يعمل</button>
+      <button type="button" class="snd" id="photo-btn">صوّر المشهد</button>
+    </div>
+  </div>
+
+  <div class="play" id="play">
+    <div class="world" id="world">
+      <div class="sky" id="sky" aria-hidden="true"></div>
+      <span class="clock" id="clock"></span>
+      <div class="bench" id="bench" aria-hidden="true"></div>
+      <div class="bush" id="bush0" aria-hidden="true"></div>
+      <div class="bush" id="bush1" aria-hidden="true"></div>
+      <button type="button" class="ball" id="ball" aria-label="كرة، اضغطها لتركلها"></button>
+      <div class="foods" id="foods">
+        <button type="button" class="food" id="food-burger" data-food="burger">برجر</button>
+        <button type="button" class="food" id="food-karak" data-food="karak">كرك</button>
+        <button type="button" class="food" id="food-samosa" data-food="samosa">سمبوسة</button>
+      </div>
+      <div class="orb-shadow" id="orb-shadow"></div>
+      <p class="orb-say" id="orb-say" aria-live="polite" hidden></p>
+      <svg id="orb" class="orb" viewBox="-70 -70 140 140" role="img" aria-label="دلمو: اضغطه واسحبه وارمه">
+        <defs>
+          <radialGradient id="pg-rg" cx="38%" cy="32%" r="75%"><stop offset="0" class="s-hi"/><stop offset=".55" class="s-mid"/><stop offset="1" class="s-lo"/></radialGradient>
+          <filter id="pg-gn" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="3" seed="7" stitchTiles="stitch"/><feColorMatrix type="matrix" values=".33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+          <filter id="pg-sf" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1"/></filter>
+        </defs>
+        <g class="pb">
+          <path class="pbody" d="M48 0A48 48 0 1 1 -48 0A48 48 0 1 1 48 0Z" fill="url(#pg-rg)" filter="url(#pg-sf)"/>
+          <path class="grain pgrain" d="M48 0A48 48 0 1 1 -48 0A48 48 0 1 1 48 0Z" transform="scale(.97)" filter="url(#pg-gn)"/>
+          <g class="pf">
+            <ellipse class="pe" cx="-15" cy="-4" rx="6.4" ry="9.1"/>
+            <ellipse class="pe" cx="15" cy="-4" rx="6.4" ry="9.1"/>
+            <ellipse class="pm" cx="0" cy="18" rx="4.3" ry="5.7"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="player-panel" id="player-panel">
+    <h2>ادخل معهم بشخصيتك</h2>
+    <div class="pp-row"><label for="pp-name">اسمك</label><input id="pp-name" maxlength="12" placeholder="مثلاً: نور" autocomplete="off"></div>
+    <div class="pp-row"><span>لونك</span><div class="swatches" id="pp-colors" role="group" aria-label="لون شخصيتك"></div></div>
+    <div class="pp-row"><span>حجمك</span><div class="seg" id="pp-size" role="group" aria-label="حجم شخصيتك">
+      <button type="button" id="pp-s0" data-s="0" aria-pressed="false">صغير</button><button type="button" id="pp-s1" data-s="1" aria-pressed="true">وسط</button><button type="button" id="pp-s2" data-s="2" aria-pressed="false">كبير</button>
+    </div></div>
+    <button type="button" class="game-btn" id="pp-join">ادخل</button>
+  </div>
+  <div class="player-ui" id="player-ui" hidden>
+    <span class="game-status" id="pp-hud" aria-live="polite"></span>
+    <div class="pp-controls">
+      <div class="seg" role="group" aria-label="التحرّك">
+        <button type="button" id="pp-left" aria-label="يسار">◀</button><button type="button" id="pp-down" aria-label="نزول">▼</button><button type="button" id="pp-right" aria-label="يمين">▶</button><button type="button" id="pp-jump">قفز</button>
+      </div>
+      <div class="seg">
+        <button type="button" id="pp-wave">لوّح</button><button type="button" id="pp-laugh">اضحك</button><button type="button" id="pp-call">نادِهم</button>
+      </div>
+      <div class="swatches" id="pp-recolor" role="group" aria-label="غيّر لونك"></div>
+      <form class="pp-chat" id="pp-chat"><input id="pp-msg" maxlength="60" placeholder="قل شيئاً لهم…" autocomplete="off" aria-label="رسالتك"><button type="submit" class="game-btn" id="pp-send">أرسل</button></form>
+      <button type="button" class="snd" id="pp-leave">اخرج</button>
+    </div>
+  </div>
+  <p class="tips">اضغط دلمو أو اسحبه وارمه، اسحب له طعاماً إلى فمه، واركل الكرة. العالم يتبع وقت البحرين، والنجوم التي تجمعها تفتح ألواناً جديدة لشخصيتك. كل ما تفعله يُحفظ في متصفحك فقط.</p>
+
+  <div class="photo-modal" id="photo-modal" hidden>
+    <figure>
+      <img id="photo-img" alt="صورة المشهد">
+      <figcaption>
+        <a class="game-btn" id="photo-save" download="hakolah-dilmo.png" href="#">حفظ الصورة</a>
+        <button type="button" class="snd" id="photo-close">إغلاق</button>
+      </figcaption>
+    </figure>
+  </div>
+</div>

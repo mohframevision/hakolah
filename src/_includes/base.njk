@@ -174,6 +174,7 @@
            القائمة المنسدلة بدل ما تزدحم مع الشعار. "اختار لي" ما تحتاج نسخة
            هنا لأنها تبقى ظاهرة بالهيدر حتى على أضيق الشاشات (انظر icon-btn-picker) #}
         <a class="nav-only-mobile{% if navActive == "favorites" %} active{% endif %}"{% if navActive == "favorites" %} aria-current="page"{% endif %} href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}">{{ icon("heart-fill", 16) }} {{ t.nav_favorites }}</a>
+        <a class="nav-only-mobile{% if navActive == "dilmo" %} active{% endif %}"{% if navActive == "dilmo" %} aria-current="page"{% endif %} href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}">{{ icon("dilmo", 16) }} {{ "Dilmo" if lang == "en" else "دلمو" }}</a>
       </nav>
       <div class="header-actions">
         {# البحث ظاهر كحقل لا أيقونة فقط (Baymard وNielsen Norman: الحقل المكشوف يُستخدم أكثر بكثير)؛
@@ -184,6 +185,7 @@
         <a class="icon-btn{% if navActive == "favorites" %} active{% endif %}"{% if navActive == "favorites" %} aria-current="page"{% endif %} href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}" title="{{ t.nav_favorites }}" aria-label="{{ t.nav_favorites }}">{{ icon("heart-fill") }}</a>
         <a class="icon-btn icon-btn-picker{% if navActive == "picker" %} active{% endif %}"{% if navActive == "picker" %} aria-current="page"{% endif %} href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}" title="{{ t.nav_picker }}" aria-label="{{ t.nav_picker }}">{{ icon("dice") }}</a>
         <a class="icon-btn{% if navActive == "sounds" %} active{% endif %}"{% if navActive == "sounds" %} aria-current="page"{% endif %} href="{{ (('/en/sounds.html' if lang == 'en' else '/sounds.html')) | url }}" title="{{ t.nav_sounds }}" aria-label="{{ t.nav_sounds }}">{{ icon("music") }}</a>
+        {% set dilmoLabel = "Dilmo" if lang == "en" else "دلمو" %}<a class="icon-btn{% if navActive == "dilmo" %} active{% endif %}"{% if navActive == "dilmo" %} aria-current="page"{% endif %} href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}" title="{{ dilmoLabel }}" aria-label="{{ dilmoLabel }}">{{ icon("dilmo") }}</a>
         <span class="header-divider" aria-hidden="true"></span>
         {# على الشاشات الضيقة نعرض الاختصار بدل الاسم الكامل عشان يضل الهيدر بصف واحد #}
         <a class="lang-switch" href="{{ (langSwitchUrl or ('/index.html' if lang == 'en' else '/en/index.html')) | url }}" title="{{ t.lang_switch }}" aria-label="{{ t.lang_switch }}"><span class="lang-full">{{ t.lang_switch }}</span><span class="lang-short" aria-hidden="true">{{ t.lang_switch_short }}</span></a>

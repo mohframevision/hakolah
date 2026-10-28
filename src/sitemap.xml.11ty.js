@@ -44,6 +44,7 @@ exports.render = function (data) {
     ["favorites.html", "en/favorites.html"],
     ["picker.html", "en/picker.html"],
     ["sounds.html", "en/sounds.html"],
+    ["dilmo.html", "en/dilmo.html"],
     ["creators.html", "en/creators.html"],
     ["business.html", "en/business.html"],
     // صفحة البحث (search.njk/en/search.njk) كانت مفقودة من الخريطة منذ إضافتها
