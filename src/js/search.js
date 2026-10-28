@@ -195,7 +195,7 @@
       if (!rows.length || (tab !== "all" && tab !== key)) return "";
       const shown = tab === "all" ? rows.slice(0, 8) : rows;
       return `<section class="search-group"><h2>${head}</h2>${shown.map((r) => rowHtml(r, query)).join("")}${
-        tab === "all" && rows.length > shown.length ? `<button type="button" class="link-btn search-more" data-tab="${key}">+${(rows.length - shown.length).toLocaleString(isEn ? "en" : "ar")}</button>` : ""
+        tab === "all" && rows.length > shown.length ? `<button type="button" class="link-btn search-more" dir="ltr" data-tab="${key}">+${(rows.length - shown.length).toLocaleString(isEn ? "en" : "ar")}</button>` : ""
       }</section>`;
     };
     // المنيو أولاً لما يكون البحث عن طبق (أغلب النتائج منيو)، وإلا الأماكن أولاً

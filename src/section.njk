@@ -31,7 +31,7 @@ eleventyComputed:
 {%- for type in carShopTypes %}
   <a class="hub-card" href="{{ ('/car-shops/' + type.slug + '.html') | url }}">
     <span class="hub-card-icon" aria-hidden="true">{{ type.icon }}</span>
-    <h3 class="hub-card-label">{{ type.label }}</h3>
+    <h2 class="hub-card-label">{{ type.label }}</h2>
   </a>
 {%- endfor %}
 </div>
@@ -44,7 +44,7 @@ eleventyComputed:
 {%- for g in toolGroups %}
   <a class="hub-card" href="{{ ('/links-tools/' + g.slug + '.html') | url }}">
     <span class="hub-card-icon" aria-hidden="true">{{ g.icon }}</span>
-    <h3 class="hub-card-label">{{ g.label }}</h3>
+    <h2 class="hub-card-label">{{ g.label }}</h2>
   </a>
 {%- endfor %}
 </div>
@@ -54,6 +54,7 @@ eleventyComputed:
 
 {# البطاقات مطبوعة هنا وقت البناء عشان محركات البحث تقرأ المحتوى فعلاً.
    main.js يستبدلها بنسخة تفاعلية بعد التحميل (فلترة/بحث/إعجاب/مفضلة). #}
+<h2 class="sr-only">قائمة {{ sectionEntry.title }}</h2>
 <div class="card-grid">
 {%- for entry in collections[sectionEntry.slug] %}
 {{ cards.card(entry, sectionEntry.slug, "ar", sectionEntry.hasDetailPages, tags_en, i18n, tag_icons, loop.index0) }}

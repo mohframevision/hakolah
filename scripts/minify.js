@@ -30,6 +30,30 @@ function walk(dir) {
   return out;
 }
 
+// أبعاد الصور المحلية بوسم <img> (width/height) عشان المتصفح يحجز مكانها قبل
+// التحميل فما تقفز الصفحة (CLS). النسبة هي المهم؛ الـCSS (height: auto) يحدد الحجم الفعلي
+const imgDimsCache = new Map();
+async function addImgDims(html) {
+  const tags = [...html.matchAll(/<img\b[^>]*>/g)].filter((m) => !/\swidth=/.test(m[0]));
+  for (const [tag] of tags) {
+    const src = (tag.match(/\ssrc="(\/assets\/[^"?#]+)"/) || [])[1];
+    if (!src || !IMAGE_EXTENSIONS.has(path.extname(src).toLowerCase())) continue;
+    if (!imgDimsCache.has(src)) {
+      const file = path.join(SITE_DIR, decodeURIComponent(src));
+      let dims = null;
+      if (fs.existsSync(file)) {
+        const m = await sharp(file).metadata();
+        const o = m.autoOrient || m;
+        if (o.width && o.height) dims = o;
+      }
+      imgDimsCache.set(src, dims);
+    }
+    const d = imgDimsCache.get(src);
+    if (d) html = html.replace(tag, tag.replace(/^<img\b/, `<img width="${d.width}" height="${d.height}"`));
+  }
+  return html;
+}
+
 async function run() {
   if (!fs.existsSync(SITE_DIR)) {
     console.error("لا يوجد مجلد _site — شغّل npm run build أولاً");
@@ -95,7 +119,7 @@ async function run() {
     }
 
     if (ext === ".html") {
-      const src = fs.readFileSync(file, "utf8");
+      const src = await addImgDims(fs.readFileSync(file, "utf8"));
       const result = await minifyHtml(src, {
         collapseWhitespace: true,
         removeComments: true,

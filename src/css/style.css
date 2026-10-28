@@ -206,6 +206,8 @@ a {
 
 img {
   max-width: 100%;
+  /* مع width/height بالـHTML (يضيفها minify.js): المتصفح يحجز مكان الصورة قبل تحميلها فما تقفز الصفحة */
+  height: auto;
   display: block;
 }
 
@@ -9135,6 +9137,9 @@ li {
 }
 .search-more {
   margin: var(--space-1) var(--space-1) 0;
+  /* «+8» كان 17px عرضاً: أقل من حد اللمس (WCAG 2.5.8 = 24px) */
+  min-width: 44px;
+  min-height: 44px;
 }
 .search-none {
   text-align: center;
@@ -9221,6 +9226,9 @@ li {
   margin: 0;
 }
 .home-row-head a {
+  /* مساحة لمس 44px بلا ما يكبر الشريط: الحشوة تُعوَّض بهامش سالب */
+  padding: 10px 12px;
+  margin: -10px -12px;
   font-size: 0.85rem;
   color: var(--color-primary);
   text-decoration: none;
