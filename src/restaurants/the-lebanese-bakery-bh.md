@@ -14,6 +14,7 @@ hours_en: "Daily 8am - 10pm"
 incomplete: true
 source: "OpenStreetMap"
 links:
+  instagram: https://www.instagram.com/thelebanesebakerybh/
   phone: "17595559"
   maps: https://www.google.com/maps/search/?api=1&query=26.236962,50.536077
 ---

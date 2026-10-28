@@ -14,6 +14,7 @@ hours_en: "Sat, Mon - Fri 7am - 2am"
 incomplete: true
 source: "OpenStreetMap"
 links:
+  instagram: https://www.instagram.com/baitalmashrabiya/
   phone: "17777166"
   maps: https://www.google.com/maps/search/?api=1&query=26.237302,50.573757
 ---

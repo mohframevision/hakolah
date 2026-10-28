@@ -14,6 +14,7 @@ hours_en: "Open 24 hours"
 incomplete: true
 source: "OpenStreetMap"
 links:
+  instagram: https://www.instagram.com/jasmis_bh/
   website: "https://www.jasmis.com/"
   phone: "17111100"
   maps: https://www.google.com/maps/search/?api=1&query=26.135834,50.528002

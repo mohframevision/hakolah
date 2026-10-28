@@ -14,6 +14,7 @@ hours_en: "Daily 11am - 2am"
 incomplete: true
 source: "OpenStreetMap"
 links:
+  instagram: https://www.instagram.com/zarzoorrestaurant/
   phone: "17484900"
   maps: https://www.google.com/maps/search/?api=1&query=26.165598,50.569820
 ---
