@@ -4,7 +4,7 @@
   var body = orb.querySelector(".pb"), face = orb.querySelector(".pf");
   var eyes = orb.querySelectorAll(".pe"), mouth = orb.querySelector(".pm"), world = document.getElementById("world");
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches, TOUCH = matchMedia("(pointer: coarse)").matches;
-  var R = 48, HALF = 70;
+  var R = 48, HALF = 70, K = 1, labels = document.getElementById("labels");
   function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
   function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
   function spring(v, k, d) { return { v: v, t: v, vel: 0, k: k, d: d }; }
@@ -349,7 +349,7 @@
     s.style.setProperty("--x", (pos.x - 6 + (Math.random() - .5) * 30).toFixed(1) + "px");
     s.style.setProperty("--y", (pos.y - R - 10).toFixed(1) + "px");
     s.style.setProperty("--dx", ((Math.random() - .5) * 40).toFixed(1) + "px");
-    stage.appendChild(s); s.addEventListener("animationend", function () { s.remove(); });
+    world.appendChild(s); s.addEventListener("animationend", function () { s.remove(); });
   }
   // singing: a soft digital voice (triangle + vibrato through vowel formants) gliding through slow lullaby phrases in C major
   var song = null, nextSong = 0;
@@ -510,12 +510,15 @@
   }
 
   function measure() {
-    W = stage.clientWidth; ground = stage.clientHeight - R - 14;
+    // small stages scale the whole world down (K), so the characters keep room to move; physics stays in world px
+    var w = stage.clientWidth, h = stage.clientHeight;
+    K = clamp(Math.min(w / 600, h / 440), .55, 1); world.style.setProperty("--k", K);
+    W = w / K; ground = (h - 14) / K - R;
     if (!pos.x) { pos.x = W / 2; pos.y = ground; }
     pos.x = clamp(pos.x, R, W - R); pos.y = Math.min(pos.y, ground);
   }
-  // wide screens zoom the whole page (--page-zoom): client px ÷ zoom = the stage CSS px everything is drawn in
-  function toStage(e) { var r = stage.getBoundingClientRect(), z = r.width / stage.offsetWidth || 1; return { x: (e.clientX - r.left) / z - stage.clientLeft, y: (e.clientY - r.top) / z - stage.clientTop }; }
+  // client px → world px: divides out both the world scale (K) and the page zoom on wide screens (--page-zoom)
+  function toStage(e) { var r = world.getBoundingClientRect(), z = r.width / world.offsetWidth || 1; return { x: (e.clientX - r.left) / z, y: (e.clientY - r.top) / z }; }
   function say(text, key, gap) {
     var t = performance.now();
     if (key) { if (lastSay[key] && t - lastSay[key] < (gap || 4000)) return; lastSay[key] = t; }
@@ -723,10 +726,12 @@
       '<g class="bf">' + eye(-1) + eye(1) + '<ellipse class="pm" cy="' + r * .37 + '" rx="' + r * .09 + '" ry="' + r * .12 + '"/></g></g>';
     var sh = document.createElement("div"); sh.className = "orb-shadow"; sh.style.width = r * 1.6 + "px";
     var bb = document.createElement("p"); bb.className = "orb-say"; bb.hidden = true;
-    if (f.player) { stage.appendChild(sh); stage.appendChild(el); stage.appendChild(bb); }
-    else { world.insertBefore(sh, orb); world.insertBefore(el, orb); world.appendChild(bb); }
+    if (f.player) { world.appendChild(sh); world.appendChild(el); }
+    else { world.insertBefore(sh, orb); world.insertBefore(el, orb); }
+    labels.appendChild(bb);
     var tag = document.createElement("div"); tag.className = "name-tag";
-    if (f.player) { stage.appendChild(tag); el.setAttribute("aria-label", T("شخصيتك ", "Your character ") + f.name); el.style.zIndex = 4; } else world.appendChild(tag);  // the visitor walks in front of the bushes
+    labels.appendChild(tag);
+    if (f.player) { el.setAttribute("aria-label", T("شخصيتك ", "Your character ") + f.name); el.style.zIndex = 4; }  // the visitor walks in front of the bushes
     var b = { f: f, el: el, sh: sh, bub: bb, body: el.querySelector(".bb"), face: el.querySelector(".bf"), eyes: el.querySelectorAll(".pe"), mouth: el.querySelector(".pm"),
       x: x, y: ground + R - r - (fromEdge ? 140 : 0), vx: fromEdge ? -5 : 0, vy: 0, sx: 1, sy: 1, svx: 0, svy: 0, tilt: 0, lx: 0, ly: 0, joy: .2,
       next: performance.now() + 1500 + Math.random() * 2500, blink: -1e4, nextBlink: 0, sayUntil: 0, speech: null, mode: "wander", tx: null, other: null, drag: null, size: S, lastBump: 0, tag: tag, home: x };
@@ -924,14 +929,14 @@
     else if (sn) { var o4 = Math.sqrt(Math.min(1, Math.sin(Math.PI * clamp(sn.p, 0, 1)) * 1.6)); mry *= 1 + 1.2 * o4; }
     b.mouth.setAttribute("rx", mrx.toFixed(2)); b.mouth.setAttribute("ry", Math.max(mry, mrx * 1.02).toFixed(2));
     if (b.tag) b.tag.style.opacity = b.bub.hidden ? "" : "0";  // the name steps aside while its owner talks
-    if (b.tag) b.tag.style.transform = "translate(" + (b.x - b.tag.offsetWidth / 2).toFixed(1) + "px," + (b.y - r - 22).toFixed(1) + "px)";
+    if (b.tag) b.tag.style.transform = "translate(" + (b.x * K - b.tag.offsetWidth / 2).toFixed(1) + "px," + ((b.y - r) * K - 20).toFixed(1) + "px)";
     var fy = surfaceY(b), sc = clamp(1 - (fy - b.y) / 300, .35, 1);
     b.sh.style.transform = "translate(" + (b.x - r * .8).toFixed(1) + "px," + (fy + r - 6).toFixed(1) + "px) scale(" + sc.toFixed(2) + ")"; b.sh.style.opacity = sc.toFixed(2);
     if (!b.bub.hidden) {
       if (t > b.sayUntil) b.bub.hidden = true;
       else {
-        var bw = b.bub.offsetWidth, bh = b.bub.offsetHeight, bx = clamp(b.x - bw / 2, 8, Math.max(8, W - bw - 8)), by = b.y - r - 12 - bh;
-        if (by < 8) by = b.y + r + 12;
+        var bw = b.bub.offsetWidth, bh = b.bub.offsetHeight, bx = clamp(b.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (b.y - r) * K - 12 - bh;
+        if (by < 8) by = (b.y + r) * K + 12;
         b.bub._x = bx; b.bub._y = by; b.bub._w = bw; b.bub._h = bh;
       }
     }
@@ -1080,7 +1085,7 @@
     for (var i = 0; i < 6; i++) {
       var d = document.createElement("span"); d.className = "dust";
       d.style.setProperty("--x", (x - 5) + "px"); d.style.setProperty("--y", (y - 8) + "px"); d.style.setProperty("--dx", ((i - 2.5) * 14) + "px");
-      stage.appendChild(d); d.addEventListener("animationend", function () { this.remove(); });
+      world.appendChild(d); d.addEventListener("animationend", function () { this.remove(); });
     }
   }
   addEventListener("keydown", function (e) { moveKey(e, true); });
@@ -1412,7 +1417,7 @@
     x.restore();
   }
   function snap() {
-    var s = 2, H = stage.clientHeight, c = document.createElement("canvas"), x = c.getContext("2d"), cs = getComputedStyle(stage);
+    var s = 2, H = world.offsetHeight, c = document.createElement("canvas"), x = c.getContext("2d"), cs = getComputedStyle(stage);
     var tok = function (n) { return cs.getPropertyValue(n).trim(); };
     c.width = W * s; c.height = H * s; x.scale(s, s);
     x.fillStyle = getComputedStyle(stage).backgroundColor; x.fillRect(0, 0, W, H);
@@ -1593,8 +1598,8 @@
       if (mood.sleepy <= .85 && t > +bub.dataset.until) bub.hidden = true;
       else {
         // keep the whole bubble inside the stage: clamp sideways, flip below him when there is no room above
-        var bw = bub.offsetWidth, bh = bub.offsetHeight, bx = clamp(pos.x - bw / 2, 8, Math.max(8, W - bw - 8)), by = pos.y - R - 14 - bh;
-        if (by < 8) by = Math.min(pos.y + R + 14, ground + R - bh - 4);
+        var bw = bub.offsetWidth, bh = bub.offsetHeight, bx = clamp(pos.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (pos.y - R) * K - 14 - bh;
+        if (by < 8) by = Math.min((pos.y + R) * K + 14, (ground + R) * K - bh - 4);
         bub._x = bx; bub._y = Math.max(8, by); bub._w = bw; bub._h = bh;  // placed by layoutBubbles()
       }
     }
@@ -1617,5 +1622,8 @@
   }).observe(stage);
   // the stage height depends on the header height, which is only known after load: re-measure whenever it changes size
   new ResizeObserver(function () { measure(); placeProps(); }).observe(stage);
+  var sideways = matchMedia("(orientation: landscape) and (max-height: 500px)");
+  function fitSideways() { if (sideways.matches) stage.scrollIntoView({ block: "start" }); }
+  sideways.addEventListener("change", fitSideways); fitSideways();
   measure(); placeProps(); renderSwatches(); spawnFriends(); tickClock(); setInterval(tickClock, 20000); draw(performance.now());
 })();

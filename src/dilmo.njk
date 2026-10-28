@@ -26,18 +26,11 @@ pageCss: "dilmo"
   <div class="play" id="play">
     <div class="world" id="world">
       <div class="sky" id="sky" aria-hidden="true"></div>
-      <span class="clock" id="clock"></span>
       <div class="bench" id="bench" aria-hidden="true"></div>
       <div class="bush" id="bush0" aria-hidden="true"></div>
       <div class="bush" id="bush1" aria-hidden="true"></div>
       <button type="button" class="ball" id="ball" aria-label="كرة، اضغطها لتركلها"></button>
-      <div class="foods" id="foods">
-        <button type="button" class="food" id="food-burger" data-food="burger">برجر</button>
-        <button type="button" class="food" id="food-karak" data-food="karak">كرك</button>
-        <button type="button" class="food" id="food-samosa" data-food="samosa">سمبوسة</button>
-      </div>
       <div class="orb-shadow" id="orb-shadow"></div>
-      <p class="orb-say" id="orb-say" aria-live="polite" hidden></p>
       <svg id="orb" class="orb" viewBox="-70 -70 140 140" role="img" aria-label="دلمو: اضغطه واسحبه وارمه">
         <defs>
           <radialGradient id="pg-rg" cx="38%" cy="32%" r="75%"><stop offset="0" class="s-hi"/><stop offset=".55" class="s-mid"/><stop offset="1" class="s-lo"/></radialGradient>
@@ -54,6 +47,15 @@ pageCss: "dilmo"
           </g>
         </g>
       </svg>
+    </div>
+    <span class="clock" id="clock"></span>
+    <div class="foods" id="foods">
+      <button type="button" class="food" id="food-burger" data-food="burger">برجر</button>
+      <button type="button" class="food" id="food-karak" data-food="karak">كرك</button>
+      <button type="button" class="food" id="food-samosa" data-food="samosa">سمبوسة</button>
+    </div>
+    <div class="labels" id="labels">
+      <p class="orb-say" id="orb-say" aria-live="polite" hidden></p>
     </div>
   </div>
 
