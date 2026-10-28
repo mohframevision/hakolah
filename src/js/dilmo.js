@@ -119,6 +119,23 @@
     cFriendCalled: ["plain", ["نعم يا {n}؟", "ناديتني؟ أنا هنا!", "أهلاً يا {n}!"]],
     cHuh: ["plain", ["لم أفهم تماماً… هل تريد أن أقترح لك مكاناً تأكل فيه؟", "لم أفهم قصدك. هل تبحث عن مكان تأكل فيه؟"]],
     cHuh2: ["plain", ["لم أفهم، لكن كلامك لطيف! هل نلعب؟", "لم أفهم جيداً… هل نلعب المطاردة؟"]],
+    cMemName: ["plain", ["تشرّفنا يا {n}! سأتذكّر اسمك.", "{n}؟ اسم جميل، لن أنساه.", "أهلاً يا {n}، حفظتُ اسمك."]],
+    cMemForget: ["plain", ["حسناً، نسيتُ كل ما أخبرتني به.", "تمّ، صفحة جديدة بيننا."]],
+    cMemWho: ["plain", ["اسمك {n}! لم أنسَ.", "أنت {n} طبعاً!"]],
+    cMemNoName: ["plain", ["لم تخبرني باسمك بعد. قل: اسمي…", "أعرفك باسم {n} هنا، لكن ما اسمك الحقيقي؟ قل: اسمي…"]],
+    cMemKnow: ["plain", ["أعرف أن {k}.", "أتذكّر أن {k}!"]],
+    cMemNothing: ["plain", ["لا أعرف عنك شيئاً بعد. أخبرني ماذا تحب!", "لم تخبرني بشيء عنك بعد."]],
+    cMemLike: ["plain", ["سأتذكّر أنك تحب {f}!", "حفظتُها: أنت تحب {f}."]],
+    cMemHate: ["plain", ["فهمت، لن أقترح عليك {f}.", "حسناً، سأبعد عنك {f}."]],
+    cHungryLike: ["plain", ["جائع؟ ما رأيك بشيء من {f} الذي تحبه؟ هل أبحث لك؟", "أعرف أنك تحب {f}… هل أبحث لك عن مكان؟"]],
+    cFound: ["plain", ["جرّب «{p}»!", "وجدتُ لك «{p}» في هكوله.", "ما رأيك بـ«{p}»؟"]],
+    cFoundMany: ["plain", ["وجدتُ أماكن! أولها «{p}»، والبقية تحت.", "جرّب «{p}»، وعندي غيره تحت."]],
+    cFoundDish: ["plain", ["«{p}» عندهم {d} ({c})!", "جرّب {d} من «{p}» ({c})."]],
+    cFoundOther: ["plain", ["لم أجد ما طلبته بالضبط، لكن جرّب «{p}».", "ليس تماماً ما طلبت، لكن «{p}» قد يعجبك."]],
+    cNotFound: ["plain", ["لم أجد في هكوله مكاناً يطابق هذا بعد.", "بحثتُ في كل الأماكن ولم أجد شيئاً مطابقاً، جرّب كلمة أخرى."]],
+    cMemMood: ["plain", ["آخر مرة كنت حزيناً يا {n}… هل أنت أفضل اليوم؟", "اشتقتُ إليك يا {n}. هل تحسّن مزاجك؟"]],
+    cMemTried: ["plain", ["هل جرّبتَ «{p}» الذي اقترحته عليك؟", "يا {n}، هل ذهبتَ إلى «{p}»؟"]],
+    cMemLikeAgain: ["plain", ["أهلاً يا {n}! ما زلتَ تحب {f}؟", "تذكّرتُ أنك تحب {f} يا {n}!"]],
     buddyReply: ["joy", ["أتفق معه!", "وأنا أيضاً يا {n}!", "كلام جميل يا {n}."]],
     sing: ["calm", ["أغنية هادئة لك.", "دعني أغنّي قليلاً.", "استرخِ واستمع.", "لحن للهدوء.", "أغنّي حين أرتاح.", "أغنية صغيرة قبل القيلولة.", "هذا لحني المفضّل."]],
     singEnd: ["calm", ["انتهت الأغنية.", "أتمنى أنها أراحتك.", "شكراً لأنك استمعت.", "كانت أغنية قصيرة.", "سأغنّي لك مرة أخرى لاحقاً."]]
@@ -229,6 +246,23 @@
     cFriendCalled: ["plain", ["Yes, {n}?", "You called? I'm here!", "Hi, {n}!"]],
     cHuh: ["plain", ["I didn't quite get that… want me to suggest a place to eat?", "Not sure what you mean. Looking for somewhere to eat?"]],
     cHuh2: ["plain", ["I didn't get that, but it sounded nice! Shall we play?", "Didn't quite catch that… play tag?"]],
+    cMemName: ["plain", ["Nice to meet you, {n}! I'll remember your name.", "{n}? Lovely name, I won't forget it.", "Hi {n}, I've saved your name."]],
+    cMemForget: ["plain", ["Okay, I've forgotten everything you told me.", "Done, a fresh start between us."]],
+    cMemWho: ["plain", ["Your name is {n}! I didn't forget.", "You're {n}, of course!"]],
+    cMemNoName: ["plain", ["You haven't told me your name yet. Say: my name is…", "I know you as {n} here, but what's your real name? Say: my name is…"]],
+    cMemKnow: ["plain", ["I know that {k}.", "I remember that {k}!"]],
+    cMemNothing: ["plain", ["I don't know anything about you yet. Tell me what you like!", "You haven't told me anything about you yet."]],
+    cMemLike: ["plain", ["I'll remember that you like {f}!", "Noted: you like {f}."]],
+    cMemHate: ["plain", ["Got it, no {f} suggestions for you.", "Okay, I'll keep {f} away from you."]],
+    cHungryLike: ["plain", ["Hungry? How about some {f}, you like that! Shall I look for a place?", "I know you like {f}… want me to find a place?"]],
+    cFound: ["plain", ["Try «{p}»!", "I found «{p}» on Hakolah.", "How about «{p}»?"]],
+    cFoundMany: ["plain", ["Found some! First is «{p}», the rest are below.", "Try «{p}», I've got more below."]],
+    cFoundDish: ["plain", ["«{p}» has {d} ({c})!", "Try the {d} at «{p}» ({c})."]],
+    cFoundOther: ["plain", ["Not exactly what you asked for, but try «{p}».", "Not quite that, but you might like «{p}»."]],
+    cNotFound: ["plain", ["I couldn't find a place on Hakolah that matches that yet.", "I searched every place and found nothing, try another word."]],
+    cMemMood: ["plain", ["You were sad last time, {n}… feeling better today?", "I missed you, {n}. Are you in a better mood?"]],
+    cMemTried: ["plain", ["Did you try «{p}», the place I suggested?", "{n}, did you go to «{p}»?"]],
+    cMemLikeAgain: ["plain", ["Hi {n}! Still a fan of {f}?", "I remembered that you like {f}, {n}!"]],
     buddyReply: ["joy", ["I agree with him!", "Me too, {n}!", "Well said, {n}."]],
     sing: ["calm", ["A calm song for you.", "Let me sing a little.", "Relax and listen.", "A tune to settle down.", "I sing when I'm relaxed.", "A little song before a nap.", "This is my favourite tune."]],
     singEnd: ["calm", ["That's the end of the song.", "I hope it relaxed you.", "Thanks for listening.", "A short one.", "I'll sing for you again later."]]
@@ -1013,6 +1047,8 @@
     if (!returning && innerWidth <= 700) stage.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });  // back from the name field to the stage
     setTimeout(function () { say(line(returning ? "playerBack" : "playerJoin", { n: cfg.name }), "pjoin", 1000); }, 900);
     setTimeout(function () { var o = pick(buddies.filter(function (x) { return x !== player; })); if (o && player) bsay(o, line("buddyHiPlayer", { n: cfg.name })); }, 2700);
+    if (returning) setTimeout(function () { if (player) recall(); }, 5200);
+    if (window.loadMenus) window.loadMenus().then(function () { index = null; }, function () { /* offline: search places without menus */ });  // dishes become searchable
   }
   function leaveGame() {
     if (!player) return;
@@ -1159,7 +1195,8 @@
   });
   // chatting without AI: the message is normalised, then matched against keyword lists (fusha, Gulf dialect
   // and English, tolerant of small typos) to find what it's about, plus any food or friend it mentions.
-  // He answers by topic and remembers his own last question, so "yes" / "no" get a fitting reply.
+  // He remembers a few things about you (name, likes, mood) in this browser, and can search Hakolah's
+  // real places and menus to answer "where can I find…".
   function norm(t) {
     return t.toLowerCase().replace(/[ً-ْـ]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
       .replace(/ؤ/g, "و").replace(/ئ/g, "ي").replace(/([ء-ي])\1+/g, "$1").replace(/([a-z])\1{2,}/g, "$1")
@@ -1167,7 +1204,10 @@
   }
   var INTENTS = {
     sing: ["غني", "غن", "غنيلي", "انشد", "sing", "song"],
-    hi: ["مرحبا", "هلا", "اهلا", "السلام عليكم", "سلام", "صباح الخير", "مساء الخير", "هاي", "hi", "hello", "good morning", "good evening", "hey", "salam"],
+    whoAmI: ["شنو اسمي", "ما اسمي", "تعرف اسمي", "what is my name", "whats my name", "what s my name", "who am i"],
+    know: ["تعرف عني", "تذكرني", "تتذكرني", "know about me", "remember me", "do you remember"],
+    forget: ["انساني", "انسني", "انس كل", "انسى كل", "forget me", "forget everything"],
+    hi: ["مرحبا", "هلا", "اهلا", "السلام عليكم", "سلام", "صباح الخير", "مساء الخير", "هاي", "hi", "hello", "hey", "salam", "good morning", "good evening"],
     bye: ["مع السلامه", "باي", "وداعا", "اشوفك", "فمان الله", "الى اللقاء", "bye", "goodbye", "see you", "cya"],
     thanks: ["شكرا", "مشكور", "يعطيك العافيه", "تسلم", "thanks", "thank you", "thx", "ty"],
     how: ["كيفك", "كيف حالك", "شلونك", "شخبارك", "شحالك", "علومك", "اخبارك", "how are you", "how r u", "hru", "how is it going"],
@@ -1179,19 +1219,35 @@
     sad: ["حزين", "زعلان", "ضايق", "متضايق", "تعبان", "مكتئب", "sad", "upset", "tired", "depressed"],
     happy: ["مبسوط", "فرحان", "سعيد", "وناسه", "تمام", "بخير", "زين", "happy", "great", "fine", "good"],
     bored: ["طفشان", "ملل", "مليت", "زهقان", "طفش", "bored", "boring"],
-    hungry: ["جوعان", "جعان", "جوع", "جائع", "ابي اكل", "hungry", "starving"],
-    whereEat: ["وين اكل", "وين اروح", "مطعم", "مطاعم", "اقترح", "تنصحني", "اين اكل", "where to eat", "restaurant", "recommend", "suggest"],
+    hungry: ["جوعان", "جعان", "جوع", "جائع", "hungry", "starving"],
+    whereEat: ["وين اكل", "وين اروح", "وين احصل", "وين القى", "وين الاقي", "اين اجد", "اقترح", "تنصحني", "دلني", "where to eat", "where can i", "recommend", "suggest"],
     play: ["نلعب", "العب", "لعبه", "play", "game", "tag"],
     joke: ["نكته", "ضحكني", "سولف", "joke", "funny"],
     yes: ["اي", "نعم", "ايه", "اكيد", "يب", "طيب", "اوكي", "yes", "yeah", "yep", "sure", "ok", "okay"],
     no: ["لا", "لاء", "مب", "ما ابي", "no", "nope", "nah"]
   };
-  var FOODS = { karak: ["كرك", "karak", "chai"], samosa: ["سمبوسه", "سنبوسه", "samosa"], burger: ["برجر", "برقر", "burger"],
-    shawarma: ["شاورما", "shawarma"], machboos: ["مجبوس", "مكبوس", "machboos"], coffee: ["قهوه", "coffee"], tea: ["شاي", "tea"], pizza: ["بيتزا", "pizza"], sweets: ["حلويات", "حلوى", "sweets", "dessert"] };
-  var FOOD_NAME = EN ? { karak: "karak", samosa: "samosa", burger: "burger", shawarma: "shawarma", machboos: "machboos", coffee: "coffee", tea: "tea", pizza: "pizza", sweets: "sweets" }
-    : { karak: "الكرك", samosa: "السمبوسة", burger: "البرجر", shawarma: "الشاورما", machboos: "المجبوس", coffee: "القهوة", tea: "الشاي", pizza: "البيتزا", sweets: "الحلويات" };
+  // foods and dishes, each with the words people use for it (search treats them as one)
+  var FOODS = { karak: ["كرك", "karak", "chai"], samosa: ["سمبوسه", "سنبوسه", "samosa"], burger: ["برجر", "برقر", "burger", "burgers"],
+    shawarma: ["شاورما", "شورما", "shawarma"], machboos: ["مجبوس", "مكبوس", "كبسه", "machboos", "kabsa"], coffee: ["قهوه", "كوفي", "coffee", "latte", "لاتيه"],
+    tea: ["شاي", "tea"], pizza: ["بيتزا", "pizza"], sweets: ["حلويات", "حلوى", "حلى", "كيك", "sweets", "dessert", "cake"],
+    pastry: ["معجنات", "فطاير", "فطائر", "مناقيش", "منقوشه", "pastry", "pastries", "manakish"], breakfast: ["فطور", "ريوق", "breakfast"],
+    grill: ["مشويات", "مشاوي", "كباب", "تكه", "grill", "grills", "kebab"], fish: ["سمك", "اسماك", "روبيان", "fish", "seafood", "shrimp"],
+    chicken: ["دجاج", "بروستد", "chicken", "broasted"], juice: ["عصير", "عصائر", "juice"], sandwich: ["سندويش", "ساندويتش", "سندويشات", "sandwich"] };
+  var FOOD_NAME = EN ? { karak: "karak", samosa: "samosa", burger: "burgers", shawarma: "shawarma", machboos: "machboos", coffee: "coffee", tea: "tea", pizza: "pizza", sweets: "sweets",
+      pastry: "pastries", breakfast: "breakfast", grill: "grills", fish: "seafood", chicken: "chicken", juice: "juice", sandwich: "sandwiches" }
+    : { karak: "الكرك", samosa: "السمبوسة", burger: "البرجر", shawarma: "الشاورما", machboos: "المجبوس", coffee: "القهوة", tea: "الشاي", pizza: "البيتزا", sweets: "الحلويات",
+      pastry: "المعجنات", breakfast: "الفطور", grill: "المشويات", fish: "المأكولات البحرية", chicken: "الدجاج", juice: "العصائر", sandwich: "السندويشات" };
   var CALLS = { main: ["دلمو", "dilmo"], shams: ["شمس", "shams"], mawja: ["موجه", "mawja"], jamra: ["جمره", "jamra"] };
-  [INTENTS, FOODS, CALLS].forEach(function (d) { for (var k in d) d[k] = d[k].map(norm); });
+  // words that point to a section of the site rather than to a place
+  var KINDS = { restaurants: ["مطعم", "مطاعم", "اكل", "غدا", "عشا", "restaurant", "restaurants", "food", "eat", "lunch", "dinner"],
+    cafes: ["كافيه", "كافي", "مقهي", "قهوه", "cafe", "cafes", "coffee"], bakeries: ["مخبز", "مخابز", "خبز", "bakery", "bakeries", "bread"],
+    places: ["زياره", "اماكن", "سياحه", "معلم", "اطلع", "visit", "places", "sightseeing", "outing"], stores: ["متجر", "متاجر", "محل", "محلات", "اشتري", "store", "shop", "buy"],
+    "car-shops": ["سياره", "سيارتي", "كراج", "قراج", "ورشه", "car", "garage", "mechanic"] };
+  var STOP = norm("في من على عن الى الي انا انت ابي ابغي اريد ودي بغيت وين اين شنو ماذا ممكن لو سمحت شي مكان احد حد اليوم الحين الان زين حلو افضل احسن قريب مني عندكم يكون فيه هل كيف اقدر احصل القى الاقي اجد دلني اقترح تنصحني بالبحرين البحرين" +
+    " the a an in to i want need find where is are some any place good best nice near me around can you please for of at with on bahrain").split(" ");
+  var LOVE = ["احب", "حب", "يعجبني", "اعشق", "اموت", "مفضل", "مفضله", "love", "like", "favourite", "favorite"].map(norm);
+  var HATE = ["ما احب", "مااحب", "لا احب", "ما يعجبني", "اكره", "مب حلو", "hate", "dont like", "do not like", "not a fan"].map(norm);
+  [INTENTS, FOODS, CALLS, KINDS].forEach(function (d) { for (var k in d) d[k] = d[k].map(norm); });
   function lev(a, b, max) {  // edit distance, gives up once it's past max
     if (Math.abs(a.length - b.length) > max) return max + 1;
     var row = [], i, j;
@@ -1205,13 +1261,14 @@
     }
     return row[b.length];
   }
+  function forms(w) { return [w, w.replace(/^و/, ""), w.replace(/^(و|ف)?(ال|بال|كال|لل)/, "")]; }
   // a word matches a keyword exactly, without its Arabic prefixes (و، ال، بال…), or with one typo (two for long words)
   function wordHit(w, k) {
-    var forms = [w, w.replace(/^و/, ""), w.replace(/^(و|ف)?(ال|بال|كال|لل)/, "")];
-    for (var i = 0; i < forms.length; i++) {
-      var x = forms[i]; if (x.length < 2) continue;
+    var f = forms(w);
+    for (var i = 0; i < f.length; i++) {
+      var x = f[i]; if (x.length < 2) continue;
       if (x === k) return true;
-      if (k.length >= 4 && x.length >= 4 && lev(x, k, k.length >= 8 ? 2 : 1) <= (k.length >= 8 ? 2 : 1)) return true;
+      if (k.length >= 5 && x.length >= 5 && lev(x, k, k.length >= 8 ? 2 : 1) <= (k.length >= 8 ? 2 : 1)) return true;
     }
     return false;
   }
@@ -1223,25 +1280,153 @@
     });
     return n;
   }
+  function anyHit(text, words, list) { return hits(text, words, list) > 0; }
   function understand(msg) {
     var text = norm(msg), words = text.split(" "), best = null, top = 0, k;
     for (k in INTENTS) { var sc = hits(text, words, INTENTS[k]); if (sc > top) { top = sc; best = k; } }
-    var food = null, call = null;
+    var food = null, call = null, kind = null;
     for (k in FOODS) if (hits(text, words, FOODS[k])) { food = k; break; }
     for (k in CALLS) if (hits(text, words, CALLS[k])) { call = k; break; }
-    return { intent: best, food: food, call: call, q: /[؟?]\s*$/.test(msg) };
+    for (k in KINDS) if (hits(text, words, KINDS[k])) { kind = k; break; }
+    var hate = anyHit(text, words, HATE), love = !hate && anyHit(text, words, LOVE);
+    var nm = /(?:اسمي|ناديني|my name is|call me)\s+([^\s،,.!؟?]{1,12})/i.exec(msg);
+    return { text: text, words: words, intent: best, food: food, call: call, kind: kind, love: love, hate: hate, name: nm && nm[1], q: /[؟?]\s*$/.test(msg) };
   }
+
+  // ---- memory: kept in this browser only (hk-dilmo), "انساني" / "forget me" clears it ----
+  var me = store.me = store.me || {};
+  me.likes = me.likes || []; me.dislikes = me.dislikes || [];
+  function myName() { return me.name || (player ? player.f.name : ""); }
+  function remember(k, v) { me[k] = v; saveStore(); }
+  function foodList(a) { return a.map(function (k) { return FOOD_NAME[k]; }).join(T("، ", ", ")); }
+
+  // ---- search: the site's own data (SITE_DATA, and the menus once loaded), scored word by word ----
+  var SECTIONS = ["restaurants", "cafes", "bakeries", "places", "stores", "car-shops"], index = null;
+  function buildIndex() {
+    index = [];
+    if (typeof SITE_DATA === "undefined") return;
+    SECTIONS.forEach(function (sec) {
+      ((SITE_DATA[sec] || {}).items || []).forEach(function (it) {
+        var menu = window.menuOf ? window.menuOf(it) : [];
+        index.push({ it: it, sec: sec, title: norm((it.title || "") + " " + (it.title_en || "")).split(" "),
+          tags: norm((it.tags || []).join(" ") + " " + (it.group || "") + " " + (it.keywords || "")).split(" "),
+          desc: norm((it.desc || "") + " " + (it.desc_en || "")).split(" "),
+          menu: menu.map(function (m) { return { m: m, w: norm(m.name + " " + (m.name_en || "")).split(" ") }; }) });
+      });
+    });
+  }
+  function inWords(list, alts) { return list.some(function (w) { return alts.some(function (a) { return wordHit(w, a); }); }); }
+  // query terms: the message's own words minus small talk, each with its synonyms when it names a food
+  function terms(u) {
+    var out = [];
+    u.words.forEach(function (w) {
+      if (w.length < 2 || STOP.indexOf(w) >= 0 || forms(w).some(function (f) { return STOP.indexOf(f) >= 0; })) return;
+      for (var k in KINDS) if (KINDS[k].some(function (x) { return wordHit(w, x); })) return;
+      for (var i in INTENTS) if (INTENTS[i].some(function (x) { return x.indexOf(" ") < 0 && wordHit(w, x); })) return;
+      if (LOVE.some(function (x) { return wordHit(w, x); })) return;
+      var alts = [w];
+      for (var f in FOODS) if (FOODS[f].some(function (x) { return wordHit(w, x); })) alts = FOODS[f];
+      out.push(alts);
+    });
+    return out;
+  }
+  function search(qs, kind) {
+    if (!index) buildIndex();
+    var avoid = me.dislikes.map(function (k) { return FOODS[k]; });
+    var res = index.map(function (e) {
+      var sc = 0, got = 0, dish = null, dn = 0, used = false;
+      e.menu.forEach(function (m) {  // the dish that matches most words, priced ones first
+        var c = qs.filter(function (alts) { return inWords(m.w, alts); }).length + (m.m.price ? .5 : 0);
+        if (c > dn && c >= 1) { dn = c; dish = m; }
+      });
+      qs.forEach(function (alts) {
+        var s = inWords(e.title, alts) ? 3 : inWords(e.tags, alts) ? 2 : inWords(e.desc, alts) ? 1.5 : 0;
+        if (!s && dish && inWords(dish.w, alts)) { s = 2; used = true; }
+        if (s) { sc += s; got++; }
+      });
+      dish = used && dish.m.price ? dish.m : null;  // only shown when the menu is why this place matched
+      if (qs.length && !got) return null;
+      sc += got * 2 + (kind ? (e.sec === kind ? 2 : -1.5) : 0);
+      if (avoid.some(function (alts) { return inWords(e.tags, alts) || inWords(e.title, alts); })) return null;
+      return { e: e, sc: sc + (dish ? .6 : 0) + Math.random() * .5, dish: dish };
+    }).filter(function (r) { return r && r.sc >= 2 && (!kind || qs.length || r.e.sec === kind); });
+    if (kind) { var same = res.filter(function (r) { return r.e.sec === kind; }); if (!same.length && qs.length) return search([], kind).map(function (r) { r.other = true; return r; }); res = same; }
+    res.sort(function (a, b) { return b.sc - a.sc; });
+    return res.slice(0, 3);
+  }
+  function itemName(it) { return EN ? it.title_en || it.title : it.title; }
+  function itemUrl(r) { var it = r.e.it; return (EN && it.detailUrlEn) || it.detailUrl || r.e.sec + ".html?q=" + encodeURIComponent(itemName(it)); }
+  var resultsEl = document.getElementById("pp-results");
+  function showResults(list) {
+    resultsEl.textContent = "";
+    list.forEach(function (r) {
+      var a = document.createElement("a"), b = document.createElement("b"), s = document.createElement("span"), sec = SITE_DATA[r.e.sec];
+      a.href = itemUrl(r); b.textContent = itemName(r.e.it);
+      s.textContent = (EN ? sec.title_en : sec.title) + (r.dish ? " · " + (EN ? r.dish.name_en || r.dish.name : r.dish.name) + (r.dish.price ? " ⁦" + r.dish.price + "⁩" : "") : "");
+      a.appendChild(b); a.appendChild(s); resultsEl.appendChild(a);
+    });
+    resultsEl.hidden = !list.length;
+  }
+  // answers a "where can I find…" message with real places; null when there's nothing to look for
+  function findPlaces(u, force) {
+    var qs = terms(u);
+    if (!qs.length && !u.kind && !force) return null;
+    if (!qs.length && !u.kind && me.likes.length) qs = [FOODS[pick(me.likes)]];  // nothing specific: his guess is what you like
+    var list = search(qs, u.kind || (qs.length ? null : "restaurants"));
+    if (!list.length) {
+      if (!qs.length && !u.kind) return null;
+      showResults([]);
+      return line("cNotFound");
+    }
+    showResults(list);
+    var top = list[0]; remember("tried", { p: itemName(top.e.it), t: Date.now() });
+    if (top.other) return line("cFoundOther", { p: itemName(top.e.it) });
+    if (top.dish) {  // short dish name and its lowest price for the bubble; the card below keeps the full menu line
+      var dn = (EN ? top.dish.name_en || top.dish.name : top.dish.name).split(/[(:]/)[0].trim(), pr = top.dish.price.split("/");
+      if (dn.length > 30) dn = dn.slice(0, 28) + "…";
+      var c = pr[0].trim() + (/BD/.test(pr[0]) ? "" : " BD");
+      return line("cFoundDish", { p: itemName(top.e.it), d: dn, c: (pr.length > 1 ? T("من ", "from ") : "") + "⁦" + c + "⁩" });  // the price stays "1.500 BD" inside Arabic text
+    }
+    return line(list.length > 1 ? "cFoundMany" : "cFound", { p: itemName(top.e.it) });
+  }
+
   var asked = null;  // his last question ("suggest" a place, "play", "how" are you), valid for a little while
   function reply(u, n) {
     var pend = asked && performance.now() < asked.until ? asked.k : null, key = null, v = { n: n };
     asked = null;
+    // things you tell him about yourself
+    if (u.name) { remember("name", u.name); return line("cMemName", { n: u.name }); }
+    if (u.intent === "forget") { store.me = me = { likes: [], dislikes: [] }; saveStore(); return line("cMemForget"); }
+    if (u.intent === "whoAmI") return me.name ? line("cMemWho", { n: me.name }) : line("cMemNoName", { n: n });
+    if (u.intent === "know") {
+      var bits = [];
+      if (me.name) bits.push(T("اسمك " + me.name, "your name is " + me.name));
+      if (me.likes.length) bits.push(T("تحب " + foodList(me.likes), "you like " + foodList(me.likes)));
+      if (me.dislikes.length) bits.push(T("لا تحب " + foodList(me.dislikes), "you don't like " + foodList(me.dislikes)));
+      return bits.length ? line("cMemKnow", { k: bits.join(T("، و", ", and ")) }) : line("cMemNothing");
+    }
+    if (u.food && u.hate) {
+      if (me.dislikes.indexOf(u.food) < 0) me.dislikes.push(u.food);
+      me.likes = me.likes.filter(function (x) { return x !== u.food; }); saveStore();
+      return line("cMemHate", { f: FOOD_NAME[u.food] });
+    }
+    if (u.food && u.love && u.intent !== "whereEat") {
+      if (me.likes.indexOf(u.food) < 0) me.likes.push(u.food);
+      me.dislikes = me.dislikes.filter(function (x) { return x !== u.food; }); saveStore();
+      var found = findPlaces(u, false);
+      return line("cMemLike", { f: FOOD_NAME[u.food] }) + (found ? " " + found : "");
+    }
+    if (u.intent === "sad" || u.intent === "happy") remember("mood", { m: u.intent, t: Date.now() });
     if (u.intent === "yes" || u.intent === "no") {
-      if (pend === "suggest") key = u.intent === "yes" ? "cYesSuggest" : "cNoSuggest";
+      if (pend === "suggest") { if (u.intent === "yes") return findPlaces(u, true) || line("cYesSuggest"); key = "cNoSuggest"; asked = { k: "play" }; }
       else if (pend === "play" && u.intent === "yes") u.intent = "play";
       else key = u.intent === "yes" ? "cYes" : "cNo";
-      if (pend === "suggest" && u.intent === "no") asked = { k: "play" };
     }
-    // a food beats weak, general topics ("I love karak" is about karak, not a compliment)
+    // a place search wins over small talk when the message names something to look for
+    if (!key && (u.intent === "whereEat" || (u.intent === "hungry" && (u.food || u.kind)) || (!u.intent && (u.food || u.kind)) || (u.intent === null && u.q))) {
+      var ans = findPlaces(u, u.intent === "whereEat");
+      if (ans) return ans;
+    }
     if (!key && u.food && /^(praise|happy|yes|no|hi)?$/.test(u.intent || "")) u.intent = null;
     if (!key) switch (u.intent) {
       case "hi": key = "replyHi"; break;
@@ -1256,7 +1441,7 @@
       case "sad": key = "cSad"; break;
       case "happy": key = "cHappy"; mood.joy = Math.min(1, mood.joy + .3); break;
       case "bored": key = "cBored"; break;
-      case "hungry": key = "cHungry"; asked = { k: "suggest" }; break;
+      case "hungry": if (me.likes.length) { v.f = FOOD_NAME[pick(me.likes)]; key = "cHungryLike"; } else key = "cHungry"; asked = { k: "suggest" }; break;
       case "whereEat": key = "cWhereEat"; break;
       case "play": key = "cPlay"; startPlayerTag(); break;
       case "joke": key = "cJoke"; break;
@@ -1266,9 +1451,21 @@
       v.f = FOOD_NAME[u.food]; key = fan ? "cFoodFav" : "cFood"; if (fan) v.w = fan.name;
     }
     if (!key && u.call) return null;  // only called someone by name: they answer instead
-    if (!key) { key = Math.random() < .6 ? "cHuh" : "cHuh2"; asked = { k: key === "cHuh" ? "suggest" : "play" }; }
+    if (!key) {  // last try: maybe it's the name of a place or a dish
+      var guess = findPlaces(u, false);
+      if (guess) return guess;
+      key = Math.random() < .6 ? "cHuh" : "cHuh2"; asked = { k: key === "cHuh" ? "suggest" : "play" };
+    }
     if (asked) asked.until = performance.now() + 20000;
     return line(key, v);
+  }
+  // when you come back, he brings up something he remembers (one thing, once per visit)
+  function recall() {
+    var day = 864e5, now = Date.now(), n = myName(), key = null, v = { n: n };
+    if (me.mood && me.mood.m === "sad" && now - me.mood.t < 3 * day) { key = "cMemMood"; asked = { k: "how", until: performance.now() + 20000 }; }
+    else if (me.tried && now - me.tried.t > 6 * 36e5 && now - me.tried.t < 14 * day) { key = "cMemTried"; v.p = me.tried.p; }
+    else if (me.likes.length) { key = "cMemLikeAgain"; v.f = FOOD_NAME[pick(me.likes)]; }
+    if (key) say(line(key, v), "recall", 1000);
   }
   function startPlayerTag() {
     var o = pick(others().filter(function (b) { return !b.drag && !b.asleep; }));
@@ -1281,7 +1478,7 @@
     var inp = document.getElementById("pp-msg"), msg = inp.value.trim().slice(0, 60);
     if (!player || !msg) return;
     inp.value = ""; stir(); bsay(player, msg);
-    var u = understand(msg), n = player.f.name;
+    var u = understand(msg), n = myName();
     if (u.intent === "sing" && !song) { setTimeout(sing, 900); return; }
     var called = u.call && u.call !== "main" ? others().filter(function (b) { return b.f.id === u.call; })[0] : null;
     var text = reply(u, n);

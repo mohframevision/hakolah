@@ -154,3 +154,11 @@ body:has(.dilmo) .daily-pick-reminder { display: none !important; }
   .dilmo .pp-pad { flex-wrap: nowrap; justify-content: space-between; }
   .dilmo .pp-pad button { min-width: 64px; min-height: 52px; font-size: 1.1rem; }
 }
+
+/* places Dilmo found for you: real links to their pages */
+.dilmo .pp-results { display: flex; flex-wrap: wrap; gap: 8px; }
+.dilmo .pp-results[hidden] { display: none; }
+.dilmo .pp-results a { flex: 1 1 220px; display: grid; gap: 2px; padding: 8px 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg); color: var(--fg); text-decoration: none; min-width: 0; max-width: 100%; }
+.dilmo .pp-results a:hover { border-color: var(--accent); }
+.dilmo .pp-results b { font-size: .92rem; overflow-wrap: anywhere; }
+.dilmo .pp-results span { font-size: .78rem; color: var(--muted); overflow-wrap: anywhere; }
