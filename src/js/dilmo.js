@@ -3,7 +3,7 @@
   var shadowEl = document.getElementById("orb-shadow"), bub = document.getElementById("orb-say");
   var body = orb.querySelector(".pb"), face = orb.querySelector(".pf");
   var eyes = orb.querySelectorAll(".pe"), mouth = orb.querySelector(".pm"), world = document.getElementById("world");
-  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches, TOUCH = matchMedia("(pointer: coarse)").matches;
   var R = 48, HALF = 70;
   function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
   function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
@@ -237,7 +237,7 @@
   var recent = [];
   function line(ev, vars) {
     var e = LINES[ev], m = MOODS[e[0]], s, tries = 0;
-    do { s = pick(m.pre) + pick(e[1]) + pick(m.post); } while (recent.indexOf(s) >= 0 && ++tries < 25);
+    do { var pre = pick(m.pre), core = pick(e[1]); if (EN && /, $/.test(pre) && !/^I[ ']/.test(core)) core = core.charAt(0).toLowerCase() + core.slice(1); s = pre + core + pick(m.post); } while (recent.indexOf(s) >= 0 && ++tries < 25);
     recent.push(s); if (recent.length > 80) recent.shift();
     for (var k in vars || {}) s = s.split("{" + k + "}").join(vars[k]);
     return s;
@@ -923,6 +923,7 @@
     if (sp3) { var o3 = Math.pow(Math.sin(Math.PI * ((t - b.speech.t0) % SYL) / SYL), .6), F = MOUTH[sp3.v]; mry *= .7 + F[0] * o3; mrx *= 1 + F[1] * o3; }
     else if (sn) { var o4 = Math.sqrt(Math.min(1, Math.sin(Math.PI * clamp(sn.p, 0, 1)) * 1.6)); mry *= 1 + 1.2 * o4; }
     b.mouth.setAttribute("rx", mrx.toFixed(2)); b.mouth.setAttribute("ry", Math.max(mry, mrx * 1.02).toFixed(2));
+    if (b.tag) b.tag.style.opacity = b.bub.hidden ? "" : "0";  // the name steps aside while its owner talks
     if (b.tag) b.tag.style.transform = "translate(" + (b.x - b.tag.offsetWidth / 2).toFixed(1) + "px," + (b.y - r - 22).toFixed(1) + "px)";
     var fy = surfaceY(b), sc = clamp(1 - (fy - b.y) / 300, .35, 1);
     b.sh.style.transform = "translate(" + (b.x - r * .8).toFixed(1) + "px," + (fy + r - 6).toFixed(1) + "px) scale(" + sc.toFixed(2) + ")"; b.sh.style.opacity = sc.toFixed(2);
@@ -1004,6 +1005,7 @@
     player.vx = 5;
     store.player = cfg; saveStore();
     panel.hidden = true; pui.hidden = false; hud.textContent = ""; renderSwatches();
+    if (!returning && innerWidth <= 700) stage.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });  // back from the name field to the stage
     setTimeout(function () { say(line(returning ? "playerBack" : "playerJoin", { n: cfg.name }), "pjoin", 1000); }, 900);
     setTimeout(function () { var o = pick(buddies.filter(function (x) { return x !== player; })); if (o && player) bsay(o, line("buddyHiPlayer", { n: cfg.name })); }, 2700);
   }
@@ -1047,6 +1049,7 @@
     if (b.pound) { if (onF) { b.pound = false; slam(b); } else b.vy = Math.max(b.vy, 17); }
     if (b.other && b.other.mode !== (b.mode === "tag" ? "flee" : "tag")) { b.mode = "wander"; b.other = null; }
     var h = b.mode === "tag" && b.other ? T("أنت المطارِد! المس " + b.other.f.name + ".", "You're it! Tag " + b.other.f.name + ".") : b.mode === "flee" && b.other ? T("اهرب! " + b.other.f.name + " يطاردك.", "Run! " + b.other.f.name + " is chasing you.") :
+      TOUCH ? T("◀ ▶ للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية، واضغطه مع «قفز» لقفزة عالية", "◀ ▶ to move · Jump (again in the air) · ▼ in the air slams down; hold it, then Jump, for a high jump") :
       T("A وD للحركة · المسافة للقفز (مرة ثانية في الهواء) · S في الهواء ضربة أرضية، وعلى الأرض تجمّع لقفزة عالية", "A and D to move · Space to jump (again in the air) · S in the air slams down, on the ground it charges a high jump");
     if (hud.textContent !== h) hud.textContent = h;
   }
@@ -1612,6 +1615,7 @@
     running = en[0].isIntersecting;
     if (running && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
   }).observe(stage);
-  addEventListener("resize", function () { measure(); placeProps(); });
+  // the stage height depends on the header height, which is only known after load: re-measure whenever it changes size
+  new ResizeObserver(function () { measure(); placeProps(); }).observe(stage);
   measure(); placeProps(); renderSwatches(); spawnFriends(); tickClock(); setInterval(tickClock, 20000); draw(performance.now());
 })();

@@ -67,11 +67,12 @@ pageCss: "dilmo"
     <button type="button" class="game-btn" id="pp-join">ادخل</button>
   </div>
   <div class="player-ui" id="player-ui" hidden>
+    <div class="pp-pad" role="group" aria-label="التحرّك" dir="ltr">
+      <div class="seg"><button type="button" id="pp-left" aria-label="يسار">◀</button><button type="button" id="pp-right" aria-label="يمين">▶</button></div>
+      <div class="seg"><button type="button" id="pp-down" aria-label="نزول">▼</button><button type="button" id="pp-jump">قفز</button></div>
+    </div>
     <span class="game-status" id="pp-hud" aria-live="polite"></span>
     <div class="pp-controls">
-      <div class="seg" role="group" aria-label="التحرّك">
-        <button type="button" id="pp-left" aria-label="يسار">◀</button><button type="button" id="pp-down" aria-label="نزول">▼</button><button type="button" id="pp-right" aria-label="يمين">▶</button><button type="button" id="pp-jump">قفز</button>
-      </div>
       <div class="seg">
         <button type="button" id="pp-wave">لوّح</button><button type="button" id="pp-laugh">اضحك</button><button type="button" id="pp-call">نادِهم</button>
       </div>

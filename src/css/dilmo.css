@@ -5,7 +5,7 @@ main.container:has(.dilmo) { max-width: none; }
   --border: var(--color-border); --accent: var(--color-primary-fill, var(--color-primary));
   --cmp: #2a7f60; --cmp-deep: #1b4d3e; --eye: #fff; --shadow: rgba(16, 32, 26, .14);
   --font: inherit;
-  display: grid; gap: 12px; padding-block: 12px 24px;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-block: 12px 24px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .dilmo { --cmp: #3fa480; --cmp-deep: #1f5a46; --shadow: rgba(0, 0, 0, .45); }
@@ -43,7 +43,7 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .orb .grain { fill: #fff; mix-blend-mode: overlay; opacity: .3; }
 .dilmo .orb .pe, .dilmo .orb .pm { fill: var(--eye); }
 .dilmo .orb-shadow { position: absolute; left: 0; top: 0; width: 80px; height: 12px; border-radius: 50%; background: var(--shadow); filter: blur(4px); }
-.dilmo .orb-say { position: absolute; left: 0; top: 0; margin: 0; z-index: 3; width: max-content; max-width: min(300px, 78vw); text-align: center; pointer-events: none;
+.dilmo .orb-say { position: absolute; left: 0; top: 0; margin: 0; z-index: 5; width: max-content; max-width: min(300px, 78vw); text-align: center; pointer-events: none;
   background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 14px; font-weight: 700; font-size: .95rem; line-height: 1.6; }
 .dilmo .orb-say[hidden] { display: none; }
 .dilmo .foods { position: absolute; top: 14px; inset-inline-start: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; z-index: 4; }
@@ -111,3 +111,31 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .photo-modal img { border-radius: var(--radius-md); width: 100%; height: auto; }
 .dilmo .photo-modal figcaption { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .dilmo .tips { font-size: .9rem; color: var(--muted); margin: 0; }
+.dilmo .pp-pad { display: flex; flex-wrap: wrap; gap: 10px; }
+.dilmo .play { scroll-margin-top: calc(var(--header-h, 64px) + 8px); }
+/* the site's daily-pick toast would sit on top of the playground */
+body:has(.dilmo) .daily-pick-reminder { display: none !important; }
+
+/* phones: the stage and the move buttons fill the screen between the header and the bottom nav;
+   the cast/sound/photo row and the rest move below, and the colour rows scroll sideways instead of wrapping */
+@media (max-width: 700px) {
+  .dilmo { gap: 10px; padding-block: 8px 16px; }
+  .dilmo .play { order: 1; height: max(260px, calc(100dvh - var(--header-h, 64px) - 60px - env(safe-area-inset-bottom, 0px) - 100px)); border-radius: var(--radius-md); }
+  .dilmo .player-panel, .dilmo .player-ui { order: 2; padding: 10px 12px; }
+  .dilmo .dilmo-top { order: 3; }
+  .dilmo .tips { order: 4; }
+  .dilmo h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .dilmo .swatches { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 4px; margin: -4px; }
+  .dilmo .swatches button { flex: none; }
+  /* a small gamepad: ◀ ▶ under the left thumb, ▼ and Jump under the right */
+  .dilmo .pp-pad { flex-wrap: nowrap; justify-content: space-between; gap: 16px; }
+  .dilmo .pp-pad .seg { flex: 1 1 0; max-width: 170px; flex-wrap: nowrap; gap: 8px; }
+  .dilmo .pp-pad button { flex: 1 1 0; min-width: 0; padding: 4px; min-height: 56px; font-size: 1.15rem; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .dilmo .pp-pad #pp-jump { flex-grow: 1.4; font-size: 1rem; font-weight: 800; }
+  .dilmo .food { min-height: 36px; padding: 2px 12px; font-size: .8rem; }
+  .dilmo .foods { top: 10px; inset-inline-start: 10px; gap: 5px; }
+  .dilmo .clock { top: 10px; bottom: auto; left: auto; inset-inline-end: 10px; transform: none; max-width: 52%; white-space: normal; text-align: end; font-size: .7rem; line-height: 1.5; }
+  .dilmo .orb-say { font-size: .85rem; padding: 3px 12px; }
+  .dilmo .pp-row > :first-child { min-width: 44px; }
+}
+.dilmo > *, .dilmo .player-ui > *, .dilmo .player-panel > * { min-width: 0; }
