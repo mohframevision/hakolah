@@ -4,7 +4,7 @@
   var body = orb.querySelector(".pb"), face = orb.querySelector(".pf");
   var eyes = orb.querySelectorAll(".pe"), mouth = orb.querySelector(".pm"), world = document.getElementById("world");
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches, TOUCH = matchMedia("(pointer: coarse)").matches;
-  var R = 48, HALF = 70, K = 1, labels = document.getElementById("labels");
+  var R = 48, HALF = 70, K = 1, G = 40, labels = document.getElementById("labels");
   function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
   function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
   function spring(v, k, d) { return { v: v, t: v, vel: 0, k: k, d: d }; }
@@ -591,7 +591,8 @@
     // small stages scale the whole world down (K), so the characters keep room to move; physics stays in world px
     var w = stage.clientWidth, h = stage.clientHeight;
     K = clamp(Math.min(w / 600, h / 440), .55, 1); world.style.setProperty("--k", K);
-    W = w / K; ground = (h - 14) / K - R;
+    G = clamp(h * .13, 30, 96);  // the ground band at the bottom, in screen px
+    W = w / K; ground = (h - G) / K - R;
     if (!pos.x) { pos.x = W / 2; pos.y = ground; }
     pos.x = clamp(pos.x, R, W - R); pos.y = Math.min(pos.y, ground);
   }
@@ -1735,9 +1736,12 @@
   }
   function tickClock() {
     var n = bahrainNow(), h = n.h;
+    if (W) paintSky();
     phase = h >= 5 && h < 11 ? "morning" : h >= 11 && h < 16 ? "noon" : h >= 16 && h < 19 ? "evening" : "night";
     isNight = phase === "night"; sky.dataset.phase = phase;
-    clock.textContent = PHASE_NAME[phase] + " · " + num(n.h % 12 || 12) + ":" + num(("0" + n.m).slice(-2)) + (n.h < 12 ? T(" ص", " AM") : T(" م", " PM")) + T(" بتوقيت البحرين", " Bahrain time") + " · ★ " + num(store.stars || 0);
+    var tz = document.createElement("span"); tz.className = "tz"; tz.textContent = T(" بتوقيت البحرين", " Bahrain time");
+    clock.textContent = PHASE_NAME[phase] + " · " + num(n.h % 12 || 12) + ":" + num(("0" + n.m).slice(-2)) + (n.h < 12 ? T(" ص", " AM") : T(" م", " PM"));
+    clock.appendChild(tz); clock.appendChild(document.createTextNode(" · ★ " + num(store.stars || 0)));
   }
   // props: a bench you can stand on, two bushes to hide behind, a ball everyone can kick
   var benchEl = document.getElementById("bench"), bench = { x: 0, w: 96, top: 0 };
@@ -1753,6 +1757,60 @@
       b.el.style.setProperty("--at", at); b.el.style.transform = at;
     });
     if (!ball.x) { ball.x = W * .42; ball.y = fl - ball.r; }
+    // background layers stand on the floor line; the near palm sits beside the right-hand bush
+    var below = world.offsetHeight - fl;
+    groundEl.style.height = below + "px";
+    far1.style.bottom = (below - 2) + "px"; far2.style.bottom = (below - 1) + "px";
+    [far1, far2].forEach(function (f) { f.setAttribute("viewBox", "0 0 " + Math.round(100 * W / (f.clientHeight || 80)) + " 100"); });  // same scale on any width: the tile repeats
+    palmEl.style.transform = "translate(" + (W * .86 - 60).toFixed(1) + "px," + (fl - 150).toFixed(1) + "px)";
+    clouds.style.setProperty("--drift", (W + 420) + "px");
+    paintSky();
+  }
+  // colour script: the sky, the far town, the ground and the light follow the real time in Bahrain,
+  // keyed to sunrise and sunset (which move through the year), blended smoothly between keys
+  var groundEl = document.getElementById("ground"), far1 = document.getElementById("far1"), far2 = document.getElementById("far2"), palmEl = document.getElementById("palm-near");
+  var clouds = document.getElementById("clouds"), sunEl = document.getElementById("sun"), moonEl = document.getElementById("moon");
+  var PAL = {  // top, horizon, far town (back, front), grass, ground (back, front), light, clouds, stars, window lights
+    night: ["#0a1430", "#22325c", "#1b2749", "#121b34", "#2b4a44", "#2c3343", "#1b2030", "#a3b0e0", "#3a4670", 1, 1],
+    dawn: ["#1d2b60", "#b98aa0", "#4c4a70", "#2f3152", "#3f5f55", "#5c5662", "#3d3a46", "#cdbadb", "#8d84a8", .4, .6],
+    sunrise: ["#7da3d8", "#ffc49a", "#c6a9aa", "#8c7682", "#6f9a6e", "#dab58d", "#b98f6a", "#ffe4d0", "#ffd9c2", 0, 0],
+    morning: ["#74b6ec", "#f5ead8", "#c9cfd2", "#a9aaa4", "#7fb069", "#e9d0a3", "#cfae7e", "#fff9f1", "#ffffff", 0, 0],
+    noon: ["#4ea3e6", "#e9f3f7", "#cfd8dc", "#b4b9b6", "#86b56c", "#ebd7ae", "#d3b688", "#ffffff", "#ffffff", 0, 0],
+    afternoon: ["#5ba6e0", "#f8e6c4", "#cbc6be", "#a59d90", "#84ad66", "#e7ca9b", "#c9a473", "#fff3e3", "#fff6ea", 0, 0],
+    golden: ["#4f6fb2", "#ffad6b", "#a97f84", "#705462", "#6f8d55", "#daa36f", "#a8774f", "#ffd4b4", "#ffc7a3", 0, .3],
+    dusk: ["#1f2a5a", "#c8707a", "#4e3b5d", "#2e2541", "#3e5148", "#6b4f58", "#44333e", "#bba5ce", "#7d6a93", .5, 1]
+  };
+  var skyNow = {};
+  function mixHex(a, b, p) { var x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16), c = function (s) { return Math.round(((x >> s) & 255) * (1 - p) + ((y >> s) & 255) * p); }; return "rgb(" + c(16) + "," + c(8) + "," + c(0) + ")"; }
+  var VARS = ["--sky-top", "--sky-hor", "--far1", "--far2", "--grass", "--g-back", "--g-front", "--tint", "--cloud"];
+  function sunTimes() {  // rough Bahrain sunrise/sunset in hours: ~4:45-6:25 and ~16:45-18:35 across the year
+    var d = new Date(), day = (Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5, c = Math.cos(2 * Math.PI * (day - 172) / 365);
+    return { sr: 5.55 - .8 * c, ss: 17.65 + .85 * c };
+  }
+  function paintSky() {
+    var n = bahrainNow(), h = n.h + n.m / 60, st = sunTimes(), sr = st.sr, ss = st.ss;
+    var keys = [[0, "night"], [sr - 1.2, "night"], [sr - .4, "dawn"], [sr + .4, "sunrise"], [sr + 2.2, "morning"], [12.5, "noon"], [ss - 1.6, "afternoon"], [ss - .15, "golden"], [ss + .55, "dusk"], [ss + 1.4, "night"], [24, "night"]];
+    var i = 0; while (i < keys.length - 2 && h >= keys[i + 1][0]) i++;
+    var a = keys[i], b = keys[i + 1], p = clamp((h - a[0]) / ((b[0] - a[0]) || 1), 0, 1), A = PAL[a[1]], B = PAL[b[1]];
+    VARS.forEach(function (v, k) { stage.style.setProperty(v, "color-mix(in oklab, " + A[k] + " " + ((1 - p) * 100).toFixed(1) + "%, " + B[k] + ")"); });
+    VARS.forEach(function (v, k) { skyNow[v] = mixHex(A[k], B[k], p); });  // plain colours for the photo
+    stage.style.setProperty("--stars", (A[9] + (B[9] - A[9]) * p).toFixed(2));
+    stage.style.setProperty("--lights", (A[10] + (B[10] - A[10]) * p).toFixed(2));
+    stage.style.setProperty("--palm", "color-mix(in oklab, var(--grass) 55%, #1f3d2e)");
+    // the sky's horizon colour meets the floor line
+    stage.style.setProperty("--hor-at", ((ground + R) / world.offsetHeight * 100).toFixed(1) + "%");
+    // sun on an arc from sunrise to sunset, moon on the night arc; warmer and lower near the horizon
+    var fl = ground + R, top = Math.max(60, fl * .14), span = fl - top;
+    var ts = (h - sr) / (ss - sr), up = ts > -.04 && ts < 1.04;
+    sunEl.style.display = up ? "" : "none";
+    if (up) {
+      var el = Math.sin(Math.PI * clamp(ts, 0, 1));
+      sunEl.style.transform = "translate(" + (W * (.08 + .84 * ts)).toFixed(1) + "px," + (fl - 10 - span * .85 * el).toFixed(1) + "px)";
+      stage.style.setProperty("--sun", "color-mix(in oklch, #ff9a4d " + (Math.max(0, 1 - el * 2.2) * 100).toFixed(0) + "%, #ffe7a8)");
+    }
+    var nightLen = 24 - ss + sr, tn = ((h - ss + 24) % 24) / nightLen, mup = tn > .07 && tn < .95;
+    moonEl.style.display = mup ? "" : "none";
+    if (mup) moonEl.style.transform = "translate(" + (W * (.1 + .8 * tn)).toFixed(1) + "px," + (fl - 30 - span * .8 * Math.sin(Math.PI * tn)).toFixed(1) + "px)";
   }
   function onBenchX(x) { return x > bench.x + 4 && x < bench.x + bench.w - 4; }
   function surfaceY(b) { var fy = floorY(b); return onBenchX(b.x) && b.y <= bench.top - b.f.r + 3 ? bench.top - b.f.r : fy; }
@@ -1852,14 +1910,16 @@
     var s = 2, H = world.offsetHeight, c = document.createElement("canvas"), x = c.getContext("2d"), cs = getComputedStyle(stage);
     var tok = function (n) { return cs.getPropertyValue(n).trim(); };
     c.width = W * s; c.height = H * s; x.scale(s, s);
-    x.fillStyle = getComputedStyle(stage).backgroundColor; x.fillRect(0, 0, W, H);
-    var tint = { morning: "rgba(255,214,150,.22)", noon: "rgba(140,200,255,.14)", evening: "rgba(255,150,90,.24)", night: "rgba(20,30,70,.45)" }[phase];
-    var gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, tint); gr.addColorStop(1, isNight ? "rgba(20,30,70,.15)" : "rgba(0,0,0,0)"); x.fillStyle = gr; x.fillRect(0, 0, W, H);
-    if (isNight) { x.fillStyle = "#fff"; sky.querySelectorAll(".star").forEach(function (e) { x.fillRect(e.offsetLeft, e.offsetTop, 2, 2); }); }
-    var pst = getComputedStyle(stage);
-    x.fillStyle = pst.getPropertyValue("--soil").trim() || tok("--border"); x.fillRect(0, H - 14, W, 14);
-    x.fillStyle = pst.getPropertyValue("--grass").trim() || tok("--cmp"); x.fillRect(0, H - 14, W, 4);
-    x.fillStyle = tok("--muted"); x.fillRect(bench.x, bench.top, bench.w, 8); x.fillRect(bench.x + 10, bench.top + 8, 5, 20); x.fillRect(bench.x + bench.w - 15, bench.top + 8, 5, 20);
+    var col = function (v) { return skyNow[v] || "#808080"; }, fl = ground + R;
+    var gr = x.createLinearGradient(0, 0, 0, fl); gr.addColorStop(0, col("--sky-top")); gr.addColorStop(1, col("--sky-hor")); x.fillStyle = gr; x.fillRect(0, 0, W, H);
+    x.globalAlpha = +tok("--stars") || 0; x.fillStyle = "#fff"; sky.querySelectorAll(".star").forEach(function (e) { x.fillRect(e.offsetLeft, e.offsetTop, 2, 2); }); x.globalAlpha = 1;
+    [[sunEl, "#ffe7a8", 20], [moonEl, "#f3efe0", 13]].forEach(function (o) {  // sun or moon where it is now
+      if (o[0].style.display === "none") return;
+      var m = /translate\(([-\d.]+)px,\s*([-\d.]+)px/.exec(o[0].style.transform); if (!m) return;
+      x.fillStyle = o[1]; x.beginPath(); x.arc(+m[1], +m[2], o[2], 0, Math.PI * 2); x.fill();
+    });
+    x.fillStyle = col("--g-back"); x.fillRect(0, fl, W, H - fl); x.fillStyle = col("--grass"); x.fillRect(0, fl, W, 4);
+    x.fillStyle = "#9a6a42"; x.fillRect(bench.x, bench.top, bench.w, 8); x.fillRect(bench.x + 10, bench.top + 8, 5, 20); x.fillRect(bench.x + bench.w - 15, bench.top + 8, 5, 20);
     x.fillStyle = tok("--surface"); x.beginPath(); x.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); x.fill(); x.strokeStyle = tok("--border"); x.stroke();
     buddies.forEach(function (b) { if (!b.f.player) paintOrb(x, b.el, b.x, b.y, b.f.r, [b.f.c1, b.f.c2, b.f.c3], clamp(b.sx, .8, 1.25), clamp(b.sy, .75, 1.22), b.tilt); });
     // resolved stop colours can be oklab()/color(); fall back to the token if this canvas can't parse them
@@ -1868,10 +1928,11 @@
     if (player) paintOrb(x, player.el, player.x, player.y, player.f.r, [player.f.c1, player.f.c2, player.f.c3], clamp(player.sx, .8, 1.25), clamp(player.sy, .75, 1.22), player.tilt);
     var bc = getComputedStyle(document.querySelector(".play")).getPropertyValue("--bush").trim() || tok("--cmp");
     x.fillStyle = bc; bushes.forEach(function (b) { var fl = ground + R; [[-17, -16, 17], [3, -24, 22], [21, -15, 16]].forEach(function (k) { x.beginPath(); x.arc(b.cx + k[0], fl + k[1] + 4, k[2], 0, Math.PI * 2); x.fill(); }); });
+    x.globalCompositeOperation = "multiply"; x.fillStyle = col("--tint"); x.fillRect(0, 0, W, H); x.globalCompositeOperation = "source-over";  // the light of the hour
     x.font = "700 12px Cairo, sans-serif"; x.textAlign = "center"; x.fillStyle = tok("--muted");
     buddies.forEach(function (b) { x.fillText(b.tag.textContent, b.x, b.y - b.f.r - 10); });
-    var ex = EN ? 16 : W - 16; x.direction = EN ? "ltr" : "rtl"; x.textAlign = EN ? "left" : "right"; x.fillStyle = tok("--fg"); x.font = "800 16px Cairo, sans-serif"; x.fillText(T("هكوله · دلمو", "Hakolah · Dilmo"), ex, 30);
-    x.font = "600 11px Cairo, sans-serif"; x.fillStyle = tok("--muted"); x.fillText(clock.textContent, ex, 48);
+    var ex = EN ? 16 : W - 16; x.direction = EN ? "ltr" : "rtl"; x.textAlign = EN ? "left" : "right"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 4; x.fillStyle = "#fff"; x.font = "800 16px Cairo, sans-serif"; x.fillText(T("هكوله · دلمو", "Hakolah · Dilmo"), ex, 30);
+    x.font = "600 11px Cairo, sans-serif"; x.fillText(clock.textContent, ex, 48); x.shadowBlur = 0;
     return c;
   }
   document.getElementById("photo-btn").addEventListener("click", function () {

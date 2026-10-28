@@ -26,6 +26,48 @@ pageCss: "dilmo"
   <div class="play" id="play">
     <div class="world" id="world">
       <div class="sky" id="sky" aria-hidden="true"></div>
+      <div class="sun" id="sun" aria-hidden="true"></div>
+      <div class="moon" id="moon" aria-hidden="true"></div>
+      <div class="clouds" id="clouds" aria-hidden="true"><i></i><i></i><i></i></div>
+      <svg class="far far1" id="far1" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+        <defs><pattern id="dlm-t1" patternUnits="userSpaceOnUse" width="1000" height="100"><path d="M0 100V88H40V82H70V88H120V76H132V64H146V76H160V88H215V84H240V88H290V74H304V54H318V74H332V88H380V82H404V88H436V66H446V58H456V66H466V88H530V80H552V66H566V80H600V88H660V82H700V88H748V74H762V58H778V74H796V88H850V84H880V88H930V78H950V88H1000V100Z"/></pattern></defs>
+        <rect width="100%" height="100" fill="url(#dlm-t1)"/>
+      </svg>
+      <svg class="far far2" id="far2" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <symbol id="dlm-palm" viewBox="-40 -100 80 100">
+            <path d="M-2 0C-5-30 1-60-1-86H3C5-60 1-30 3 0Z"/>
+            <path d="M1-86Q-18-99-38-82Q-18-92 1-84Z M1-86Q20-99 38-82Q18-92 1-84Z M1-87Q-10-104-28-100Q-10-98 1-85Z M1-87Q12-104 30-100Q12-98 1-85Z M1-86Q-24-88-34-68Q-20-84 1-84Z M1-86Q24-88 34-68Q20-84 1-84Z"/>
+          </symbol>
+          <pattern id="dlm-t2" patternUnits="userSpaceOnUse" x="-120" width="1000" height="100">
+        <use href="#dlm-palm" x="0" y="8" width="80" height="92"/>
+        <path d="M70 100V74H76V70H84V74H120V68H126V48H142V68H150V74H170V100Z"/>
+        <path d="M128 52H140V66H128Z" class="slit"/>
+        <use href="#dlm-palm" x="180" y="0" width="90" height="100"/>
+        <path d="M262 100V80H268V76H330V80H336V100Z"/>
+        <use href="#dlm-palm" x="410" y="18" width="70" height="82"/>
+        <path d="M560 100V72H566V68H600V60H606V40H624V60H630V68H668V72H674V100Z"/>
+        <path d="M609 44H621V58H609Z" class="slit"/>
+        <use href="#dlm-palm" x="680" y="4" width="84" height="96"/>
+        <path d="M770 100V82H776V78H850V82H856V100Z"/>
+        <use href="#dlm-palm" x="880" y="12" width="76" height="88"/>
+        <rect class="win" x="92" y="80" width="7" height="9"/><rect class="win" x="108" y="80" width="7" height="9"/>
+        <rect class="win" x="290" y="85" width="7" height="8"/><rect class="win" x="586" y="78" width="7" height="9"/>
+        <rect class="win" x="640" y="78" width="7" height="9"/><rect class="win" x="800" y="86" width="7" height="8"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100" fill="url(#dlm-t2)"/>
+      </svg>
+      <svg class="palm-near" id="palm-near" viewBox="-60 -150 120 150" aria-hidden="true">
+        <path class="trunk" d="M-4 0C-9-45 2-95-2-128H5C9-95 3-45 6 0Z"/>
+        <g class="fronds">
+          <path d="M1-128Q-28-146-58-120Q-28-136 1-124Z"/><path d="M1-128Q30-146 58-120Q28-136 1-124Z"/>
+          <path d="M1-129Q-14-154-42-148Q-14-145 1-126Z"/><path d="M1-129Q16-154 44-148Q16-145 1-126Z"/>
+          <path d="M1-128Q-36-130-50-100Q-30-124 1-125Z"/><path d="M1-128Q36-130 50-100Q30-124 1-125Z"/>
+          <circle cx="-3" cy="-122" r="3"/><circle cx="4" cy="-121" r="3"/><circle cx="0" cy="-118" r="3"/>
+        </g>
+      </svg>
+      <div class="ground" id="ground" aria-hidden="true"></div>
       <div class="bench" id="bench" aria-hidden="true"></div>
       <div class="bush" id="bush0" aria-hidden="true"></div>
       <div class="bush" id="bush1" aria-hidden="true"></div>
@@ -48,6 +90,7 @@ pageCss: "dilmo"
         </g>
       </svg>
     </div>
+    <div class="tint" id="tint" aria-hidden="true"></div>
     <span class="clock" id="clock"></span>
     <div class="foods" id="foods">
       <button type="button" class="food" id="food-burger" data-food="burger">برجر</button>
