@@ -2,6 +2,9 @@
    يتحمّل عند أول محادثة فقط (dilmo.js يضيفه لقاموسه). لا ذكاء اصطناعي: كلمات مفتاحية → ردود مكتوبة مسبقاً.
    المعلومات هنا ثابتة ومعروفة فقط؛ أي معلومة متغيّرة (الطقس الآن، الأسعار) تأتي من بيانات الموقع أو لا تُقال. */
 window.DILMO_WORDS = {
+  // lessons the owner taught in training mode (dilmo.html?train), reviewed by Claude before they land here:
+  // k = words that must all be in the message (already in plain form), ar/en = the answer ({n} = the visitor's name)
+  taught: [],
   // more ways to say what he already understands: dialect, typos and Arabizi
   more: {
     hi: ["هلو", "هلا والله", "يا هلا", "مرحبتين", "صباحو", "مسا الخير", "صباح النور", "hala", "halaa", "mar7aba", "marhaba", "salam alaikum", "slm", "yo", "sup", "hiya", "howdy"],

@@ -1143,6 +1143,7 @@
     setTimeout(function () { say(line(returning ? "playerBack" : "playerJoin", { n: cfg.name }), "pjoin", 1000); }, 900);
     setTimeout(function () { var o = pick(buddies.filter(function (x) { return x !== player; })); if (o && player) bsay(o, line("buddyHiPlayer", { n: cfg.name })); }, 2700);
     if (returning) setTimeout(function () { if (player) recall(); }, 5200);
+    renderTrain();
     loadWords();
     if (window.loadMenus) window.loadMenus().then(function () { index = null; }, function () { /* offline: search places without menus */ });  // dishes become searchable
   }
@@ -1152,7 +1153,7 @@
     [player.el, player.sh, player.bub, player.tag].forEach(function (x) { x.remove(); });
     buddies.splice(buddies.indexOf(player), 1); buddies.forEach(function (b) { if (b.other === player) { b.other = null; b.mode = "wander"; } });
     player = null; store.player = null; saveStore();
-    panel.hidden = false; pui.hidden = true;
+    panel.hidden = false; pui.hidden = true; renderTrain();
     say(line("playerBye", { n: n }), "pbye", 1000);
   }
   document.getElementById("pp-join").addEventListener("click", function () {
@@ -1345,8 +1346,8 @@
     cafes: ["كافيه", "كافي", "مقهي", "قهوه", "cafe", "cafes", "coffee"], bakeries: ["مخبز", "مخابز", "خبز", "bakery", "bakeries", "bread"],
     places: ["زياره", "اماكن", "سياحه", "معلم", "اطلع", "visit", "places", "sightseeing", "outing"], stores: ["متجر", "متاجر", "محل", "محلات", "اشتري", "store", "shop", "buy"],
     "car-shops": ["سياره", "سيارتي", "كراج", "قراج", "ورشه", "car", "garage", "mechanic"] };
-  var STOP = norm("في من على عن الى الي انا انت ابي ابغي اريد ودي بغيت وين اين شنو ماذا ممكن لو سمحت شي مكان احد حد اليوم الحين الان زين حلو افضل احسن قريب مني عندكم يكون فيه هل كيف اقدر احصل القى الاقي اجد دلني اقترح تنصحني بالبحرين البحرين" +
-    " the a an in to i want need find where is are some any place good best nice near me around can you please for of at with on bahrain").split(" ");
+  var STOP = norm("وش ايش شو شرايك رايك تتوقع تفكر في من على عن الى الي انا انت ابي ابغي اريد ودي بغيت وين اين شنو ماذا ممكن لو سمحت شي مكان احد حد اليوم الحين الان زين حلو افضل احسن قريب مني عندكم يكون فيه هل كيف اقدر احصل القى الاقي اجد دلني اقترح تنصحني بالبحرين البحرين" +
+    " the a an in to i want what think opinion about need find where is are some any place good best nice near me around can you please for of at with on bahrain").split(" ");
   var LOVE = ["احب", "حب", "يعجبني", "اعشق", "اموت", "مفضل", "مفضله", "love", "like", "favourite", "favorite"].map(norm);
   var HATE = ["ما احب", "مااحب", "لا احب", "ما يعجبني", "اكره", "مب حلو", "hate", "dont like", "do not like", "not a fan"].map(norm);
   [INTENTS, FOODS, CALLS, KINDS].forEach(function (d) { for (var k in d) d[k] = d[k].map(norm); });
@@ -1361,6 +1362,7 @@
         for (k in D.topics) INTENTS[k] = D.topics[k].map(norm);
         for (k in D.foods) FOODS[k] = D.foods[k].map(norm);
         Object.assign(FOOD_NAME, EN ? D.foodNames.en : D.foodNames.ar); Object.assign(LINES, EN ? D.en : D.ar);
+        TAUGHT = (D.taught || []).map(function (L) { return { k: L.k.map(norm), a: EN ? L.en : L.ar }; });
         res();
       };
       sc.onerror = function () { wordsP = null; res(); };
@@ -1714,16 +1716,118 @@
     if (loadWords()) wordsP.then(go); else go();
   });
   function answer(msg) {
-    var u = understand(msg), n = myName();
-    if (u.intent === "sing" && !song) { setTimeout(sing, 900); return; }
+    var u = understand(msg), n = myName(), lesson = lessonFor(u);
+    if (!lesson && u.intent === "sing" && !song) { setTimeout(sing, 900); return; }
     var called = u.call && u.call !== "main" ? others().filter(function (b) { return b.f.id === u.call; })[0] : null;
     var speaker = called || (mainAway ? pick(others()) : null);
-    var text = (speaker && persona(speaker, u, n)) || reply(u, n);
-    if (speaker) setTimeout(function () { if (player) bsay(speaker, text || line("cFriendCalled", { n: n })); }, 1100);
-    else setTimeout(function () { say(text || line("cFriendCalled", { n: n }), "pchat", 300); }, 1300);
+    var text = lesson ? lesson.a.split("{n}").join(n) : (speaker && persona(speaker, u, n)) || reply(u, n);
+    var shown = text || line("cFriendCalled", { n: n });
+    if (speaker) setTimeout(function () { if (player) bsay(speaker, shown); }, 1100);
+    else setTimeout(function () { say(shown, "pchat", 300); }, 1300);
+    lastEx = { q: msg, a: shown, taught: !!lesson, u: u }; renderTrain();
     var o = pick(others());
     if (!called && o && !mainAway && (u.intent === "hi" || u.intent === "praise") && Math.random() < .5) setTimeout(function () { if (player) bsay(o, line("buddyReply", { n: n })); }, 2900);
   }
+
+  // ---- training (dilmo.html?train): the owner rates his answers and teaches better ones.
+  // Lessons live in this browser only and apply at once; Claude reviews the exported file and moves the good ones
+  // into dilmo-words.js (taught), where they reach every visitor. No AI: a lesson is "these words → this answer".
+  var TRAIN = /[?&]train\b/.test(location.search), TAUGHT = [], lastEx = null, trainEl = null;
+  function trainData() { try { return JSON.parse(localStorage.getItem("hk-dilmo-train") || "{}"); } catch { return {}; } }
+  function saveTrain(d) { try { localStorage.setItem("hk-dilmo-train", JSON.stringify(d)); } catch { /* private window */ } }
+  function lessons() { var d = trainData(); return (d.lessons || []).filter(function (L) { return L.lang === (EN ? "en" : "ar"); }); }
+  // a lesson matches when all its chosen words are in the message (typos and prefixes allowed);
+  // with no words chosen, three quarters of the question's own words must be there
+  function lessonFor(u) {
+    var best = null, bestN = 0;
+    lessons().map(function (L) { return { k: (L.k && L.k.length ? L.k : null), q: L.q, a: L.a }; }).concat(TAUGHT).forEach(function (L) {
+      var keys = L.k || norm(L.q).split(" ").filter(function (w) { return w.length > 1 && STOP.indexOf(w) < 0; });
+      if (!keys.length) return;
+      var hit = keys.filter(function (k) { return u.words.some(function (w) { return wordHit(w, k); }); }).length;
+      if (hit / keys.length >= (L.k ? 1 : .75) && hit > bestN) { best = L; bestN = hit; }
+    });
+    return best;
+  }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function renderTrain() {
+    if (!TRAIN) return;
+    if (!trainEl) { trainEl = el("section", "train"); trainEl.setAttribute("aria-label", T("تدريب دلمو", "Train Dilmo")); document.querySelector(".tips").before(trainEl); }
+    var d = trainData(), mine = lessons();
+    trainEl.textContent = "";
+    trainEl.appendChild(el("h2", null, T("تدريب دلمو", "Train Dilmo")));
+    if (!player) trainEl.appendChild(el("p", "train-note", T("ادخل بشخصيتك أولاً، ثم كلّم دلمو وقيّم ردوده هنا.", "Join with your character first, then talk to Dilmo and rate his answers here.")));
+    else if (!lastEx) trainEl.appendChild(el("p", "train-note", T("اكتب له أي شيء في المحادثة، وسيظهر رده هنا لتقيّمه.", "Type anything to him in the chat; his answer shows up here for you to rate.")));
+    else {
+      var box = el("div", "train-last");
+      box.appendChild(el("span", "train-q", T("قلت: ", "You: ") + lastEx.q));
+      box.appendChild(el("span", "train-a", T("ردّ: ", "He said: ") + lastEx.a + (lastEx.taught ? T(" (من درس علّمته)", " (from a lesson)") : "")));
+      trainEl.appendChild(box);
+      if (!lastEx.rated) {
+        var row = el("div", "train-row"), good = el("button", "game-btn", T("👍 صح", "👍 Good")), bad = el("button", "snd", T("👎 غلط، علّمه", "👎 Wrong, teach him"));
+        good.type = bad.type = "button";
+        good.addEventListener("click", function () { log(true); lastEx.rated = "good"; renderTrain(); });
+        bad.addEventListener("click", function () { log(false); lastEx.rated = "bad"; renderTrain(); setTimeout(function () { var t = trainEl.querySelector("textarea"); if (t) t.focus(); }, 0); });
+        row.appendChild(good); row.appendChild(bad); trainEl.appendChild(row);
+      } else if (lastEx.rated === "good") trainEl.appendChild(el("p", "train-note", T("سُجّل أن الرد صحيح.", "Noted as a good answer.")));
+      else if (lastEx.rated === "bad") trainEl.appendChild(teachForm());
+      else trainEl.appendChild(el("p", "train-note", T("حفظتُ الدرس. جرّب أن تسأله مرة أخرى.", "Lesson saved. Try asking him again.")));
+    }
+    // the lessons so far, and the file Claude reviews
+    var foot = el("div", "train-row");
+    foot.appendChild(el("span", "train-note", T("الدروس: ", "Lessons: ") + num(mine.length) + T(" · التقييمات: ", " · Ratings: ") + num((d.feedback || []).length)));
+    var dl = el("button", "snd", T("تنزيل الدروس", "Download lessons")), clr = el("button", "snd", T("مسح الكل", "Clear all"));
+    dl.type = clr.type = "button";
+    dl.addEventListener("click", exportTrain);
+    clr.addEventListener("click", function () { if (confirm(T("مسح كل الدروس والتقييمات؟", "Delete all lessons and ratings?"))) { saveTrain({}); renderTrain(); } });
+    foot.appendChild(dl); foot.appendChild(clr); trainEl.appendChild(foot);
+    if (mine.length) {
+      var list = el("details", "train-list"); list.appendChild(el("summary", null, T("عرض الدروس", "Show lessons")));
+      mine.slice().reverse().forEach(function (L) {
+        var li = el("div", "train-item");
+        li.appendChild(el("span", null, "«" + L.q + "» → " + L.a + (L.k && L.k.length ? T(" · الكلمات: ", " · words: ") + L.k.join("، ") : "")));
+        var del = el("button", "snd", T("حذف", "Delete")); del.type = "button";
+        del.addEventListener("click", function () { var dd = trainData(); dd.lessons = (dd.lessons || []).filter(function (x) { return x.t !== L.t; }); saveTrain(dd); renderTrain(); });
+        li.appendChild(del); list.appendChild(li);
+      });
+      trainEl.appendChild(list);
+    }
+  }
+  function teachForm() {
+    var f = el("form", "train-form");
+    var lab = el("label", null, T("الرد الصحيح", "The right answer")), ta = el("textarea"); ta.rows = 2; ta.maxLength = 160; ta.required = true;
+    ta.placeholder = T("اكتب ما كان يجب أن يقوله دلمو ({n} = اسم الزائر)", "What Dilmo should have said ({n} = the visitor's name)");
+    lab.appendChild(ta); f.appendChild(lab);
+    // the message's own words, to choose which ones must be there for this answer
+    var words = terms(lastEx.u).map(function (a) { return a[0]; }).filter(function (w, i, a) { return a.indexOf(w) === i; });
+    var picked = words.slice();
+    if (words.length) {
+      f.appendChild(el("span", "train-note", T("الكلمات المهمة في سؤالك (اضغط لإلغاء أي كلمة). يُطبَّق الدرس على أي رسالة فيها كل هذه الكلمات، فكلما قلّت صار أعمّ:", "The important words in your question (tap to drop one). The lesson applies to any message with all of them, so fewer words means broader:")));
+      var chips = el("div", "seg");
+      words.forEach(function (w) {
+        var b = el("button", null, w); b.type = "button"; b.setAttribute("aria-pressed", "true");
+        b.addEventListener("click", function () { var on = picked.indexOf(w) < 0; picked = on ? picked.concat(w) : picked.filter(function (x) { return x !== w; }); b.setAttribute("aria-pressed", String(on)); });
+        chips.appendChild(b);
+      });
+      f.appendChild(chips);
+    }
+    var save = el("button", "game-btn", T("احفظ الدرس", "Save the lesson")); save.type = "submit"; f.appendChild(save);
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var a = ta.value.trim(); if (!a) return;
+      var dd = trainData(); dd.lessons = dd.lessons || [];
+      dd.lessons.push({ q: lastEx.q, k: picked, a: a, wrong: lastEx.a, lang: EN ? "en" : "ar", t: Date.now() });
+      saveTrain(dd); lastEx.rated = "saved"; renderTrain();
+      say(T("حفظتُها! شكراً لأنك علّمتني.", "Got it! Thanks for teaching me."), "taught", 500);
+    });
+    return f;
+  }
+  function log(ok) { var d = trainData(); d.feedback = d.feedback || []; d.feedback.push({ q: lastEx.q, a: lastEx.a, ok: ok, lang: EN ? "en" : "ar", t: Date.now() }); saveTrain(d); }
+  function exportTrain() {
+    var d = trainData(), blob = new Blob([JSON.stringify({ app: "dilmo-training", exported: new Date().toISOString(), lessons: d.lessons || [], feedback: d.feedback || [] }, null, 2)], { type: "application/json" });
+    var a = el("a"); a.href = URL.createObjectURL(blob); a.download = "dilmo-lessons-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  }
+  if (TRAIN) setTimeout(renderTrain, 0);
 
   // ---- world life: Bahrain time of day, a ball, a bench, bushes, hide-and-seek, stars, a photo ----
   var sky = document.getElementById("sky"), clock = document.getElementById("clock"), phase = "noon", isNight = false;
@@ -1906,7 +2010,28 @@
     face.querySelectorAll("ellipse").forEach(function (e) { x.beginPath(); x.ellipse(+e.getAttribute("cx") || 0, +e.getAttribute("cy") || 0, +e.getAttribute("rx"), +e.getAttribute("ry"), 0, 0, Math.PI * 2); x.fill(); });
     x.restore();
   }
+  // a background layer drawn from its own SVG, with the hour's colours written into the copy
+  function svgImage(el, fill, fix) {
+    var cl = el.cloneNode(true); cl.setAttribute("xmlns", "http://www.w3.org/2000/svg"); cl.setAttribute("fill", fill);
+    cl.setAttribute("width", el.clientWidth); cl.setAttribute("height", el.clientHeight); cl.removeAttribute("style");
+    if (fix) fix(cl);
+    return new Promise(function (res) {
+      var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); };
+      im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(cl));
+    });
+  }
   function snap() {
+    var lights = getComputedStyle(stage).getPropertyValue("--lights").trim() || "0";
+    return Promise.all([
+      svgImage(far1, skyNow["--far1"] || "#999"),
+      svgImage(far2, skyNow["--far2"] || "#777", function (cl) {
+        cl.querySelectorAll(".win").forEach(function (w) { w.setAttribute("fill", "#ffd27a"); w.setAttribute("opacity", lights); });
+        cl.querySelectorAll(".slit").forEach(function (w) { w.setAttribute("fill", "rgba(0,0,0,.25)"); });
+      }),
+      svgImage(palmEl, getComputedStyle(palmEl.querySelector(".fronds")).fill, function (cl) { cl.querySelector(".trunk").setAttribute("fill", getComputedStyle(palmEl.querySelector(".trunk")).fill); })
+    ]).then(function (img) { return paintScene(img); });
+  }
+  function paintScene(img) {
     var s = 2, H = world.offsetHeight, c = document.createElement("canvas"), x = c.getContext("2d"), cs = getComputedStyle(stage);
     var tok = function (n) { return cs.getPropertyValue(n).trim(); };
     c.width = W * s; c.height = H * s; x.scale(s, s);
@@ -1918,7 +2043,17 @@
       var m = /translate\(([-\d.]+)px,\s*([-\d.]+)px/.exec(o[0].style.transform); if (!m) return;
       x.fillStyle = o[1]; x.beginPath(); x.arc(+m[1], +m[2], o[2], 0, Math.PI * 2); x.fill();
     });
+    var wr = world.getBoundingClientRect(), z = wr.width / world.offsetWidth || 1;
+    x.fillStyle = col("--cloud"); x.globalAlpha = .85;
+    clouds.querySelectorAll("i").forEach(function (ci) {  // each cloud: the same four soft lobes as its CSS
+      var r = ci.getBoundingClientRect(), cx = (r.left - wr.left) / z, cy = (r.top - wr.top) / z, w = r.width / z, h = r.height / z;
+      [[.30, .70, 40, 22], [.55, .50, 46, 30], [.78, .72, 36, 20], [.54, .86, 70, 12]].forEach(function (e) { x.beginPath(); x.ellipse(cx + e[0] * w, cy + e[1] * h, e[2] / 170 * w, e[3] / 52 * h, 0, 0, Math.PI * 2); x.fill(); });
+    });
+    x.globalAlpha = 1;
+    [[far1, img[0]], [far2, img[1]]].forEach(function (p) { if (p[1]) x.drawImage(p[1], 0, H - parseFloat(p[0].style.bottom) - p[0].clientHeight, W, p[0].clientHeight); });
     x.fillStyle = col("--g-back"); x.fillRect(0, fl, W, H - fl); x.fillStyle = col("--grass"); x.fillRect(0, fl, W, 4);
+    var pm = /translate\(([-\d.]+)px,\s*([-\d.]+)px/.exec(palmEl.style.transform);
+    if (img[2] && pm) x.drawImage(img[2], +pm[1], +pm[2], 120, 150);
     x.fillStyle = "#9a6a42"; x.fillRect(bench.x, bench.top, bench.w, 8); x.fillRect(bench.x + 10, bench.top + 8, 5, 20); x.fillRect(bench.x + bench.w - 15, bench.top + 8, 5, 20);
     x.fillStyle = tok("--surface"); x.beginPath(); x.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); x.fill(); x.strokeStyle = tok("--border"); x.stroke();
     buddies.forEach(function (b) { if (!b.f.player) paintOrb(x, b.el, b.x, b.y, b.f.r, [b.f.c1, b.f.c2, b.f.c3], clamp(b.sx, .8, 1.25), clamp(b.sy, .75, 1.22), b.tilt); });
@@ -1937,9 +2072,11 @@
   }
   document.getElementById("photo-btn").addEventListener("click", function () {
     stir(); tone(1200, 900, .08, "square", .03);
-    var url = snap().toDataURL("image/png");
-    document.getElementById("photo-img").src = url; document.getElementById("photo-save").href = url;
-    photoModal.hidden = false; document.getElementById("photo-close").focus();
+    snap().then(function (c) {
+      var url = c.toDataURL("image/png");
+      document.getElementById("photo-img").src = url; document.getElementById("photo-save").href = url;
+      photoModal.hidden = false; document.getElementById("photo-close").focus();
+    });
   });
   document.getElementById("photo-close").addEventListener("click", function () { photoModal.hidden = true; });
   photoModal.addEventListener("click", function (e) { if (e.target === photoModal) photoModal.hidden = true; });

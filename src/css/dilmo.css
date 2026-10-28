@@ -198,3 +198,18 @@ body:has(.dilmo) .daily-pick-reminder { display: none !important; }
 .dilmo .pp-results a:hover { border-color: var(--accent); }
 .dilmo .pp-results b { font-size: .92rem; overflow-wrap: anywhere; }
 .dilmo .pp-results span { font-size: .78rem; color: var(--muted); overflow-wrap: anywhere; }
+
+/* training panel (dilmo.html?train only) */
+.dilmo .train { background: var(--surface); border: 2px dashed color-mix(in oklab, var(--gold) 70%, var(--border)); border-radius: var(--radius); padding: 14px 18px; display: grid; gap: 10px; }
+.dilmo .train h2 { font-size: 1.05rem; margin: 0; }
+.dilmo .train-note { font-size: .88rem; color: var(--muted); margin: 0; }
+.dilmo .train-last { display: grid; gap: 4px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg); }
+.dilmo .train-q { font-weight: 700; }
+.dilmo .train-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dilmo .train-form { display: grid; gap: 8px; }
+.dilmo .train-form label { display: grid; gap: 4px; font-weight: 700; font-size: .9rem; }
+.dilmo .train-form textarea { font: inherit; font-size: 1rem; padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg); color: var(--fg); resize: vertical; }
+.dilmo .train-form .game-btn { justify-self: start; }
+.dilmo .train-list summary { cursor: pointer; font-weight: 700; font-size: .9rem; }
+.dilmo .train-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: .88rem; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .dilmo .train { order: 2; } }
