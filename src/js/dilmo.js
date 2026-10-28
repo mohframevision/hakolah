@@ -11,7 +11,7 @@
 
   var EN = document.documentElement.lang === "en";
   function T(ar, en) { return EN ? en : ar; }
-  function num(n) { var s = String(n); return EN ? s : s.replace(/d/g, function (d) { return "٠١٢٣٤٥٦٧٨٩"[d]; }); }
+  function num(n) { var s = String(n); return EN ? s : s.replace(/\d/g, function (d) { return "٠١٢٣٤٥٦٧٨٩"[d]; }); }
   // phrasebook (fusha): every line = mood opener + core + mood tail, and recent lines are never repeated
   var MOODS_AR = {
     joy: { pre: ["", "", "يا سلام! ", "رائع! ", "مرحى! ", "هيّا! ", "جميل! ", "يا للروعة! "], post: ["", "", " هذا ممتع!", " أعِدها!", " ما ألطفك!", " يومي صار أجمل.", " أنا سعيد!"] },
@@ -119,6 +119,19 @@
     cFriendCalled: ["plain", ["نعم يا {n}؟", "ناديتني؟ أنا هنا!", "أهلاً يا {n}!"]],
     cHuh: ["plain", ["لم أفهم تماماً… هل تريد أن أقترح لك مكاناً تأكل فيه؟", "لم أفهم قصدك. هل تبحث عن مكان تأكل فيه؟"]],
     cHuh2: ["plain", ["لم أفهم، لكن كلامك لطيف! هل نلعب؟", "لم أفهم جيداً… هل نلعب المطاردة؟"]],
+    dNew: ["plain", ["آخر ما أُضيف إلى هكوله: «{p}»، والبقية تحت.", "جديد هكوله: «{p}»، وتحت أماكن أخرى جديدة."]],
+    dWhich: ["plain", ["عن أي مكان تسأل؟ اكتب اسمه.", "اكتب لي اسم المكان وسأخبرك."]],
+    dHours: ["plain", ["«{p}»: {h}", "ساعات «{p}»: {h}"]],
+    dHoursNone: ["plain", ["ساعات «{p}» لم نتحقّق منها في هكوله بعد، فلن أخمّنها."]],
+    dHoursNoneCall: ["plain", ["ساعات «{p}» لم نتحقّق منها بعد، فلن أخمّنها. اتصل بهم: {t}"]],
+    dPhone: ["plain", ["رقم «{p}»: {t}", "تقدر تتصل بـ«{p}» على {t}"]],
+    dPhoneNone: ["plain", ["ليس عندي رقم مؤكّد لـ«{p}» بعد."]],
+    dLoc: ["plain", ["موقع «{p}» على الخريطة تحت، اضغطه.", "هذا موقع «{p}»، تجده تحت."]],
+    dLocNone: ["plain", ["ليس عندي موقع مؤكّد لـ«{p}» بعد."]],
+    dNoMenu: ["plain", ["منيو «{p}» ليس في هكوله بعد، فلا أعرف أسعاره."]],
+    dNoPrice: ["plain", ["عند «{p}» {d}، لكن سعره غير مؤكّد بعد."]],
+    dPriceMenu: ["plain", ["منيو «{p}» فيه {k} صنفاً، مثلاً {d} ({c}). اسألني عن صنف بعينه!"]],
+    dPrice: ["plain", ["{d} في «{p}»: {c}", "سعر {d} عند «{p}»: {c}"]],
     cMemName: ["plain", ["تشرّفنا يا {n}! سأتذكّر اسمك.", "{n}؟ اسم جميل، لن أنساه.", "أهلاً يا {n}، حفظتُ اسمك."]],
     cMemForget: ["plain", ["حسناً، نسيتُ كل ما أخبرتني به.", "تمّ، صفحة جديدة بيننا."]],
     cMemWho: ["plain", ["اسمك {n}! لم أنسَ.", "أنت {n} طبعاً!"]],
@@ -246,6 +259,19 @@
     cFriendCalled: ["plain", ["Yes, {n}?", "You called? I'm here!", "Hi, {n}!"]],
     cHuh: ["plain", ["I didn't quite get that… want me to suggest a place to eat?", "Not sure what you mean. Looking for somewhere to eat?"]],
     cHuh2: ["plain", ["I didn't get that, but it sounded nice! Shall we play?", "Didn't quite catch that… play tag?"]],
+    dNew: ["plain", ["Newest on Hakolah: «{p}», more below.", "Just added: «{p}», and other new places below."]],
+    dWhich: ["plain", ["Which place do you mean? Type its name.", "Tell me the place's name and I'll check."]],
+    dHours: ["plain", ["«{p}»: {h}", "Hours for «{p}»: {h}"]],
+    dHoursNone: ["plain", ["We haven't confirmed «{p}»'s hours yet, so I won't guess."]],
+    dHoursNoneCall: ["plain", ["We haven't confirmed «{p}»'s hours yet, so I won't guess. Call them: {t}"]],
+    dPhone: ["plain", ["«{p}»'s number: {t}", "You can call «{p}» on {t}"]],
+    dPhoneNone: ["plain", ["I don't have a confirmed number for «{p}» yet."]],
+    dLoc: ["plain", ["«{p}» on the map is below, tap it.", "Here's where «{p}» is, below."]],
+    dLocNone: ["plain", ["I don't have a confirmed location for «{p}» yet."]],
+    dNoMenu: ["plain", ["«{p}»'s menu isn't on Hakolah yet, so I don't know its prices."]],
+    dNoPrice: ["plain", ["«{p}» has {d}, but its price isn't confirmed yet."]],
+    dPriceMenu: ["plain", ["«{p}»'s menu has {k} items, e.g. {d} ({c}). Ask me about a specific one!"]],
+    dPrice: ["plain", ["{d} at «{p}»: {c}", "{d} costs {c} at «{p}»."]],
     cMemName: ["plain", ["Nice to meet you, {n}! I'll remember your name.", "{n}? Lovely name, I won't forget it.", "Hi {n}, I've saved your name."]],
     cMemForget: ["plain", ["Okay, I've forgotten everything you told me.", "Done, a fresh start between us."]],
     cMemWho: ["plain", ["Your name is {n}! I didn't forget.", "You're {n}, of course!"]],
@@ -1048,6 +1074,7 @@
     setTimeout(function () { say(line(returning ? "playerBack" : "playerJoin", { n: cfg.name }), "pjoin", 1000); }, 900);
     setTimeout(function () { var o = pick(buddies.filter(function (x) { return x !== player; })); if (o && player) bsay(o, line("buddyHiPlayer", { n: cfg.name })); }, 2700);
     if (returning) setTimeout(function () { if (player) recall(); }, 5200);
+    loadWords();
     if (window.loadMenus) window.loadMenus().then(function () { index = null; }, function () { /* offline: search places without menus */ });  // dishes become searchable
   }
   function leaveGame() {
@@ -1223,6 +1250,11 @@
     whereEat: ["وين اكل", "وين اروح", "وين احصل", "وين القى", "وين الاقي", "اين اجد", "اقترح", "تنصحني", "دلني", "where to eat", "where can i", "recommend", "suggest"],
     play: ["نلعب", "العب", "لعبه", "play", "game", "tag"],
     joke: ["نكته", "ضحكني", "سولف", "joke", "funny"],
+    dHours: ["متى يفتح", "متى يسكر", "متى يغلق", "ساعات العمل", "ساعات", "يفتح", "يسكر", "يغلق", "مفتوح", "فاتح", "open", "opens", "close", "closes", "hours", "opening hours"],
+    dPhone: ["رقم", "رقمهم", "تلفون", "تليفون", "هاتف", "اتصل", "phone", "number", "call", "contact"],
+    dPrice: ["بكم", "كم سعر", "سعر", "اسعار", "price", "prices", "cost", "how much"],
+    dLoc: ["وين موقع", "موقع", "لوكيشن", "عنوان", "خريطه", "location", "address", "map", "directions", "where is"],
+    dNew: ["شنو الجديد", "اخر الاماكن", "اماكن جديده", "جديد", "الجديد", "new places", "whats new", "what s new", "newest", "latest"],
     yes: ["اي", "نعم", "ايه", "اكيد", "يب", "طيب", "اوكي", "yes", "yeah", "yep", "sure", "ok", "okay"],
     no: ["لا", "لاء", "مب", "ما ابي", "no", "nope", "nah"]
   };
@@ -1248,6 +1280,24 @@
   var LOVE = ["احب", "حب", "يعجبني", "اعشق", "اموت", "مفضل", "مفضله", "love", "like", "favourite", "favorite"].map(norm);
   var HATE = ["ما احب", "مااحب", "لا احب", "ما يعجبني", "اكره", "مب حلو", "hate", "dont like", "do not like", "not a fan"].map(norm);
   [INTENTS, FOODS, CALLS, KINDS].forEach(function (d) { for (var k in d) d[k] = d[k].map(norm); });
+  var wordsSrc = (document.currentScript || {}).src || "", wordsP = null;
+  function loadWords() {
+    if (wordsP || !wordsSrc) return wordsP;
+    wordsP = new Promise(function (res) {
+      var sc = document.createElement("script"); sc.src = wordsSrc.replace("dilmo.js", "dilmo-words.js");
+      sc.onload = function () {
+        var D = window.DILMO_WORDS, k; if (!D) return res();
+        for (k in D.more) INTENTS[k] = (INTENTS[k] || []).concat(D.more[k].map(norm));
+        for (k in D.topics) INTENTS[k] = D.topics[k].map(norm);
+        for (k in D.foods) FOODS[k] = D.foods[k].map(norm);
+        Object.assign(FOOD_NAME, EN ? D.foodNames.en : D.foodNames.ar); Object.assign(LINES, EN ? D.en : D.ar);
+        res();
+      };
+      sc.onerror = function () { wordsP = null; res(); };
+      document.head.appendChild(sc);
+    });
+    return wordsP;
+  }
   function lev(a, b, max) {  // edit distance, gives up once it's past max
     if (Math.abs(a.length - b.length) > max) return max + 1;
     var row = [], i, j;
@@ -1284,13 +1334,14 @@
   function understand(msg) {
     var text = norm(msg), words = text.split(" "), best = null, top = 0, k;
     for (k in INTENTS) { var sc = hits(text, words, INTENTS[k]); if (sc > top) { top = sc; best = k; } }
+    if (!best && INTENTS.t_laugh && /(هه|ههه|(ha){2,}|lo+l|😂|🤣)/i.test(msg)) best = "t_laugh";
     var food = null, call = null, kind = null;
     for (k in FOODS) if (hits(text, words, FOODS[k])) { food = k; break; }
     for (k in CALLS) if (hits(text, words, CALLS[k])) { call = k; break; }
     for (k in KINDS) if (hits(text, words, KINDS[k])) { kind = k; break; }
     var hate = anyHit(text, words, HATE), love = !hate && anyHit(text, words, LOVE);
     var nm = /(?:اسمي|ناديني|my name is|call me)\s+([^\s،,.!؟?]{1,12})/i.exec(msg);
-    return { text: text, words: words, intent: best, food: food, call: call, kind: kind, love: love, hate: hate, name: nm && nm[1], q: /[؟?]\s*$/.test(msg) };
+    return { raw: msg, text: text, words: words, intent: best, food: food, call: call, kind: kind, love: love, hate: hate, name: nm && nm[1], q: /[؟?]\s*$/.test(msg) };
   }
 
   // ---- memory: kept in this browser only (hk-dilmo), "انساني" / "forget me" clears it ----
@@ -1361,8 +1412,9 @@
     resultsEl.textContent = "";
     list.forEach(function (r) {
       var a = document.createElement("a"), b = document.createElement("b"), s = document.createElement("span"), sec = SITE_DATA[r.e.sec];
-      a.href = itemUrl(r); b.textContent = itemName(r.e.it);
-      s.textContent = (EN ? sec.title_en : sec.title) + (r.dish ? " · " + (EN ? r.dish.name_en || r.dish.name : r.dish.name) + (r.dish.price ? " ⁦" + r.dish.price + "⁩" : "") : "");
+      a.href = r.href || itemUrl(r); b.textContent = itemName(r.e.it);
+      if (r.href) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
+      s.textContent = r.sub ? r.sub : (EN ? sec.title_en : sec.title) + (r.dish ? " · " + (EN ? r.dish.name_en || r.dish.name : r.dish.name) + (r.dish.price ? " ⁦" + r.dish.price + "⁩" : "") : "");
       a.appendChild(b); a.appendChild(s); resultsEl.appendChild(a);
     });
     resultsEl.hidden = !list.length;
@@ -1390,9 +1442,96 @@
     return line(list.length > 1 ? "cFoundMany" : "cFound", { p: itemName(top.e.it) });
   }
 
+  // words that name a kind of place, not a particular one ("restaurant" in "Lebanese Restaurant")
+  var GENERIC = ["مطعم", "مطاعم", "كافيه", "كافي", "مقهي", "مخبز", "فرع", "محل", "restaurant", "cafe", "coffee", "bakery", "branch", "shop", "the"].map(norm);
+  // the places whose name the message mentions (several branches can tie)
+  function placesNamed(u) {
+    if (!index) buildIndex();
+    var qs = terms(u).filter(function (alts) { return !alts.some(function (w) { return GENERIC.indexOf(w) >= 0; }); }), best = 0, out = [];
+    if (!qs.length) return [];
+    index.forEach(function (e) {
+      var c = qs.filter(function (alts) { return inWords(e.title, alts); }).length;
+      if (c > best) { best = c; out = [e]; } else if (c && c === best) out.push(e);
+    });
+    if (!out.length) { out = search(qs, null).map(function (r) { return r.e; }); out.qs = []; return out; }
+    out.qs = qs.filter(function (alts) { return !inWords(out[0].title, alts); });  // what's left, e.g. the dish
+    return out;
+  }
+  function placeAnswer(intent, u) {
+    if (intent === "dNew") {
+      if (!index) buildIndex();
+      var fresh = index.filter(function (e) { return e.it.addedAt; }).sort(function (a, b) { return b.it.addedAt - a.it.addedAt; }).slice(0, 3);
+      if (!fresh.length) return null;
+      showResults(fresh.map(function (e) { return { e: e }; }));
+      return line("dNew", { p: itemName(fresh[0].it) });
+    }
+    var ps = placesNamed(u), e = ps[0];
+    if (!e) {
+      if (intent === "dPrice") return findPlaces(u, false);  // "how much is machboos": search every menu
+      asked = { k: "which", i: intent, until: performance.now() + 20000 }; return line("dWhich");
+    }
+    var it = e.it, L = it.links || {}, p = itemName(it);
+    if (intent === "dHours") {
+      showResults(ps.slice(0, 3).map(function (x) { return { e: x, sub: (EN ? x.it.hours_en || x.it.hours : x.it.hours) || T("الساعات غير مؤكدة بعد", "Hours not confirmed yet") }; }));
+      var h = EN ? it.hours_en || it.hours : it.hours;
+      return h ? line("dHours", { p: p, h: h }) : line(L.phone ? "dHoursNoneCall" : "dHoursNone", { p: p, t: L.phone || "" });
+    }
+    if (intent === "dPhone") {
+      showResults(ps.slice(0, 3).filter(function (x) { return (x.it.links || {}).phone; }).map(function (x) { return { e: x, href: "tel:+973" + x.it.links.phone.replace(/\D/g, "").replace(/^973/, ""), sub: "\u2066+973 " + x.it.links.phone + "\u2069" }; }));
+      return L.phone ? line("dPhone", { p: p, t: "\u2066" + L.phone + "\u2069" }) : line("dPhoneNone", { p: p });
+    }
+    if (intent === "dLoc") {
+      showResults(ps.slice(0, 3).filter(function (x) { return (x.it.links || {}).maps; }).map(function (x) { return { e: x, href: x.it.links.maps, sub: T("افتح على الخريطة", "Open in maps") }; }));
+      return L.maps ? line("dLoc", { p: p }) : line("dLocNone", { p: p });
+    }
+    // dPrice: the dish you named on that place's menu, or a taste of the menu
+    var menu = e.menu, dishTerms = ps.qs, m = null, mc = 0;
+    if (!menu.length) return line("dNoMenu", { p: p });
+    menu.forEach(function (x) { var c = dishTerms.filter(function (alts) { return inWords(x.w, alts); }).length + (x.m.price ? .5 : 0); if (c > mc && (c >= 1 || !dishTerms.length)) { mc = c; m = x.m; } });
+    if (!m || !dishTerms.length) {
+      var priced = menu.filter(function (x) { return x.m.price; });
+      if (!priced.length) return line("dNoMenu", { p: p });
+      m = pick(priced).m;
+      showResults([{ e: e }]);
+      return line("dPriceMenu", { p: p, k: num(menu.length), d: dishName(m), c: lowPrice(m.price) });
+    }
+    if (!m.price) return line("dNoPrice", { p: p, d: dishName(m) });
+    showResults([{ e: e, dish: m }]);
+    return line("dPrice", { p: p, d: dishName(m), c: lowPrice(m.price) });
+  }
+  function dishName(m) { var d = (EN ? m.name_en || m.name : m.name).split(/[(:]/)[0].trim(); return d.length > 30 ? d.slice(0, 28) + "…" : d; }
+  function lowPrice(pr) { var a = pr.split("/"), c = a[0].trim() + (/BD/.test(a[0]) ? "" : " BD"); return (a.length > 1 ? T("من ", "from ") : "") + "\u2066" + c + "\u2069"; }
+  // sums typed as text: "15 × 4", "كم ١٢ زائد ٧", "what is 9 divided by 3"
+  function maths(msg) {
+    var t = msg.replace(/[٠-٩]/g, function (d) { return "٠١٢٣٤٥٦٧٨٩".indexOf(d); }).replace(/,/g, "")
+      .replace(/زائد|plus|\+/gi, " + ").replace(/ناقص|minus|−/gi, " - ").replace(/ضرب|في|times|×|\*|\bx\b/gi, " * ").replace(/قسمه|قسمة|على|divided by|÷|\//gi, " / ");
+    var m = /(-?\d+(?:\.\d+)?)\s*([-+*/])\s*(-?\d+(?:\.\d+)?)/.exec(t);
+    if (!m) return null;
+    var a = +m[1], b = +m[3], o = m[2], r = o === "+" ? a + b : o === "-" ? a - b : o === "*" ? a * b : b === 0 ? null : a / b;
+    if (r === null) return line("c_mathBad");
+    r = Math.round(r * 1000) / 1000;
+    return line("c_math", { q: "\u2066" + a + " " + (o === "*" ? "×" : o === "/" ? "÷" : o) + " " + b + "\u2069", v: num(r) });
+  }
+  function computed(intent) {
+    var now = new Date(), tz = "Asia/Bahrain", loc = EN ? "en-GB" : "ar-BH";
+    if (intent === "c_time") return line("c_time", { v: new Intl.DateTimeFormat(loc, { timeZone: tz, hour: "numeric", minute: "2-digit", hour12: true }).format(now) });
+    if (intent === "c_date") return line("c_date", { v: new Intl.DateTimeFormat(loc, { timeZone: tz, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(now) });
+    if (intent === "c_weekend" || intent === "f_weekend") {
+      if (intent === "f_weekend" && LINES.f_weekend) return line("f_weekend");
+      var wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(now));
+      if (wd === 5 || wd === 6) return line("c_weekendNow");
+      var d = 5 - wd;  // Bahrain's weekend: Friday and Saturday
+      return line("c_weekendIn", { v: d === 1 ? T("يوم واحد", "1 day") : d === 2 ? T("يومان", "2 days") : T(num(d) + " أيام", d + " days") });
+    }
+    if (intent === "t_weather") {  // no live weather here: say so, and what the season is usually like
+      var mo = +new Intl.DateTimeFormat("en-US", { timeZone: tz, month: "numeric" }).format(now);
+      return line(mo >= 5 && mo <= 9 ? "t_weather_hot" : mo === 12 || mo <= 2 ? "t_weather_cool" : "t_weather_mild");
+    }
+    return null;
+  }
   var asked = null;  // his last question ("suggest" a place, "play", "how" are you), valid for a little while
   function reply(u, n) {
-    var pend = asked && performance.now() < asked.until ? asked.k : null, key = null, v = { n: n };
+    var pend = asked && performance.now() < asked.until ? asked.k : null, key = null, v = { n: n }, asked0 = asked;
     asked = null;
     // things you tell him about yourself
     if (u.name) { remember("name", u.name); return line("cMemName", { n: u.name }); }
@@ -1415,6 +1554,16 @@
       me.dislikes = me.dislikes.filter(function (x) { return x !== u.food; }); saveStore();
       var found = findPlaces(u, false);
       return line("cMemLike", { f: FOOD_NAME[u.food] }) + (found ? " " + found : "");
+    }
+    var sum = maths(u.raw);
+    if (sum) return sum;
+    if (pend === "which" && !u.intent) { var again = placeAnswer(asked0.i, u); if (again) return again; }
+    if (/^d[A-Z]/.test(u.intent || "")) return placeAnswer(u.intent, u);
+    var cv = computed(u.intent);
+    if (cv) return cv;
+    if (/^[tf]_/.test(u.intent || "")) {
+      if ((u.food || u.kind) && /^t_/.test(u.intent)) { var near = findPlaces(u, false); if (near) return near; }
+      if (LINES[u.intent]) return line(u.intent, v);
     }
     if (u.intent === "sad" || u.intent === "happy") remember("mood", { m: u.intent, t: Date.now() });
     if (u.intent === "yes" || u.intent === "no") {
@@ -1478,6 +1627,10 @@
     var inp = document.getElementById("pp-msg"), msg = inp.value.trim().slice(0, 60);
     if (!player || !msg) return;
     inp.value = ""; stir(); bsay(player, msg);
+    var go = function () { answer(msg); };
+    if (loadWords()) wordsP.then(go); else go();
+  });
+  function answer(msg) {
     var u = understand(msg), n = myName();
     if (u.intent === "sing" && !song) { setTimeout(sing, 900); return; }
     var called = u.call && u.call !== "main" ? others().filter(function (b) { return b.f.id === u.call; })[0] : null;
@@ -1487,7 +1640,7 @@
     else if (!called) setTimeout(function () { say(line("cFriendCalled", { n: n }), "pchat", 300); }, 1300);
     var o = pick(others());
     if (!called && o && !mainAway && (u.intent === "hi" || u.intent === "praise") && Math.random() < .5) setTimeout(function () { if (player) bsay(o, line("buddyReply", { n: n })); }, 2900);
-  });
+  }
 
   // ---- world life: Bahrain time of day, a ball, a bench, bushes, hide-and-seek, stars, a photo ----
   var sky = document.getElementById("sky"), clock = document.getElementById("clock"), phase = "noon", isNight = false;
