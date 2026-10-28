@@ -119,6 +119,12 @@
     cFriendCalled: ["plain", ["نعم يا {n}؟", "ناديتني؟ أنا هنا!", "أهلاً يا {n}!"]],
     cHuh: ["plain", ["لم أفهم تماماً… هل تريد أن أقترح لك مكاناً تأكل فيه؟", "لم أفهم قصدك. هل تبحث عن مكان تأكل فيه؟"]],
     cHuh2: ["plain", ["لم أفهم، لكن كلامك لطيف! هل نلعب؟", "لم أفهم جيداً… هل نلعب المطاردة؟"]],
+    pName: ["plain", ["أنا {w}! صديقة دلمو، {a}.", "اسمي {w}، و{a}!"]],
+    pHow: ["plain", ["أنا {w} وبخير، شكراً يا {n}!", "بأفضل حال! وأنت؟"]],
+    pAge: ["plain", ["عمري؟ هذا سرّ بيني وبين دلمو!", "أصغر من دلمو بقليل، أظن!"]],
+    pHome: ["plain", ["أعيش هنا في ساحة دلمو، في هكوله.", "بيتي هذه الساحة مع أصدقائي."]],
+    pLikes: ["plain", ["أحبّ {f}، ولوني {c}!", "أكلتي المفضّلة {f}، هل تطعمني؟"]],
+    pFriends: ["plain", ["صديقي المقرّب دلمو، وأحبّ اللعب مع الجميع.", "كلنا أصدقاء هنا، وأنت منهم الآن!"]],
     dNew: ["plain", ["آخر ما أُضيف إلى هكوله: «{p}»، والبقية تحت.", "جديد هكوله: «{p}»، وتحت أماكن أخرى جديدة."]],
     dWhich: ["plain", ["عن أي مكان تسأل؟ اكتب اسمه.", "اكتب لي اسم المكان وسأخبرك."]],
     dHours: ["plain", ["«{p}»: {h}", "ساعات «{p}»: {h}"]],
@@ -259,6 +265,12 @@
     cFriendCalled: ["plain", ["Yes, {n}?", "You called? I'm here!", "Hi, {n}!"]],
     cHuh: ["plain", ["I didn't quite get that… want me to suggest a place to eat?", "Not sure what you mean. Looking for somewhere to eat?"]],
     cHuh2: ["plain", ["I didn't get that, but it sounded nice! Shall we play?", "Didn't quite catch that… play tag?"]],
+    pName: ["plain", ["I'm {w}! Dilmo's friend, {a}.", "My name is {w}, {a}!"]],
+    pHow: ["plain", ["I'm {w} and I'm fine, thanks {n}!", "Doing great! And you?"]],
+    pAge: ["plain", ["My age? That's a secret between me and Dilmo!", "A little younger than Dilmo, I think!"]],
+    pHome: ["plain", ["I live here in Dilmo's playground, on Hakolah.", "This playground is home, with my friends."]],
+    pLikes: ["plain", ["I love {f}, and my colour is {c}!", "My favourite food is {f}, will you feed me?"]],
+    pFriends: ["plain", ["My best friend is Dilmo, and I like playing with everyone.", "We're all friends here, and now you are too!"]],
     dNew: ["plain", ["Newest on Hakolah: «{p}», more below.", "Just added: «{p}», and other new places below."]],
     dWhich: ["plain", ["Which place do you mean? Type its name.", "Tell me the place's name and I'll check."]],
     dHours: ["plain", ["«{p}»: {h}", "Hours for «{p}»: {h}"]],
@@ -533,9 +545,10 @@
     var dx = px - pos.x, dy = py - pos.y, r = -(sp.spin.v + sp.tilt.v) * Math.PI / 180;
     return { x: dx * Math.cos(r) - dy * Math.sin(r), y: dx * Math.sin(r) + dy * Math.cos(r) };
   }
-  function dent(lx, ly, amt) {
+  function newRim() { var a = []; for (var q = 0; q < N; q++) a.push({ a: q / N * Math.PI * 2, x: 0, y: 0, vx: 0, vy: 0 }); return a; }
+  function dent(lx, ly, amt, P) {
     var a = Math.atan2(ly, lx);
-    pts.forEach(function (p) { var w = Math.exp(-Math.pow(adiff(p.a, a), 2) / .3); p.vx -= Math.cos(p.a) * amt * w; p.vy -= Math.sin(p.a) * amt * w; });
+    (P || pts).forEach(function (p) { var w = Math.exp(-Math.pow(adiff(p.a, a), 2) / .3); p.vx -= Math.cos(p.a) * amt * w; p.vy -= Math.sin(p.a) * amt * w; });
   }
   function softStep(t, dt) {
     var reachA = 0, reachAmt = 0;
@@ -544,7 +557,11 @@
       var d = Math.hypot(tp.x - pos.x, tp.y - pos.y), lim = foodDrag ? 140 : 80;
       if (d > R + 4 && d < R + lim) { var l = local(tp.x, tp.y); reachA = Math.atan2(l.y, l.x); reachAmt = (1 - (d - R) / lim) * (foodDrag ? 16 : 12); }
     }
-    pts.forEach(function (p) {
+    rim(pts, dt, cheek, reachA, reachAmt);
+  }
+  // each rim point springs toward where the cheek pull (or a reach toward food) wants it, then relaxes toward its neighbours
+  function rim(P, dt, cheek, reachA, reachAmt) {
+    P.forEach(function (p) {
       var tx = 0, ty = 0, w;
       if (cheek) { w = .3 + .7 * Math.exp(-Math.pow(adiff(p.a, cheek.a), 2) / .9); tx = cheek.px * w; ty = cheek.py * w; }
       else if (reachAmt) { w = Math.exp(-Math.pow(adiff(p.a, reachA), 2) / .2); tx = Math.cos(p.a) * reachAmt * w; ty = Math.sin(p.a) * reachAmt * w; }
@@ -552,14 +569,15 @@
       p.vy = p.vy * Math.pow(.8, dt) + (ty - p.y) * .22 * dt; p.y += p.vy * dt;
     });
     // relax each rim point toward its neighbours so no corner ever forms
-    var ox = pts.map(function (p) { return p.x; }), oy = pts.map(function (p) { return p.y; });
-    pts.forEach(function (p, i) {
+    var ox = P.map(function (p) { return p.x; }), oy = P.map(function (p) { return p.y; });
+    P.forEach(function (p, i) {
       var a = (i - 1 + N) % N, b = (i + 1) % N;
       p.x = .5 * ox[i] + .25 * (ox[a] + ox[b]); p.y = .5 * oy[i] + .25 * (oy[a] + oy[b]);
     });
   }
-  function pathD() {
-    var P = pts.map(function (p) { return [Math.cos(p.a) * R + p.x, Math.sin(p.a) * R + p.y]; });
+  function pathD(rimPts, rr) {
+    rr = rr || R;
+    var P = (rimPts || pts).map(function (p) { return [Math.cos(p.a) * rr + p.x, Math.sin(p.a) * rr + p.y]; });
     var s = "M" + P[0][0].toFixed(2) + " " + P[0][1].toFixed(2);
     for (var i = 0; i < N; i++) {
       var p0 = P[(i - 1 + N) % N], p1 = P[i], p2 = P[(i + 1) % N], p3 = P[(i + 2) % N];
@@ -583,7 +601,7 @@
     var t = performance.now();
     if (key) { if (lastSay[key] && t - lastSay[key] < (gap || 4000)) return; lastSay[key] = t; }
     if (mainAway) { var fr = others(); if (fr.length) bsay(pick(fr), text); return; }  // he left: a friend speaks instead
-    bub.textContent = text; bub.hidden = false; bub.dataset.until = t + 1900; bub._since = t;
+    bub.textContent = text; bub.hidden = false; bub.dataset.until = t + clamp(text.length * 65, 1900, 7000); bub._since = t;
     if (text !== "Zzz…") {
       var sy = syllables(text), q = /[؟?]\s*$/.test(text);
       speech = { t0: t, syl: sy }; talkUntil = t + sy.length * SYL + 150; babble(sy, q);
@@ -669,6 +687,18 @@
       rubTimes = rubTimes.filter(function (t) { return now - t < 900; });
       if (rubTimes.length >= 5) { mood.tickle = 1; mood.joy = Math.min(1, mood.joy + .04); befriend(.002); say(line("tickle"), "tickle", 3000); }
     }
+    buddies.forEach(function (b) {
+      if (b.drag || Math.hypot(p.x - b.x, p.y - b.y) > b.f.r) return;
+      var s2 = Math.sign(dx);
+      if (s2 && s2 !== b.rubSign) { b.rubSign = s2; b.rubs = (b.rubs || []).filter(function (x) { return now - x < 900; }); b.rubs.push(now); }
+      if ((b.rubs || []).length >= 5) {
+        b.rubs = []; b.joy = 1; b.tickleUntil = now + 900;
+        if (!b.f.player && now - (b.tickAt || 0) > 3000) { b.tickAt = now; bsay(b, line("tickle")); if (!b.f.player) bfAdd(b, .01); }
+      } else if (p.y < b.y - b.f.r * .3 && speed > .5 && speed < 9 && ++b.petN > 40) {  // slow strokes on the top of the head
+        b.petN = 0; b.joy = Math.min(1, b.joy + .3);
+        if (!b.f.player && now - (b.petAt || 0) > 6000) { b.petAt = now; bsay(b, line("pet")); bfAdd(b, .01); }
+      }
+    });
   }, { passive: true });
   orb.addEventListener("pointerdown", function (e) {
     var p = toStage(e); stir(); stick = null;
@@ -756,8 +786,19 @@
   var FRIENDS = [
     { id: "shams", name: T("شمس", "Shams"), c1: "#f6cf6a", c2: "#e0a82e", c3: "#a8740f", r: 30, pitch: 620, energy: 1.25, shy: false, harm: 2, fav: "karak" },
     { id: "mawja", name: T("موجة", "Mawja"), c1: "#8cc4ec", c2: "#4a90c8", c3: "#24547d", r: 26, pitch: 360, energy: .7, shy: true, harm: -3, fav: "samosa" },
-    { id: "jamra", name: T("جمرة", "Jamra"), c1: "#f2a58f", c2: "#e07a5f", c3: "#9c4630", r: 28, pitch: 500, energy: 1, shy: false, harm: 4, fav: "burger" }
+    { id: "jamra", name: T("جمرة", "Jamra"), c1: "#f2a58f", c2: "#e07a5f", c3: "#9c4630", r: 28, pitch: 500, energy: 1, shy: false, harm: 4, fav: "burger" },
+    // only on wide screens: a phone stage has room for three friends at most
+    { id: "lulua", name: T("لؤلؤة", "Lulua"), c1: "#fbe3ec", c2: "#eaa6c0", c3: "#b0607f", r: 25, pitch: 700, energy: 1.1, shy: false, harm: 7, fav: "sweets", wide: true },
+    { id: "ramla", name: T("رملة", "Ramla"), c1: "#f6e6c2", c2: "#d9b46a", c3: "#9a7634", r: 33, pitch: 300, energy: .6, shy: false, harm: -5, fav: "machboos", wide: true },
+    { id: "najma", name: T("نجمة", "Najma"), c1: "#c4c8f7", c2: "#6b73d9", c3: "#3a3f91", r: 24, pitch: 760, energy: 1.4, shy: false, harm: 9, fav: "juice", wide: true },
+    { id: "ghaima", name: T("غيمة", "Ghaima"), c1: "#f4f6f9", c2: "#c9d1db", c3: "#8592a3", r: 29, pitch: 420, energy: .8, shy: true, harm: -1, fav: "pizza", wide: true }
   ];
+  var ABOUT = EN ? { shams: ["full of energy", "gold"], mawja: ["a little shy", "blue"], jamra: ["always up for a chase", "coral"], lulua: ["sweet and chatty", "pearl pink"],
+      ramla: ["big, slow and calm", "sand"], najma: ["the fastest of us all", "night blue"], ghaima: ["quiet, I drift around", "cloud grey"] }
+    : { shams: ["نشيطة جداً", "ذهبي"], mawja: ["خجولة قليلاً", "أزرق"], jamra: ["أحبّ المطاردة دائماً", "مرجاني"], lulua: ["لطيفة وأحبّ الكلام", "وردي لؤلؤي"],
+      ramla: ["كبيرة وهادئة وبطيئة", "رملي"], najma: ["الأسرع بيننا", "أزرق ليلي"], ghaima: ["هادئة، أتنقّل بخفّة", "رمادي غيمي"] };
+  var WIDE = false;  // decided once the stage is measured
+  function friendHere(f, i) { return f.wide ? WIDE : i < 2 || thirdArrived; }
   var DIALOGS = EN ? [
     ["Tried a new restaurant today?", "Not yet. Any ideas?"], ["Lovely weather today!", "Yes, perfect for a walk."],
     ["I'm a little hungry.", "Me too! What shall we eat?"], ["Who's moving the pointer?", "That's our visitor friend."],
@@ -782,7 +823,7 @@
     var eye = function (sx) { return '<ellipse class="pe" cx="' + sx * r * .31 + '" cy="' + -r * .08 + '" rx="' + r * .13 + '" ry="' + r * .19 + '"/>'; };
     el.innerHTML = '<defs><radialGradient id="' + gid + '" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="' + f.c1 + '"/><stop offset=".55" stop-color="' + f.c2 + '"/><stop offset="1" stop-color="' + f.c3 + '"/></radialGradient>' +
       '</defs>' +
-      '<g class="bb"><circle r="' + r + '" fill="url(#' + gid + ')" filter="url(#pg-sf)"/><circle class="grain" r="' + (r - 1) + '" filter="url(#pg-gn)"/>' +
+      '<g class="bb"><path class="bp" fill="url(#' + gid + ')" filter="url(#pg-sf)"/><path class="grain bg" transform="scale(.97)" filter="url(#pg-gn)"/>' +
       '<g class="bf">' + eye(-1) + eye(1) + '<ellipse class="pm" cy="' + r * .37 + '" rx="' + r * .09 + '" ry="' + r * .12 + '"/></g></g>';
     var sh = document.createElement("div"); sh.className = "orb-shadow"; sh.style.width = r * 1.6 + "px";
     var bb = document.createElement("p"); bb.className = "orb-say"; bb.hidden = true;
@@ -794,40 +835,62 @@
     if (f.player) { el.setAttribute("aria-label", T("شخصيتك ", "Your character ") + f.name); el.style.zIndex = 4; }  // the visitor walks in front of the bushes
     var b = { f: f, el: el, sh: sh, bub: bb, body: el.querySelector(".bb"), face: el.querySelector(".bf"), eyes: el.querySelectorAll(".pe"), mouth: el.querySelector(".pm"),
       x: x, y: ground + R - r - (fromEdge ? 140 : 0), vx: fromEdge ? -5 : 0, vy: 0, sx: 1, sy: 1, svx: 0, svy: 0, tilt: 0, lx: 0, ly: 0, joy: .2,
-      next: performance.now() + 1500 + Math.random() * 2500, blink: -1e4, nextBlink: 0, sayUntil: 0, speech: null, mode: "wander", tx: null, other: null, drag: null, size: S, lastBump: 0, tag: tag, home: x };
+      next: performance.now() + 1500 + Math.random() * 2500, blink: -1e4, nextBlink: 0, sayUntil: 0, speech: null, mode: "wander", tx: null, other: null, drag: null, size: S, lastBump: 0, tag: tag, home: x,
+      petN: 0, pts: newRim(), bp: el.querySelector(".bp"), bg: el.querySelector(".bg"), cheek: null, spin: 0, spinA: 0, flat: false };
+    var sc = r / R;  // everything a pull or poke does to him, scaled to this body's size
     updateTag(b);
     el.addEventListener("pointerdown", function (e) {
-      var p = toStage(e); stir(); e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId);
-      b.drag = { ox: p.x - b.x, oy: p.y - b.y, sx: p.x, sy: p.y, moved: false, vx: 0, vy: 0 };
+      var p = toStage(e), l = blocal(b, p.x, p.y); stir(); e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId);
+      b.drag = { ox: p.x - b.x, oy: p.y - b.y, sx: p.x, sy: p.y, moved: false, vx: 0, vy: 0, lx: l.x, ly: l.y };
+      // grabbed near the edge: that's a cheek to pull, like Dilmo's
+      b.cheek = Math.hypot(l.x, l.y) > r * .6 ? { a: Math.atan2(l.y, l.x), gx: l.x, gy: l.y, px: 0, py: 0, side: Math.abs(l.x) > Math.abs(l.y) } : null;
     });
     el.addEventListener("pointermove", function (e) {
       var d = b.drag; if (!d) return;
-      var p = toStage(e);
+      var p = toStage(e), now = performance.now();
+      if (b.cheek) {
+        var l = blocal(b, p.x, p.y), cx = l.x - b.cheek.gx, cy = l.y - b.cheek.gy, len = Math.hypot(cx, cy) || 1;
+        if (len > 70) { b.cheek = null; d.moved = true; d.ox = p.x - b.x; d.oy = p.y - b.y; if (!f.player) bsay(b, line("free")); }
+        else {
+          var k = 34 * sc * Math.tanh(len / (45 * sc)) / len; b.cheek.px = cx * k; b.cheek.py = cy * k; sfx("squeak", Math.min(1, len / (60 * sc)));
+          if (len > 14 * sc && !f.player && now - (b.pinchAt || 0) > 3500) { b.pinchAt = now; bsay(b, line(b.cheek.side ? "cheek" : "stretch")); }
+        }
+        return;
+      }
       if (!d.moved && Math.hypot(p.x - d.sx, p.y - d.sy) > 6) { d.moved = true; bsay(b, line("buddyLift")); }
       if (d.moved) { var nx = clamp(p.x - d.ox, r, W - r), ny = clamp(p.y - d.oy, r, floorY(b)); d.vx = nx - b.x; d.vy = ny - b.y; b.x = nx; b.y = ny; }
     });
     function up() {
       var d = b.drag; if (!d) return; b.drag = null;
+      if (b.cheek) { var pulled = Math.hypot(b.cheek.px, b.cheek.py); b.cheek = null; if (pulled > 8 * sc) { b.joy = 1; sfx("snap"); return; } }
       if (d.moved) { b.vx = clamp(d.vx, -40, 40); b.vy = clamp(d.vy, -40, 40); if (Math.hypot(b.vx, b.vy) > 18) bsay(b, line("buddyThrow")); return; }
       if (hs && hs.b === b) { endHideSeek(true); return; }
       b.awakeUntil = performance.now() + 20000;
       if (b.asleep) { b.asleep = false; b.vy = -6; bsay(b, line("buddyWoke")); return; }
-      b.vy = -7 * f.energy; b.joy = 1; b.svy -= .2; sfx("pop");
+      b.vy = -7 * f.energy; b.joy = 1; b.svy -= .2; sfx("pop"); dent(d.lx, d.ly, 10 * sc, b.pts);
+      if (f.player) return;  // your own character just squishes, it doesn't talk back at you
       bsay(b, line(f.shy ? "buddyShyPoke" : "buddyPoke"));
       if (f.shy) { b.mode = "hide"; b.tx = clamp(pos.x + (b.x < pos.x ? 1 : -1) * (R + r), r, W - r); b.next = performance.now() + 2500; }
     }
     el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+    el.addEventListener("dblclick", function () { b.spin += 360; b.joy = 1; b.vy = -9 * f.energy; if (!f.player) bsay(b, line("spin")); });
+    b.bp.setAttribute("d", pathD(b.pts, r)); b.bg.setAttribute("d", pathD(b.pts, r));
     buddies.push(b); return b;
+  }
+  function blocal(b, px, py) {  // a point in this body's own (tilted, spinning) frame
+    var dx = px - b.x, dy = py - b.y, a = -(b.tilt + b.spinA) * Math.PI / 180;
+    return { x: dx * Math.cos(a) - dy * Math.sin(a), y: dx * Math.sin(a) + dy * Math.cos(a) };
   }
   function bsay(b, text) {
     var t = performance.now(), sy = syllables(text);
-    b.bub.textContent = text; b.bub.hidden = false; b.sayUntil = t + 2000; b.bub._since = t; b.speech = { t0: t, syl: sy };
+    b.bub.textContent = text; b.bub.hidden = false; b.sayUntil = t + clamp(text.length * 65, 2000, 7000); b.bub._since = t; b.speech = { t0: t, syl: sy };
     sy.forEach(function (s, i) { var f = b.f.pitch * (s.v === "ee" ? 1.15 : s.v === "oo" ? .88 : 1); tone(f, f * .94, .08, "sine", .05, i * SYL / 1000); });
   }
   function spawnFriends() {
-    var cast = store.cast || {}, xs = [W * .2, W * .82, W * .65];
+    var cast = store.cast || {}, xs = [.2, .82, .65, .36, .93, .08, .55];
+    WIDE = stage.clientWidth >= 700;
     if (store.friend >= .5) thirdArrived = true;
-    FRIENDS.forEach(function (f, i) { if ((i < 2 || thirdArrived) && cast[f.id] !== false) makeBuddy(f, xs[i], false); });
+    FRIENDS.forEach(function (f, i) { if (friendHere(f, i) && cast[f.id] !== false) makeBuddy(f, W * xs[i], false); });
     if (cast.main === false) setMain(false);
     renderCast();
     if (store.player && store.player.name) joinAs(store.player, true);
@@ -900,7 +963,7 @@
       b.x += b.vx * dt; b.y += b.vy * dt; if (!me2) b.vx *= Math.pow(.99, dt);
       if (b.y > fy) {  // the visitor's character lands dead, no bounce; friends stay bouncy
         var hit = b.vy; b.y = fy; b.vy = hit > 2.5 && !me2 ? -hit * .45 : 0; if (!me2) b.vx *= .8;
-        if (hit > 2.5) { b.svy -= Math.min(hit, 18) * .012; b.svx += Math.min(hit, 18) * .009; }
+        if (hit > 2.5) { b.svy -= Math.min(hit, 18) * .012; b.svx += Math.min(hit, 18) * .009; dent(0, r, Math.min(hit, 20) * .5 * r / R, b.pts); }
         if (me2 && hit > 9) dust(b.x, fy + r);
       }
       if (b.x < r || b.x > W - r) { b.x = clamp(b.x, r, W - r); b.vx = me2 ? 0 : -b.vx * .6; }
@@ -914,6 +977,8 @@
     var ldx = tg.x - b.x, ldy = tg.y - b.y, ld = Math.hypot(ldx, ldy) || 1, k = Math.min(1, ld / 200);
     b.lx += (ldx / ld * k - b.lx) * .15 * dt; b.ly += (ldy / ld * k - b.ly) * .15 * dt;
     if (t > b.nextBlink) { b.blink = t; b.nextBlink = t + 2000 + Math.random() * 4500; }
+    b.spinA += (b.spin - b.spinA) * .08 * dt;
+    rim(b.pts, dt, b.cheek, 0, 0);
   }
   function bumped(A, B, s, t) {
     if (t - lastBump < 500) return;
@@ -977,8 +1042,11 @@
   }
   function drawBuddy(b, t) {
     var r = b.f.r, S = b.size, i;
-    b.el.style.transform = "translate(" + (b.x - S / 2).toFixed(1) + "px," + (b.y - S / 2).toFixed(1) + "px)";
-    b.body.setAttribute("transform", "translate(0 " + r + ") rotate(" + b.tilt.toFixed(2) + ") scale(" + clamp(b.sx, .8, 1.25).toFixed(3) + " " + clamp(b.sy, .75, 1.22).toFixed(3) + ") translate(0 " + -r + ")");
+    var jit = t < (b.tickleUntil || 0) && !reduce ? (Math.random() - .5) * 3 : 0;
+    b.el.style.transform = "translate(" + (b.x - S / 2 + jit).toFixed(1) + "px," + (b.y - S / 2).toFixed(1) + "px)";
+    var mx = 0; for (i = 0; i < b.pts.length; i++) mx = Math.max(mx, Math.abs(b.pts[i].x), Math.abs(b.pts[i].y));
+    if (mx > .05 || !b.flat) { var dd = pathD(b.pts, r); b.bp.setAttribute("d", dd); b.bg.setAttribute("d", dd); b.flat = mx <= .05; }
+    b.body.setAttribute("transform", "rotate(" + b.spinA.toFixed(1) + ") translate(0 " + r + ") rotate(" + b.tilt.toFixed(2) + ") scale(" + clamp(b.sx, .8, 1.25).toFixed(3) + " " + clamp(b.sy, .75, 1.22).toFixed(3) + ") translate(0 " + -r + ")");
     b.face.setAttribute("transform", "translate(" + (b.lx * r * .15).toFixed(2) + " " + (b.ly * r * .1).toFixed(2) + ")");
     var bl = t - b.blink < 240 ? Math.sin(Math.PI * (t - b.blink) / 240) : 0;
     var erx = r * .13, ery = Math.max(r * .19 * (1 - .34 * bl) * (1 + .12 * b.joy) * (song ? .8 : 1), erx * (bl ? .95 : 1.08));
@@ -1186,7 +1254,7 @@
     setTimeout(function () { bsay(b, line("arrive2")); }, 700);
   }
   function castItems() {
-    return ["main"].concat(FRIENDS.filter(function (f, i) { return i < 2 || thirdArrived; }).map(function (f) { return f.id; }));
+    return ["main"].concat(FRIENDS.filter(friendHere).map(function (f) { return f.id; }));
   }
   function toggleCast(key, on) {
     store.cast = store.cast || {}; store.cast[key] = on; saveStore();
@@ -1238,7 +1306,7 @@
     bye: ["مع السلامه", "باي", "وداعا", "اشوفك", "فمان الله", "الى اللقاء", "bye", "goodbye", "see you", "cya"],
     thanks: ["شكرا", "مشكور", "يعطيك العافيه", "تسلم", "thanks", "thank you", "thx", "ty"],
     how: ["كيفك", "كيف حالك", "شلونك", "شخبارك", "شحالك", "علومك", "اخبارك", "how are you", "how r u", "hru", "how is it going"],
-    name: ["اسمك", "شنو اسمك", "ما اسمك", "من انت", "منو انت", "your name", "who are you"],
+    name: ["اسمك", "اسمج", "شنو اسمك", "شنو اسمج", "ما اسمك", "من انت", "من انتي", "منو انت", "منو انتي", "your name", "who are you", "who r u"],
     age: ["عمرك", "كم عمرك", "how old"],
     home: ["وين ساكن", "اين تعيش", "وين بيتك", "من وين", "where do you live", "where are you from"],
     praise: ["حلو", "جميل", "كيوت", "ظريف", "احبك", "احسن", "رهيب", "لطيف", "يجنن", "cute", "nice", "love you", "cool", "awesome", "sweet"],
@@ -1269,7 +1337,8 @@
       pastry: "pastries", breakfast: "breakfast", grill: "grills", fish: "seafood", chicken: "chicken", juice: "juice", sandwich: "sandwiches" }
     : { karak: "الكرك", samosa: "السمبوسة", burger: "البرجر", shawarma: "الشاورما", machboos: "المجبوس", coffee: "القهوة", tea: "الشاي", pizza: "البيتزا", sweets: "الحلويات",
       pastry: "المعجنات", breakfast: "الفطور", grill: "المشويات", fish: "المأكولات البحرية", chicken: "الدجاج", juice: "العصائر", sandwich: "السندويشات" };
-  var CALLS = { main: ["دلمو", "dilmo"], shams: ["شمس", "shams"], mawja: ["موجه", "mawja"], jamra: ["جمره", "jamra"] };
+  var CALLS = { main: ["دلمو", "dilmo"], shams: ["شمس", "shams"], mawja: ["موجه", "mawja"], jamra: ["جمره", "jamra"], lulua: ["لؤلؤه", "لولوه", "لولو", "lulua", "lulu"],
+    ramla: ["رمله", "ramla"], najma: ["نجمه", "najma"], ghaima: ["غيمه", "ghaima"] };
   // words that point to a section of the site rather than to a place
   var KINDS = { restaurants: ["مطعم", "مطاعم", "اكل", "غدا", "عشا", "restaurant", "restaurants", "food", "eat", "lunch", "dinner"],
     cafes: ["كافيه", "كافي", "مقهي", "قهوه", "cafe", "cafes", "coffee"], bakeries: ["مخبز", "مخابز", "خبز", "bakery", "bakeries", "bread"],
@@ -1616,6 +1685,19 @@
     else if (me.likes.length) { key = "cMemLikeAgain"; v.f = FOOD_NAME[pick(me.likes)]; }
     if (key) say(line(key, v), "recall", 1000);
   }
+  // a friend answering questions about itself, as itself (not as Dilmo)
+  function persona(b, u, n) {
+    var f = b.f, a = ABOUT[f.id] || ["", ""], v = { w: f.name, a: a[0], c: a[1], f: FOOD_NAME[f.fav] || "", n: n };
+    switch (u.intent) {
+      case "name": case "t_robot": return line("pName", v);
+      case "how": return line("pHow", v);
+      case "age": return line("pAge", v);
+      case "home": return line("pHome", v);
+      case "t_dilmoLikes": case "t_colors": return line("pLikes", v);
+      case "t_friends": return line("pFriends", v);
+    }
+    return null;
+  }
   function startPlayerTag() {
     var o = pick(others().filter(function (b) { return !b.drag && !b.asleep; }));
     if (!o || !player) return;
@@ -1634,10 +1716,10 @@
     var u = understand(msg), n = myName();
     if (u.intent === "sing" && !song) { setTimeout(sing, 900); return; }
     var called = u.call && u.call !== "main" ? others().filter(function (b) { return b.f.id === u.call; })[0] : null;
-    var text = reply(u, n);
-    if (called) setTimeout(function () { if (player) bsay(called, line("cFriendCalled", { n: n })); }, 900);
-    if (text) setTimeout(function () { say(text, "pchat", 300); }, called ? 2400 : 1300);
-    else if (!called) setTimeout(function () { say(line("cFriendCalled", { n: n }), "pchat", 300); }, 1300);
+    var speaker = called || (mainAway ? pick(others()) : null);
+    var text = (speaker && persona(speaker, u, n)) || reply(u, n);
+    if (speaker) setTimeout(function () { if (player) bsay(speaker, text || line("cFriendCalled", { n: n })); }, 1100);
+    else setTimeout(function () { say(text || line("cFriendCalled", { n: n }), "pchat", 300); }, 1300);
     var o = pick(others());
     if (!called && o && !mainAway && (u.intent === "hi" || u.intent === "praise") && Math.random() < .5) setTimeout(function () { if (player) bsay(o, line("buddyReply", { n: n })); }, 2900);
   }
@@ -1701,7 +1783,7 @@
     b.meals.push(t); el.style.opacity = "0"; setTimeout(function () { el.style.opacity = ""; }, 5000);
     sfx("munch"); b.joy = 1; b.vy = -6; b.awakeUntil = t + 20000; b.asleep = false;
     bfAdd(b, fav ? .15 : .05);
-    bsay(b, fav ? line("favYes", { f: food }) : Math.random() < .5 ? line("favHint", { f: document.getElementById("food-" + b.f.fav).textContent }) : line("thanksFood", { f: food }));
+    bsay(b, fav ? line("favYes", { f: food }) : Math.random() < .5 ? line("favHint", { f: FOOD_NAME[b.f.fav] }) : line("thanksFood", { f: food }));
   }
   // hide and seek: Mawja hides behind a bush; find her with your character, a click on the bush, or a click on her
   var hs = null, hsNext = 0;
