@@ -4,7 +4,7 @@ title: "محوّل الملفات بدون سيرفر"
 icon: 🔄
 desc: حوّل الصور والصوت والفيديو — اضغط صورة، طلّع صوت مقطع فيديو، صغّر حجم فيديو. كل شي يصير داخل متصفحك، وملفك ما يغادر جهازك ولا يُرفع لأي مكان.
 title_en: "Serverless File Converter"
-desc_en: Convert images, audio and video — compress a photo, pull the audio out of a clip, shrink a video. Everything happens inside your browser, and your file never leaves your device.
+desc_en: "Convert images, audio and video: compress a photo, pull the audio out of a clip, or shrink a video. It all runs inside your browser, so your file never leaves your device."
 categories:
   - صورة
   - صوت

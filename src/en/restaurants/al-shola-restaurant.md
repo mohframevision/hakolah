@@ -1,9 +1,9 @@
 ---
 title: Al Shoala Restaurant - Jidhafs Branch
 icon: 🍽️
-desc: Shawarma and the “Arabi” plate for dinner, grilled chicken and mezze with hot Turkish bread for lunch — with three branches.
+desc: Shawarma and the “Arabi” plate for dinner; grilled chicken and mezze with hot Turkish bread for lunch. Three branches.
 langSwitchUrl: "/restaurants/مطعم-الشعلة.html"
-recommendation: "The “Arabi” plate for dinner — by far their best dish. For lunch: a whole grilled chicken with the mixed mezze plate."
+recommendation: "The “Arabi” plate for dinner, by far their best dish. For lunch, a whole grilled chicken with the mixed mezze plate."
 ---
 
 ## About the Restaurant
@@ -58,12 +58,12 @@ From the printed menu at the Jid Hafs branch (October 2026). Full prices are und
 
 ## Branches
 
-- **Jid Hafs** — we tried it, and it's our favorite
+- **Jid Hafs**: we tried it, and it's our favorite
   - Address: Block 422, Road 80, Building 912
   - 📞 17552044
-- **Jid Ali** — we tried it
+- **Jid Ali**: we tried it
   - 📞 17683378
-- **Muharraq** — we haven't tried it yet
+- **Muharraq**: we haven't tried it yet
   - 📞 17333676
 
 ## Delivery and Contact

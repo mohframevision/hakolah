@@ -3,7 +3,7 @@ title: "هل يُضعف الذكاء الاصطناعي عقولنا؟ قراء�
 icon: "🧠"
 desc: قراءة نقدية في الضجة المتداولة حول دراسة MIT عن ChatGPT والدماغ — أين انتهت الحقيقة العلمية وبدأ التحريف، وما هو "الدَّيْن المعرفي" فعلاً، وكيف تستخدم الذكاء الاصطناعي بدون ما يُضعف تفكيرك.
 title_en: "Is AI Weakening Our Brains? A Scientific Look at the MIT Study and the \"Neural Connectivity\" Panic"
-desc_en: A critical read on the viral claims around MIT's ChatGPT-and-the-brain study — where the real science ends and the distortion begins, what "cognitive debt" actually means, and how to use AI without dulling your thinking.
+desc_en: "A critical read of the viral claims about MIT's study on ChatGPT and the brain: where the science ends and the distortion starts, what \"cognitive debt\" means, and how to use AI without dulling your thinking."
 categories:
   - تقنية وبرمجيات
   - نصائح

@@ -3,7 +3,7 @@ title: "سبع عادات تجعلك تستخدم الذكاء الاصطناع�
 icon: "🧭"
 desc: قراءة في مقطع يلخّص كيف يتعامل أكثر الناس إنجازاً مع الذكاء الاصطناعي — سبع عادات بسيطة في طريقة الحديث معه، مع أمثلة وطرق تطبيق ورسوم توضيحية.
 title_en: "Seven Habits for Using AI Like a Top CEO"
-desc_en: A read of a video on how the most productive people work with AI — seven simple habits in how you talk to it, with examples, ways to apply them, and illustrations.
+desc_en: "Notes on a video about how highly productive people work with AI: seven simple habits in how you talk to it, with examples, ways to apply them, and illustrations."
 categories:
   - تقنية وبرمجيات
   - نصائح

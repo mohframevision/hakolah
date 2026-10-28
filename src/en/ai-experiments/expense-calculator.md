@@ -2,7 +2,7 @@
 pageScript: "expense"
 title: "Income & Expense Calculator"
 icon: 🧮
-desc: Log your income and expenses with categories you choose, and see your balance and spending breakdown instantly — no server, no account, everything stays in your browser.
+desc: "Log your income and expenses under categories you choose, and see your balance and spending breakdown right away. There is no server and no account: everything stays in your browser."
 categories:
   - مال
 dateAdded: 2026-09-06
@@ -14,19 +14,19 @@ noThirdParty: true
 
 <details class="calc-intro">
   <summary>ℹ️ What does this tool do?</summary>
-  <p>A simple calculator for your income and expenses — an electricity bill, rent, a rental property, anything you need to track. Tap numbers on the built-in calculator, pick a category with one tap, and hit Add — no keyboard, no typing, no dialog interrupting you.</p>
-  <p>It answers the two questions that actually matter: <strong>how much do I have left?</strong> (opening balance + all your income − all your expenses) and <strong>where did this month's money go?</strong> — two different questions, and conflating them is the most common mistake in expense tools. It has two modes: personal, which analyses your spending against the well-known 50/30/20 rule, and business, which lays out an income statement with gross and net profit and their margins.</p>
+  <p>A simple calculator for your income and expenses: an electricity bill, rent, a rental property, anything you want to track. Tap the numbers on the built-in calculator, pick a category, and hit Add. You never need the keyboard, and no dialog pops up.</p>
+  <p>It answers two separate questions: <strong>how much do I have left?</strong> (opening balance + all your income − all your expenses) and <strong>where did this month's money go?</strong> Many expense tools mix the two up. It has two modes: personal, which analyses your spending against the well-known 50/30/20 rule, and business, which lays out an income statement with gross and net profit and their margins.</p>
 </details>
 
 <div class="conv-privacy">
   <strong>🔒 Your data never leaves your browser.</strong>
-  There's no server and no account — every entry is saved locally in your browser only.
+  There's no server and no account. Every entry is saved only in your browser.
   <br />
   <span class="conv-privacy-proof">That cuts both ways: the data lives on this device and browser only, and doesn't move to another device on its own. Download a backup now and then from the bottom of the page if you want to move it or keep it safe.</span>
 </div>
 
 <div class="calc-balance-card">
-  <div class="calc-balance-label">💵 Current balance — what's actually left</div>
+  <div class="calc-balance-label">💵 Current balance (what's actually left)</div>
   <div class="calc-balance-value" id="calcCurrentBalance">—</div>
   <div class="calc-balance-formula">Opening balance + all income − all expenses (not just one month)</div>
   <div class="calc-balance-settings">
@@ -92,7 +92,7 @@ noThirdParty: true
   </div>
 
   <div class="calc-field">
-    <span class="calc-field-label">Classification (optional — drives the analysis below)</span>
+    <span class="calc-field-label">Classification (optional, used in the analysis below)</span>
     <div class="instrument-picker" id="calcClassChips"></div>
   </div>
 
@@ -143,7 +143,7 @@ noThirdParty: true
 <div class="calc-breakdown" id="calcBreakdown"></div>
 
 <h2>All entries</h2>
-<p class="calc-empty-note" id="calcEmpty" hidden>No entries in this period yet — add your first one from the form above.</p>
+<p class="calc-empty-note" id="calcEmpty" hidden>No entries in this period yet. Add your first one from the form above.</p>
 <div class="calc-entries" id="calcEntries"></div>
 
 <div class="calc-actions-row">

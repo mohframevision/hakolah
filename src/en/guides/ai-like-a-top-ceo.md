@@ -1,20 +1,20 @@
 ---
 title: "Seven Habits for Using AI Like a Top CEO"
 icon: "🧭"
-desc: A read of a video on how the most productive people work with AI — seven simple habits in how you talk to it, with examples, ways to apply them, and illustrations.
+desc: "Notes on a video about how highly productive people work with AI: seven simple habits in how you talk to it, with examples, ways to apply them, and illustrations."
 langSwitchUrl: "/guides/ai-like-a-top-ceo.html"
 aiDisclosure: "This article was written with AI assistance (Claude). Human input level: the site owner sent the video and asked for it to be turned into an article; the AI transcribed the video's audio automatically, then summarized and rewrote it, and designed its illustrations in code. The figures quoted are the video creator's claims and were not independently verified."
 image: /assets/guides/ai-like-a-top-ceo.jpg
 imageCredit: "AI illustration · Hakolah"
 ---
 
-The creator of this video argues that the gap between the smartest people and everyone else in using AI isn't a better model or a different tool — it's almost entirely in **how they talk to it**. He lays out seven simple habits, which we summarize here in our own words, with examples of how to apply them.
+The creator of this video argues that the people who get the most out of AI mostly differ in **how they talk to it**, more than in which model or tool they use. He lays out seven simple habits, which we summarize here in our own words, with examples of how to apply them.
 
 > Source: the video "How to Use AI Like A Top 0.1% CEO" by creator Nick Saraev. This article is a summary and read in our own words, not a literal translation.
 
 ## 1. Talk, Don't Type
 
-The average person types around 30–50 words per minute but speaks around 150–200. Not every spoken word will be perfect, but you still get far more across to the AI with your voice than with your fingers — so don't let your fingers be the bottleneck.
+The average person types around 30–50 words per minute but speaks around 150–200. Not every spoken word will be perfect, but you still get far more across to the AI by speaking than by typing.
 
 <figure class="viz">
 <svg viewBox="0 0 560 120" role="img" aria-label="Typing speed compared with speaking speed">
@@ -23,12 +23,12 @@ The average person types around 30–50 words per minute but speaks around 150�
 <text class="viz-t viz-s" x="195" y="38">30–50 words per minute</text>
 <text class="viz-t viz-b" x="10" y="88">Speaking</text>
 <rect class="viz-accent" x="85" y="70" width="400" height="26" rx="6"/>
-<text class="viz-on" x="95" y="88">150–200 words per minute — 3–4× faster</text>
+<text class="viz-on" x="95" y="88">150–200 words per minute (3–4× faster)</text>
 </svg>
 <figcaption>Your voice is three to four times faster than your fingers.</figcaption>
 </figure>
 
-**How to apply it:** use any free voice dictation tool — ideally one you can train on your own words and terms so it gets more accurate. (We covered [Wispr Flow](/en/guides/wispr-flow.html) as one example in an earlier article.)
+**How to apply it:** use any free voice dictation tool, ideally one you can train on your own words and terms so it gets more accurate. (We covered [Wispr Flow](/en/guides/wispr-flow.html) as one example in an earlier article.)
 
 ## 2. An Always-On Voice Assistant in Meetings
 
@@ -53,11 +53,11 @@ Picture an executive assistant who's always with you: listening to the meeting, 
 
 A picture is worth a thousand words, and a video is 24 or more pictures every second. So the best users ask the AI itself to make visuals that explain the idea: interactive charts, 3D models, or an explainer video.
 
-**Example:** if you're moving into a new office, don't stop at the floor plan — ask for a 3D model with realistic lighting that you can walk around in, then furnish it with real products to try before you buy. The same goes for turning dense reports into clear visuals. (The illustrations in this very article were made in code this way.)
+**Example:** if you're moving into a new office, go past the floor plan and ask for a 3D model with realistic lighting that you can walk around in, then furnish it with real products to try before you buy. The same goes for turning dense reports into clear visuals. (The illustrations in this very article were made in code this way.)
 
 ## 4. Have the AI Interview You
 
-It isn't enough to tell it what you want — often the bottleneck is your own lack of knowledge, or how hard it is to put exactly what you want into words. Relying only on what you know is like trying to pipe an entire ocean through the straw of your personal experience.
+Telling it what you want often isn't enough, because you may not know enough about the subject, or may struggle to put exactly what you want into words. Relying only on what you know is like trying to pipe an ocean through the straw of your own experience.
 
 <figure class="viz">
 <svg viewBox="0 0 560 120" role="img" aria-label="The ocean: everything the model knows; the straw: your experience alone">
@@ -73,7 +73,7 @@ It isn't enough to tell it what you want — often the bottleneck is your own la
 
 ## 5. Ask for Flaws, Not Opinions
 
-Models are trained with reinforcement learning from human feedback (RLHF), so they're sometimes rewarded more for agreeing with you than for being right. Ask for their opinion and they'll usually lean toward praise — even when you're wrong.
+Models are trained with reinforcement learning from human feedback (RLHF), so they're sometimes rewarded more for agreeing with you than for being right. Ask for their opinion and they'll usually lean toward praise, even when you're wrong.
 
 <figure class="viz viz-compare">
 <div class="viz-no"><b>✗ Instead of:</b> "What do you think of this?" · "Is this email okay?" · "What do you think of my project?"</div>
@@ -94,14 +94,14 @@ If you doubt a model can do something, ask it to do it instead of asking people.
 <text class="viz-t viz-b viz-hi" x="515" y="38" text-anchor="middle">53%</text>
 <text class="viz-t viz-s" x="285" y="142" text-anchor="middle">A hard benchmark over 30 days</text>
 </svg>
-<figcaption>What's true today may not be true tomorrow — the only way to know is to try.</figcaption>
+<figcaption>What's true today may not be true tomorrow, so try it.</figcaption>
 </figure>
 
-The video notes that Nvidia's CEO doesn't just listen to what others tell him; he runs AI coding tools on his own computer and tries them himself — because the best answer to "is this possible?" is to try it at least once.
+The video notes that Nvidia's CEO runs AI coding tools on his own computer and tries them himself, on the idea that the best answer to "is this possible?" is to try it at least once.
 
 ## 7. Keep an Open Mind
 
-AI tools will take many forms: digital avatars that chat with you like a coworker, small wearable devices, ways of working we aren't used to yet. Try them — you'll either succeed or fail, and both are fine, because you explored the opportunity. The cost of not trying is very high these days.
+AI tools will take many forms: digital avatars that chat with you like a coworker, small wearable devices, ways of working we aren't used to yet. Try them. Whether it works or not, you'll have learned what the tool can do, and the video argues that not trying costs more these days.
 
 <figure class="viz">
 <svg viewBox="0 0 560 130" role="img" aria-label="A scale: not trying weighs more than trying">
@@ -122,5 +122,3 @@ AI tools will take many forms: digital avatars that chat with you like a coworke
 - **Ask for flaws:** "What's wrong with this?" instead of "What do you think?"
 - **Try it yourself:** the fastest answer to "is this possible?" is to try.
 - **Keep an open mind:** the cost of not trying is higher than the cost of failing.
-
-And the rule that ties them together: the difference isn't the tool, it's how you talk to it.

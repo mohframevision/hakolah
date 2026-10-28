@@ -1,7 +1,7 @@
 ---
 title: Karbabad Beach
 icon: 🌅
-desc: A coastal spot with a variety of food trucks and a beautiful sea view — a great place for a change of scenery.
+desc: A seaside spot with a range of food trucks and a view of the sea.
 image: /assets/uploads/karbabad-DSC04756.jpg
 langSwitchUrl: "/places/karbabad-beach.html"
 imageCredit: "© Mohamed"
@@ -17,7 +17,7 @@ gallery:
 
 ## About This Place
 
-Karbabad Beach is one of Bahrain locals' favorite spots for a quiet evening by the sea. The place is known for its gathering of various food trucks along the waterfront walkway, with an open sea view that makes it a great spot for walking or sitting with family or friends.
+Karbabad Beach is where many people in Bahrain go for a quiet evening by the sea. Food trucks line the waterfront walkway, and the open sea view makes it a good place to walk or sit with family or friends.
 
 ## Getting There
 
@@ -29,5 +29,5 @@ The place is easily reachable by car.
 
 ## Tips Before You Go
 
-- The best time to visit is in the evening, especially around and after sunset — the weather is nicer and the food trucks are open.
-- The place is family-friendly, but weekend crowds are noticeably higher than on regular weekdays.
+- Go in the evening, around or after sunset, when it's cooler and the food trucks are open.
+- It suits families, but it gets much busier at weekends than on weekdays.

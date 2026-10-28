@@ -87,7 +87,7 @@ The well-known site **Have I Been Pwned** lets you enter your email to see if it
 
 ## And Hakolah? What We Collect and What We Don't
 
-We want to be straight with you, so here is what we actually checked on the site, not just promises:
+Here is what we checked on the site ourselves:
 
 **What we don't have at all, so it can't leak from us:**
 - **No accounts and no passwords.** You don't sign in to Hakolah or create an account, so there's no user database to steal.

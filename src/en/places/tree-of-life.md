@@ -10,15 +10,15 @@ imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Bahrain_Tree_of_Life_15
 
 ## About This Place
 
-The Tree of Life is one of Bahrain's best-known landmarks: a tree roughly 400 years old standing alone in the southern desert, with no other tree anywhere in sight. Many legends surround it because of its ability to survive in such harsh conditions.
+The Tree of Life is one of Bahrain's best-known landmarks: a tree roughly 400 years old standing alone in the southern desert, with no other tree anywhere in sight. Many legends have grown up around how it survives there.
 
-What strikes visitors most is the span of its branches; it is much larger than it looks in photos, and it stands out clearly against the bare desert, which makes it a great spot for photography from every side.
+Its branches spread much wider than photos suggest, and against the bare desert it photographs well from every side.
 
 ## Before You Visit
 
 - **Entry**: a public natural site, and entry is free.
 - **Protection**: the tree is surrounded by a railing that marks a protected zone, and a caretaker looks after the site and asks visitors to respect that zone and not go close to the tree.
-- **Lighting**: the site is lit, so visiting after sunset is enjoyable too.
+- **Lighting**: the site is lit, so you can visit after sunset.
 - **Best time**: the cooler hours, since it is open desert.
 - **Booking**: no advance booking is needed.
 - **Tours**: tour companies offer paid tours that include the tree along with other sights, priced from around 27 to 233 BHD depending on length and programme.

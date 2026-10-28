@@ -26,7 +26,7 @@ pageScript: "sounds"
     <button type="button" class="sounds-tab" role="tab" aria-selected="false" aria-controls="panePractice" data-pane="panePractice">🎶 <span class="tab-text">Practice</span></button>
   </div>
 
-  <section class="sounds-pane" id="panePlay" role="tabpanel" data-drop="⬇️ Drop the file here" data-drop-bad="This kind of file can't be opened here — try MIDI, audio or video">
+  <section class="sounds-pane" id="panePlay" role="tabpanel" data-drop="⬇️ Drop the file here" data-drop-bad="This kind of file can't be opened here. Try MIDI, audio or video.">
     <p class="phone-rotate">🔄 Turn your phone sideways: the piano gets bigger, with recording and layers on one screen.</p>
     <div class="beep-play">
       <div class="play-toolbar">
@@ -45,7 +45,7 @@ pageScript: "sounds"
       <details class="beep-help" id="beepHelp">
         <summary>⌨️ How to play & shortcuts</summary>
         <p class="beep-param-note">Middle row <span dir="ltr"><kbd>A</kbd> … <kbd>'</kbd></span> for the white keys, the row above <span dir="ltr"><kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd></span> for the black keys, <kbd>Z</kbd> / <kbd>X</kbd> to shift the octave, and hold <kbd>Shift</kbd> for the sustain pedal. It also works with a keyboard plugged into your phone, a real MIDI keyboard, or by touching the keys directly: press near the top of a key for a soft note and near the bottom for a strong one. Recording shortcuts: <kbd>R</kbd> start/stop, and <kbd>Space</kbd> play/stop after your first recording (the full list appears with it).</p>
-        <p class="beep-param-note">🎬 The video stays on your device and is never uploaded. It follows the white line: move the line to see the frame, and press play or record while you watch. Put a “cut marker” (M) at every cut in the scene and clips and effects snap to it. Step frame by frame with the buttons or the , and . keys — then download the video with your music, or the separate stems for your editing software.</p>
+        <p class="beep-param-note">🎬 The video stays on your device and is never uploaded. It follows the white line: move the line to see the frame, and press play or record while you watch. Put a “cut marker” (M) at every cut in the scene and clips and effects snap to it. Step frame by frame with the buttons or the , and . keys, then download the video with your music, or the separate stems for your editing software.</p>
       </details>
       <details class="beep-help beep-settings" id="beepSettings">
         <summary><span class="sum-play">⚙️ Maqam & recording settings</span><span class="sum-practice">🕌 Maqam</span></summary>
@@ -92,7 +92,7 @@ pageScript: "sounds"
         <button type="button" class="filter-chip" id="beepAddDrums" aria-expanded="false" aria-controls="beepDrums">🥁 Rhythm</button>
         <button type="button" class="filter-chip" id="beepMicRec" data-label="🎤 Record your voice" data-stop="⏹ Stop" data-denied="Microphone access wasn't allowed." data-failed="Couldn't record or read the audio." data-silent="No sound was picked up.">🎤 Record your voice</button>
         <button type="button" class="filter-chip" id="beepAddSfx" aria-expanded="false" aria-controls="beepSfx">💥 SFX</button>
-        <label class="filter-chip" for="beepMidiFile" title="Open a MIDI file from BandLab or any app — each instrument becomes a track you can edit">📂 Open MIDI file</label>
+        <label class="filter-chip" for="beepMidiFile" title="Open a MIDI file from BandLab or any app. Each instrument becomes a track you can edit.">📂 Open MIDI file</label>
         <input type="file" id="beepMidiFile" accept=".mid,.midi,audio/midi,audio/x-midi" hidden data-done="✅ MIDI file opened: {n} track(s)" data-failed="Could not read the MIDI file" />
         <label class="filter-chip" for="beepAudioFile">📁 Audio file</label>
         <input type="file" id="beepAudioFile" accept="audio/*" hidden />
@@ -165,7 +165,7 @@ pageScript: "sounds"
         </div>
         <p class="beep-param-note">Put the white line on the cut in your scene: risers and reverses end exactly there, the whoosh peaks there, and hits start there. All effects are generated in code and free for any use.</p>
       </div>
-      <div class="beep-video" id="beepVideoBox" hidden data-missing="Choose the same video file again with the “🎬 Video” button:" data-failed="Your browser can't play this video format — try MP4 (H.264) or WebM.">
+      <div class="beep-video" id="beepVideoBox" hidden data-missing="Choose the same video file again with the “🎬 Video” button:" data-failed="Your browser can't play this video format. Try MP4 (H.264) or WebM.">
         <video id="beepVideo" playsinline preload="auto"></video>
         <p class="beep-video-missing" id="beepVideoMissing" hidden></p>
         <div class="beep-video-bar">
@@ -184,12 +184,12 @@ pageScript: "sounds"
           <button type="button" class="filter-chip" id="beepVideoRemove">✕ Remove video</button>
         </div>
       </div>
-      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-track="Track" data-max="You've reached the limit: 64 clips and 16 tracks" data-silent="All layers are muted" data-restored="🔄 Your last project was restored" data-shared="🔗 Opened the shared project — edit it and share it again">
+      <div class="beep-rec-take" id="beepRecTake" hidden data-layer="Layer" data-track="Track" data-max="You've reached the limit: 64 clips and 16 tracks" data-silent="All layers are muted" data-restored="🔄 Your last project was restored" data-shared="🔗 Opened the shared project. Edit it and share it again.">
         <div class="beep-clip-tools" id="beepClipTools">
           <button type="button" class="filter-chip" id="beepToolSplit" disabled data-cut="Select a clip, place the white line inside it by clicking the ruler, then press Split.">✂️ Split</button>
           <button type="button" class="filter-chip" id="beepToolCopy" disabled>⧉ Duplicate</button>
           <button type="button" class="filter-chip" id="beepToolMute" disabled data-mute="🔇 Mute" data-unmute="🔊 Unmute">🔇 Mute</button>
-          <button type="button" class="filter-chip" id="beepToolEdit" disabled data-audio="Recorded audio can't be edited note by note — split it or drag its edge.">✏️ Edit</button>
+          <button type="button" class="filter-chip" id="beepToolEdit" disabled data-audio="Recorded audio can't be edited note by note. Split it or drag its edge instead.">✏️ Edit</button>
           <button type="button" class="filter-chip" id="beepToolQuant" disabled data-done="🧲 Notes snapped to the grid" data-audio="Quantize works on note clips only.">🧲 Quantize</button>
           <button type="button" class="filter-chip" id="beepToolClean" disabled data-on="🎤 Clean my voice" data-off="↺ Original sound" data-done="🎤 Cleaned: less rumble, room noise and hiss, clearer and steadier speech" data-only="Cleaning works on microphone recordings only." title="Like a radio mic: cuts rumble below 100 Hz, lowers noise between words, softens S hiss, adds clarity and evens out the level">🎤 Clean my voice</button>
           <button type="button" class="filter-chip" id="beepToolDelete" disabled>🗑️ Delete</button>
@@ -210,7 +210,7 @@ pageScript: "sounds"
             <button type="button" class="filter-chip" id="beepEdZoomOut" aria-label="Zoom out">➖</button>
             <button type="button" class="filter-chip" id="beepEdZoomIn" aria-label="Zoom in">➕</button>
             <label class="beep-ed-vel"><span>💪 Velocity</span><input type="range" id="beepEdVel" min="1" max="127" step="1" value="96" disabled /></label>
-            <button type="button" class="filter-chip" id="beepEdRit" disabled title="Gradually slows the selected notes (ritardando) — each press adds 10% by the end; later notes move along">🐢 Slow down</button>
+            <button type="button" class="filter-chip" id="beepEdRit" disabled title="Gradually slows the selected notes (ritardando). Each press adds 10% by the end, and later notes move along.">🐢 Slow down</button>
             <button type="button" class="filter-chip" id="beepEdAccel" disabled title="Gradually speeds up the selected notes (accelerando)">🐇 Speed up</button>
             <button type="button" class="filter-chip" id="beepEdDelete" disabled>🗑️ Delete note</button>
             <button type="button" class="filter-chip" id="beepEdClose">✓ Done</button>
@@ -220,7 +220,7 @@ pageScript: "sounds"
           </div>
           <p class="beep-param-note">Click an empty spot to add a note; drag across empty space to select several notes (or <kbd>Ctrl</kbd>+<kbd>A</kbd> for all, <kbd>Shift</kbd>+click to add one to the selection). Drag any selected note to move them all, or its right edge to change the length. <kbd>Delete</kbd> deletes, <kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd>/<kbd>D</kbd> copy, cut, paste (at the white line) and duplicate, <span dir="ltr">← →</span> move by a grid step and <span dir="ltr">↑ ↓</span> by a semitone (with <kbd>Shift</kbd>: a bar / an octave). Double-click a note to delete it; clicking a note name plays it.</p>
         </div>
-        <p class="beep-param-note" id="beepTimelineHint">🔲 To select several layers: drag across empty space, or <kbd>Ctrl</kbd>+<kbd>A</kbd> for all, or <kbd>Shift</kbd>+click — dragging any of them moves them all, and delete, copy, duplicate, mute and the arrows apply to the whole selection. ↔️↕️ Drag any layer freely: left and right in time (on the grid), and up and down between tracks (drop it below the last track to start a new one). Drag a layer's edge to shorten or lengthen it without cutting: nothing is deleted, and lengthening brings back what was hidden. To place the white line, click or drag on the ruler or any empty space; recording starts there and the selected clip is split there. Double-click a layer to edit its notes, and click a track number to open its mixer.</p>
+        <p class="beep-param-note" id="beepTimelineHint">🔲 To select several layers: drag across empty space, or <kbd>Ctrl</kbd>+<kbd>A</kbd> for all, or <kbd>Shift</kbd>+click. Dragging any of them moves them all, and delete, copy, duplicate, mute and the arrows apply to the whole selection. ↔️↕️ Drag any layer freely: left and right in time (on the grid), and up and down between tracks (drop it below the last track to start a new one). Drag a layer's edge to shorten or lengthen it without cutting: nothing is deleted, and lengthening brings back what was hidden. To place the white line, click or drag on the ruler or any empty space; recording starts there and the selected clip is split there. Double-click a layer to edit its notes, and click a track number to open its mixer.</p>
         <details class="beep-help beep-mixer" id="beepMixer">
           <summary>🎚️ Mixer, effects & mastering</summary>
           <div class="beep-mix-strips" id="beepMixStrips"></div>
@@ -274,7 +274,7 @@ pageScript: "sounds"
             <li><span class="beep-key-combo" dir="ltr"><kbd>Esc</kbd></span><span>Stop everything and deselect (back to playing with letters)</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Enter</kbd> · <kbd>Home</kbd> · <kbd>End</kbd></span><span>Move the white line to the start · start · end</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>← →</kbd></span><span>Move the focused layer (or the white line) one grid step, with Shift a whole bar; ↑ ↓ between tracks</span></li>
-            <li><span class="beep-key-combo" dir="ltr"><kbd>S</kbd></span><span>Split the selected layer at the white line — only while a layer is selected; otherwise S plays a piano note</span></li>
+            <li><span class="beep-key-combo" dir="ltr"><kbd>S</kbd></span><span>Split the selected layer at the white line (only while a layer is selected; otherwise S plays a piano note)</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Q</kbd></span><span>Snap the selected layer's notes to the grid</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Delete</kbd> · <kbd>Backspace</kbd></span><span>Delete the note selected in the editor, or the layer</span></li>
             <li><span class="beep-key-combo" dir="ltr"><kbd>Ctrl</kbd> + <kbd>C</kbd> · <kbd>X</kbd> · <kbd>V</kbd></span><span>Copy · cut · paste at the white line</span></li>
@@ -291,8 +291,8 @@ pageScript: "sounds"
           <button type="button" class="filter-chip" id="beepRecWav" aria-label="Download your project as WAV (full quality)" title="Full-quality audio file" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">WAV</button>
           <button type="button" class="filter-chip" id="beepRecMp3" aria-label="Download your project as MP3 (smaller file)" title="Smaller audio file" data-working="⏳ Preparing…" data-failed="Couldn't prepare the file">MP3</button>
           <button type="button" class="filter-chip" id="beepRecMidi" aria-label="Download your project as MIDI (the notes themselves, for BandLab or any music app)" title="The notes themselves (not audio): open it in BandLab or any music app and keep working">MIDI</button>
-          <button type="button" class="filter-chip" id="beepRecStems" title="A ZIP with the full mix + one WAV per track, all the same length, ready for editing software" data-working="⏳" data-failed="Couldn't prepare the files" data-toolong="This project is too long to export as separate stems on this device — shorten it or export a single WAV">🗂️ Stems</button>
-          <button type="button" class="filter-chip" id="beepShare" data-copied="✅ Project link copied" data-audio="✅ Link copied — audio recordings aren't shared by link, download them as WAV">🔗 Share</button>
+          <button type="button" class="filter-chip" id="beepRecStems" title="A ZIP with the full mix + one WAV per track, all the same length, ready for editing software" data-working="⏳" data-failed="Couldn't prepare the files" data-toolong="This project is too long to export as separate stems on this device. Shorten it or export a single WAV.">🗂️ Stems</button>
+          <button type="button" class="filter-chip" id="beepShare" data-copied="✅ Project link copied" data-audio="✅ Link copied. Audio recordings aren't shared by link, so download them as WAV.">🔗 Share</button>
           <button type="button" class="filter-chip" id="beepRecClear" aria-label="Delete all layers" title="Delete all layers">🗑️</button>
         </div>
         <p class="beep-param-note">💾 Your project is saved automatically in your browser and comes back when you open the page again.</p>
@@ -417,9 +417,9 @@ pageScript: "sounds"
                 data-empty="You haven't added a sound yet."
                 data-need="Record a sound or pick a file first."
                 data-recording="🎙️ Recording… (three seconds max)"
-                data-ready="✅ Your sound is ready — play it now."
+                data-ready="✅ Your sound is ready. Play it now."
                 data-denied="Microphone access was not allowed."
-                data-silent="No sound was picked up — move closer to the sound and record again."
+                data-silent="No sound was picked up. Move closer to the sound and record again."
                 data-failed="Couldn't read that sound, try another file."></p>
             </div>
             </div>
@@ -448,7 +448,7 @@ pageScript: "sounds"
             <button type="button" class="filter-chip" id="beepOctUp" aria-label="Octave up">X ⬆️</button>
           </div>
           <button type="button" class="filter-chip" id="beepPedal" aria-pressed="false" title="Sustain pedal: notes keep ringing after you lift your finger (or hold Shift)">🦶 <span class="qb-text">Pedal</span></button>
-          <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 Connect MIDI keyboard" data-on="🎹 " data-none="No MIDI keyboard found — plug it in, then press again." data-denied="MIDI access wasn't allowed.">🎹 <span class="qb-text">Connect MIDI keyboard</span></button>
+          <button type="button" class="filter-chip" id="beepMidi" data-label="🎹 Connect MIDI keyboard" data-on="🎹 " data-none="No MIDI keyboard found. Plug it in, then press again." data-denied="MIDI access wasn't allowed.">🎹 <span class="qb-text">Connect MIDI keyboard</span></button>
           <button type="button" class="filter-chip" id="beepFullscreen" hidden aria-label="Fullscreen">⛶</button>
           <button type="button" class="filter-chip piano-more" id="pianoMore" aria-expanded="false" aria-label="More keyboard options" title="More keyboard options">⋯</button>
         </div>
@@ -521,7 +521,7 @@ pageScript: "sounds"
           <button type="button" class="filter-chip param-btn active" data-param="dynamics" data-value="1">mf Medium</button>
           <button type="button" class="filter-chip param-btn" data-param="dynamics" data-value="1.6">f Loud</button>
         </div></div>
-        <p class="beep-param-note">🎨 Timbre (the color of the sound) is the instrument itself — change it from the "Instrument" panel above to hear the same melody in a different color.</p>
+        <p class="beep-param-note">🎨 Timbre (the color of the sound) comes from the instrument. Change it from the "Instrument" panel above to hear the same melody in a different color.</p>
       </div>
     </details>
     <details class="beep-panel">
@@ -552,7 +552,7 @@ pageScript: "sounds"
       data-label-cadence-authentic="Authentic cadence"
       data-label-cadence-plagal="Plagal cadence"
       data-label-seed="Seed"></div>
-    <p class="beep-experiment-hint">🎧 Headphones recommended — and every piece is a completely new tune, so try it more than once.</p>
+    <p class="beep-experiment-hint">🎧 Headphones recommended. Every piece is a new tune, so try it more than once.</p>
   </section>
 
   <section class="sounds-pane" id="paneLearn" role="tabpanel" hidden>
@@ -588,7 +588,7 @@ pageScript: "sounds"
       </ul>
       <p class="beep-param-note">🎧 The example is generated in code to apply the instructions; it is not the film's original score. Beauty Blubbers and Event Horizon are sounds from the course library, so they are stood in for by a celesta shimmer and a long choir chord.</p>
     </div>
-    <div class="beep-quiz" id="beepQuiz" data-right="✅ Correct! It was: " data-wrong="❌ Not quite — it was: " data-names="Frequency|Rhythm|Timbre|Dynamics">
+    <div class="beep-quiz" id="beepQuiz" data-right="✅ Correct! It was: " data-wrong="❌ Not quite. It was: " data-names="Frequency|Rhythm|Timbre|Dynamics">
       <p class="beep-params-title">👂 Ear training: what changed?</p>
       <p class="beep-param-note">You'll hear the same clip twice; the second time, exactly one parameter changes. Guess which.</p>
       <button type="button" class="btn secondary" id="beepQuizPlay">▶️ Hear both clips</button>
@@ -633,13 +633,13 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
           <button type="button" class="filter-chip" id="songWriteLine">↵ Line</button>
           <button type="button" class="filter-chip" id="songWriteBack" aria-label="Delete the last note" title="Delete the last note">⌫</button>
         </div>
-        <div class="song-chips" id="songChips" role="group" aria-label="Written notes — tap any to hear it"></div>
+        <div class="song-chips" id="songChips" role="group" aria-label="Written notes: tap any to hear it"></div>
         <p class="beep-param-note song-groups-hint">🎨 Each key’s color = its group: “Middle” is green, “Low” blue, “High” yellow. When typing letters: <span dir="ltr">^</span> = high, <span dir="ltr">.</span> = low.</p>
         <p class="beep-param-note">Each note is a letter: <span dir="ltr">C D E F G A B</span> (or Do Re Mi), with <span dir="ltr">#</span> or <span dir="ltr">b</span> after it for sharp and flat. <span dir="ltr">^</span> before it = one octave up, <span dir="ltr">.</span> before it = one down. Every note is an even half beat, <span dir="ltr">~</span> holds the previous note longer, and <span dir="ltr">_</span> is a rest. To press several keys together: <span dir="ltr">C+E+G</span> or <span dir="ltr">[C E G]</span>; for an exact length: <span dir="ltr">C:2</span>. Lyric lines are skipped when playing and shown above the piano.</p>
         <p class="beep-param-note">🎼 For musicians: paste a piece in <bdi dir="ltr">ABC</bdi> notation (with a <span dir="ltr">K:</span> line) and it is read with its meter, key and note values, or open a MIDI or MusicXML file (from MuseScore and others: each hand is a track).</p>
       </details>
       <div class="song-tracks" id="songTracks" data-families="Piano|Chromatic percussion|Organ|Guitar|Bass|Strings|Ensemble|Brass|Reed|Pipe|Synth lead|Synth pad|Synth effects|Ethnic|Percussive|Sound effects" data-track="Track" hidden>
-        <p class="beep-setting-label">🎼 MIDI file — choose the tracks to practice:</p>
+        <p class="beep-setting-label">🎼 MIDI file: choose the tracks to practice:</p>
         <div class="instrument-picker" id="songTrackChips"></div>
         <div class="instrument-picker" id="songHands" role="group" aria-label="Hand">
           <button type="button" class="filter-chip" data-hand="both">🙌 Both hands</button>
@@ -672,7 +672,7 @@ Or paste letter notes from a site like noobnotes" aria-label="✍️ Type or pas
         <span class="song-loop" id="songLoopRange" dir="ltr" hidden><label>From bar <input type="number" id="songLoopFrom" min="1" value="1" inputmode="numeric" /></label> <label>to <input type="number" id="songLoopTo" min="1" value="4" inputmode="numeric" /></label></span>
       </div>
       <div class="song-keys-slot" id="songKeysSlot"></div>
-      <p class="beep-param-note">Practice mode waits for you: the bars fall and stop at the line until you press the right note — by touch, computer keyboard, or a MIDI keyboard. You can also open a MIDI file (from sites like bitmidi.com) and it falls with its exact rhythm. Keyboard: <kbd>Space</kbd> play/pause, <kbd>Home</kbd> back to the start.</p>
+      <p class="beep-param-note">Practice mode waits for you: the bars fall and stop at the line until you press the right note, by touch, on a computer keyboard, or on a MIDI keyboard. You can also open a MIDI file (from sites like bitmidi.com) and it falls with its exact rhythm. Keyboard: <kbd>Space</kbd> play/pause, <kbd>Home</kbd> back to the start.</p>
     </div>
   </section>
 </div>

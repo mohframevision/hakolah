@@ -1,5 +1,5 @@
 ---
-title: "Before You Run Any Ad — Four Systems You Need to Build First"
+title: "Before You Run Any Ad: Four Systems to Build First"
 icon: "💡"
 desc: Most people think marketing just means ads and posts. In reality, tactics without a foundational system quickly collapse, just like a house built without a blueprint.
 langSwitchUrl: "/guides/anthimat-al-tasweeq-al-arbaa.html"
@@ -12,48 +12,48 @@ imageCredit: "AI illustration · Hakolah"
 
 Ask anyone: "What's the first thing that comes to mind when you hear 'marketing'?" and the answer is usually: an Instagram ad, a TikTok video, or a Snapchat story. In other words, the mind jumps straight to tactics.
 
-The problem is this is exactly like someone who wants to build a house, gathers all the construction materials — cement, steel, bricks — and starts pouring and building right away, without any engineering blueprint. The outcome is predictable: the house collapses no matter how good the materials were.
+That is like gathering cement, steel and bricks for a house and starting to build without a blueprint. However good the materials, the house falls down.
 
-The same applies to marketing. Tactics — ads, posts, videos — are just "building materials," and no matter how strong they are, without a "blueprint" to place them correctly, the result collapses, or at least goes nowhere.
+Ads, posts and videos are the building materials of marketing. Without a plan for where each one goes, they get you nowhere, however good they are.
 
-That blueprint is made up of **four foundational systems**, each built on top of the one before it, and together they trace a person's journey from "doesn't know you" to "becomes your customer":
+The plan has **four systems**, each built on the one before it. Together they take a person from not knowing you to buying from you:
 
 ## System One: Offer and Positioning
 
 Before any other step, two questions need clear answers:
 
-- **What offer are you making?** Specifically, what "transformation" does your customer reach after using your service or product? People don't buy a "product," they buy an outcome they achieve.
+- **What offer are you making?** What changes for your customer after they use your product or service? People pay for that result.
 - **What's your positioning and messaging?** How are you different from everyone else, and in exactly what wording do you communicate that difference to your audience?
 
-Without clarity on this point, any marketing tactic that follows has no direction.
+Until these are clear, every tactic that follows has no direction.
 
 ## System Two: Continuous Traffic
 
-The goal here isn't "posting today," it's having a **system** that gets new people continuously and repeatedly getting to know you, not just once and then it stops.
+You need a **system** that keeps bringing new people to you week after week, beyond a single post or campaign.
 
 Tactics here vary and fall into two categories:
 - **Organic**: regular content, SEO, direct engagement.
 - **Paid**: paid ads.
 
-Both types are valid, and what matters is having a continuous system, not scattered attempts.
+Either works, as long as it runs continuously.
 
 ## System Three: Building Trust (The Most Overlooked System)
 
-This is the system most people ignore entirely; they meet someone for the first time through an ad or a post, then try to sell them something immediately, without building any prior trust.
+Most people skip this one. Someone sees them for the first time in an ad or a post, and they try to sell straight away.
 
-What's needed here is a system that makes the person "spend more time with you" before reaching the sales stage, such as:
+Give people ways to spend more time with you before you ask them to buy, such as:
 - An email newsletter.
-- A lead magnet — valuable free content in exchange for contact information.
-- Long-form educational content, like YouTube videos, that cements your expertise in the audience's mind.
+- A lead magnet: useful free content in exchange for contact details.
+- Long educational content, like YouTube videos, that shows what you know.
 
-Without this system, you're trying to sell to a stranger, and that's a major reason many "ads" fail despite being a correct tactic in itself.
+Without it you are selling to strangers, which is a big reason ads that look right still fail.
 
 ## System Four: Converting Interested People Into Customers
 
-The final step is a clear sales path that matches the nature of your service and your target audience — the same path isn't right for every case. Its tactics vary by situation: sales calls, limited-time offers, a direct landing page, and others.
+The last step is a clear way to buy that suits your service and your audience, and it differs from case to case: sales calls, limited-time offers, a landing page, and so on.
 
 ## Conclusion
 
-The four systems — offer and positioning, then continuous traffic, then building trust, then converting customers — precisely trace a person's journey from "stranger" to "follower" to "interested" to "customer."
+Offer and positioning, continuous traffic, trust, then conversion: the four systems take a person from stranger to follower, then to interested, then to customer.
 
 Instead of chasing every tactic on the market, build the four systems first, then pick the tactics that fit each system based on your situation.

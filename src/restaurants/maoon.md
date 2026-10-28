@@ -3,7 +3,7 @@ title: ماعون
 icon: 🍗
 desc: مطعم بحريني بمنطقة الزنج — مبهر ومدفون دجاج ولحم أرقاب، مع مكس عيش وسبشل ماعون، وإفصاح واضح عن مصادر اللحوم.
 title_en: Ma'oon
-desc_en: A Bahraini restaurant in Al Zinj — mabhar and madfoon chicken and neck meat, plus rice mixes and a "Ma'oon Special", with clearly disclosed meat sources.
+desc_en: "A Bahraini restaurant in Al Zinj serving mabhar and madfoon chicken and neck meat, rice mixes, and a \"Ma'oon Special\". It discloses where its meat comes from."
 hours: "١١:٠٠ص - ٥:٠٠م"
 hours_en: "11:00am - 5:00pm"
 categories:

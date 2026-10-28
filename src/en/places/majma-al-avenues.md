@@ -1,7 +1,7 @@
 ---
 title: The Avenues Bahrain
 icon: 🛍️
-desc: The largest mall in Bahrain, on the waterfront in the heart of Manama — shopping, dining, and entertainment.
+desc: The largest mall in Bahrain, on the Manama waterfront, with shops, restaurants and entertainment.
 langSwitchUrl: "/places/majma-al-avenues.html"
 image: /assets/uploads/avenues.jpg
 imageCredit: "Droodkin · CC BY-SA 4.0"
@@ -10,13 +10,13 @@ imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Avenues_coastline,_Bahr
 
 ## About This Place
 
-The Avenues Bahrain is the largest shopping mall in the Kingdom of Bahrain, and the first waterfront shopping and entertainment complex of this scale, stretching 1.5 kilometers along the waterfront next to King Faisal Highway in the heart of Manama. The mall houses more than 130 stores, nearly half of which are restaurants and cafes overlooking Bahrain Bay, in addition to 10 cinema screens, a supermarket, a kids' play area, an ice skating rink, and a gym.
+The Avenues Bahrain is the largest shopping mall in Bahrain and the first waterfront shopping and entertainment complex of its size. It runs 1.5 kilometers along the water next to King Faisal Highway in central Manama. It has more than 130 stores, nearly half of them restaurants and cafes overlooking Bahrain Bay, plus 10 cinema screens, a supermarket, a kids' play area, an ice rink and a gym.
 
-The mall features an architectural design that blends modern style with traditional Bahraini elements, and is built around a wide central courtyard housing a traditional Bahraini souq. Among its standout features is a specially designed roof that lets in natural sunlight while protecting visitors from the heat, and a Water Taxi service that brings visitors in from several marinas around Bahrain.
+The building mixes modern design with traditional Bahraini elements and is built around a wide central courtyard with a traditional Bahraini souq. The roof lets daylight in while keeping out the heat, and a Water Taxi brings visitors from several marinas around Bahrain.
 
-Brands present include Christian Dior, H&M, Swarovski, Kiehl's, Pottery Barn, and West Elm, and among the restaurants: Shake Shack, Five Guys, CZN Burak, and The Cheesecake Factory — among more than 130 other stores and restaurants, spread across 16 main shopping categories (clothing, beauty, electronics, jewelry, home furniture, and more) and 5 categories for restaurants and cafes (restaurants, fast food, cafes and desserts, chocolate, and coffee roasters).
+Shops include Christian Dior, H&M, Swarovski, Kiehl's, Pottery Barn and West Elm, and restaurants include Shake Shack, Five Guys, CZN Burak and The Cheesecake Factory. The 130+ stores and restaurants fall into 16 shopping categories (clothing, beauty, electronics, jewelry, home furniture, and more) and 5 categories for restaurants and cafes (restaurants, fast food, cafes and desserts, chocolate, and coffee roasters).
 
-A **Hilton Garden Inn** hotel sits inside the mall with a direct view over Bahrain Bay, in addition to an official mobile app for the mall (available for iOS and Android) featuring an interactive map and exclusive offers.
+A Hilton Garden Inn inside the mall looks over Bahrain Bay. The mall also has an official app for iOS and Android with an interactive map and offers.
 
 ## Practical Information
 

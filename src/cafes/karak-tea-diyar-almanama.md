@@ -3,7 +3,7 @@ title: كرك تي - ديار المنامة
 icon: "☕"
 desc: كرك تي بمنطقة ديار المنامة — كرك ومشروبات.
 title_en: Karak Tea - Diyar Al Manama
-desc_en: Karak Tea in Diyar Al Manama — karak tea and drinks.
+desc_en: "Karak Tea in Diyar Al Manama, serving karak tea and other drinks."
 categories:
   - كرك
   - ديار المنامة

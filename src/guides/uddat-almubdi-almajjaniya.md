@@ -3,7 +3,7 @@ title: عدّة المبدع المجانية - أي برنامج يحل محل 
 icon: "🎨"
 desc: البرامج المجانية لا تحل محل برنامج أدوبي واحد كاملاً، بل محل أجزاء منه. هذا الدليل يوضح أي برنامج يغطي أي جزء، وأي برنامجين تجمع بينهما للتصميم والصور والمونتاج.
 title_en: "The Free Creator's Toolkit: Which Free App Replaces Which Paid One"
-desc_en: Free apps don't replace a whole Adobe app — they replace pieces of it. This guide shows which app covers which piece, and which two to pair for design, photos and video.
+desc_en: "Each free app replaces one piece of an Adobe app. This guide shows which app covers which piece, and which two to pair for design, photos and video."
 categories:
   - تقنية وبرمجيات
   - تصميم ومونتاج

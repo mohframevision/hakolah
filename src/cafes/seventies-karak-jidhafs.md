@@ -3,7 +3,7 @@ title: كرك السبعينات - جدحفص
 icon: "☕"
 desc: فرع كرك السبعينات بمنطقة جدحفص — كرك ومشروبات.
 title_en: Karak Al-Sabinat - Jidhafs
-desc_en: Karak Al-Sabinat branch in Jidhafs — karak tea and drinks.
+desc_en: "Karak Al-Sabinat branch in Jidhafs, serving karak tea and other drinks."
 categories:
   - كرك
   - جدحفص

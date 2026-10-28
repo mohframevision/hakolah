@@ -3,7 +3,7 @@ title: تنجيدات كلاسك لاين
 icon: 🛋️
 desc: تنجيد مقاعد السيارات، صباغة الجلد، وإصلاح الدشبورد، وأيضاً تنجيد يخوت وأثاث منازل وفنادق — فرع مستقل بسلماباد (تابع لمجموعة كلاسك لاين، نفس مجموعة معرض كلاسك لاين موتورز بالسهلة).
 title_en: Classic Line Upholstery
-desc_en: Car seat upholstery, leather refinishing, and dashboard repair, plus yacht and home/hotel furniture upholstery — an independent branch in Salmabad (part of the Classic Line group, same group as the Classic Line Motors showroom in Sehla).
+desc_en: "Car seat upholstery, leather refinishing and dashboard repair, plus upholstery for yachts and for home and hotel furniture. An independent branch in Salmabad, part of the Classic Line group (same group as the Classic Line Motors showroom in Sehla)."
 categories:
   - تنجيد
   - سلماباد

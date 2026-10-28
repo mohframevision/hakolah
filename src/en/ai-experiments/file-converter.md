@@ -2,7 +2,7 @@
 pageScript: "converter"
 title: "Serverless File Converter"
 icon: 🔄
-desc: Convert images, audio and video — compress a photo, pull the audio out of a clip, shrink a video. Everything happens inside your browser, and your file never leaves your device.
+desc: "Convert images, audio and video: compress a photo, pull the audio out of a clip, or shrink a video. It all runs inside your browser, so your file never leaves your device."
 categories:
   - صورة
   - صوت
@@ -15,7 +15,7 @@ noThirdParty: true
 
 <details class="calc-intro">
   <summary>ℹ️ Why a converter with no server?</summary>
-  <p>Most online converters upload your file to their server, convert it there, then hand you back a result to download. You have no way to know where that file was stored, for how long, or who can reach it. And this is not a theoretical worry: a photo of a document, a private voice recording, a family video — each one passes through a stranger's machine. Browsers today can do the conversion itself without the file ever leaving your device, and this experiment proves it.</p>
+  <p>Most online converters upload your file to their server, convert it there, then hand you back a result to download. You have no way to know where that file was stored, for how long, or who can reach it. That matters when the file is a photo of a document, a private voice recording or a family video, because each one passes through a stranger's machine. Browsers can now do the conversion themselves, and this experiment shows it working without the file leaving your device.</p>
 </details>
 
 <div class="instrument-picker conv-kinds">
@@ -51,7 +51,7 @@ noThirdParty: true
   <strong>🔒 Your file never leaves your device.</strong>
   The whole conversion happens inside your browser, and we send your file nowhere.
   <br />
-  <span class="conv-privacy-proof">Want to verify it yourself? Disconnect the internet after the page loads — it keeps working.</span>
+  <span class="conv-privacy-proof">Want to verify it yourself? Disconnect the internet after the page loads; it keeps working.</span>
 </div>
 
 <div class="conv-options" id="convImageOpts">
@@ -117,7 +117,7 @@ noThirdParty: true
   </div>
 
   <p class="conv-option-note">
-    You can drop an audio file here instead of a video — we'll turn it into a square video with an animated
+    You can drop an audio file here instead of a video, and we'll turn it into a square video with an animated
     waveform instead of a picture.
   </p>
   <p class="conv-option-note">

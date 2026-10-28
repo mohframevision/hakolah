@@ -3,7 +3,7 @@ title: ذا لوفت
 icon: 🛍️
 desc: متجر بحريني للتجارة العامة — أدوات مطبخ، مستلزمات منزلية، هدايا، ألعاب، ومنتجات عناية وجمال، بأبو صيبع.
 title_en: The Loft General Trading
-desc_en: A Bahraini general trading store — kitchenware, homeware, giftware, toys, and beauty products, in Abu Saiba.
+desc_en: "A Bahraini general trading store in Abu Saiba selling kitchenware, homeware, gifts, toys and beauty products."
 categories:
   - المستلزمات المنزلية
   - عناية وجمال

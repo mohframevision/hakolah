@@ -3,7 +3,7 @@ title: كرك السبعينات - أبو قوة
 icon: "☕"
 desc: فرع كرك السبعينات بمنطقة أبو قوة — كرك ومشروبات.
 title_en: Karak Al-Sabinat - Abu Quwah
-desc_en: Karak Al-Sabinat branch in Abu Quwah — karak tea and drinks.
+desc_en: "Karak Al-Sabinat branch in Abu Quwah, serving karak tea and other drinks."
 categories:
   - كرك
   - أبو قوة

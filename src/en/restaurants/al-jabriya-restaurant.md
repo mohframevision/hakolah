@@ -1,9 +1,9 @@
 ---
 title: Al Jabriya Restaurant
 icon: 🍽️
-desc: A Turkish-Bahraini restaurant with branches in Busaiteen, Jidhafs, and more, serving Turkish grills and shawarma (saj/Turkish/Lebanese bread options), pizza, and pastries. Especially known for its Russian sandwich, with wide popularity despite occasional crowds, at mid-range prices for everyone.
+desc: A Turkish-Bahraini restaurant with branches in Busaiteen, Jidhafs and elsewhere, serving Turkish grills, shawarma on saj, Turkish or Lebanese bread, pizza and pastries. Best known for its Russian sandwich. Mid-range prices, and it can get crowded.
 langSwitchUrl: "/restaurants/مطعم-الجابرية.html"
-recommendation: The Russian sandwich is the dish that made the restaurant's name what it is — if it's your first visit, that's the one worth trying first.
+recommendation: The Russian sandwich made this restaurant's name. On a first visit, order that.
 ---
 
 ## About the Restaurant
@@ -14,10 +14,9 @@ bread options (saj, Turkish, Lebanese), alongside pizza and pastries.
 
 ## Known For
 
-**The Russian sandwich** — the dish most associated with the restaurant's
-name, and a major reason for its wide popularity. Prices are mid-range and
-accessible to most, though the restaurant sometimes gets crowded due to
-demand.
+**The Russian sandwich** is the dish people know the restaurant for, and
+a big part of why it's so popular. Prices are mid-range, and it sometimes
+gets crowded.
 
 ## Branches
 

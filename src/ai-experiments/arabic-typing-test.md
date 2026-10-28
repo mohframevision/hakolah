@@ -4,7 +4,7 @@ title: "اختبار سرعة الكتابة بالعربية"
 icon: ⌨️
 desc: "تحدٍّ حقيقي لسرعتك ودقتك — جمل بفصحى أدبية فيها همزات وتاء مربوطة وألف مقصورة، لا لغة مبسّطة. العدّاد يبدأ مع أول حرف، والنتيجة تُحفظ بجهازك."
 title_en: "Arabic Typing Speed Test"
-desc_en: "A real challenge to your speed and accuracy — sentences in literary Arabic, rich in hamzas and hard letter forms, not simplified language. The timer starts with your first keystroke."
+desc_en: "Tests your speed and accuracy on sentences in literary Arabic, full of hamzas and hard letter forms. The timer starts with your first keystroke."
 categories:
   - نص
 dateAdded: 2026-09-06

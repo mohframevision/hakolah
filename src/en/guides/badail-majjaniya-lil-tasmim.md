@@ -18,7 +18,7 @@ Professional design and editing software, like Photoshop, After Effects, Cinema 
 
 ## After Effects Alternative: Cavalry
 
-**Cavalry** is a 2D motion graphics app built on a node-based system, and after Canva's acquisition it became **completely free for individuals**, even for commercial use (except for companies that need team features and SSO login, which still requires payment). It's not a "lite" version of After Effects — it was built from scratch for high-performance procedural animation.
+**Cavalry** is a 2D motion graphics app built on a node-based system, and after Canva's acquisition it became **completely free for individuals**, even for commercial use (except for companies that need team features and SSO login, which still requires payment). It was built from scratch for fast procedural animation, rather than as a cut-down After Effects.
 
 ## Cinema 4D Alternative: Blender
 
@@ -26,7 +26,7 @@ Professional design and editing software, like Photoshop, After Effects, Cinema 
 
 ## Premiere Pro Alternative: DaVinci Resolve
 
-**DaVinci Resolve** by Blackmagic Design offers a genuinely free version, with no watermark or time limit, covering professional editing, color correction, Fusion effects, and audio editing, at quality up to 4K at 60 frames per second. The paid version, **DaVinci Resolve Studio**, costs $295 as a **one-time purchase only**, with no subscription, and adds AI tools, higher resolution up to 32K, higher frame rates up to 120fps, and cloud collaboration.
+**DaVinci Resolve** by Blackmagic Design has a free version with no watermark or time limit, covering professional editing, color correction, Fusion effects, and audio editing, at quality up to 4K at 60 frames per second. The paid version, **DaVinci Resolve Studio**, costs $295 as a **one-time purchase only**, with no subscription, and adds AI tools, higher resolution up to 32K, higher frame rates up to 120fps, and cloud collaboration.
 
 ## Conclusion
 

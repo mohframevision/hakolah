@@ -3,7 +3,7 @@ title: Terms of Use | Hakolah
 layout: base.njk
 lang: "en"
 permalink: en/terms.html
-description: Hakolah's terms of use — the nature of the service, limits of liability, and content rights.
+description: "Hakolah's terms of use: what the service is, the limits of our liability, and content rights."
 langSwitchUrl: "/terms.html"
 ---
 
@@ -15,15 +15,15 @@ By using Hakolah, you agree to the following terms:
 
 ## Nature of the service
 
-Hakolah is a directory that gathers links, tools, restaurants, stores, and places in one place to make them easier to find. Information (like addresses, links, and business hours) may change at its original source without our knowledge, so we don't guarantee its full accuracy at all times — verify any important detail (like an address or contact number) from the source itself before relying on it.
+Hakolah is a directory that gathers links, tools, restaurants, stores, and places in one place to make them easier to find. Information (like addresses, links, and business hours) may change at its original source without our knowledge, so we can't guarantee it is always accurate. Verify any important detail (like an address or contact number) from the source itself before relying on it.
 
 ## External links
 
-The site contains links to external sites, stores, and social media accounts that we don't own or manage. We're not responsible for their content, policies, or any dealings between you and them. Some of these links are affiliate links through which we may earn a small commission at no extra cost to you — see the [privacy policy]({{ '/en/privacy-policy.html' | url }}) for details.
+The site contains links to external sites, stores, and social media accounts that we don't own or manage. We're not responsible for their content, policies, or any dealings between you and them. Some of these links are affiliate links through which we may earn a small commission at no extra cost to you. See the [privacy policy]({{ '/en/privacy-policy.html' | url }}) for details.
 
 ## Content rights
 
-The site's content (text and design) is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — you may share the content with attribution to Hakolah and without commercial use, and any derivative works are published under the same license.
+The site's content (text and design) is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/): you may share the content with attribution to Hakolah and without commercial use, and any derivative works are published under the same license.
 
 ## Suggesting additions
 

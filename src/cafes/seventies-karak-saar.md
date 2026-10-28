@@ -3,7 +3,7 @@ title: كرك السبعينات - سار
 icon: "☕"
 desc: فرع كرك السبعينات بمنطقة سار — كرك ومشروبات.
 title_en: Karak Al-Sabinat - Sar
-desc_en: Karak Al-Sabinat branch in Sar — karak tea and drinks.
+desc_en: "Karak Al-Sabinat branch in Sar, serving karak tea and other drinks."
 categories:
   - كرك
   - سار

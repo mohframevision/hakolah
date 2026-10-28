@@ -1,5 +1,5 @@
 ---
-title: "Wispr Flow — The AI Voice Dictation App"
+title: "Wispr Flow: AI Voice Dictation"
 icon: "🎙️"
 desc: An introduction to Wispr Flow, which turns speech into clean, formatted text instantly, plus an explanation of its referral program.
 langSwitchUrl: "/guides/wispr-flow.html"
@@ -14,7 +14,7 @@ Wispr Flow is an AI-powered voice dictation app that works on Mac, Windows, iPho
 
 ## What Sets It Apart from Traditional Voice Typing
 
-The app doesn't just transcribe speech word-for-word like ordinary speech-to-text tools — it understands the intent behind a sentence, automatically removes filler words (like "um" and "uh") and unintended repetition, and adds proper punctuation and formatting (paragraphs, lists, emails). It also learns the user's personal vocabulary over time, such as names and recurring terms, and supports over a hundred languages with automatic detection as you switch between them mid-speech. It works inside any app you can type in, without needing plugins or per-app setup.
+Ordinary speech-to-text tools transcribe word for word. Wispr Flow works out what you meant, removes filler words (like "um" and "uh") and unintended repetition, and adds proper punctuation and formatting (paragraphs, lists, emails). It also learns the user's personal vocabulary over time, such as names and recurring terms, and supports over a hundred languages with automatic detection as you switch between them mid-speech. It works inside any app you can type in, without needing plugins or per-app setup.
 
 ## Plans and Pricing
 

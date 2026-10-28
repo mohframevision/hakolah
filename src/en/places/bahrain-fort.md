@@ -10,13 +10,13 @@ imageCreditUrl: "https://unsplash.com/photos/hEPkfOY7ibY"
 
 ## About This Place
 
-Bahrain Fort (Qal'at al-Bahrain) is an archaeological mound covering around 17.5 hectares, on the northern coast of Bahrain island, holding traces of more than 4,000 years of continuous settlement. The site was the capital of the ancient Dilmun civilization, one of the most important archaeological sites in the Arabian Gulf region — Dilmun is even mentioned in the Epic of Gilgamesh as "the land of immortality."
+Bahrain Fort (Qal'at al-Bahrain) is an archaeological mound covering around 17.5 hectares, on the northern coast of Bahrain island, holding traces of more than 4,000 years of continuous settlement. It was the capital of the ancient Dilmun civilization and is one of the main archaeological sites in the Arabian Gulf. Dilmun appears in the Epic of Gilgamesh as "the land of immortality."
 
-Archaeological expeditions (excavation work began in 1954, led by a Danish team, and continued for decades) uncovered seven stacked archaeological layers spanning from around 2300 BCE to the 16th century CE, including Kassite, Greek, Portuguese, and Persian remains — residential, commercial, religious, and military structures that document the site's importance as a trading port across the ages. The fort visible today above the mound was built during the Portuguese period.
+Excavations began in 1954 under a Danish team and continued for decades. They uncovered seven layers stacked on top of each other, from around 2300 BCE to the 16th century CE, with Kassite, Greek, Portuguese and Persian remains: houses, shops, religious buildings and military structures from the centuries when the site was a trading port. The fort visible today above the mound was built during the Portuguese period.
 
-Bahrain Fort was inscribed on the UNESCO World Heritage List in 2005, in recognition of its exceptional testimony to cultural exchange and urban development over thousands of years.
+UNESCO added Bahrain Fort to its World Heritage List in 2005, citing what it shows about cultural exchange and urban development over thousands of years.
 
-The site includes a museum, opened in 2008, made up of 5 halls displayed in chronological order across the different archaeological eras, and holding more than 500 artifacts excavated from the site.
+The site museum opened in 2008. Its 5 halls run in chronological order through the archaeological eras and hold more than 500 artifacts dug up at the site.
 
 ## Practical Information
 

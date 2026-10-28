@@ -10,7 +10,7 @@ imageCredit: "AI illustration · Hakolah"
 
 ## The 8-bit Style Is Everywhere Right Now
 
-The audio and visual style of classic video games (8-bit) is seeing huge popularity in creative content right now, whether in short videos, indie games, or even ads. Even so, many content creators spend hours searching for sound effects in exactly this style, when they can actually be generated in a matter of seconds.
+The sound and look of classic 8-bit video games are popular in short videos, indie games and ads. Many creators spend hours searching for sound effects in this style, when a free tool can generate them in seconds.
 
 ## The Tool: jsfxr
 
@@ -42,11 +42,11 @@ Once you reach the result you want, you can export the sound directly as a **WAV
 
 ## Where to Find the Tool
 
-The tool is open source and hosted on more than one link by different developers, all nearly copies of the same source code. The following links have been checked and verified safe before being listed here:
+Because it is open source, several developers host near-identical copies. We checked that each of these links is safe before listing it:
 
-- [🌐 sfxr.me](https://sfxr.me/) — the most popular and most up-to-date version.
-- [🌐 szfxr on GitHub Pages](https://szfpro.github.io/szfxr/) — an alternative version hosted on GitHub.
-- [🌐 sn_jsfxr by Harmless Lion](https://harmlesslion.com/sn_sfxr/) — another alternative version with a similar interface.
-- [🌐 TSFXR](https://tsfxr.jdmnk.dev/) — another version with a different interface and an excellent user experience.
+- [🌐 sfxr.me](https://sfxr.me/): the most popular and most up-to-date version.
+- [🌐 szfxr on GitHub Pages](https://szfpro.github.io/szfxr/): another version, hosted on GitHub.
+- [🌐 sn_jsfxr by Harmless Lion](https://harmlesslion.com/sn_sfxr/): another version with a similar interface.
+- [🌐 TSFXR](https://tsfxr.jdmnk.dev/): a version with a different interface that is easy to use.
 
-If one of the links goes down or its address changes in the future, the rest remain an immediate alternative for the same tool.
+If one link goes down or moves, the others still work.

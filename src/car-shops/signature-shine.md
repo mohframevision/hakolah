@@ -3,7 +3,7 @@ title: سيجنتشر شاين
 icon: 🚿
 desc: خدمات العناية بالسيارات — غسيل، تلميع، نانو سيراميك، وحماية داخلية وخارجية، بالسهلة الشمالية.
 title_en: Signature Shine
-desc_en: Car care services — washing, polishing, nano ceramic coating, and interior/exterior protection, in North Sehla.
+desc_en: "Car washing, polishing, nano ceramic coating, and interior and exterior protection, in North Sehla."
 categories:
   - غسيل
   - تلميع

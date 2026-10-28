@@ -2,7 +2,7 @@
 pageScript: "typing"
 title: "Arabic Typing Speed Test"
 icon: ⌨️
-desc: "A real challenge to your speed and accuracy — sentences in literary Arabic, rich in hamzas and hard letter forms, not simplified language. The timer starts with your first keystroke."
+desc: "Tests your speed and accuracy on sentences in literary Arabic, full of hamzas and hard letter forms. The timer starts with your first keystroke."
 categories:
   - نص
 dateAdded: 2026-09-06
@@ -14,9 +14,9 @@ noThirdParty: true
 
 <details class="calc-intro">
   <summary>ℹ️ What does this experiment do?</summary>
-  <p>Most typing tests are in English, and Arabic is genuinely different: letters join up, hamzas and taa marbuta matter, and the Arabic keyboard has its own rhythm.</p>
-  <p>The sentences here are deliberately in literary Arabic — not simplified, not colloquial. This is a challenge, not a beginner drill: it is dense with the different hamza forms that fast typists get wrong most often. The timer starts on your first keystroke rather than before it, and letters colour as you go: green for correct, red for wrong.</p>
-  <p>Your score is saved in your browser alone — no account, no server — so you're competing with yourself.</p>
+  <p>Most typing tests are in English, and Arabic is different: letters join up, hamzas and taa marbuta matter, and the Arabic keyboard has its own rhythm.</p>
+  <p>The sentences are in literary Arabic, neither simplified nor colloquial, and they are packed with the hamza forms that fast typists get wrong most often. Beginners may find it hard. The timer starts on your first keystroke rather than before it, and letters colour as you go: green for correct, red for wrong.</p>
+  <p>Your score is saved only in your browser, with no account and no server, so you're competing with yourself.</p>
 </details>
 
 <div class="instrument-picker type-levels">

@@ -7,7 +7,7 @@ langSwitchUrl: "/restaurants/kabsatna-lmatna.html"
 
 ## About
 
-Kabsatna Lmatna is a kabsa restaurant in Saar, with the slogan "the gathering starts here". It specializes in kabsa, built on one idea: it should taste like home cooking, not restaurant food.
+Kabsatna Lmatna is a kabsa restaurant in Saar, with the slogan "the gathering starts here". It only makes kabsa, and aims for the taste of home cooking.
 
 ## How It's Cooked
 

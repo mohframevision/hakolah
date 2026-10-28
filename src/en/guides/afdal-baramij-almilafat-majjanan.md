@@ -22,7 +22,7 @@ To shrink a large video while keeping its quality, use **HandBrake**: pick your 
 
 ## An Archive File? 7-Zip
 
-**7-Zip** opens ZIP, RAR, ISO and more, compresses folders with a password, and is genuinely free with no purchase reminders. If you use WinRAR, make sure it's updated to version 7.13 or newer, since it doesn't update itself.
+**7-Zip** opens ZIP, RAR, ISO and more, compresses folders with a password, and is free with no purchase reminders. If you use WinRAR, make sure it's updated to version 7.13 or newer, since it doesn't update itself.
 
 ## A Video That Won't Play? VLC
 

@@ -3,7 +3,7 @@ title: "الكود صار مادة تُشكَّل: القصة الحقيقية �
 icon: "🧪"
 desc: "قرأنا فكرة رائجة هالفترة — إن الكود صار مادة تشكيلية متاحة للجميع، مو حكراً على المبرمجين. جربناها فعلياً على أرض الواقع عبر قسم تجارب بهكوله، وهذا اللي تعلمناه: السرعة مو المشكلة اللي انحلّت، القرار والاختبار هم اللي لسا شغل بشري بالكامل."
 title_en: "Code Became a Material You Shape: The Real Story Behind Hakolah's Experiments"
-desc_en: "We read a popular idea going around — that code has become a shapeable material available to everyone, not just programmers. We actually tested it through Hakolah's Experiments section, and here's what we learned: speed wasn't the problem that got solved — judgment and testing are still entirely human work."
+desc_en: "A popular idea says code has become a material anyone can shape, programmers or not. We tested it in Hakolah's Experiments section. Writing code got faster, but judgment and testing were still entirely our job."
 categories:
   - تقنية وبرمجيات
   - نصائح

@@ -38,7 +38,7 @@ langSwitchUrl: "/about.html"
 
 # About Hakolah
 
-Hakolah is a Bahraini guide that gathers restaurants, cafes, bakeries, stores, places and car shops in Bahrain in one place, in Arabic and English, to save visitors time and effort.
+Hakolah is a Bahraini guide that gathers restaurants, cafes, bakeries, stores, places and car shops in Bahrain in one place, in Arabic and English.
 
 ## What will you find on Hakolah?
 
@@ -46,12 +46,12 @@ Hakolah is a Bahraini guide that gathers restaurants, cafes, bakeries, stores, p
 - **Smart search:** search by place name, kind of food, or even the name of a dish inside a menu, and filter by area and category.
 - **"Pick for me":** if you can't decide where to eat, it chooses a place for you with a simple game.
 - **"Near me":** sorts places by how close they are to you (if you allow location, and we don't store it).
-- **Articles and guides:** carefully written guides, sometimes on topics that matter to everyone, like protecting your accounts.
+- **Articles and guides:** practical guides, some on topics everyone deals with, like protecting your accounts.
 - **For creators:** a separate portal with [free apps and tools](/en/creators.html) for video editing, design and audio, AI experiments, and the Hakolah Sounds tool.
 
 ## How do we collect the information?
 
-We collect place data from public sources: the places' own accounts, their ordering systems and some open maps, then organize it with AI assistance and the site owner reviews it. Some cards are still **being completed** and may lack a menu or hours; we fill them in gradually. If you see outdated or wrong information, please tell us so we can fix it.
+We collect place data from public sources: the places' own accounts, their ordering systems and some open maps, then organize it with AI assistance, and the site owner reviews it. Some cards are still being completed and may lack a menu or hours; we fill them in gradually. If you see outdated or wrong information, please tell us so we can fix it.
 
 ## Is the current content final?
 
@@ -61,23 +61,23 @@ You can save what you like to "Favorites" without signing in, and the list is st
 
 <h2 id="visited">The "✅ Personally visited" badge</h2>
 
-Some cards carry a "✅ Personally visited" badge — this badge means the Hakolah site owner has actually visited this place in person, not just found the info online. We add it gradually every time we visit a new place.
+This badge means the site owner has been to the place in person, beyond finding its details online. We add it each time we visit a new place.
 
 <h2 id="liked">The "👍 Recommended" badge</h2>
 
-A personal recommendation badge from the site owner — it only appears on places they genuinely liked after trying them. Not having the badge doesn't mean a place is bad, it just means we haven't shared a personal opinion on it yet.
+The site owner's personal recommendation. It only appears on places they liked after trying them. A place without it isn't necessarily bad; we just haven't given an opinion on it yet.
 
 <h2 id="reviews">Our policy on opinions and reviews</h2>
 
-Hakolah is a guide that gathers information — it is not a review site. A restaurant, cafe or bakery being listed here doesn't mean we recommend it or have rated it; most cards are information only: the name, location and contact details.
+Hakolah gathers information about places; it doesn't review them. A restaurant, cafe or bakery being listed here doesn't mean we recommend it or have rated it; most cards are information only: the name, location and contact details.
 
-A personal opinion only appears when it's stated clearly and openly, like the "👍 Recommended" badge. And we only give an opinion on a place after the site owner has tried it personally several times — enough to know most of what it's like: tasting the food and dealing with the staff.
+When we do give a personal opinion, it is labelled, like the "👍 Recommended" badge. The site owner has to try a place several times first, enough to know the food and how the staff treat customers.
 
-If a place has widespread negative attention online, we most likely won't share any opinion on it — even a positive one — unless our own personal experience there is enough to support it.
+If a place has a lot of negative attention online, we will most likely give no opinion on it, positive or negative, unless our own visits there are enough to support one.
 
 <h2 id="ads">Ads and paid links</h2>
 
-We show ads (after you accept cookies), and some links are **referral links** that earn us a small commission if you buy through them, which we state clearly. Any place that pays to be featured is labelled "Ad", and doesn't rise in search or in "Pick for me" because of it.
+We show ads (after you accept cookies), and some links are referral links that earn us a small commission if you buy through them, which we state clearly. Any place that pays to be featured is labelled "Ad", and doesn't rise in search or in "Pick for me" because of it.
 
 <h2 id="privacy">Your privacy</h2>
 

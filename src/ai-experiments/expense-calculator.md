@@ -4,7 +4,7 @@ title: "حاسبة المصروفات والدخل"
 icon: 🧮
 desc: تسجّل دخلك ومصروفاتك بفئات تختارها، وشوف رصيدك وتوزيع مصروفاتك فوراً — بلا سيرفر ولا حساب، كل شي محفوظ بمتصفحك بس.
 title_en: "Income & Expense Calculator"
-desc_en: Log your income and expenses with categories you choose, and see your balance and spending breakdown instantly — no server, no account, everything stays in your browser.
+desc_en: "Log your income and expenses under categories you choose, and see your balance and spending breakdown right away. There is no server and no account: everything stays in your browser."
 categories:
   - مال
 dateAdded: 2026-09-06
