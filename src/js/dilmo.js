@@ -99,7 +99,7 @@
     cHowTired: ["plain", ["نعسان قليلاً… وأنت؟", "متعب بعض الشيء، لكني بخير. وأنت؟"]],
     cHowGrumpy: ["plain", ["كنتُ منزعجاً قليلاً، لكن سؤالك أسعدني.", "أفضل الآن بعد أن سألت."]],
     cName: ["plain", ["اسمي دلمو!", "أنا دلمو، رفيقك في هكوله.", "دلمو، وهؤلاء أصدقائي."]],
-    cAge: ["plain", ["عمري؟ وُلدتُ مع هكوله!", "صغير، لكني أعرف أماكن كثيرة.", "لا أعدّ السنين، أعدّ النجوم."]],
+    cAge: ["plain", ["عمري {v}، وُلدتُ في ٢٨ أكتوبر ٢٠٢٦.", "عمري {v} فقط، صغير لكني أعرف أماكن كثيرة."]],
     cHome: ["plain", ["أعيش هنا في هكوله، في البحرين.", "بيتي هذه الساحة، وأحياناً خلف الشجيرة."]],
     cPraise: ["plain", ["شكراً! أحرجتني.", "وأنت ألطف يا {n}!", "كلامك جعل يومي أجمل."]],
     cInsult: ["plain", ["هذا ليس لطيفاً.", "لماذا تقول هذا؟", "سأتظاهر أني لم أسمع."]],
@@ -245,7 +245,7 @@
     cHowTired: ["plain", ["A little sleepy… and you?", "A bit tired, but fine. And you?"]],
     cHowGrumpy: ["plain", ["I was a bit grumpy, but your question cheered me up.", "Better now that you asked."]],
     cName: ["plain", ["My name is Dilmo!", "I'm Dilmo, your Hakolah companion.", "Dilmo, and these are my friends."]],
-    cAge: ["plain", ["My age? I was born with Hakolah!", "Young, but I know lots of places.", "I don't count years, I count stars."]],
+    cAge: ["plain", ["I'm {v} old. I was born on 28 October 2026.", "Just {v} old, young but I know lots of places."]],
     cHome: ["plain", ["I live here in Hakolah, in Bahrain.", "This playground is my home, and sometimes behind the bush."]],
     cPraise: ["plain", ["Thank you! You're making me blush.", "You're even nicer, {n}!", "That made my day."]],
     cInsult: ["plain", ["That's not nice.", "Why would you say that?", "I'll pretend I didn't hear that."]],
@@ -1594,6 +1594,12 @@
       if (wd === 5 || wd === 6) return line("c_weekendNow");
       var d = 5 - wd;  // Bahrain's weekend: Friday and Saturday
       return line("c_weekendIn", { v: d === 1 ? T("يوم واحد", "1 day") : d === 2 ? T("يومان", "2 days") : T(num(d) + " أيام", d + " days") });
+    }
+    if (intent === "age") {  // his real age, counted from the day the Dilmo page went up
+      var dd = Math.floor((now - Date.UTC(2026, 9, 27, 21)) / 864e5), mm = Math.floor(dd / 30.44);
+      // ponytail: days then months only; add years once he turns one
+      return line("cAge", { v: dd < 60 ? (dd < 1 ? T("أقل من يوم", "less than a day") : dd === 1 ? T("يوم واحد", "1 day") : dd === 2 ? T("يومان", "2 days") : T(num(dd) + (dd <= 10 ? " أيام" : " يوماً"), dd + " days"))
+        : T(num(mm) + (mm <= 10 ? " أشهر" : " شهراً"), mm + " months") });
     }
     if (intent === "t_weather") {  // no live weather here: say so, and what the season is usually like
       var mo = +new Intl.DateTimeFormat("en-US", { timeZone: tz, month: "numeric" }).format(now);
