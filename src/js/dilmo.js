@@ -142,7 +142,7 @@
     cMemForget: ["plain", ["حسناً، نسيتُ كل ما أخبرتني به.", "تمّ، صفحة جديدة بيننا."]],
     cMemWho: ["plain", ["اسمك {n}! لم أنسَ.", "أنت {n} طبعاً!"]],
     cMemNoName: ["plain", ["لم تخبرني باسمك بعد. قل: اسمي…", "أعرفك باسم {n} هنا، لكن ما اسمك الحقيقي؟ قل: اسمي…"]],
-    cMemKnow: ["plain", ["أعرف أن {k}.", "أتذكّر أن {k}!"]],
+    cMemKnow: ["plain", ["أعرف {k}.", "أتذكّر {k}!"]],
     cMemNothing: ["plain", ["لا أعرف عنك شيئاً بعد. أخبرني ماذا تحب!", "لم تخبرني بشيء عنك بعد."]],
     cMemLike: ["plain", ["سأتذكّر أنك تحب {f}!", "حفظتُها: أنت تحب {f}."]],
     cMemHate: ["plain", ["فهمت، لن أقترح عليك {f}.", "حسناً، سأبعد عنك {f}."]],
@@ -535,7 +535,7 @@
     this.textContent = soundOn ? T("الصوت: يعمل", "Sound: on") : T("الصوت: متوقّف", "Sound: off");
     if (soundOn) sfx("pop"); else stopSong();
   });
-  function quietSay(text, t) { bub.textContent = text; bub.hidden = false; bub.dataset.until = t + 700; bub._since = performance.now(); }
+  function quietSay(text, t) { if (keepBub(performance.now())) return; bub.textContent = text; bub.hidden = false; bub.dataset.until = t + 700; bub._since = performance.now(); }
   function foodCenter() {
     var r = foodDrag.el.getBoundingClientRect();
     return toStage({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 });
@@ -600,14 +600,17 @@
   function toStage(e) { var r = world.getBoundingClientRect(), z = r.width / world.offsetWidth || 1; return { x: (e.clientX - r.left) / z, y: (e.clientY - r.top) / z }; }
   function say(text, key, gap) {
     var t = performance.now();
+    if (key !== "pchat" && keepBub(t)) return;  // his answer to you stays readable; bumps and chatter wait
     if (key) { if (lastSay[key] && t - lastSay[key] < (gap || 4000)) return; lastSay[key] = t; }
     if (mainAway) { var fr = others(); if (fr.length) bsay(pick(fr), text); return; }  // he left: a friend speaks instead
     bub.textContent = text; bub.hidden = false; bub.dataset.until = t + clamp(text.length * 65, 1900, 7000); bub._since = t;
+    bub._keep = key === "pchat" ? +bub.dataset.until : 0;
     if (text !== "Zzz…") {
       var sy = syllables(text), q = /[؟?]\s*$/.test(text);
       speech = { t0: t, syl: sy }; talkUntil = t + sy.length * SYL + 150; babble(sy, q);
     }
   }
+  function keepBub(t) { return !bub.hidden && bub._keep && t < bub._keep; }
   function stir() {
     lastInput = performance.now();
     if (mood.sleepy > .6) { mood.sleepy = 0; mood.startle = 1; pos.vy = -9; bub.hidden = true; say(line("wake"), "wake", 3000); }
@@ -1617,9 +1620,9 @@
     if (u.intent === "whoAmI") return me.name ? line("cMemWho", { n: me.name }) : line("cMemNoName", { n: n });
     if (u.intent === "know") {
       var bits = [];
-      if (me.name) bits.push(T("اسمك " + me.name, "your name is " + me.name));
-      if (me.likes.length) bits.push(T("تحب " + foodList(me.likes), "you like " + foodList(me.likes)));
-      if (me.dislikes.length) bits.push(T("لا تحب " + foodList(me.dislikes), "you don't like " + foodList(me.dislikes)));
+      if (me.name) bits.push(T("أنّ اسمك " + me.name, "your name is " + me.name));
+      if (me.likes.length) bits.push(T("أنك تحب " + foodList(me.likes), "you like " + foodList(me.likes)));
+      if (me.dislikes.length) bits.push(T("أنك لا تحب " + foodList(me.dislikes), "you don't like " + foodList(me.dislikes)));
       return bits.length ? line("cMemKnow", { k: bits.join(T("، و", ", and ")) }) : line("cMemNothing");
     }
     if (u.food && u.hate) {
