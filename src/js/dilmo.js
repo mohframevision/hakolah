@@ -154,6 +154,8 @@
     cNotFound: ["plain", ["لم أجد في هكوله مكاناً يطابق هذا بعد.", "بحثتُ في كل الأماكن ولم أجد شيئاً مطابقاً، جرّب كلمة أخرى."]],
     cMemMood: ["plain", ["آخر مرة كنت حزيناً يا {n}… هل أنت أفضل اليوم؟", "اشتقتُ إليك يا {n}. هل تحسّن مزاجك؟"]],
     cMemTried: ["plain", ["هل جرّبتَ «{p}» الذي اقترحته عليك؟", "يا {n}، هل ذهبتَ إلى «{p}»؟"]],
+    cTriedYes: ["joy", ["رائع! يسعدني أن اقتراحي نفعك.", "جميل! متى أردتَ مكاناً آخر فاسألني.", "هذا ما أحبّ سماعه!"]],
+    cTriedNo: ["plain", ["لا بأس، ما زال ينتظرك. هل أقترح عليك مكاناً آخر؟", "ربما في وقت لاحق. أأقترح عليك غيره؟"]],
     cMemLikeAgain: ["plain", ["أهلاً يا {n}! ما زلتَ تحب {f}؟", "تذكّرتُ أنك تحب {f} يا {n}!"]],
     buddyReply: ["joy", ["أتفق معه!", "وأنا أيضاً يا {n}!", "كلام جميل يا {n}."]],
     sing: ["calm", ["أغنية هادئة لك.", "دعني أغنّي قليلاً.", "استرخِ واستمع.", "لحن للهدوء.", "أغنّي حين أرتاح.", "أغنية صغيرة قبل القيلولة.", "هذا لحني المفضّل."]],
@@ -300,6 +302,8 @@
     cNotFound: ["plain", ["I couldn't find a place on Hakolah that matches that yet.", "I searched every place and found nothing, try another word."]],
     cMemMood: ["plain", ["You were sad last time, {n}… feeling better today?", "I missed you, {n}. Are you in a better mood?"]],
     cMemTried: ["plain", ["Did you try «{p}», the place I suggested?", "{n}, did you go to «{p}»?"]],
+    cTriedYes: ["joy", ["Great! Glad my tip helped.", "Nice! Ask me whenever you want another place.", "That's what I like to hear!"]],
+    cTriedNo: ["plain", ["No problem, it's still there. Want another suggestion?", "Maybe later then. Shall I suggest something else?"]],
     cMemLikeAgain: ["plain", ["Hi {n}! Still a fan of {f}?", "I remembered that you like {f}, {n}!"]],
     buddyReply: ["joy", ["I agree with him!", "Me too, {n}!", "Well said, {n}."]],
     sing: ["calm", ["A calm song for you.", "Let me sing a little.", "Relax and listen.", "A tune to settle down.", "I sing when I'm relaxed.", "A little song before a nap.", "This is my favourite tune."]],
@@ -605,6 +609,7 @@
     if (key !== "pchat" && keepBub(t)) return;  // his answer to you stays readable; bumps and chatter wait
     if (key) { if (lastSay[key] && t - lastSay[key] < (gap || 4000)) return; lastSay[key] = t; }
     if (mainAway) { var fr = others(); if (fr.length) bsay(pick(fr), text); return; }  // he left: a friend speaks instead
+    bub.classList.remove("link"); bub.removeAttribute("title");
     bub.textContent = text; bub.hidden = false; bub.dataset.until = t + clamp(text.length * 65, 1900, 7000); bub._since = t;
     bub._keep = key === "pchat" ? +bub.dataset.until : 0;
     if (text !== "Zzz…") {
@@ -1515,7 +1520,9 @@
   }
   function itemName(it) { return EN ? it.title_en || it.title : it.title; }
   function itemUrl(r) { var it = r.e.it; return (EN && it.detailUrlEn) || it.detailUrl || r.e.sec + ".html?q=" + encodeURIComponent(itemName(it)); }
-  var resultsEl = document.getElementById("pp-results");
+  var resultsEl = document.getElementById("pp-results"), bubLink = null;
+  // his suggestion is a link: tap the bubble and he takes you to that place
+  bub.addEventListener("click", function () { if (bub.classList.contains("link")) location.href = bub.dataset.href; });
   // he says "the rest are below": when that list is out of view, a button in his world takes you to it
   var resHint = document.createElement("button"); resHint.type = "button"; resHint.className = "res-hint"; resHint.hidden = true;
   resHint.textContent = T("↓ النتائج", "↓ Results"); stage.appendChild(resHint);
@@ -1530,7 +1537,7 @@
       s.textContent = r.sub ? r.sub : (EN ? sec.title_en : sec.title) + (r.dish ? " · " + (EN ? r.dish.name_en || r.dish.name : r.dish.name) + (r.dish.price ? " ⁦" + r.dish.price + "⁩" : "") : "");
       a.appendChild(b); a.appendChild(s); resultsEl.appendChild(a);
     });
-    resultsEl.hidden = !list.length;
+    resultsEl.hidden = !list.length; bubLink = list.length ? list[0].href || itemUrl(list[0]) : null;
     requestAnimationFrame(function () { var r = resultsEl.getBoundingClientRect(); resHint.hidden = !list.length || (r.top < innerHeight && r.bottom > 0); });
   }
   // answers a "where can I find…" message with real places; null when there's nothing to look for
@@ -1585,6 +1592,7 @@
       asked = { k: "which", i: intent, until: performance.now() + 20000 }; return line("dWhich");
     }
     var it = e.it, L = it.links || {}, p = itemName(it);
+    bubLink = itemUrl({ e: e });
     if (intent === "dHours") {
       showResults(ps.slice(0, 3).map(function (x) { return { e: x, sub: (EN ? x.it.hours_en || x.it.hours : x.it.hours) || T("الساعات غير مؤكدة بعد", "Hours not confirmed yet") }; }));
       var h = EN ? it.hours_en || it.hours : it.hours;
@@ -1687,7 +1695,8 @@
     }
     if (u.intent === "sad" || u.intent === "happy") remember("mood", { m: u.intent, t: Date.now() });
     if (u.intent === "yes" || u.intent === "no") {
-      if (pend === "suggest") { if (u.intent === "yes") return findPlaces(u, true) || line("cYesSuggest"); key = "cNoSuggest"; asked = { k: "play" }; }
+      if (pend === "tried") { if (u.intent === "yes") key = "cTriedYes"; else { key = "cTriedNo"; asked = { k: "suggest" }; } }
+      else if (pend === "suggest") { if (u.intent === "yes") return findPlaces(u, true) || line("cYesSuggest"); key = "cNoSuggest"; asked = { k: "play" }; }
       else if (pend === "play" && u.intent === "yes") u.intent = "play";
       else key = u.intent === "yes" ? "cYes" : "cNo";
     }
@@ -1732,7 +1741,7 @@
   function recall() {
     var day = 864e5, now = Date.now(), n = myName(), key = null, v = { n: n };
     if (me.mood && me.mood.m === "sad" && now - me.mood.t < 3 * day) { key = "cMemMood"; asked = { k: "how", until: performance.now() + 20000 }; }
-    else if (me.tried && now - me.tried.t > 6 * 36e5 && now - me.tried.t < 14 * day) { key = "cMemTried"; v.p = me.tried.p; }
+    else if (me.tried && now - me.tried.t > 6 * 36e5 && now - me.tried.t < 14 * day) { key = "cMemTried"; v.p = me.tried.p; asked = { k: "tried", until: performance.now() + 30000 }; }
     else if (me.likes.length) { key = "cMemLikeAgain"; v.f = FOOD_NAME[pick(me.likes)]; }
     if (key) say(line(key, v), "recall", 1000);
   }
@@ -1764,6 +1773,7 @@
     if (loadWords()) wordsP.then(go); else go();
   });
   function answer(msg) {
+    bubLink = null;
     var u = understand(msg), n = myName(), lesson = lessonFor(u);
     nextSong = Math.max(nextSong, performance.now() + 45000);  // you're talking: no surprise songs for a while
     if (!lesson && u.intent === "sing" && !song) { setTimeout(sing, 900); return; }
@@ -1772,7 +1782,7 @@
     var text = lesson ? lesson.a.split("{n}").join(n) : (speaker && persona(speaker, u, n)) || reply(u, n);
     var shown = text || line("cFriendCalled", { n: n });
     if (speaker) setTimeout(function () { if (player) bsay(speaker, shown); }, 1100);
-    else setTimeout(function () { say(shown, "pchat", 300); }, 1300);
+    else { var link = bubLink; setTimeout(function () { say(shown, "pchat", 300); if (link) { bub.dataset.href = link; bub.classList.add("link"); bub.title = T("اضغط لفتح المكان", "Tap to open the place"); } }, 1300); }
     lastEx = { q: msg, a: shown, taught: !!lesson, u: u }; renderTrain();
     var o = pick(others());
     if (!called && o && !mainAway && (u.intent === "hi" || u.intent === "praise") && Math.random() < .5) setTimeout(function () { if (player) bsay(o, line("buddyReply", { n: n })); }, 2900);
