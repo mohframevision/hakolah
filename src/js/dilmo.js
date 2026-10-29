@@ -657,7 +657,7 @@
     if (idle > 20000) say(line("bored"), "bored", 25000);
     if (r < .35) gaze = { x: Math.random() * 2 - 1, y: Math.random() * 1.2 - .7, until: t + 900 + Math.random() * 1400 };
     else if (r < .55 && !reduce) pos.vy = -4 - Math.random() * 4;
-    else if (r < .7 && !reduce) { pos.vx = (Math.random() < .5 ? -1 : 1) * (2 + Math.random() * 3); pos.vy = -3; }
+    else if (r < .7 && !reduce) { var hd = roomSide(pos.x, R); if (hd) { pos.vx = hd * (2 + Math.random() * 3); pos.vy = -3; } }  // a little hop, toward the side with room
     else if (r < .85 && others().length) {  // glances at one of his friends
       var o = pick(others()), dx = o.x - pos.x, dy = o.y - pos.y, d = Math.hypot(dx, dy) || 1;
       gaze = { x: dx / d, y: dy / d, until: t + 1600 };
@@ -896,7 +896,7 @@
       b.vy = -7 * f.energy; b.joy = 1; b.svy -= .2; sfx("pop"); dent(d.lx, d.ly, 10 * sc, b.pts);
       if (f.player) return;  // your own character just squishes, it doesn't talk back at you
       bsay(b, line(f.shy ? "buddyShyPoke" : "buddyPoke"));
-      if (f.shy) { b.mode = "hide"; b.tx = clamp(pos.x + (b.x < pos.x ? 1 : -1) * (R + r), r, W - r); b.next = performance.now() + 2500; }
+      if (f.shy) { b.mode = "hide"; b.tx = clamp(pos.x + (b.x < pos.x ? 1 : -1) * (R + r + 10), r, W - r); b.next = performance.now() + 2500; }
     }
     el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
     el.addEventListener("dblclick", function () { b.spin += 360; b.joy = 1; feel(b.em, "conf", .7); b.vy = -9 * f.energy; if (!f.player) bsay(b, line("spin")); });
@@ -939,18 +939,18 @@
   }
   function startTag(b, t) {
     var o = pick(buddies.filter(function (x) { return x !== b && !x.drag; })); if (!o) return;
-    b.mode = "tag"; b.other = o; o.mode = "flee"; o.other = b; b.next = o.next = t + 6500;
+    b.mode = "tag"; b.other = o; o.mode = "flee"; o.other = b; b.next = o.next = t + 4500;
     bsay(b, line("tagStart"));
   }
   function think(b, t) {
     var r = b.f.r;
-    b.next = t + (2500 + Math.random() * 3500) / b.f.energy; b.mode = "wander"; b.other = null;
-    if (song) { b.mode = "sing"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 8), r, W - r); b.next = t + 800; return; }
+    b.next = t + (1800 + Math.random() * 2600) / b.f.energy; b.mode = "wander"; b.other = null;
+    if (song) { b.mode = "sing"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 14), r, W - r); b.next = t + 800; return; }
     if (isNight && t > (b.awakeUntil || 0)) { b.mode = "sleep"; b.tx = b.home; b.next = t + 6000; return; }  // bedtime in Bahrain
     if (player && bfOf(b) >= .5 && Math.random() < .5) { b.mode = "follow"; b.next = t + 5000; return; }  // close friends tag along
-    if (mood.annoy > .5 || mood.joy < -.2) { b.mode = "comfort"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 4), r, W - r); b.next = t + 2500; return; }
+    if (mood.annoy > .5 || mood.joy < -.2) { b.mode = "comfort"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 12), r, W - r); b.next = t + 2500; return; }
     if (b.f.shy && ptr.has && !ptr.out && Math.hypot(ptr.x - b.x, ptr.y - b.y) < 140) {  // hides behind him, on the side away from the pointer
-      b.mode = "hide"; b.tx = clamp(pos.x + (ptr.x < pos.x ? 1 : -1) * (R + r), r, W - r); feel(b.em, "shy", .7); feel(b.em, "fear", .3); return;
+      b.mode = "hide"; b.tx = clamp(pos.x + (ptr.x < pos.x ? 1 : -1) * (R + r + 10), r, W - r); feel(b.em, "shy", .7); feel(b.em, "fear", .3); return;
     }
     if (player && Math.random() < .18 && !buddies.some(function (x) { return x.mode === "visit"; })) {  // one at a time goes over to talk to the visitor's character
       b.mode = "visit"; b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 20), r, W - r); feel(b.em, "shy", b.f.shy ? .7 : .35);
@@ -960,19 +960,32 @@
     var k = Math.random();
     if (k < .3) b.tx = roomy(b);
     else if (k < .5 && !mainAway) chat(b, t);
-    else if (k < .62 && buddies.length > 1) startTag(b, t);
+    else if (k < .55 && buddies.length > 2 && !crowd(b) && !buddies.some(function (x) { return x.mode === "tag"; })) startTag(b, t);  // a short game of tag now and then, one at a time
     else if (k < .75 && !reduce) b.vy = -6 * b.f.energy;
     else if (k < .88 && buddies.filter(function (x) { return x.mode === "ball"; }).length < 2) { b.mode = "ball"; b.next = t + 3500; }  // two chasing the ball is a game, seven is a pile
     else b.tx = null;
   }
   // a spot to wander to: of a few tries, the one farthest from everyone else
-  function roomy(b) {
+  function roomy(b, dir) {  // dir: only look that way (after bumping into someone)
     var r = b.f.r, xs = buddies.filter(function (x) { return x !== b; }).map(function (x) { return x.x; }).concat(mainAway ? [] : [pos.x]), best = b.x, bd = -1;
     for (var i = 0; i < 4; i++) {
-      var x = clamp(b.x + (Math.random() - .5) * 420, r, W - r), d = xs.reduce(function (m, o) { return Math.min(m, Math.abs(o - x)); }, 1e9);
+      var x = clamp(b.x + (dir ? dir * (80 + Math.random() * 260) : (Math.random() - .5) * 520), r, W - r), d = xs.reduce(function (m, o) { return Math.min(m, Math.abs(o - x)); }, 1e9);
       if (d > bd) { bd = d; best = x; }
     }
     return best;
+  }
+  // free floor ahead of b in direction dir before it would touch Dilmo or a friend (the visitor walks through)
+  function gapAhead(b, dir) {
+    var L = buddies.filter(function (x) { return x !== b && !x.f.player; }).map(function (x) { return { x: x.x, y: x.y, r: x.f.r }; });
+    if (!mainAway) L.push({ x: pos.x, y: pos.y, r: R });
+    return L.reduce(function (m, o) { var d = (o.x - b.x) * dir; return d > 0 && Math.abs(o.y - b.y) < b.f.r + o.r ? Math.min(m, d - b.f.r - o.r - 6) : m; }, 1e9);
+  }
+  // which way has room for a hop from x: -1, 1, or 0 when both sides are taken
+  function roomSide(x, r) {
+    var xs = buddies.filter(function (b) { return !b.f.player; }).map(function (b) { return [b.x, b.f.r]; });
+    var free = function (dir) { return x + dir * (r + 60) > r && x + dir * (r + 60) < W - r && !xs.some(function (o) { var d = (o[0] - x) * dir; return d > 0 && d < r + o[1] + 70; }); };
+    var a = free(-1), c = free(1);
+    return a && c ? (Math.random() < .5 ? -1 : 1) : a ? -1 : c ? 1 : 0;
   }
   function slot(b, mode) { return buddies.filter(function (x) { return x.mode === mode; }).indexOf(b); }
   // the nearest body standing almost on top of this one (Dilmo, a friend or the visitor), if any
@@ -993,7 +1006,10 @@
       if (b.mode === "flee") { feel(b.em, "fear", .3); b.em.heart = Math.max(b.em.heart, .45); }  // being chased: a playful fright
       if (b.f.player) b.tx = null;  // the visitor steers their own character, even during tag
       else if (b.mode === "tag" && b.other) b.tx = b.other.x;
-      else if (b.mode === "flee" && b.other) b.tx = clamp(b.x + (b.x < b.other.x ? -1 : 1) * 120, r, W - r);
+      else if (b.mode === "flee" && b.other) {  // run away from the chaser, toward open floor (not into the others)
+        var away = b.x < b.other.x ? -1 : 1, rs = gapAhead(b, away) > 40 ? away : gapAhead(b, -away) > 120 ? -away : away;
+        b.tx = clamp(b.x + rs * 120, r, W - r);
+      }
       else if (b.mode === "follow" && player) b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 16 + slot(b, "follow") * 46), r, W - r);
       else if (b.mode === "ball") b.tx = ball.x;
       if (b.mode === "comfort" && Math.hypot(pos.x - b.x, pos.y - b.y) < R + r + 24) {
@@ -1007,7 +1023,15 @@
       }
       if (b.tx != null && b.y >= fy - 1) {  // walks in little hops
         var dx = b.tx - b.x;
-        if (Math.abs(dx) > 14) { b.vx = Math.sign(dx) * (2.5 + 2.5 * b.f.energy); b.vy = -3 - 1.5 * b.f.energy; } else if (b.mode !== "tag" && b.mode !== "flee") b.tx = null;
+        if (Math.abs(dx) > 14) {
+          // each hop is sized to the room ahead and the distance left, so they walk up to someone and stop
+          // beside them (or land on their spot) instead of hopping into them and bouncing around
+          var dir = Math.sign(dx), chase = b.mode === "tag" || b.mode === "flee", hvy = 3 + 1.5 * b.f.energy, air = 2 * hvy / .75;
+          var room = gapAhead(b, dir), step = Math.min(2.5 + 2.5 * b.f.energy, Math.abs(dx) / air, room / air);
+          if (room < 6 && chase) { b.vx = dir * (3 + 2.5 * b.f.energy); b.vy = -9 - 2 * b.f.energy; }  // in a chase: leap over
+          else if (step < .6) { b.vx = 0; if (!chase) { b.tx = b.mode === "wander" ? roomy(b, -dir) : null; if (b.mode !== "wander") b.next = Math.min(b.next, t + 900); } }  // someone's right there: turn round (or wait beside them)
+          else { b.vx = dir * step; b.vy = -hvy; }
+        } else if (b.mode !== "tag" && b.mode !== "flee") b.tx = null;
       }
       var me2 = b.f.player;
       b.vy += (me2 ? playerGravity(b) : .75) * dt; if (me2 && !b.pound) b.vy = Math.min(b.vy, 18);  // terminal velocity
