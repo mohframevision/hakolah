@@ -2,7 +2,7 @@
   var stage = document.getElementById("play"), orb = document.getElementById("orb");
   var shadowEl = document.getElementById("orb-shadow"), bub = document.getElementById("orb-say");
   var body = orb.querySelector(".pb"), face = orb.querySelector(".pf");
-  var eyes = orb.querySelectorAll(".pe"), mouth = orb.querySelector(".pm"), world = document.getElementById("world");
+  var world = document.getElementById("world");
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches, TOUCH = matchMedia("(pointer: coarse)").matches;
   var R = 48, HALF = 70, K = 1, G = 40, labels = document.getElementById("labels");
   function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
@@ -326,7 +326,8 @@
     erx: spring(6.4, .2, .65), ery: spring(9.1, .2, .65),
     mrx: spring(4.3, .2, .65), mry: spring(5.7, .2, .65), mx: spring(0, .12, .75)
   };
-  var mood = { joy: .2, startle: 0, dizzy: 0, annoy: 0, sleepy: 0, shy: 0, tickle: 0, curious: 0 };
+  var mood = { joy: .2, startle: 0, dizzy: 0, annoy: 0, sleepy: 0, shy: 0, tickle: 0, curious: 0, fear: 0, sad: 0, love: 0, conf: 0, heart: 0 };
+  var FK = null, hbPulse = 0, lastDraw = 0;  // Dilmo's face kit (made at start), his heartbeat pulse
   var W = 0, ground = 0, pos = { x: 0, y: 0, vx: 0, vy: 0 };
   var ptr = { x: 0, y: 0, has: false, out: false }, drag = null;
   var t0 = performance.now(), last = t0, lastInput = t0, running = false, raf = 0;
@@ -390,6 +391,7 @@
     else if (name === "whoosh") hiss(.35, .18, 1400);
     else if (name === "splat") { hiss(.12, .3, 500); tone(150, 70, .16, "sine", .3); }
     else if (name === "munch") { for (var i = 0; i < 3; i++) hiss(.06, .25, 900 + i * 150, i * .2); }
+    else if (name === "beat") { tone(62, 48, .09, "sine", .05 + .07 * (v || 0)); tone(58, 44, .08, "sine", .03 + .05 * (v || 0), .16); }  // lub-dub
     else if (name === "snore") { tone(110, 90, 1.1, "sine", .05); hiss(1, .03, 300, .1); }
   }
   // speech: the line is split into rough syllables, each with a vowel shape read from the letters
@@ -541,7 +543,15 @@
     this.textContent = soundOn ? T("الصوت: يعمل", "Sound: on") : T("الصوت: متوقّف", "Sound: off");
     if (soundOn) sfx("pop"); else stopSong();
   });
-  function quietSay(text, t) { if (keepBub(performance.now())) return; bub.textContent = text; bub.hidden = false; bub.dataset.until = t + 700; bub._since = performance.now(); }
+  // «الكلام: متوقّف»: nobody talks and no text bubbles appear; faces, play and sounds stay
+  var quiet = !!store.quiet, talkBtn = document.getElementById("talk"), root = stage.closest(".dilmo") || document.body;
+  function applyQuiet() {
+    talkBtn.setAttribute("aria-pressed", String(!quiet)); talkBtn.textContent = quiet ? T("الكلام: متوقّف", "Talking: off") : T("الكلام: يعمل", "Talking: on");
+    root.classList.toggle("chat-off", quiet);
+    if (quiet) { bub.hidden = true; buddies.forEach(function (b) { b.bub.hidden = true; }); talkUntil = 0; }
+  }
+  talkBtn.addEventListener("click", function () { quiet = !quiet; store.quiet = quiet; saveStore(); applyQuiet(); });
+  function quietSay(text, t) { if (quiet || keepBub(performance.now())) return; bub.textContent = text; bub.hidden = false; bub.dataset.until = t + 700; bub._since = performance.now(); }
   function foodCenter() {
     var r = foodDrag.el.getBoundingClientRect();
     return toStage({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 });
@@ -606,7 +616,7 @@
   function toStage(e) { var r = world.getBoundingClientRect(), z = r.width / world.offsetWidth || 1; return { x: (e.clientX - r.left) / z, y: (e.clientY - r.top) / z }; }
   function say(text, key, gap) {
     var t = performance.now();
-    if (key !== "pchat" && keepBub(t)) return;  // his answer to you stays readable; bumps and chatter wait
+    if (quiet || (key !== "pchat" && keepBub(t))) return;  // his answer to you stays readable; bumps and chatter wait
     if (key) { if (lastSay[key] && t - lastSay[key] < (gap || 4000)) return; lastSay[key] = t; }
     if (mainAway) { var fr = others(); if (fr.length) bsay(pick(fr), text); return; }  // he left: a friend speaks instead
     bub.classList.remove("link"); bub.removeAttribute("title");
@@ -667,7 +677,7 @@
       circ.last = ang; circ.t = now;
       if (Math.abs(circ.sum) > Math.PI * 4 && !song) { circ.sum = 0; sing(); }
     } else { circ.last = null; circ.sum = 0; }
-    if (!drag && d < 170 && speed > 45) { mood.startle = Math.min(1, mood.startle + .7); say(line("startle"), "startle", 6000); }
+    if (!drag && d < 170 && speed > 45) { mood.startle = Math.min(1, mood.startle + .7); feel(mood, "fear", .4); mood.heart = Math.min(1, mood.heart + .3); say(line("startle"), "startle", 6000); }
     if (drag && cheek) {
       var l = local(p.x, p.y), cx = l.x - cheek.gx, cy = l.y - cheek.gy, len = Math.hypot(cx, cy) || 1;
       if (len > 110) {  // pulled too far: the cheek slips out of your fingers and springs back (grab his middle to carry him)
@@ -685,7 +695,7 @@
         var sg = Math.abs(drag.vx) > 8 ? Math.sign(drag.vx) : 0;
         if (sg && sg !== drag.lastSign) { drag.lastSign = sg; drag.rev.push(now); }
         drag.rev = drag.rev.filter(function (x) { return now - x < 1000; });
-        if (drag.rev.length >= 4) { mood.dizzy = Math.min(1, mood.dizzy + .05); say(line("shake"), "shake", 3000); }
+        if (drag.rev.length >= 4) { mood.dizzy = Math.min(1, mood.dizzy + .05); mood.conf = Math.min(1, mood.conf + .04); mood.annoy = Math.min(1, mood.annoy + .015); say(line("shake"), "shake", 3000); }
         // rocking him slowly side to side, like a cradle
         var rs = Math.abs(drag.vx) > 1.2 && Math.abs(drag.vx) < 7 ? Math.sign(drag.vx) : 0;
         if (rs && rs !== drag.cSign) { drag.cSign = rs; drag.crad.push(now); }
@@ -694,7 +704,7 @@
       }
     } else if (d < R) {
       var lp = local(p.x, p.y);
-      if (lp.y < -8 && speed > .5 && speed < 9) { mood.calm = Math.min(1, mood.calm + .02); befriend(.003); if (mood.calm > .9 && !song && performance.now() > nextSong) sing(); else if (mood.calm > .6 && !song) say(line("pet"), "pet", 6000); }
+      if (lp.y < -8 && speed > .5 && speed < 9) { mood.calm = Math.min(1, mood.calm + .02); mood.love = Math.min(1, mood.love + .006); if (mood.calm > .5) feel(mood, "shy", .35); befriend(.003); if (mood.calm > .9 && !song && performance.now() > nextSong) sing(); else if (mood.calm > .6 && !song) say(line("pet"), "pet", 6000); }
       var s = Math.sign(dx);
       if (s && s !== rubSign) { rubSign = s; rubTimes.push(now); }
       rubTimes = rubTimes.filter(function (t) { return now - t < 900; });
@@ -708,7 +718,7 @@
         b.rubs = []; b.joy = 1; b.tickleUntil = now + 900;
         if (!b.f.player && now - (b.tickAt || 0) > 3000) { b.tickAt = now; bsay(b, line("tickle")); if (!b.f.player) bfAdd(b, .01); }
       } else if (p.y < b.y - b.f.r * .3 && speed > .5 && speed < 9 && ++b.petN > 40) {  // slow strokes on the top of the head
-        b.petN = 0; b.joy = Math.min(1, b.joy + .3);
+        b.petN = 0; b.joy = Math.min(1, b.joy + .3); feel(b.em, "love", .55); feel(b.em, "shy", .4);
         if (!b.f.player && now - (b.petAt || 0) > 6000) { b.petAt = now; bsay(b, line("pet")); bfAdd(b, .01); }
       }
     });
@@ -730,13 +740,13 @@
     if (d.moved) {
       pos.vx = clamp(d.vx, -45, 45); pos.vy = clamp(d.vy, -45, 45);
       var s = Math.hypot(pos.vx, pos.vy);
-      if (s > 20) { mood.dizzy = Math.min(1, mood.dizzy + s / 60); sfx("whoosh"); say(line("throw"), "throw", 2500); }
+      if (s > 20) { mood.dizzy = Math.min(1, mood.dizzy + s / 60); feel(mood, "fear", Math.min(1, s / 40)); mood.heart = Math.min(1, mood.heart + .5); sfx("whoosh"); say(line("throw"), "throw", 2500); }
     } else if (d.shy) { mood.shy = 0; pos.vy = -7; sp.sy.vel += .15; say(line("unshy"), "unshy", 4000); }
     else if (performance.now() - d.t < 300) poke(d.lx, d.ly);
   }
   orb.addEventListener("pointerup", release);
   orb.addEventListener("pointercancel", release);
-  orb.addEventListener("dblclick", function () { sp.spin.t += 360; mood.joy = 1; pos.vy = -12; say(line("spin"), "spin", 2000); });
+  orb.addEventListener("dblclick", function () { sp.spin.t += 360; mood.joy = 1; feel(mood, "conf", .7); pos.vy = -12; say(line("spin"), "spin", 2000); });
 
   // feeding: drag a food chip into his mouth
   var foods = document.getElementById("foods");
@@ -792,7 +802,7 @@
   });
   document.documentElement.addEventListener("mouseleave", function () {
     ptr.out = true;
-    if (running) { mood.joy = Math.max(-.5, mood.joy - .15); say(line("left"), "left", 8000); }
+    if (running) { mood.joy = Math.max(-.5, mood.joy - .15); feel(mood, "sad", .45); say(line("left"), "left", 8000); }
   });
 
   // ---- friends: smaller orbs with their own colour, voice and temperament ----
@@ -846,10 +856,12 @@
     var tag = document.createElement("div"); tag.className = "name-tag";
     labels.appendChild(tag);
     if (f.player) { el.setAttribute("aria-label", T("شخصيتك ", "Your character ") + f.name); el.style.zIndex = 4; }  // the visitor walks in front of the bushes
-    var b = { f: f, el: el, sh: sh, bub: bb, body: el.querySelector(".bb"), face: el.querySelector(".bf"), eyes: el.querySelectorAll(".pe"), mouth: el.querySelector(".pm"),
+    var b = { f: f, el: el, sh: sh, bub: bb, body: el.querySelector(".bb"), face: el.querySelector(".bf"),
       x: x, y: ground + R - r - (fromEdge ? 140 : 0), vx: fromEdge ? -5 : 0, vy: 0, sx: 1, sy: 1, svx: 0, svy: 0, tilt: 0, lx: 0, ly: 0, joy: .2,
       next: performance.now() + 1500 + Math.random() * 2500, blink: -1e4, nextBlink: 0, sayUntil: 0, speech: null, mode: "wander", tx: null, other: null, drag: null, size: S, lastBump: 0, tag: tag, home: x,
-      petN: 0, pts: newRim(), bp: el.querySelector(".bp"), bg: el.querySelector(".bg"), cheek: null, spin: 0, spinA: 0, flat: false };
+      petN: 0, pts: newRim(), bp: el.querySelector(".bp"), bg: el.querySelector(".bg"), cheek: null, spin: 0, spinA: 0, flat: false,
+      em: { anger: 0, fear: 0, sad: 0, shy: 0, love: 0, conf: 0, heart: 0 }, lastDraw: 0 };
+    b.FK = faceKit(b.face, b.body);
     var sc = r / R;  // everything a pull or poke does to him, scaled to this body's size
     updateTag(b);
     el.addEventListener("pointerdown", function (e) {
@@ -877,7 +889,7 @@
     function up() {
       var d = b.drag; if (!d) return; b.drag = null;
       if (b.cheek) { var pulled = Math.hypot(b.cheek.px, b.cheek.py); b.cheek = null; if (pulled > 8 * sc) { b.joy = 1; sfx("snap"); return; } }
-      if (d.moved) { b.vx = clamp(d.vx, -40, 40); b.vy = clamp(d.vy, -40, 40); if (Math.hypot(b.vx, b.vy) > 18) bsay(b, line("buddyThrow")); return; }
+      if (d.moved) { b.vx = clamp(d.vx, -40, 40); b.vy = clamp(d.vy, -40, 40); var ts = Math.hypot(b.vx, b.vy); if (ts > 18) { feel(b.em, "fear", Math.min(1, ts / 35)); b.em.heart = Math.min(1, b.em.heart + .5); bsay(b, line("buddyThrow")); } return; }
       if (hs && hs.b === b) { endHideSeek(true); return; }
       b.awakeUntil = performance.now() + 20000;
       if (b.asleep) { b.asleep = false; b.vy = -6; bsay(b, line("buddyWoke")); return; }
@@ -887,7 +899,7 @@
       if (f.shy) { b.mode = "hide"; b.tx = clamp(pos.x + (b.x < pos.x ? 1 : -1) * (R + r), r, W - r); b.next = performance.now() + 2500; }
     }
     el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
-    el.addEventListener("dblclick", function () { b.spin += 360; b.joy = 1; b.vy = -9 * f.energy; if (!f.player) bsay(b, line("spin")); });
+    el.addEventListener("dblclick", function () { b.spin += 360; b.joy = 1; feel(b.em, "conf", .7); b.vy = -9 * f.energy; if (!f.player) bsay(b, line("spin")); });
     b.bp.setAttribute("d", pathD(b.pts, r)); b.bg.setAttribute("d", pathD(b.pts, r));
     buddies.push(b); return b;
   }
@@ -896,6 +908,7 @@
     return { x: dx * Math.cos(a) - dy * Math.sin(a), y: dx * Math.sin(a) + dy * Math.cos(a) };
   }
   function bsay(b, text) {
+    if (quiet) return;
     var t = performance.now(), sy = syllables(text);
     b.bub.textContent = text; b.bub.hidden = false; b.sayUntil = t + clamp(text.length * 65, 2000, 7000); b.bub._since = t; b.speech = { t0: t, syl: sy };
     sy.forEach(function (s, i) { var f = b.f.pitch * (s.v === "ee" ? 1.15 : s.v === "oo" ? .88 : 1); tone(f, f * .94, .08, "sine", .05, i * SYL / 1000); });
@@ -937,10 +950,10 @@
     if (player && bfOf(b) >= .5 && Math.random() < .5) { b.mode = "follow"; b.next = t + 5000; return; }  // close friends tag along
     if (mood.annoy > .5 || mood.joy < -.2) { b.mode = "comfort"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 4), r, W - r); b.next = t + 2500; return; }
     if (b.f.shy && ptr.has && !ptr.out && Math.hypot(ptr.x - b.x, ptr.y - b.y) < 140) {  // hides behind him, on the side away from the pointer
-      b.mode = "hide"; b.tx = clamp(pos.x + (ptr.x < pos.x ? 1 : -1) * (R + r), r, W - r); return;
+      b.mode = "hide"; b.tx = clamp(pos.x + (ptr.x < pos.x ? 1 : -1) * (R + r), r, W - r); feel(b.em, "shy", .7); feel(b.em, "fear", .3); return;
     }
     if (player && Math.random() < .18 && !buddies.some(function (x) { return x.mode === "visit"; })) {  // one at a time goes over to talk to the visitor's character
-      b.mode = "visit"; b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 20), r, W - r);
+      b.mode = "visit"; b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 20), r, W - r); feel(b.em, "shy", b.f.shy ? .7 : .35);
       setTimeout(function () { if (player) bsay(b, line("toPlayer", { n: player.f.name })); }, 900);
       return;
     }
@@ -974,16 +987,17 @@
     var r = b.f.r, fy = surfaceY(b);
     b.joy += (.15 - b.joy) * .004 * dt;
     b.asleep = b.mode === "sleep" && Math.abs(b.x - b.home) < 20 && b.y >= fy - 1;
-    if (b.asleep && t > (b.zzzAt || 0)) { b.zzzAt = t + 7000; b.bub.textContent = "Zzz…"; b.bub.hidden = false; b.bub._since = t; b.sayUntil = t + 2500; b.speech = null; }
+    if (b.asleep && !quiet && t > (b.zzzAt || 0)) { b.zzzAt = t + 7000; b.bub.textContent = "Zzz…"; b.bub.hidden = false; b.bub._since = t; b.sayUntil = t + 2500; b.speech = null; }
     if (!b.drag || !b.drag.moved) {
       if (b.f.player) playerControl(b, fy, dt, t); else if (!b.drag && t > b.next) think(b, t);
+      if (b.mode === "flee") { feel(b.em, "fear", .3); b.em.heart = Math.max(b.em.heart, .45); }  // being chased: a playful fright
       if (b.f.player) b.tx = null;  // the visitor steers their own character, even during tag
       else if (b.mode === "tag" && b.other) b.tx = b.other.x;
       else if (b.mode === "flee" && b.other) b.tx = clamp(b.x + (b.x < b.other.x ? -1 : 1) * 120, r, W - r);
       else if (b.mode === "follow" && player) b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 16 + slot(b, "follow") * 46), r, W - r);
       else if (b.mode === "ball") b.tx = ball.x;
       if (b.mode === "comfort" && Math.hypot(pos.x - b.x, pos.y - b.y) < R + r + 24) {
-        b.mode = "wander"; bsay(b, line("comfort")); mood.annoy *= .4; mood.joy = Math.max(mood.joy, .3); befriend(.01);
+        b.mode = "wander"; feel(b.em, "love", .45); bsay(b, line("comfort")); mood.annoy *= .4; mood.joy = Math.max(mood.joy, .3); befriend(.01);
         setTimeout(function () { say(line("thanks"), "thanks", 4000); }, 1500);
       }
       if (b.tx == null && b.y >= fy - 1 && !b.f.player && /^(wander|follow|ball)$/.test(b.mode) && t > (b.roomAt || 0)) {  // too crowded here: step aside
@@ -1006,6 +1020,7 @@
       if (b.x < r || b.x > W - r) { b.x = clamp(b.x, r, W - r); b.vx = me2 ? 0 : -b.vx * .6; }
       if (b.y < r) { b.y = r; b.vy = -b.vy * .5; }
     }
+    if (b.drag && b.drag.moved && b.y < surfaceY(b) - 120) { b.em.fear = Math.min(1, b.em.fear + .006 * dt); b.em.heart = Math.min(1, b.em.heart + .005 * dt); }
     var air = Math.min(.18, Math.abs(b.vy) * .01);
     b.svx = b.svx * Math.pow(.7, dt) + (1 - air * .6 + (b.crouch ? .14 : 0) - b.sx) * .18 * dt; b.sx += b.svx * dt;
     b.svy = b.svy * Math.pow(.7, dt) + (1 + air - (b.crouch ? .22 : 0) - b.sy) * .18 * dt; b.sy += b.svy * dt;
@@ -1027,7 +1042,7 @@
       if (X.ball) return;
       var Y = i ? A : B;
       if (X.main) { var l = local(Y.o.x, Y.o.y); dent(l.x, l.y, Math.min(s, 20) * .5); if (talk && !said) { said = true; say(line("bumpMain"), "bump", 4000); } }
-      else if (!X.b.f.player) { X.b.svy -= .12; if (talk && !said && t - X.b.lastBump > 2500) { said = true; X.b.lastBump = t; bsay(X.b, line("bump")); } }
+      else if (!X.b.f.player) { X.b.svy -= .12; if (s > 12) { feel(X.b.em, t - (X.b.hardAt || 0) < 3000 ? "anger" : "conf", .55); X.b.hardAt = t; } if (talk && !said && t - X.b.lastBump > 2500) { said = true; X.b.lastBump = t; bsay(X.b, line("bump")); } }
     });
     if (said) lastBumpTalk = t;
   }
@@ -1036,7 +1051,7 @@
     if (!A.b || !B.b) return;
     var x = A.b.mode === "tag" && A.b.other === B.b ? A.b : B.b.mode === "tag" && B.b.other === A.b ? B.b : null;
     if (!x || t - (x.tagAt || 0) < 900) return;
-    var y = x.other; x.mode = "flee"; y.mode = "tag"; x.tagAt = y.tagAt = t; if (talking() < 2) bsay(x, line("tagGot"));
+    var y = x.other; x.mode = "flee"; y.mode = "tag"; x.tagAt = y.tagAt = t; x.joy = 1; feel(y.em, "conf", .45); if (talking() < 2) bsay(x, line("tagGot"));
   }
   // everyone pushes everyone: circle-circle collisions, heavier = bigger, held ones don't budge
   function collideAll(t) {
@@ -1082,6 +1097,101 @@
     }
     L.forEach(function (e) { e.style.transform = "translate(" + e._x.toFixed(1) + "px," + e._y.toFixed(1) + "px)"; });
   }
+
+  // ---- faces: eyes with lids, a mouth that smiles or frowns, brows, blush, a tint, and little signs ----
+  // one kit for everyone, drawn in Dilmo's units (r = 48) and scaled by k = r / 48
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function mkS(tag, cls, parent, before) { var e = document.createElementNS(SVGNS, tag); e.setAttribute("class", cls); parent.insertBefore(e, before || null); return e; }
+  function faceKit(faceG, bodyG) {
+    faceG.querySelectorAll("ellipse").forEach(function (e) { e.remove(); });
+    var P = { tint: mkS("path", "ptint", bodyG, faceG) };
+    P.blush = [mkS("ellipse", "pk", faceG), mkS("ellipse", "pk", faceG)];
+    P.eyes = [mkS("path", "pe", faceG), mkS("path", "pe", faceG)];
+    P.brows = [mkS("path", "pbr", faceG), mkS("path", "pbr", faceG)];
+    P.mouth = mkS("path", "pm", faceG);
+    var fx = mkS("g", "pfx", bodyG);
+    P.sweat = mkS("path", "fx-sweat", fx); P.tear = mkS("path", "fx-tear", fx); P.vein = mkS("path", "fx-vein", fx);
+    P.q = mkS("text", "fx-q", fx); P.q.textContent = "?"; P.heart = mkS("path", "fx-heart", fx);
+    P.hb = 0;  // heartbeat phase
+    return P;
+  }
+  // an ellipse squeezed between two lines: lids for eyes, a flat top (smile) or flat bottom (frown) for the mouth
+  function blob(k, cx, cy, rx, ry, top, bot) {
+    var d = "";
+    for (var i = 0; i < 32; i++) {
+      var a = i / 32 * Math.PI * 2, x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry;
+      if (top) y = Math.max(y, top(x)); if (bot) y = Math.min(y, bot(x));
+      d += (i ? "L" : "M") + (x * k).toFixed(2) + " " + (y * k).toFixed(2);
+    }
+    return d + "Z";
+  }
+  function vis(e, o) { e.style.opacity = o > .02 ? Math.min(1, o).toFixed(2) : "0"; return o > .02; }
+  // E: joy anger fear sad shy love conf heart sleepy (0..1).  g: the face as the old code shaped it (eye y, sizes, mouth),
+  // so talking, eating and singing keep working underneath the expression.  Returns the heartbeat pulse (0..1).
+  function renderFace(P, k, E, g, t, dt, beat) {
+    var happy = clamp((E.joy - .45) / .3, 0, 1) * (1 - E.fear) * (1 - E.anger) * (1 - E.sad);
+    var lidTop = .45 * E.sleepy + .22 * E.anger + .12 * E.sad, slant = 1.1 * E.anger - .8 * Math.max(E.sad, E.fear);
+    var grow = 1 + .18 * E.fear;
+    for (var i = 0; i < 2; i++) {
+      var s = i ? 1 : -1, cx = 15 * s, cy = g.ey, rx = g.rx * grow, ry = g.ry[i] * grow * (1 + (i ? -.22 : .22) * E.conf);
+      var top = (function (cx, cy, rx, ry, s) { return function (x) { return cy - ry + 2 * ry * lidTop + slant * .62 * ry * ((x - cx) / rx) * -s; }; })(cx, cy, rx, ry, s);
+      var bot = happy > .02 ? (function (cy, ry) { return function () { return cy + ry - 2 * ry * .55 * happy; }; })(cy, ry) : null;
+      P.eyes[i].setAttribute("d", blob(k, cx, cy, rx, ry, lidTop || slant ? top : null, bot));
+      // brows sit above the eye: anger tips the inner end down, fear and sadness lift it, confusion raises one
+      var bshow = Math.max(E.anger, E.fear * .9, E.sad * .85, E.conf * .9);
+      if (vis(P.brows[i], bshow * 1.4)) {
+        var ang = E.anger - .9 * Math.max(E.fear, E.sad), lift = (i ? 0 : 5 * E.conf) + 2 * E.fear, by = cy - ry - 5 - lift;
+        var ox = s * 23, ix = s * 7, oy = by - ang * 1.5, iy = by + ang * 4.5 - (i ? 0 : 1.5 * E.conf);
+        P.brows[i].setAttribute("d", "M" + (ox * k).toFixed(2) + " " + (oy * k).toFixed(2) + "Q" + ((ox + ix) / 2 * k).toFixed(2) + " " + ((Math.min(oy, iy) - 2.2) * k).toFixed(2) + " " + (ix * k).toFixed(2) + " " + (iy * k).toFixed(2));
+        P.brows[i].style.strokeWidth = (2.6 * k).toFixed(2);
+      }
+      if (vis(P.blush[i], .85 * Math.max(E.shy, E.love * .8, happy * .25))) {
+        P.blush[i].setAttribute("cx", (s * 25 * k).toFixed(2)); P.blush[i].setAttribute("cy", ((cy + 11) * k).toFixed(2));
+        P.blush[i].setAttribute("rx", (6.5 * k).toFixed(2)); P.blush[i].setAttribute("ry", (3.6 * k).toFixed(2));
+      }
+    }
+    // mouth: a smile flattens its top into a "D", a frown flattens its bottom
+    var curve = g.busy ? 0 : clamp(.85 * E.joy - .95 * E.sad - .6 * E.anger - .25 * E.fear, -1, 1);
+    var mrx = g.mrx * (1 + .35 * Math.max(curve, 0) + .6 * Math.max(-curve, 0)), mry = g.mry * (1 - .15 * Math.max(-curve, 0)), mcy = g.mcy + (curve < 0 ? 2.5 * -curve : 0);
+    P.mouth.setAttribute("d", blob(k, g.mx, mcy, mrx, mry,
+      curve > .05 ? function () { return mcy - mry * (1 - .85 * curve); } : null,
+      curve < -.05 ? function () { return mcy + mry * (1 + .85 * curve); } : null));
+    // a flush of red when angry, pale when scared
+    var red = E.anger > E.fear;
+    if (vis(P.tint, red ? E.anger * .16 : E.fear * .38)) { P.tint.setAttribute("d", g.dd); P.tint.setAttribute("fill", red ? "#ff2020" : "#eef3ff"); }
+    // signs
+    if (vis(P.sweat, (Math.max(E.fear, E.shy * .7) - .35) * 2)) { var sy = -26 + (t % 1400) / 1400 * 8; P.sweat.setAttribute("d", drop(k, 33, sy, 4)); }
+    if (vis(P.tear, (E.sad - .45) * 2.5)) { var ty = g.ey + g.ry[1] + 5 + (t % 1600) / 1600 * 14; P.tear.setAttribute("d", drop(k, 17, ty, 3)); }
+    if (vis(P.vein, (E.anger - .55) * 3)) {
+      var vs = 1 + .12 * Math.sin(t / 90), v = function (a, b) { return ((a * vs + 30) * k).toFixed(2) + " " + ((b * vs - 36) * k).toFixed(2); };
+      P.vein.setAttribute("d", "M" + v(-6, -2) + "Q" + v(-2, -2) + " " + v(-2, -6) + "M" + v(2, -6) + "Q" + v(2, -2) + " " + v(6, -2) + "M" + v(6, 2) + "Q" + v(2, 2) + " " + v(2, 6) + "M" + v(-2, 6) + "Q" + v(-2, 2) + " " + v(-6, 2));
+      P.vein.style.strokeWidth = (2.2 * k).toFixed(2);
+    }
+    if (vis(P.q, (E.conf - .35) * 2.5)) {
+      P.q.setAttribute("x", (27 * k).toFixed(2)); P.q.setAttribute("y", ((-44 + Math.sin(t / 300) * 2) * k).toFixed(2));
+      P.q.style.fontSize = (20 * k).toFixed(1) + "px"; P.q.style.strokeWidth = (3 * k).toFixed(1) + "px";
+    }
+    // heartbeat: faster as fear or love rises ("lub-dub"), the heart sign beats with it
+    var bpm = 64 + 116 * E.heart, prev = P.hb; P.hb += dt * 16.67 * bpm / 60000;
+    var f = P.hb % 1, pulse = Math.exp(-Math.pow(f * 13, 2)) + .6 * Math.exp(-Math.pow((f - .23) * 13, 2));
+    if (Math.floor(P.hb) !== Math.floor(prev) && E.heart > .45 && beat) beat(E.heart);
+    var ha = Math.max((E.heart - .3) * 2, (E.love - .35) * 2);
+    if (vis(P.heart, ha)) {
+      var hs = (.85 + .4 * pulse) * k, hx = -31, hy = -40;
+      P.heart.setAttribute("d", "M0 3C-6 -2 -7 -7 -3.5 -7.5C-1.5 -7.8 0 -6 0 -4.5C0 -6 1.5 -7.8 3.5 -7.5C7 -7 6 -2 0 3Z");
+      P.heart.setAttribute("transform", "translate(" + (hx * k).toFixed(2) + " " + (hy * k).toFixed(2) + ") scale(" + (hs * 1.5).toFixed(3) + ")");
+    }
+    return E.heart * pulse;
+  }
+  function drop(k, x, y, r) {  // a teardrop pointing up
+    var X = function (v) { return (v * k).toFixed(2); };
+    return "M" + X(x) + " " + X(y - r * 1.8) + "C" + X(x + r) + " " + X(y - r * .4) + " " + X(x + r) + " " + X(y + r) + " " + X(x) + " " + X(y + r) + "C" + X(x - r) + " " + X(y + r) + " " + X(x - r) + " " + X(y - r * .4) + " " + X(x) + " " + X(y - r * 1.8) + "Z";
+  }
+  // feelings fade on their own, each at its own pace
+  var FADE = { anger: .997, fear: .996, sad: .998, shy: .995, love: .997, conf: .997, heart: .998 };  // per frame: about 3 to 6 s to fade by half
+  function fadeFeel(E, dt) { for (var k2 in FADE) if (E[k2]) E[k2] *= Math.pow(FADE[k2], dt); }
+  function feel(E, k2, v) { E[k2] = Math.min(1, Math.max(E[k2] || 0, v)); }
+
   function drawBuddy(b, t) {
     var r = b.f.r, S = b.size, i;
     var jit = t < (b.tickleUntil || 0) && !reduce ? (Math.random() - .5) * 3 : 0;
@@ -1091,13 +1201,14 @@
     b.body.setAttribute("transform", "rotate(" + b.spinA.toFixed(1) + ") translate(0 " + r + ") rotate(" + b.tilt.toFixed(2) + ") scale(" + clamp(b.sx, .8, 1.25).toFixed(3) + " " + clamp(b.sy, .75, 1.22).toFixed(3) + ") translate(0 " + -r + ")");
     b.face.setAttribute("transform", "translate(" + (b.lx * r * .15).toFixed(2) + " " + (b.ly * r * .1).toFixed(2) + ")");
     var bl = t - b.blink < 240 ? Math.sin(Math.PI * (t - b.blink) / 240) : 0;
-    var erx = r * .13, ery = Math.max(r * .19 * (1 - .34 * bl) * (1 + .12 * b.joy) * (song ? .8 : 1), erx * (bl ? .95 : 1.08));
-    if (b.asleep) { erx = r * .09; ery = erx * 1.06; }  // eyes shrink to small dots while asleep
-    for (i = 0; i < 2; i++) { b.eyes[i].setAttribute("rx", erx.toFixed(2)); b.eyes[i].setAttribute("ry", ery.toFixed(2)); }
-    var mrx = r * .09, mry = r * .12, sp3 = b.speech && b.speech.syl[Math.floor((t - b.speech.t0) / SYL)], sn = song && songNote(t);
+    var k = r / R, erx = 6.24, ery = Math.max(9.12 * (1 - .34 * bl) * (1 + .12 * b.joy) * (song ? .8 : 1), erx * (bl ? .95 : 1.08));
+    var mrx = 4.32, mry = 5.76, sp3 = b.speech && b.speech.syl[Math.floor((t - b.speech.t0) / SYL)], sn = song && songNote(t);
     if (sp3) { var o3 = Math.pow(Math.sin(Math.PI * ((t - b.speech.t0) % SYL) / SYL), .6), F = MOUTH[sp3.v]; mry *= .7 + F[0] * o3; mrx *= 1 + F[1] * o3; }
     else if (sn) { var o4 = Math.sqrt(Math.min(1, Math.sin(Math.PI * clamp(sn.p, 0, 1)) * 1.6)); mry *= 1 + 1.2 * o4; }
-    b.mouth.setAttribute("rx", mrx.toFixed(2)); b.mouth.setAttribute("ry", Math.max(mry, mrx * 1.02).toFixed(2));
+    var bdt = clamp((t - b.lastDraw) / 16.67, 0, 4); b.lastDraw = t; fadeFeel(b.em, bdt);
+    var E = b.em, hp = renderFace(b.FK, k, { joy: b.joy, anger: E.anger, fear: E.fear, sad: E.sad, shy: E.shy, love: E.love, conf: E.conf, heart: E.heart, sleepy: b.asleep ? 1.7 : 0 },
+      { ey: -3.84, rx: erx, ry: [ery, ery], mx: 0, mcy: 17.76, mrx: mrx, mry: Math.max(mry, mrx * 1.02), dd: b.bp.getAttribute("d"), busy: !!sp3 || !!sn }, t, bdt);
+    if (hp) b.body.setAttribute("transform", b.body.getAttribute("transform") + " scale(" + (1 + .035 * hp).toFixed(3) + ")");
     if (b.tag) b.tag.style.opacity = b.bub.hidden ? "" : "0";  // the name steps aside while its owner talks
     if (b.tag) b.tag.style.transform = "translate(" + (b.x * K - b.tag.offsetWidth / 2).toFixed(1) + "px," + ((b.y - r) * K - 20).toFixed(1) + "px)";
     var fy = surfaceY(b), sc = clamp(1 - (fy - b.y) / 300, .35, 1);
@@ -1192,7 +1303,7 @@
     if (!player) return;
     var n = player.f.name;
     [player.el, player.sh, player.bub, player.tag].forEach(function (x) { x.remove(); });
-    buddies.splice(buddies.indexOf(player), 1); buddies.forEach(function (b) { if (b.other === player) { b.other = null; b.mode = "wander"; } });
+    buddies.splice(buddies.indexOf(player), 1); buddies.forEach(function (b) { feel(b.em, "sad", .6); if (b.other === player) { b.other = null; b.mode = "wander"; } });
     player = null; store.player = null; saveStore();
     panel.hidden = false; pui.hidden = true; renderTrain();
     say(line("playerBye", { n: n }), "pbye", 1000);
@@ -1289,6 +1400,7 @@
     [b.el, b.sh, b.bub, b.tag].forEach(function (x) { x.remove(); });
     buddies.splice(buddies.indexOf(b), 1);
     buddies.forEach(function (x) { if (x.other === b) { x.other = null; x.mode = "wander"; } });
+    feel(mood, "sad", .5);
     if (hs && hs.b === b) hs = null;
   }
   function addFriend(id) {
@@ -1551,7 +1663,7 @@
       showResults([]);
       return line("cNotFound");
     }
-    showResults(list);
+    showResults(list); mood.joy = Math.max(mood.joy, .75);
     var top = list[0]; remember("tried", { p: itemName(top.e.it), t: Date.now() });
     if (top.other) return line("cFoundOther", { p: itemName(top.e.it) });
     if (top.dish) {  // short dish name and its lowest price for the bubble; the card below keeps the full menu line
@@ -1708,14 +1820,16 @@
     if (!key && u.food && /^(praise|happy|yes|no|hi)?$/.test(u.intent || "")) u.intent = null;
     if (!key) switch (u.intent) {
       case "hi": key = "replyHi"; break;
-      case "bye": key = "cBye"; break;
+      case "bye": key = "cBye"; feel(mood, "sad", .5); break;
       case "thanks": key = "cThanks"; break;
       case "how": key = mood.sleepy > .5 ? "cHowTired" : mood.annoy > .4 ? "cHowGrumpy" : "cHowGood"; if (key !== "cHowGrumpy") asked = { k: "how" }; break;
       case "name": key = "cName"; break;
       case "age": key = "cAge"; break;
       case "home": key = "cHome"; break;
-      case "praise": key = "cPraise"; mood.joy = 1; befriend(.01); break;
-      case "insult": key = "cInsult"; mood.annoy = Math.min(1, mood.annoy + .3); break;
+      case "praise": key = "cPraise"; mood.joy = 1; befriend(.01); feel(mood, "shy", .75);
+        if (/احبك|حبيتك|love you/.test(u.raw || "")) { feel(mood, "love", 1); mood.heart = Math.min(1, mood.heart + .7); } else { feel(mood, "love", .4); mood.heart = Math.min(1, mood.heart + .3); }
+        break;
+      case "insult": key = "cInsult"; mood.annoy = Math.min(1, mood.annoy + .75); setTimeout(function () { feel(mood, "sad", .65); }, 2200); break;  // angry first, hurt after
       case "sad": key = "cSad"; break;
       case "happy": key = "cHappy"; mood.joy = Math.min(1, mood.joy + .3); break;
       case "bored": key = "cBored"; break;
@@ -1732,7 +1846,7 @@
     if (!key) {  // last try: maybe it's the name of a place or a dish
       var guess = findPlaces(u, false);
       if (guess) return guess;
-      key = Math.random() < .6 ? "cHuh" : "cHuh2"; asked = { k: key === "cHuh" ? "suggest" : "play" };
+      key = Math.random() < .6 ? "cHuh" : "cHuh2"; feel(mood, "conf", .85); asked = { k: key === "cHuh" ? "suggest" : "play" };
     }
     if (asked) asked.until = performance.now() + 20000;
     return line(key, v);
@@ -1808,12 +1922,25 @@
     return best;
   }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function showFeeling(k) {
+    var M = { joy: "joy", anger: "annoy", shy: "shy", conf: "conf", fear: "fear", heart: "heart", sad: "sad", love: "love" };
+    mood[M[k]] = 1; if (k === "fear" || k === "love") mood.heart = Math.max(mood.heart, .8);
+    buddies.forEach(function (b) { if (k === "joy") b.joy = 1; else { b.em[k] = 1; if (k === "fear" || k === "love") b.em.heart = Math.max(b.em.heart, .8); } });
+  }
   function renderTrain() {
     if (!TRAIN) return;
     if (!trainEl) { trainEl = el("section", "train"); trainEl.setAttribute("aria-label", T("تدريب دلمو", "Train Dilmo")); document.querySelector(".tips").before(trainEl); }
     var d = trainData(), mine = lessons();
     trainEl.textContent = "";
     trainEl.appendChild(el("h2", null, T("تدريب دلمو", "Train Dilmo")));
+    // preview every expression on everyone at once (the owner checks them here)
+    var fx = el("div", "train-faces"); fx.appendChild(el("span", "train-note", T("معاينة التعابير: ", "Preview expressions: ")));
+    [["joy", "فرح", "Happy"], ["anger", "غضب", "Angry"], ["shy", "خجل", "Shy"], ["conf", "حيرة", "Confused"], ["fear", "خوف", "Afraid"], ["heart", "نبض متسارع", "Racing heart"], ["sad", "حزن", "Sad"], ["love", "حب", "Love"]].forEach(function (x) {
+      var b = el("button", "snd", T(x[1], x[2])); b.type = "button";
+      b.addEventListener("click", function () { showFeeling(x[0]); });
+      fx.appendChild(b);
+    });
+    trainEl.appendChild(fx);
     if (!player) trainEl.appendChild(el("p", "train-note", T("ادخل بشخصيتك أولاً، ثم كلّم دلمو وقيّم ردوده هنا.", "Join with your character first, then talk to Dilmo and rate his answers here.")));
     else if (!lastEx) trainEl.appendChild(el("p", "train-note", T("اكتب له أي شيء في المحادثة، وسيظهر رده هنا لتقيّمه.", "Type anything to him in the chat; his answer shows up here for you to rate.")));
     else {
@@ -2066,7 +2193,11 @@
     x.fillStyle = g; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill();
     var face = el.querySelector(".pf, .bf"), m = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(face.getAttribute("transform") || "") || [0, 0, 0];
     x.translate(+m[1], +m[2]); x.fillStyle = "#fff";
-    face.querySelectorAll("ellipse").forEach(function (e) { x.beginPath(); x.ellipse(+e.getAttribute("cx") || 0, +e.getAttribute("cy") || 0, +e.getAttribute("rx"), +e.getAttribute("ry"), 0, 0, Math.PI * 2); x.fill(); });
+    face.querySelectorAll(".pk").forEach(function (e) { var o = +e.style.opacity || 0; if (!o) return; x.globalAlpha = o; x.fillStyle = "#ff7a9c"; x.beginPath(); x.ellipse(+e.getAttribute("cx"), +e.getAttribute("cy"), +e.getAttribute("rx"), +e.getAttribute("ry"), 0, 0, Math.PI * 2); x.fill(); });
+    x.globalAlpha = 1; x.fillStyle = "#fff"; x.strokeStyle = "#fff"; x.lineCap = "round";
+    face.querySelectorAll(".pe, .pm").forEach(function (e) { if (e.getAttribute("d")) x.fill(new Path2D(e.getAttribute("d"))); });
+    face.querySelectorAll(".pbr").forEach(function (e) { var o = +e.style.opacity || 0; if (!o || !e.getAttribute("d")) return; x.globalAlpha = o; x.lineWidth = parseFloat(e.style.strokeWidth) || 2.6; x.stroke(new Path2D(e.getAttribute("d"))); });
+    x.globalAlpha = 1;
     x.restore();
   }
   // a background layer drawn from its own SVG, with the hour's colours written into the copy
@@ -2182,17 +2313,19 @@
     }
 
     mood.joy += (.15 - mood.joy) * .004 * dt;
-    mood.dizzy *= Math.pow(.985, dt); mood.annoy *= Math.pow(.992, dt); mood.startle *= Math.pow(.93, dt);
+    mood.dizzy *= Math.pow(.985, dt); mood.annoy *= Math.pow(.996, dt); mood.startle *= Math.pow(.93, dt);
     mood.tickle *= Math.pow(.95, dt); mood.curious *= Math.pow(.98, dt); mood.calm *= Math.pow(.99, dt);
-    if (!drag || !drag.shy) mood.shy *= Math.pow(.9, dt);
+    fadeFeel(mood, dt);
+    if (!drag || !drag.shy) mood.shy *= Math.pow(.995, dt);
 
+    if (drag && drag.moved && pos.y < ground - 120) { mood.fear = Math.min(1, mood.fear + .006 * dt); mood.heart = Math.min(1, mood.heart + .005 * dt); }
     if (stick && t > stick.until) stick = null;
     if (!drag || !drag.moved) {
       pos.vy += (stick ? .02 : .75) * dt; pos.x += pos.vx * dt; pos.y += pos.vy * dt; pos.vx *= Math.pow(.99, dt);
       if (pos.y > ground) {
         var hit = pos.vy; pos.y = ground; pos.vy = hit > 2.5 ? -hit * .45 : 0; pos.vx *= .82;
         if (hit > 2.5) { sp.sy.vel -= Math.min(hit, 18) * .012; sp.sx.vel += Math.min(hit, 18) * .009; dent(0, R, Math.min(hit, 20) * .5); if (hit > 5) sfx("boing", hit); }
-        if (hit > 22) { mood.annoy = Math.min(1, mood.annoy + .25); say(line("ouch"), "ouch", 2500); }
+        if (hit > 22) { mood.annoy = Math.min(1, mood.annoy + .25); feel(mood, "conf", .5); say(line("ouch"), "ouch", 2500); }
       }
       if (pos.x < R || pos.x > W - R) {
         var wv = Math.abs(pos.vx), ws = pos.x < R ? -1 : 1;
@@ -2270,16 +2403,18 @@
     var cpx = cheek ? cheek.px * .2 : 0, cpy = cheek ? cheek.py * .2 : 0;
     orb.style.transform = "translate(" + (pos.x - HALF + jx).toFixed(1) + "px," + (pos.y - HALF).toFixed(1) + "px)";
     body.setAttribute("transform", "rotate(" + sp.spin.v.toFixed(1) + ") translate(0 " + R + ") rotate(" + sp.tilt.v.toFixed(2) +
-      ") scale(" + clamp(sp.sx.v, .8, 1.25).toFixed(3) + " " + clamp(sp.sy.v, .75, 1.22).toFixed(3) + ") translate(0 " + -R + ")");
+      ") scale(" + clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25).toFixed(3) + " " + clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22).toFixed(3) + ") translate(0 " + -R + ")");
     face.setAttribute("transform", "translate(" + (sp.lx.v * 7 + ox + cpx).toFixed(2) + " " + (sp.ly.v * 5 + oy + cpy).toFixed(2) + ")");
-    for (var i = 0; i < 2; i++) {
+    var rys = [0, 1].map(function (i) {
       var w = t - wink[i] < 380 ? Math.sin(Math.PI * (t - wink[i]) / 380) : 0;
       var near = cheek && (i ? cheek.gx > 0 : cheek.gx < 0) ? 1 - .25 * mood.pinch : 1;
-      eyes[i].setAttribute("cy", ey.toFixed(2)); eyes[i].setAttribute("rx", (rx * (1 + .05 * w)).toFixed(2));
-      eyes[i].setAttribute("ry", (ry * (1 - .5 * w) * near).toFixed(2));
-    }
-    mouth.setAttribute("cx", sp.mx.v.toFixed(2)); mouth.setAttribute("cy", (18 + sp.ey.v * .5).toFixed(2));
-    mouth.setAttribute("rx", mrx.toFixed(2)); mouth.setAttribute("ry", mry.toFixed(2));
+      return ry * (1 - .5 * w) * near;
+    });
+    var fdt = clamp((t - lastDraw) / 16.67, 0, 4); lastDraw = t;
+    var asleepNow = mood.sleepy > .85;
+    hbPulse = renderFace(FK, 1, { joy: mood.joy, anger: mood.annoy, fear: mood.fear, sad: mood.sad, shy: mood.shy, love: mood.love, conf: Math.max(mood.conf, mood.dizzy * .6), heart: mood.heart, sleepy: asleepNow ? 1.7 : mood.sleepy },
+      { ey: ey, rx: rx, ry: rys, mx: sp.mx.v, mcy: 18 + sp.ey.v * .5, mrx: mrx, mry: mry, dd: dd, busy: t < eatUntil || !!song || (speech && t < talkUntil) }, t, fdt,
+      function (h) { sfx("beat", h); });
     var sc = clamp(1 - (ground - pos.y) / 300, .35, 1);
     shadowEl.style.transform = "translate(" + (pos.x - 40).toFixed(1) + "px," + (ground + R - 6) + "px) scale(" + sc.toFixed(2) + ")";
     shadowEl.style.opacity = sc.toFixed(2);
@@ -2314,5 +2449,6 @@
   var sideways = matchMedia("(orientation: landscape) and (max-height: 500px)");
   function fitSideways() { if (sideways.matches) stage.scrollIntoView({ block: "start" }); }
   sideways.addEventListener("change", fitSideways); fitSideways();
+  FK = faceKit(face, body); applyQuiet();
   measure(); placeProps(); renderSwatches(); spawnFriends(); tickClock(); setInterval(tickClock, 20000); draw(performance.now());
 })();

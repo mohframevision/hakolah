@@ -42,6 +42,17 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .s-lo { stop-color: var(--cmp-deep); }
 .dilmo .orb .grain { fill: #fff; mix-blend-mode: overlay; opacity: .3; }
 .dilmo .orb .pe, .dilmo .orb .pm { fill: var(--eye); }
+/* expressions: brows, blush, a tint over the body, and little signs (sweat, tear, anger mark, ?, heart) */
+.dilmo .orb .pbr { fill: none; stroke: var(--eye); stroke-linecap: round; }
+.dilmo .orb .pk { fill: #ff7a9c; }
+.dilmo .orb .ptint { pointer-events: none; }
+.dilmo .orb .pfx { pointer-events: none; }
+.dilmo .orb .fx-sweat, .dilmo .orb .fx-tear { fill: #a9dcff; stroke: #fff; stroke-width: .8; }
+.dilmo .orb .fx-vein { fill: none; stroke: #e5484d; stroke-linecap: round; }
+.dilmo .orb .fx-q { fill: #fff; stroke: rgba(20, 24, 40, .45); paint-order: stroke; font-weight: 800; text-anchor: middle; }
+.dilmo .orb .fx-heart { fill: #ff5d7a; stroke: #fff; stroke-width: .8; }
+.dilmo .orb { overflow: visible; }
+.dilmo .chat-off .pp-chat { display: none; }
 /* contact shadow: dark at the middle, fading out (a gradient, not a blur filter, so it costs nothing to move) */
 .dilmo .orb-shadow { position: absolute; left: 0; top: 0; width: 80px; height: 12px; border-radius: 50%; background: radial-gradient(closest-side, rgba(20, 24, 40, .38), rgba(20, 24, 40, .16) 60%, transparent); }
 .dilmo .orb-say { position: absolute; left: 0; top: 0; margin: 0; z-index: 5; width: max-content; max-width: min(300px, 78vw); text-align: center; pointer-events: none;
@@ -208,6 +219,7 @@ body:has(.dilmo) .daily-pick-reminder { display: none !important; }
 .dilmo .train { background: var(--surface); border: 2px dashed color-mix(in oklab, var(--gold) 70%, var(--border)); border-radius: var(--radius); padding: 14px 18px; display: grid; gap: 10px; }
 .dilmo .train h2 { font-size: 1.05rem; margin: 0; }
 .dilmo .train-note { font-size: .88rem; color: var(--muted); margin: 0; }
+.dilmo .train-faces { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .dilmo .train-last { display: grid; gap: 4px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg); }
 .dilmo .train-q { font-weight: 700; }
 .dilmo .train-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
