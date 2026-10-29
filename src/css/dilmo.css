@@ -192,6 +192,8 @@ body:has(.dilmo) .daily-pick-reminder { display: none !important; }
 }
 
 /* places Dilmo found for you: real links to their pages */
+.dilmo .res-hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 16px; border: 0; border-radius: var(--radius-pill); background: var(--accent); color: #fff; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+.dilmo .res-hint[hidden] { display: none; }
 .dilmo .pp-results { display: flex; flex-wrap: wrap; gap: 8px; }
 .dilmo .pp-results[hidden] { display: none; }
 .dilmo .pp-results a { flex: 1 1 220px; display: grid; gap: 2px; padding: 8px 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg); color: var(--fg); text-decoration: none; min-width: 0; max-width: 100%; }

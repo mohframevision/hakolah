@@ -31,7 +31,7 @@
     hum: ["neutral", ["أفكّر في مطعم جديد.", "ترى، أين نأكل اليوم؟", "أحبّ هذا المكان.", "الجو هادئ هنا.", "أنا جاهز متى أردت.", "أبحث عن شيء أفعله.", "سأتمشّى قليلاً.", "هل جرّبتَ «اختار لي»؟"]],
     startle: ["surprise", ["أخفتني!", "أفزعتني!", "ما هذا؟!", "على رسلك!", "كدتُ أقفز من مكاني!", "لم أرك قادماً!", "أسرعتَ كثيراً!", "انتبه!"]],
     lift: ["surprise", ["إلى أين تأخذني؟", "أنا أطير!", "أنزلني برفق!", "أين نذهب؟", "ارتفعتُ عالياً!", "أمسكني جيداً!", "الأرض بعيدة!"]],
-    free: ["joy", ["حسناً حسناً، أنا قادم معك!", "انفلتُّ! سآتي معك.", "لقد غلبتني، سأتبعك.", "حسناً، خذني معك!", "أنا معك أينما ذهبت!", "لا داعي للشدّ، سآتي!"]],
+    slip: ["joy", ["آخ! أفلتَ خدّي!", "بوينغ! عاد خدّي إلى مكانه.", "طار خدّي من يدك!", "انزلق! خدّي أقوى منك.", "آي! برفق يا صديقي."]],
     cheek: ["joy", ["خدّي! خدّي!", "أعِد خدّي إلى مكانه!", "خدّي يتمدّد!", "صار خدّي طويلاً!", "انتبه لخدّي!", "خدّي ليس مطّاطاً!", "أعِده كما كان!"]],
     stretch: ["surprise", ["صرتُ مثل العلكة!", "سأنفلت!", "أنا أتمدّد!", "صرتُ بيضة!", "إلى متى تمدّني؟", "شكلي تغيّر!", "سأعود كما كنت!", "أنا مرن جداً!"]],
     tickle: ["joy", ["ههه لا! كفى كفى!", "هذا يضحكني!", "لا أتحمّل الضحك!", "توقّف، سأنفجر ضحكاً!", "أنت تُضحكني!", "لا لا لا، ههه!", "ضحكتُ حتى تعبت!"]],
@@ -177,7 +177,7 @@
     hum: ["neutral", ["I'm thinking about a new restaurant.", "Where should we eat today?", "I like it here.", "It's calm here.", "I'm ready when you are.", "Looking for something to do.", "I'll take a little walk.", "Have you tried «Pick for me»?"]],
     startle: ["surprise", ["You scared me!", "What was that?!", "Slow down!", "I nearly jumped out of my skin!", "I didn't see you coming!", "Careful!"]],
     lift: ["surprise", ["Where are you taking me?", "I'm flying!", "Put me down gently!", "Where are we going?", "So high up!", "Hold on to me!"]],
-    free: ["joy", ["Okay okay, I'm coming with you!", "I slipped free! I'll come along.", "You win, I'll follow you.", "Fine, take me with you!", "No need to pull, I'm coming!"]],
+    slip: ["joy", ["Ow! My cheek slipped!", "Boing! My cheek snapped back.", "It got away from you!", "Slippery! My cheek wins.", "Ouch! Gently, friend."]],
     cheek: ["joy", ["My cheek! My cheek!", "Put my cheek back!", "My cheek is stretching!", "Mind my cheek!", "My cheek isn't rubber!"]],
     stretch: ["surprise", ["I'm like chewing gum!", "I'm going to slip!", "I'm stretching!", "I'm an egg now!", "How long will you stretch me?", "I'll bounce back!"]],
     tickle: ["joy", ["Haha no! Stop stop!", "That tickles!", "I can't stop laughing!", "Stop, I'll burst!", "You're making me laugh!", "No no no, haha!"]],
@@ -309,7 +309,9 @@
   var recent = [];
   function line(ev, vars) {
     var e = LINES[ev], m = MOODS[e[0]], s, tries = 0;
-    do { var pre = pick(m.pre), core = pick(e[1]); if (EN && /, $/.test(pre) && !/^I[ ']/.test(core)) core = core.charAt(0).toLowerCase() + core.slice(1); s = pre + core + pick(m.post); } while (recent.indexOf(s) >= 0 && ++tries < 25);
+    // the mood's little openers/closers («رائع!»، «يومي صار أجمل.») season a line now and then, not every line
+    do { var pre = Math.random() < .3 ? pick(m.pre) : "", core = pick(e[1]), post = Math.random() < .2 ? pick(m.post) : ""; if (post && recent.some(function (x) { return x.slice(-post.length) === post; })) post = "";
+      if (EN && /, $/.test(pre) && !/^I[ ']/.test(core)) core = core.charAt(0).toLowerCase() + core.slice(1); s = pre + core + post; } while (recent.indexOf(s) >= 0 && ++tries < 25);
     recent.push(s); if (recent.length > 80) recent.shift();
     for (var k in vars || {}) s = s.split("{" + k + "}").join(vars[k]);
     return s;
@@ -424,7 +426,7 @@
     world.appendChild(s); s.addEventListener("animationend", function () { s.remove(); });
   }
   // singing: a soft digital voice (triangle + vibrato through vowel formants) gliding through slow lullaby phrases in C major
-  var song = null, nextSong = 0;
+  var song = null, nextSong = performance.now() + 60000;  // he sings on his own only after a while (you can still ask: «غنّ»)
   // songbook: [scale degree, beats]; degree 0 = C4, 7 = C5, negatives go below C4 (C major)
   // public-domain children's melodies + originals; when the list runs out he improvises new ones forever
   var MAJ = [0, 2, 4, 5, 7, 9, 11];
@@ -637,14 +639,14 @@
   function idleAct(idle) {
     var r = Math.random(), t = performance.now();
     if (r < .12 && !hs && t > hsNext && !isNight) { startHideSeek(t); return; }
-    if (idle > 9000) say(line("bored"), "bored", 25000);
+    if (idle > 20000) say(line("bored"), "bored", 25000);
     if (r < .35) gaze = { x: Math.random() * 2 - 1, y: Math.random() * 1.2 - .7, until: t + 900 + Math.random() * 1400 };
     else if (r < .55 && !reduce) pos.vy = -4 - Math.random() * 4;
     else if (r < .7 && !reduce) { pos.vx = (Math.random() < .5 ? -1 : 1) * (2 + Math.random() * 3); pos.vy = -3; }
     else if (r < .85 && others().length) {  // glances at one of his friends
       var o = pick(others()), dx = o.x - pos.x, dy = o.y - pos.y, d = Math.hypot(dx, dy) || 1;
       gaze = { x: dx / d, y: dy / d, until: t + 1600 };
-    } else if (idle > 8000 && t > nextSong) sing(); else say(line("hum"), "hum", 9000);
+    } else if (idle > 25000 && t > nextSong) sing(); else if (idle > 12000) say(line("hum"), "hum", 15000);
   }
 
   addEventListener("pointermove", function (e) {
@@ -663,12 +665,14 @@
     if (!drag && d < 170 && speed > 45) { mood.startle = Math.min(1, mood.startle + .7); say(line("startle"), "startle", 6000); }
     if (drag && cheek) {
       var l = local(p.x, p.y), cx = l.x - cheek.gx, cy = l.y - cheek.gy, len = Math.hypot(cx, cy) || 1;
-      if (len > 70) { cheek = null; mood.pinch = 0; drag.moved = true; drag.ox = p.x - pos.x; drag.oy = p.y - pos.y; say(line("free"), "free", 4000); }
+      if (len > 110) {  // pulled too far: the cheek slips out of your fingers and springs back (grab his middle to carry him)
+        cheek = null; mood.pinch = 0; drag.slipped = true; sfx("snap"); sp.sx.vel += .06; sp.sy.vel -= .05; say(line("slip"), "slip", 3000);
+      }
       else {
         var k = 34 * Math.tanh(len / 45) / len; cheek.px = cx * k; cheek.py = cy * k; mood.pinch = Math.min(1, len / 60); sfx("squeak", mood.pinch);
         if (len > 14) say(line(cheek.side ? "cheek" : "stretch"), "pinch", 3500);
       }
-    } else if (drag) {
+    } else if (drag && !drag.slipped) {
       if (!drag.moved && Math.hypot(p.x - drag.sx, p.y - drag.sy) > 6) { drag.moved = true; mood.shy = 0; say(line("lift"), "lift", 5000); }
       if (drag.moved) {
         var nx = clamp(p.x - drag.ox, R, W - R), ny = clamp(p.y - drag.oy, R, ground);
@@ -854,13 +858,14 @@
       var p = toStage(e), now = performance.now();
       if (b.cheek) {
         var l = blocal(b, p.x, p.y), cx = l.x - b.cheek.gx, cy = l.y - b.cheek.gy, len = Math.hypot(cx, cy) || 1;
-        if (len > 70) { b.cheek = null; d.moved = true; d.ox = p.x - b.x; d.oy = p.y - b.y; if (!f.player) bsay(b, line("free")); }
+        if (len > 110 * sc) { b.cheek = null; d.slipped = true; b.joy = 1; sfx("snap"); b.svx += .06; b.svy -= .05; if (!f.player) bsay(b, line("slip")); }  // slips back, like Dilmo's
         else {
           var k = 34 * sc * Math.tanh(len / (45 * sc)) / len; b.cheek.px = cx * k; b.cheek.py = cy * k; sfx("squeak", Math.min(1, len / (60 * sc)));
           if (len > 14 * sc && !f.player && now - (b.pinchAt || 0) > 3500) { b.pinchAt = now; bsay(b, line(b.cheek.side ? "cheek" : "stretch")); }
         }
         return;
       }
+      if (d.slipped) return;
       if (!d.moved && Math.hypot(p.x - d.sx, p.y - d.sy) > 6) { d.moved = true; bsay(b, line("buddyLift")); }
       if (d.moved) { var nx = clamp(p.x - d.ox, r, W - r), ny = clamp(p.y - d.oy, r, floorY(b)); d.vx = nx - b.x; d.vy = ny - b.y; b.x = nx; b.y = ny; }
     });
@@ -929,18 +934,36 @@
     if (b.f.shy && ptr.has && !ptr.out && Math.hypot(ptr.x - b.x, ptr.y - b.y) < 140) {  // hides behind him, on the side away from the pointer
       b.mode = "hide"; b.tx = clamp(pos.x + (ptr.x < pos.x ? 1 : -1) * (R + r), r, W - r); return;
     }
-    if (player && Math.random() < .18) {  // goes over to talk to the visitor's character
+    if (player && Math.random() < .18 && !buddies.some(function (x) { return x.mode === "visit"; })) {  // one at a time goes over to talk to the visitor's character
       b.mode = "visit"; b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 20), r, W - r);
       setTimeout(function () { if (player) bsay(b, line("toPlayer", { n: player.f.name })); }, 900);
       return;
     }
     var k = Math.random();
-    if (k < .3) b.tx = clamp(b.x + (Math.random() - .5) * 300, r, W - r);
+    if (k < .3) b.tx = roomy(b);
     else if (k < .5 && !mainAway) chat(b, t);
     else if (k < .62 && buddies.length > 1) startTag(b, t);
     else if (k < .75 && !reduce) b.vy = -6 * b.f.energy;
-    else if (k < .88) { b.mode = "ball"; b.next = t + 3500; }
+    else if (k < .88 && buddies.filter(function (x) { return x.mode === "ball"; }).length < 2) { b.mode = "ball"; b.next = t + 3500; }  // two chasing the ball is a game, seven is a pile
     else b.tx = null;
+  }
+  // a spot to wander to: of a few tries, the one farthest from everyone else
+  function roomy(b) {
+    var r = b.f.r, xs = buddies.filter(function (x) { return x !== b; }).map(function (x) { return x.x; }).concat(mainAway ? [] : [pos.x]), best = b.x, bd = -1;
+    for (var i = 0; i < 4; i++) {
+      var x = clamp(b.x + (Math.random() - .5) * 420, r, W - r), d = xs.reduce(function (m, o) { return Math.min(m, Math.abs(o - x)); }, 1e9);
+      if (d > bd) { bd = d; best = x; }
+    }
+    return best;
+  }
+  function slot(b, mode) { return buddies.filter(function (x) { return x.mode === mode; }).indexOf(b); }
+  // the nearest body standing almost on top of this one (Dilmo, a friend or the visitor), if any
+  function crowd(b) {
+    var L = buddies.filter(function (x) { return x !== b; }).map(function (x) { return { x: x.x, y: x.y, r: x.f.r }; });
+    if (!mainAway) L.push({ x: pos.x, y: pos.y, r: R });
+    var best = null, bd = 1e9;
+    L.forEach(function (o) { var d = Math.abs(o.x - b.x); if (d < o.r + b.f.r + 10 && Math.abs(o.y - b.y) < o.r + b.f.r && d < bd) { bd = d; best = o; } });
+    return best;
   }
   function buddyStep(b, t, dt) {
     var r = b.f.r, fy = surfaceY(b);
@@ -952,11 +975,16 @@
       if (b.f.player) b.tx = null;  // the visitor steers their own character, even during tag
       else if (b.mode === "tag" && b.other) b.tx = b.other.x;
       else if (b.mode === "flee" && b.other) b.tx = clamp(b.x + (b.x < b.other.x ? -1 : 1) * 120, r, W - r);
-      else if (b.mode === "follow" && player) b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 16), r, W - r);
+      else if (b.mode === "follow" && player) b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 16 + slot(b, "follow") * 46), r, W - r);
       else if (b.mode === "ball") b.tx = ball.x;
       if (b.mode === "comfort" && Math.hypot(pos.x - b.x, pos.y - b.y) < R + r + 24) {
         b.mode = "wander"; bsay(b, line("comfort")); mood.annoy *= .4; mood.joy = Math.max(mood.joy, .3); befriend(.01);
         setTimeout(function () { say(line("thanks"), "thanks", 4000); }, 1500);
+      }
+      if (b.tx == null && b.y >= fy - 1 && !b.f.player && /^(wander|follow|ball)$/.test(b.mode) && t > (b.roomAt || 0)) {  // too crowded here: step aside
+        b.roomAt = t + 900;
+        var near = crowd(b);
+        if (near) b.tx = clamp(b.x + (b.x < near.x ? -1 : 1) * (60 + Math.random() * 60), r, W - r);
       }
       if (b.tx != null && b.y >= fy - 1) {  // walks in little hops
         var dx = b.tx - b.x;
@@ -984,21 +1012,26 @@
     b.spinA += (b.spin - b.spinA) * .08 * dt;
     rim(b.pts, dt, b.cheek, 0, 0);
   }
+  var lastBumpTalk = 0;
   function bumped(A, B, s, t) {
     if (t - lastBump < 500) return;
     lastBump = t; sfx("boing", s);
+    // only a real knock gets a remark, and only one remark every few seconds for the whole stage (a crowd bumping is not news)
+    var talk = s > 10 && t - lastBumpTalk > 7000 && talking() < 2, said = false;
     [A, B].forEach(function (X, i) {
       if (X.ball) return;
       var Y = i ? A : B;
-      if (X.main) { var l = local(Y.o.x, Y.o.y); dent(l.x, l.y, Math.min(s, 20) * .5); say(line("bumpMain"), "bump", 4000); }
-      else if (!X.b.f.player && t - X.b.lastBump > 2500) { X.b.lastBump = t; X.b.svy -= .12; bsay(X.b, line("bump")); }
+      if (X.main) { var l = local(Y.o.x, Y.o.y); dent(l.x, l.y, Math.min(s, 20) * .5); if (talk && !said) { said = true; say(line("bumpMain"), "bump", 4000); } }
+      else if (!X.b.f.player) { X.b.svy -= .12; if (talk && !said && t - X.b.lastBump > 2500) { said = true; X.b.lastBump = t; bsay(X.b, line("bump")); } }
     });
+    if (said) lastBumpTalk = t;
   }
+  function talking() { return [bub].concat(buddies.map(function (b) { return b.bub; })).filter(function (e) { return !e.hidden; }).length; }
   function tagContact(A, B, t) {
     if (!A.b || !B.b) return;
     var x = A.b.mode === "tag" && A.b.other === B.b ? A.b : B.b.mode === "tag" && B.b.other === A.b ? B.b : null;
     if (!x || t - (x.tagAt || 0) < 900) return;
-    var y = x.other; x.mode = "flee"; y.mode = "tag"; x.tagAt = y.tagAt = t; bsay(x, line("tagGot"));
+    var y = x.other; x.mode = "flee"; y.mode = "tag"; x.tagAt = y.tagAt = t; if (talking() < 2) bsay(x, line("tagGot"));
   }
   // everyone pushes everyone: circle-circle collisions, heavier = bigger, held ones don't budge
   function collideAll(t) {
@@ -1483,6 +1516,11 @@
   function itemName(it) { return EN ? it.title_en || it.title : it.title; }
   function itemUrl(r) { var it = r.e.it; return (EN && it.detailUrlEn) || it.detailUrl || r.e.sec + ".html?q=" + encodeURIComponent(itemName(it)); }
   var resultsEl = document.getElementById("pp-results");
+  // he says "the rest are below": when that list is out of view, a button in his world takes you to it
+  var resHint = document.createElement("button"); resHint.type = "button"; resHint.className = "res-hint"; resHint.hidden = true;
+  resHint.textContent = T("↓ النتائج", "↓ Results"); stage.appendChild(resHint);
+  resHint.addEventListener("click", function () { resultsEl.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" }); resHint.hidden = true; });
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { if (es[0].isIntersecting) resHint.hidden = true; }).observe(resultsEl);
   function showResults(list) {
     resultsEl.textContent = "";
     list.forEach(function (r) {
@@ -1493,6 +1531,7 @@
       a.appendChild(b); a.appendChild(s); resultsEl.appendChild(a);
     });
     resultsEl.hidden = !list.length;
+    requestAnimationFrame(function () { var r = resultsEl.getBoundingClientRect(); resHint.hidden = !list.length || (r.top < innerHeight && r.bottom > 0); });
   }
   // answers a "where can I find…" message with real places; null when there's nothing to look for
   function findPlaces(u, force) {
@@ -1726,6 +1765,7 @@
   });
   function answer(msg) {
     var u = understand(msg), n = myName(), lesson = lessonFor(u);
+    nextSong = Math.max(nextSong, performance.now() + 45000);  // you're talking: no surprise songs for a while
     if (!lesson && u.intent === "sing" && !song) { setTimeout(sing, 900); return; }
     var called = u.call && u.call !== "main" ? others().filter(function (b) { return b.f.id === u.call; })[0] : null;
     var speaker = called || (mainAway ? pick(others()) : null);
@@ -2096,8 +2136,8 @@
       buddies.forEach(function (b) { buddyStep(b, t, dt); }); collideAll(t); ballStep(dt); gemStep(t); hsStep(t); return;
     }
     var idle = t - lastInput;
-    if (drag && !cheek && !drag.moved && !drag.shy && t - drag.t > 650) { drag.shy = true; mood.shy = 1; say(line("shy"), "shy", 3000); }
-    if (idle > (isNight ? 7000 : 15000) && !drag) mood.sleepy = Math.min(1, mood.sleepy + .0025 * dt);
+    if (drag && !cheek && !drag.moved && !drag.shy && !drag.slipped && t - drag.t > 650) { drag.shy = true; mood.shy = 1; say(line("shy"), "shy", 3000); }
+    if (idle > (isNight ? 20000 : 40000) && !drag) mood.sleepy = Math.min(1, mood.sleepy + .0025 * dt);
     var asleep = mood.sleepy > .85;
     if (asleep && (bub.hidden || bub.textContent !== "Zzz…")) say("Zzz…");
     if (asleep && t > nextSnore) { nextSnore = t + 3200; sfx("snore"); }
