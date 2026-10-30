@@ -302,10 +302,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         } else if (value.startsWith("daily:")) {
             int i = Integer.parseInt(value.substring(6));
             if (i < dailyItems.size()) {
-                JSONObject item = dailyItems.get(i);
                 Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
-                startActivity("ai-experiments".equals(currentSlug) ? webViewIntentFor(item) : articleIntentFor(item));
-                overridePendingTransition(0, 0);
+                ItemAdapter.open(this, dailyItems.get(i), currentSlug);
             }
         } else if (value.startsWith("url:") || value.startsWith("tel:")) {
             // أزرار بطاقات "اختيار اليوم"
@@ -390,7 +388,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     // ------------------------------------------------------------
 
     private void loadData() {
-        showLoading();
+        // تحديث بالخلفية (رجوع للتطبيق بعد مدة): البيانات الحالية تبقى ظاهرة
+        if (sections == null) showLoading();
         HakolahApi.fetch(this, this);
     }
 
@@ -411,6 +410,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             return;
         }
         buildSectionTabs();
+        // تحديث صامت: نفس القسم والبحث والفلتر — كان يرجّع المستخدم لأول قسم ويمسح بحثه
+        JSONObject current = currentSlug == null ? null : sections.optJSONObject(currentSlug);
+        if (current != null && isBrowsable(current)) {
+            currentItems = current.optJSONArray("items");
+            buildFilterChips();
+            applyFilters();
+            highlightActiveTab();
+            return;
+        }
         if (!deepLinkHandled) {
             deepLinkHandled = true;
             if (handleDeepLink()) return;
@@ -455,35 +463,17 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         for (int i = 0; i < items.length(); i++) {
             JSONObject item = items.optJSONObject(i);
             if (item == null || !slug.equals(item.optString("id", ""))) continue;
-            Intent intent = "ai-experiments".equals(section)
-                    ? webViewIntentFor(item)
-                    : articleIntentFor(item);
-            startActivity(intent);
-            overridePendingTransition(0, 0);
             selectSection(section);
+            ItemAdapter.open(this, item, section);
             return true;
         }
         return false;
     }
 
-    private Intent articleIntentFor(JSONObject item) {
-        Intent intent = new Intent(this, ArticleActivity.class);
-        intent.putExtra(ArticleActivity.EXTRA_TITLE, Lang.title(this, item));
-        intent.putExtra(ArticleActivity.EXTRA_ICON, item.optString("icon", "⭐"));
-        intent.putExtra(ArticleActivity.EXTRA_CONTENT, Lang.content(this, item));
-        intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, Lang.detailPath(this, item));
-        return intent;
-    }
-
-    private Intent webViewIntentFor(JSONObject item) {
-        Intent intent = new Intent(this, WebViewActivity.class);
-        intent.putExtra(WebViewActivity.EXTRA_TITLE, Lang.title(this, item));
-        intent.putExtra(WebViewActivity.EXTRA_URL, Lang.detailUrl(this, item));
-        return intent;
-    }
-
     @Override
     public void onError(String message) {
+        // فشل تحديث بالخلفية ما يمسح بيانات معروضة أصلاً
+        if (sections != null) return;
         showError(message);
     }
     // -----------------------------
@@ -630,9 +620,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             if (item == null) continue;
             if (currentTag != null && !hasTag(item, currentTag)) continue;
             // البحث باللغتين دائماً — تكتب "burger" أو "برجر" وتلقى نفس العنصر
-            String haystack = item.optString("title", "") + " " + item.optString("desc", "") + " "
-                    + item.optString("title_en", "") + " " + item.optString("desc_en", "");
-            if (!SearchUtil.fuzzyIncludes(haystack, searchQuery)) continue;
+            if (!searchQuery.isEmpty() && !SearchUtil.fuzzyIncludes(searchText(item), searchQuery)) continue;
             matched.add(item);
         }
 
@@ -662,6 +650,33 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         }
         boolean browsing = currentTag == null && searchQuery.isEmpty() && !sortByDistance;
         dailyWrap.setVisibility(browsing && dailyCards > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    // نص البحث لكل عنصر باللغتين: الاسم والوصف + التصنيفات + الكلمات المفتاحية
+    // (روابط وأدوات) + أسماء أصناف المنيو — نفس نطاق بحث الموقع. يُحسب مرة
+    // ويُخزَّن بالعنصر نفسه بدل إعادة بنائه مع كل حرف
+    static String searchText(JSONObject item) {
+        String cached = item.optString("_search", "");
+        if (!cached.isEmpty()) return cached;
+        StringBuilder sb = new StringBuilder();
+        for (String k : new String[]{"title", "desc", "title_en", "desc_en", "keywords"}) sb.append(item.optString(k, "")).append(' ');
+        JSONArray tags = item.optJSONArray("tags");
+        for (int i = 0; tags != null && i < tags.length(); i++) {
+            String t = tags.optString(i);
+            sb.append(t).append(' ');
+            if (cachedTagsEn != null) sb.append(cachedTagsEn.optString(t, "")).append(' ');
+        }
+        JSONArray menu = item.optJSONArray("menuItems");
+        for (int i = 0; menu != null && i < menu.length(); i++) {
+            JSONObject m = menu.optJSONObject(i);
+            if (m != null) sb.append(m.optString("name", "")).append(' ').append(m.optString("name_en", "")).append(' ');
+        }
+        String out = sb.toString();
+        try {
+            item.put("_search", out);
+        } catch (Exception ignored) {
+        }
+        return out;
     }
 
     // ترتيب إدراج يدوي بـCollator عربي — بنفس سبب تفادي Comparator<T> بملفات
@@ -948,7 +963,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         LinkButtons.build(this, actions, item, HakolahApi.ORIGIN, this);
         // عنصر له صفحة (مقال/تجربة): نفس سلوك القائمة — يفتح داخل التطبيق
         // (قارئ المقال أو WebView) لا بالمتصفح الخارجي
-        if (!item.optString("detailUrl", "").isEmpty() && actions.getChildCount() > 0) {
+        if (ItemAdapter.isArticle(item) && actions.getChildCount() > 0) {
             TextView open = (TextView) actions.getChildAt(0);
             boolean experiment = "ai-experiments".equals(currentSlug);
             open.setText(getString(experiment ? R.string.open_experiment : R.string.read_article));
@@ -965,6 +980,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         }
         scroll.addView(actions);
         card.addView(scroll);
+        // البطاقة نفسها تفتح صفحة المكان (الأزرار داخلها تبقى لها)
+        card.setTag("daily:" + index);
+        card.setOnClickListener(this);
         return card;
     }
 

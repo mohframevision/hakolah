@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- دائرة أزرار الإجراءات بصفحة المكان (اتصال/الاتجاهات/...): نفس صف أزرار خرائط قوقل -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/ripple_on_secondary">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/tonal" />
+        </shape>
+    </item>
+</ripple>

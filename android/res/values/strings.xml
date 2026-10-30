@@ -142,4 +142,21 @@
     <string name="story_help_suggest">أرسل اقتراحك</string>
     <string name="story_help_share">شارك هكوله</string>
     <string name="story_sign">— محمد، صانع هكوله</string>
+
+    <string name="back">رجوع</string>
+    <string name="place_directions">الاتجاهات</string>
+    <string name="place_menu_link">المنيو</string>
+    <string name="place_open_map">افتح الموقع على الخريطة</string>
+    <string name="place_copy_hint">اضغط مطولاً للنسخ</string>
+    <string name="copied">تم نسخ الرقم</string>
+    <string name="place_meat">مصدر اللحوم</string>
+    <string name="place_checked">تحقّقنا منه بتاريخ %1$s</string>
+    <string name="place_menu">المنيو والأسعار</string>
+    <string name="menu_count">%1$d صنف</string>
+    <string name="place_menu_all">عرض المنيو كاملاً (%1$d)</string>
+    <string name="place_about">نبذة</string>
+    <string name="place_on_site">افتح الصفحة في موقع هكوله</string>
+    <string name="menu_search_hint">ابحث في المنيو…</string>
+    <string name="menu_sort_cheap">الأرخص أولاً</string>
+    <string name="menu_empty">لا يوجد صنف بهذا الاسم</string>
 </resources>

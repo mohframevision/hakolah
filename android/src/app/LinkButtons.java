@@ -17,8 +17,9 @@ import org.json.JSONObject;
 class LinkButtons {
     static void build(Context context, LinearLayout container, JSONObject item, String origin, View.OnClickListener listener) {
         container.removeAllViews();
-        String detailUrl = item.optString("detailUrl", "");
-        if (!detailUrl.isEmpty()) {
+        // مقال صافٍ بلا روابط تواصل: زر التفاصيل وحده. مكان له مقال (مطعم بصفحة)
+        // يعرض أزرار الاتصال والخريطة كأي مكان — كانت تختفي خلف زر "التفاصيل"
+        if (ItemAdapter.isArticle(item)) {
             add(context, container, R.drawable.ic_menu_book, context.getString(R.string.btn_details), "url:" + Lang.detailUrl(context, item), true, listener);
             return;
         }

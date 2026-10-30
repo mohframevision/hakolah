@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- رأس صفحة المكان: نفس تدرّج بطاقة "اختيار اليوم"، بزوايا سفلية فقط -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <corners android:bottomLeftRadius="28dp" android:bottomRightRadius="28dp" />
+    <gradient android:angle="315" android:startColor="#FF1B4D3E" android:endColor="#FF2E8B68" />
+</shape>

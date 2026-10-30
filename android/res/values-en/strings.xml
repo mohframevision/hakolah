@@ -140,4 +140,21 @@
     <string name="story_help_suggest">Send a suggestion</string>
     <string name="story_help_share">Share Hakolah</string>
     <string name="story_sign">— Mohamed, maker of Hakolah</string>
+
+    <string name="back">Back</string>
+    <string name="place_directions">Directions</string>
+    <string name="place_menu_link">Menu</string>
+    <string name="place_open_map">Open on the map</string>
+    <string name="place_copy_hint">Long-press to copy</string>
+    <string name="copied">Number copied</string>
+    <string name="place_meat">Meat source</string>
+    <string name="place_checked">Checked on %1$s</string>
+    <string name="place_menu">Menu &amp; prices</string>
+    <string name="menu_count">%1$d items</string>
+    <string name="place_menu_all">See the full menu (%1$d)</string>
+    <string name="place_about">About</string>
+    <string name="place_on_site">Open the page on hakolah.com</string>
+    <string name="menu_search_hint">Search the menu…</string>
+    <string name="menu_sort_cheap">Cheapest first</string>
+    <string name="menu_empty">No item by that name</string>
 </resources>

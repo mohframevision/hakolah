@@ -173,16 +173,10 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             holder.tags.setVisibility(View.GONE);
         }
 
-        // hasDetailPages يُشتق من وجود detailUrl بالعنصر نفسه لا من ثابت
-        // بمستوى القائمة — يسمح لشاشة المفضلة تخلط عناصر من أقسام مختلفة
-        // (بعضها مقالات وبعضها بطاقات روابط) بنفس ItemAdapter
-        boolean hasDetailPages = !item.optString("detailUrl", "").isEmpty();
-        if (hasDetailPages) {
-            // "أدلة"/"أماكن": مقال يُعرض أصلياً بـArticleActivity. "تجارب
-            // الذكاء الاصطناعي": أدوات JS تفاعلية ثقيلة (مولّد ألحان، محوّل
-            // ملفات...) — تُفتح بـWebViewActivity (نفس الصفحة الحقيقية داخل
-            // التطبيق) بدل إعادة كتابة مئات الأسطر جافا لكل أداة
-            boolean isExperiment = "ai-experiments".equals(itemSection);
+        // مقال (أدلة) أو تجربة: زر قراءة واحد. أي مكان آخر (حتى اللي له مقال،
+        // مثل مطاعم بصفحة) يعرض أزرار الاتصال والخريطة، والكرت كله يفتح صفحته
+        boolean isExperiment = "ai-experiments".equals(itemSection);
+        if (isExperiment || isArticle(item)) {
             holder.actions.removeAllViews();
             TextView readBtn = new TextView(context);
             readBtn.setText(context.getString(isExperiment ? R.string.open_experiment : R.string.read_article));
@@ -198,13 +192,15 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             readBtn.setClickable(true);
             readBtn.setFocusable(true);
             readBtn.setGravity(android.view.Gravity.CENTER);
-            readBtn.setTag((isExperiment ? "webview:" : "article:") + position);
+            readBtn.setTag("open:" + position);
             readBtn.setOnClickListener(this);
             Touch.springy(readBtn);
             holder.actions.addView(readBtn);
         } else {
             LinkButtons.build(context, holder.actions, item, HakolahApi.ORIGIN, this);
         }
+        row.setTag(R.id.itemTitle, "open:" + position);
+        row.setOnClickListener(this);
 
         return row;
     }
@@ -247,7 +243,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        Object tagObj = v.getTag();
+        Object tagObj = v.getTag(R.id.itemTitle) != null ? v.getTag(R.id.itemTitle) : v.getTag();
         if (!(tagObj instanceof String)) return;
         String tag = (String) tagObj;
         if (tag.startsWith("url:") || tag.startsWith("tel:")) {
@@ -266,14 +262,10 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             int position = Integer.parseInt(tag.substring(6));
             Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             shareItem(items.get(position));
-        } else if (tag.startsWith("article:")) {
-            int position = Integer.parseInt(tag.substring(8));
+        } else if (tag.startsWith("open:")) {
+            JSONObject item = items.get(Integer.parseInt(tag.substring(5)));
             Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
-            openArticle(items.get(position));
-        } else if (tag.startsWith("webview:")) {
-            int position = Integer.parseInt(tag.substring(8));
-            Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
-            openWebView(items.get(position));
+            open(context, item, itemSection(item));
         }
     }
 
@@ -286,28 +278,49 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
                 .setInterpolator(new android.view.animation.OvershootInterpolator(5f)).start();
     }
 
-    private void openArticle(JSONObject item) {
-        Intent intent = new Intent(context, ArticleActivity.class);
-        intent.putExtra(ArticleActivity.EXTRA_TITLE, Lang.title(context, item));
-        intent.putExtra(ArticleActivity.EXTRA_ICON, item.optString("icon", "⭐"));
-        intent.putExtra(ArticleActivity.EXTRA_CONTENT, Lang.content(context, item));
-        intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, Lang.detailPath(context, item));
-        context.startActivity(intent);
-        context.overridePendingTransition(0, 0);
+    // مقال صافٍ: نص بلا أي رابط تواصل ولا ساعات ولا منيو (قسم الأدلة) — هذا
+    // يفتح بقارئ المقال، وكل ما عداه صفحة مكان
+    static boolean isArticle(JSONObject item) {
+        if (item.optString("contentHtml", "").isEmpty()) return false;
+        if (!item.optString("hours", "").isEmpty() || !item.optString("mapsUrl", "").isEmpty()) return false;
+        JSONArray menu = item.optJSONArray("menuItems");
+        if (menu != null && menu.length() > 0) return false;
+        JSONObject links = item.optJSONObject("links");
+        if (links != null) {
+            java.util.Iterator<String> keys = links.keys();
+            while (keys.hasNext()) if (!links.optString(keys.next(), "").isEmpty()) return false;
+        }
+        return true;
     }
 
-    private void openWebView(JSONObject item) {
-        Intent intent = new Intent(context, WebViewActivity.class);
-        intent.putExtra(WebViewActivity.EXTRA_TITLE, Lang.title(context, item));
-        intent.putExtra(WebViewActivity.EXTRA_URL, Lang.detailUrl(context, item));
-        context.startActivity(intent);
-        context.overridePendingTransition(0, 0);
+    // نقطة فتح واحدة لأي عنصر من أي شاشة (القائمة، اختيار اليوم، المفضلة، اختار لي، الروابط)
+    static void open(Activity a, JSONObject item, String section) {
+        Intent intent;
+        if ("ai-experiments".equals(section)) {
+            intent = new Intent(a, WebViewActivity.class);
+            intent.putExtra(WebViewActivity.EXTRA_TITLE, Lang.title(a, item));
+            intent.putExtra(WebViewActivity.EXTRA_URL, Lang.detailUrl(a, item));
+        } else if (isArticle(item)) {
+            intent = new Intent(a, ArticleActivity.class);
+            intent.putExtra(ArticleActivity.EXTRA_TITLE, Lang.title(a, item));
+            intent.putExtra(ArticleActivity.EXTRA_ICON, item.optString("icon", "⭐"));
+            intent.putExtra(ArticleActivity.EXTRA_CONTENT, Lang.content(a, item));
+            intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, Lang.detailPath(a, item));
+        } else {
+            intent = PlaceActivity.intent(a, item, section);
+        }
+        a.startActivity(intent);
+        a.overridePendingTransition(0, 0);
     }
 
     // نفس buildShareText/buildShareUrl بالموقع بالضبط: يفضّل detailUrl لو
     // موجود (أقسام المقالات)، وإلا رابط القسم مع ?q=العنوان — عبر مشاركة
     // النظام الأصلية (ACTION_SEND) بدل Web Share API
     private void shareItem(JSONObject item) {
+        share(context, item, itemSection(item));
+    }
+
+    static void share(Activity context, JSONObject item, String section) {
         String title = Lang.title(context, item);
         String detailUrl = item.optString("detailUrl", "");
         String url;
@@ -320,7 +333,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             } catch (Exception e) {
                 encodedTitle = title;
             }
-            url = Lang.siteUrl(context, itemSection(item) + ".html?q=" + encodedTitle);
+            url = Lang.siteUrl(context, section + ".html?q=" + encodedTitle);
         }
         String text = title + context.getString(R.string.share_suffix) + "\n" + url;
 

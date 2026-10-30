@@ -13,4 +13,7 @@
     <color name="ripple_on_primary">#33FFFFFF</color>
     <color name="ripple_on_secondary">#1A000000</color>
     <color name="search_box_bg">#C7FFFFFF</color>
+    <!-- خلفية خافتة بلون الهوية (أزرار الإجراءات، الشارات) والنص عليها -->
+    <color name="tonal">#E2EFE9</color>
+    <color name="on_tonal">#1B4D3E</color>
 </resources>

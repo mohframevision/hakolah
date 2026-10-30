@@ -13,4 +13,6 @@
     <color name="ripple_on_primary">#33FFFFFF</color>
     <color name="ripple_on_secondary">#26FFFFFF</color>
     <color name="search_box_bg">#C71C1C1C</color>
+    <color name="tonal">#20382F</color>
+    <color name="on_tonal">#A8DCC6</color>
 </resources>
