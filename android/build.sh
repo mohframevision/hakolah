@@ -14,7 +14,7 @@ set -euo pipefail
 
 SDK="/d/AndroidSdk"
 BT="$SDK/build-tools/34.0.0"
-PLATFORM="$SDK/platforms/android-34/android.jar"
+PLATFORM="$SDK/platforms/android-36/android.jar"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SAFE="/tmp/hakolah-android-build"
 OUT="$SAFE/build"

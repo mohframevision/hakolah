@@ -131,6 +131,7 @@ public class MenuActivity extends Activity implements View.OnClickListener, Text
         list.setAdapter(adapter);
         root.addView(list, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         setContentView(root);
+        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(R.color.bg));
         refresh();
     }
 

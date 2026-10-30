@@ -32,6 +32,7 @@ public class ArticleActivity extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_article);
+        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(R.color.bg));
 
         title = getIntent().getStringExtra(EXTRA_TITLE);
         String icon = getIntent().getStringExtra(EXTRA_ICON);

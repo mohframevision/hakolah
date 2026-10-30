@@ -92,6 +92,7 @@ public class SearchActivity extends Activity implements View.OnClickListener, Te
         BottomNav.attach(this, nav, BottomNav.SEARCH);
 
         setContentView(root);
+        Ui.edgeToEdge(this, getColor(R.color.bg), getColor(R.color.surface));
         box.requestFocus();
         getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
                 | android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);

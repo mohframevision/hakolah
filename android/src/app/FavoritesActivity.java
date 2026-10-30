@@ -23,6 +23,7 @@ public class FavoritesActivity extends Activity implements View.OnClickListener 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
+        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(R.color.surface));
         findViewById(R.id.favoritesCloseButton).setOnClickListener(this);
         findViewById(R.id.favoritesBrowse).setOnClickListener(this);
         Touch.springy(findViewById(R.id.favoritesBrowse));

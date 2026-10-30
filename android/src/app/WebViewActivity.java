@@ -64,6 +64,10 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         String title = getIntent().getStringExtra(EXTRA_TITLE);
         String url = getIntent().getStringExtra(EXTRA_URL);
         String tab = getIntent().getStringExtra(EXTRA_TAB);
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, new Ui.BackCallback(this));
+        }
+        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(tab != null ? R.color.surface : R.color.bg));
         ((TextView) findViewById(R.id.webviewTitle)).setText(title == null ? "" : title);
         findViewById(R.id.webviewCloseButton).setOnClickListener(this);
         if (tab != null) {
@@ -102,9 +106,18 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         int vis = land ? View.GONE : View.VISIBLE;
         findViewById(R.id.webviewBar).setVisibility(vis);
         findViewById(R.id.bottomNav).setVisibility(vis);
-        getWindow().getDecorView().setSystemUiVisibility(land
-                ? View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                : View.SYSTEM_UI_FLAG_VISIBLE);
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            android.view.WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                c.setSystemBarsBehavior(android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                if (land) c.hide(android.view.WindowInsets.Type.systemBars());
+                else c.show(android.view.WindowInsets.Type.systemBars());
+            }
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(land
+                    ? View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    : Ui.legacyFlags(false, false));
+        }
     }
 
     @Override

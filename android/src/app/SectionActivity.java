@@ -84,6 +84,7 @@ public class SectionActivity extends Activity implements View.OnClickListener, T
             return;
         }
         setContentView(R.layout.activity_section);
+        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(R.color.surface));
         createdLang = Prefs.getLang(this);
 
         itemList = findViewById(R.id.itemList);

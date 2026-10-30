@@ -57,7 +57,6 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
             return;
         }
         section = getIntent().getStringExtra(EXTRA_SECTION);
-        getWindow().setStatusBarColor(0xFF1B4D3E);
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -75,6 +74,7 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
         buildMenu(root);
         buildAbout(root);
         setContentView(scroll);
+        Ui.edgeToEdge(this, 0xFF1B4D3E, getColor(R.color.bg));
     }
 
     // ---- الرأس: رجوع / مشاركة / مفضلة، ثم الأيقونة والاسم والوصف والتصنيفات ----

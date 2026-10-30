@@ -60,7 +60,7 @@ public class StoryActivity extends Activity implements View.OnClickListener, Vie
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_story);
-        getWindow().setStatusBarColor(0xFF06120E);
+        Ui.edgeToEdge(this, 0, 0);
         animations = Build.VERSION.SDK_INT < 26 || ValueAnimator.areAnimatorsEnabled();
 
         scroll = findViewById(R.id.storyScroll);

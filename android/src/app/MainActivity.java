@@ -54,6 +54,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Ui.edgeToEdge(this, getColor(R.color.bg), getColor(R.color.surface));
         createdLang = Prefs.getLang(this);
         loadingView = findViewById(R.id.loadingView);
         errorView = findViewById(R.id.errorView);

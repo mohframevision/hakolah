@@ -52,6 +52,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
     private final List<JSONObject> pool = new ArrayList<>();
     private JSONObject chosen;
     private boolean revealed;
+    private Object backCallback;
     // حركات الطفو لا نهائية — نوقفها عند إغلاق الكشف وإلا تستمر بلا فايدة
     private final List<ObjectAnimator> bobs = new ArrayList<>();
 
@@ -66,7 +67,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_picker);
-        getWindow().setStatusBarColor(0xFF06120E);
+        Ui.edgeToEdge(this, 0, 0);
 
         sections = MainActivity.cachedSections;
         orb = findViewById(R.id.pickerOrb);
@@ -193,6 +194,9 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         } else if (tag.startsWith("url:") || tag.startsWith("tel:")) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             LinkButtons.handleClick(this, tag);
+        } else if ("open".equals(tag) && chosen != null) {
+            Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
+            ItemAdapter.open(this, chosen, sectionSlugOf(chosen));
         } else if (ACTION_BACK.equals(tag)) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.CLOSE);
             hideReveal();
@@ -227,6 +231,10 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
     private void showReveal(JSONObject item) {
         if (item == null) return;
         revealed = true;
+        if (android.os.Build.VERSION.SDK_INT >= 33 && backCallback == null) {
+            backCallback = new Ui.BackCallback(this);
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, (android.window.OnBackInvokedCallback) backCallback);
+        }
         orb.animate().alpha(0.22f).scaleX(0.78f).scaleY(0.78f).setDuration(520).setInterpolator(new DecelerateInterpolator(2f)).start();
         pill.animate().alpha(0f).setDuration(200).start();
         headline.setText(getString(R.string.picker_result));
@@ -294,6 +302,9 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         LinkButtons.build(this, actions, item, HakolahApi.ORIGIN, this);
         actionsScroll.addView(actions);
         card.addView(actionsScroll);
+        // البطاقة نفسها تفتح صفحة المكان (المنيو، الساعات، كل الأرقام)
+        card.setTag("open");
+        card.setOnClickListener(this);
         reveal.addView(card);
 
         // البطاقة تطلع من المنتصف بنابض
@@ -423,6 +434,10 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
 
     private void hideReveal() {
         revealed = false;
+        if (android.os.Build.VERSION.SDK_INT >= 33 && backCallback != null) {
+            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback((android.window.OnBackInvokedCallback) backCallback);
+            backCallback = null;
+        }
         handler.removeCallbacksAndMessages(null);
         for (ObjectAnimator b : bobs) b.cancel();
         bobs.clear();
