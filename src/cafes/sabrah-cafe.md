@@ -11,4 +11,5 @@ links:
   website: ''
   maps: https://maps.app.goo.gl/upuRRU2Zrr8YT3t26
   instagram: ''
+incomplete: true
 ---

@@ -14,4 +14,5 @@ links:
   instagram: https://www.instagram.com/rozabellacafe
 lat: 26.2204621
 lng: 50.5436696
+incomplete: true
 ---

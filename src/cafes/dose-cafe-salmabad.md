@@ -12,4 +12,5 @@ links:
   website: ''
 lat: 26.1864814
 lng: 50.5186363
+incomplete: true
 ---
