@@ -2119,7 +2119,8 @@ a.photo-credit.card {
 .prose tr:last-child td { border-bottom: 0; }
 .prose tbody tr:nth-child(even) { background: color-mix(in srgb, var(--color-text) 3%, transparent); }
 /* الأسعار ما تنكسر على سطرين: أي خلية فيها «د.ب» أو BHD */
-.prose td:is(:last-child, :nth-last-child(2):not(:first-child)) { white-space: nowrap; }
+/* عمود السعر الثاني فقط بجداول ٤ أعمدة؛ بجدول ٣ أعمدة العمود قبل الأخير مكوّنات ولازم يلتفّ */
+.prose td:is(:last-child, :nth-last-child(2):nth-child(n+3)) { white-space: nowrap; }
 @media (max-width: 600px) {
   .prose table { display: block; overflow-x: auto; }
 }
