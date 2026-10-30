@@ -13,7 +13,7 @@ const { fitGlyphInRect } = require("./heh-glyph.js");
 const SIZE = 1080;
 const SITE_URL = "https://hakolah.com/";
 const outDir =
-  "C:\\Users\\Computia.ME\\AppData\\Local\\Temp\\claude\\D-----------\\79ddc704-5480-4e31-b983-b66d3efa52e6\\scratchpad";
+  require("path").join(__dirname, "..", "هكوله", "بوسترات");
 
 const FONT = "Tahoma, Arial, sans-serif";
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

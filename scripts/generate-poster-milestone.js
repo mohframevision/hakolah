@@ -13,7 +13,7 @@ const SIZE = 1080;
 const SITE_URL = "https://hakolah.com/";
 const COUNT = "+160";
 const outDir =
-  "C:\\Users\\Computia.ME\\AppData\\Local\\Temp\\claude\\D-----------\\79ddc704-5480-4e31-b983-b66d3efa52e6\\scratchpad";
+  require("path").join(__dirname, "..", "هكوله", "بوسترات");
 
 async function main() {
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });

@@ -11,7 +11,7 @@ const { fitGlyphInRect } = require("./heh-glyph.js");
 
 const SITE_URL = "https://hakolah.com/";
 const outDir =
-  "C:\\Users\\Computia.ME\\AppData\\Local\\Temp\\claude\\D-----------\\79ddc704-5480-4e31-b983-b66d3efa52e6\\scratchpad";
+  require("path").join(__dirname, "..", "هكوله", "بوسترات");
 const FONT = 'font-family="Tahoma, Arial, sans-serif"';
 
 // oy = إزاحة عمودية للمحتوى (0 للمنشور؛ للستوري يتوسّط بعيداً عن أشرطة الواجهة)

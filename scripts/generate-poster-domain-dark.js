@@ -8,7 +8,7 @@ const path = require("path");
 const { chromium } = require("playwright");
 
 const outDir =
-  "C:\\Users\\Computia.ME\\AppData\\Local\\Temp\\claude\\D-----------\\79ddc704-5480-4e31-b983-b66d3efa52e6\\scratchpad";
+  require("path").join(__dirname, "..", "هكوله", "بوسترات");
 const SITE = "https://hakolah.com/";
 const G = "#34d399";
 
