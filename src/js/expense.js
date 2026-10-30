@@ -96,8 +96,8 @@ function initExpenseCalculator() {
     // نسخة من القائمة: نضيف للأصل داخل الحلقة
     entries.slice().forEach((source) => {
       if (source.repeat !== "monthly") return;
-      // سقف 24 شهراً: عملية بتاريخ قديم جداً ما تولّد عشرات النسخ فجأة
-      for (let n = 1; n <= 24; n++) {
+      // سقف 24 نسخة جديدة بكل مرة (لا 24 شهراً من الأصل، وإلا الراتب يوقف بعد سنتين بصمت)
+      for (let n = 1, made = 0; n <= 1200 && made < 24; n++) {
         const date = addMonths(source.date, n);
         if (date > today) break;
         const genId = `${source.id}-r${date.slice(0, 7)}`;
@@ -107,6 +107,7 @@ function initExpenseCalculator() {
         entries.push({ ...source, id: genId, date, repeat: "", from: source.id });
         ids.add(genId);
         created++;
+        made++;
       }
     });
     if (created) saveEntries();
@@ -755,10 +756,16 @@ function initExpenseCalculator() {
         const data = JSON.parse(await file.text());
         if (!Array.isArray(data)) throw new Error("bad shape");
         let added = 0;
+        const ids = new Set(entries.map((e) => e.id));
         data.forEach((item) => {
-          if (!item || typeof item.amount !== "number" || (item.type !== "income" && item.type !== "expense")) return;
+          if (!item || !Number.isFinite(item.amount) || (item.type !== "income" && item.type !== "expense")) return;
+          // نحتفظ بالـid وبمرجع الأصل: الاستيراد مرتين ما يكرّر، ونسخ التكرار الشهري ما تتولّد من جديد فوقها
+          const id = typeof item.id === "string" && item.id.length <= 80 ? item.id : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${added}`;
+          if (ids.has(id)) return;
+          ids.add(id);
           entries.push({
-            id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${added}`,
+            id,
+            ...(typeof item.from === "string" ? { from: item.from.slice(0, 80) } : {}),
             date: typeof item.date === "string" ? item.date : todayStr(),
             type: item.type,
             amount: item.amount,
@@ -770,6 +777,7 @@ function initExpenseCalculator() {
           added++;
         });
         saveEntries();
+        materializeRecurring();
         render();
         showToast(say(`تمت إضافة ${added} عملية`, `Added ${added} entries`));
       } catch {
