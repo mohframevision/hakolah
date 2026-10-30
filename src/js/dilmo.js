@@ -1026,8 +1026,8 @@
         if (Math.abs(dx) > 14) {
           // each hop is sized to the room ahead and the distance left, so they walk up to someone and stop
           // beside them (or land on their spot) instead of hopping into them and bouncing around
-          var dir = Math.sign(dx), chase = b.mode === "tag" || b.mode === "flee", hvy = 3 + 1.5 * b.f.energy, air = 2 * hvy / .75;
-          var room = gapAhead(b, dir), step = Math.min(2.5 + 2.5 * b.f.energy, Math.abs(dx) / air, room / air);
+          var dir = Math.sign(dx), chase = b.mode === "tag" || b.mode === "flee", hvy = 3 + 1.5 * b.f.energy, airT = 2 * hvy / .75;
+          var room = gapAhead(b, dir), step = Math.min(2.5 + 2.5 * b.f.energy, Math.abs(dx) / airT, room / airT);
           if (room < 6 && chase) { b.vx = dir * (3 + 2.5 * b.f.energy); b.vy = -9 - 2 * b.f.energy; }  // in a chase: leap over
           else if (step < .6) { b.vx = 0; if (!chase) { b.tx = b.mode === "wander" ? roomy(b, -dir) : null; if (b.mode !== "wander") b.next = Math.min(b.next, t + 900); } }  // someone's right there: turn round (or wait beside them)
           else { b.vx = dir * step; b.vy = -hvy; }
