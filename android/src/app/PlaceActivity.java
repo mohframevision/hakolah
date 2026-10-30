@@ -73,15 +73,22 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
         buildMenu(root);
         buildAbout(root);
         setContentView(scroll);
-        Ui.edgeToEdge(this, 0xFF1B4D3E, getColor(R.color.bg));
+        // المحتوى يطلع قطعة قطعة بعد تمدد الكرت (نفس ظهور المحتوى بالمرجع)
+        for (int i = 0; i < root.getChildCount(); i++) {
+            View part = root.getChildAt(i);
+            part.setAlpha(0f);
+            part.setTranslationY(dp(18));
+            part.animate().alpha(1f).translationY(0f).setStartDelay(90 + i * 45L).setDuration(380)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator(2f)).start();
+        }
+        Ui.edgeToEdge(this, getColor(R.color.bg), getColor(R.color.bg));
     }
 
     // ---- الرأس: رجوع / مشاركة / مفضلة، ثم الأيقونة والاسم والوصف والتصنيفات ----
     private View buildHero() {
         LinearLayout hero = new LinearLayout(this);
         hero.setOrientation(LinearLayout.VERTICAL);
-        hero.setBackgroundResource(R.drawable.place_hero_bg);
-        hero.setPadding(dp(8), dp(8), dp(8), dp(24));
+        hero.setPadding(dp(8), dp(8), dp(8), dp(8));
 
         LinearLayout bar = new LinearLayout(this);
         bar.setGravity(Gravity.CENTER_VERTICAL);
@@ -96,16 +103,14 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
         body.setPadding(dp(16), 0, dp(16), 0);
-        TextView icon = Ui.iconTile(this, item.optString("icon", "⭐"), section, 72, 38);
-        icon.setBackground(Ui.rounded(this, 0x2EFFFFFF, 22));
-        body.addView(icon);
-        TextView title = Ui.text(this, Lang.title(this, item), 27, 0xFFFFFFFF, false);
+        body.addView(Ui.iconTile(this, Icons.item(item, section), 64, getColor(R.color.field), getColor(R.color.text)));
+        TextView title = Ui.text(this, Lang.title(this, item), 27, getColor(R.color.text), false);
         Ui.display(title);
         title.setPadding(0, dp(12), 0, 0);
         body.addView(title);
         String desc = Lang.desc(this, item);
         if (!desc.isEmpty()) {
-            TextView d = Ui.text(this, desc, 15, 0xE6FFFFFF, false);
+            TextView d = Ui.text(this, desc, 15, getColor(R.color.text_muted), false);
             d.setPadding(0, dp(4), 0, 0);
             body.addView(d);
         }
@@ -115,8 +120,8 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
             hs.setHorizontalScrollBarEnabled(false);
             LinearLayout row = new LinearLayout(this);
             for (int i = 0; i < tags.length(); i++) {
-                TextView pill = Ui.text(this, Lang.tag(this, tags.optString(i)), 12.5f, 0xFFFFFFFF, false);
-                pill.setBackgroundResource(R.drawable.glass_pill);
+                TextView pill = Ui.text(this, Lang.tag(this, tags.optString(i)), 13, getColor(R.color.text_muted), false);
+                pill.setBackground(Ui.rounded(this, getColor(R.color.field), 14));
                 pill.setPadding(dp(12), dp(4), dp(12), dp(4));
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 lp.setMarginEnd(dp(6));
@@ -135,9 +140,9 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
     private ImageView iconButton(int res, String tag, String desc) {
         ImageView b = new ImageView(this);
         b.setImageResource(res);
-        b.setColorFilter(0xFFFFFFFF);
+        b.setColorFilter(getColor(R.color.text));
         b.setPadding(dp(12), dp(12), dp(12), dp(12));
-        b.setBackgroundResource(R.drawable.glass_circle);
+        b.setBackgroundResource(R.drawable.row_bg);
         b.setContentDescription(desc);
         b.setTag(tag);
         b.setOnClickListener(this);
@@ -168,7 +173,10 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
         return row.getChildCount() == 0 ? null : row;
     }
 
+    // أول إجراء (الاتصال عادة) هو الأساسي: دائرة خضراء ممتلئة — الوحيد الملوّن
+    // بالصفحة. الباقي دوائر محايدة
     private void addAction(LinearLayout row, int icon, String label, String tag) {
+        boolean primary = row.getChildCount() == 0;
         LinearLayout a = new LinearLayout(this);
         a.setOrientation(LinearLayout.VERTICAL);
         a.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -180,8 +188,8 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
         Touch.springy(a, 0.92f);
         ImageView i = new ImageView(this);
         i.setImageResource(icon);
-        i.setColorFilter(getColor(R.color.on_tonal));
-        i.setBackgroundResource(R.drawable.tonal_circle);
+        i.setColorFilter(primary ? 0xFFFFFFFF : getColor(R.color.text));
+        i.setBackgroundResource(primary ? R.drawable.circle_solid_bg : R.drawable.tonal_circle);
         i.setPadding(dp(14), dp(14), dp(14), dp(14));
         i.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         a.addView(i, new LinearLayout.LayoutParams(dp(52), dp(52)));
@@ -226,7 +234,7 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
         i.setImageResource(icon);
         i.setColorFilter(getColor(tag == null ? R.color.text_muted : R.color.brand_accent));
         row.addView(i, new LinearLayout.LayoutParams(dp(22), dp(22)));
-        TextView t = Ui.text(this, text, 15, getColor(tag == null ? R.color.text : R.color.brand_accent), false);
+        TextView t = Ui.text(this, text, 15, getColor(R.color.text), false);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         lp.setMarginStart(dp(16));
         row.addView(t, lp);
@@ -321,7 +329,7 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
     private void applyFav() {
         boolean on = Prefs.isFavorite(this, section, item.optString("id", ""));
         favBtn.setImageResource(on ? R.drawable.ic_favorite_fill : R.drawable.ic_favorite_outline);
-        favBtn.setColorFilter(on ? 0xFFFF6B8F : 0xFFFFFFFF);
+        favBtn.setColorFilter(on ? 0xFFE0245E : getColor(R.color.text));
     }
 
     private int dp(float v) {
@@ -333,7 +341,7 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
         String tag = (String) v.getTag();
         if ("back".equals(tag)) {
             finish();
-            overridePendingTransition(0, 0);
+            overridePendingTransition(R.anim.stay, R.anim.place_out);
         } else if ("share".equals(tag)) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             ItemAdapter.share(this, item, section);
@@ -367,6 +375,6 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        overridePendingTransition(0, 0);
+        overridePendingTransition(R.anim.stay, R.anim.place_out);
     }
 }

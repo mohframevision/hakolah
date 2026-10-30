@@ -16,7 +16,6 @@ import android.widget.TextView;
 // بالضبط ما كان ناقصاً واللي خلّى القسمين مخفيين مؤقتاً بالتطبيق.
 public class ArticleActivity extends Activity implements View.OnClickListener {
     static final String EXTRA_TITLE = "title";
-    static final String EXTRA_ICON = "icon";
     static final String EXTRA_CONTENT = "content";
     static final String EXTRA_DETAIL_URL = "detailUrl";
 
@@ -32,16 +31,16 @@ public class ArticleActivity extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_article);
-        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(R.color.bg));
+        Ui.edgeToEdge(this, getColor(R.color.bg), getColor(R.color.bg));
 
         title = getIntent().getStringExtra(EXTRA_TITLE);
-        String icon = getIntent().getStringExtra(EXTRA_ICON);
         String contentHtml = getIntent().getStringExtra(EXTRA_CONTENT);
         detailUrl = getIntent().getStringExtra(EXTRA_DETAIL_URL);
 
         ((TextView) findViewById(R.id.articleHeaderTitle)).setText(title == null ? "" : title);
         TextView titleView = findViewById(R.id.articleTitle);
-        titleView.setText((icon == null ? "⭐" : icon) + "  " + (title == null ? "" : title));
+        titleView.setText(title == null ? "" : title);
+        Ui.display(titleView);
 
         TextView body = findViewById(R.id.articleBody);
         if (contentHtml != null && !contentHtml.isEmpty()) {

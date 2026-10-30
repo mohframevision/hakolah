@@ -41,21 +41,48 @@ class SearchUtil {
         return prevRow[n];
     }
 
+    // نص البحث المطبّع وكلماته (بلا تكرار) يُحسب مرة لكل نص ويُعاد استخدامه
+    // مع كل حرف — كان يُطبَّع ويُقسَّم من جديد مع كل ضغطة، وأسماء أصناف المنيو
+    // (آلاف الكلمات) جعلت الحرف الواحد يأخذ عشرات الملّي ثانية
+    private static final class Prepared {
+        final String norm;
+        final String[] words;
+
+        Prepared(String raw) {
+            norm = normalizeArabic(raw.toLowerCase());
+            java.util.LinkedHashSet<String> set = new java.util.LinkedHashSet<>();
+            for (String w : norm.trim().split("\\s+")) if (!w.isEmpty()) set.add(w);
+            words = set.toArray(new String[0]);
+        }
+    }
+
+    private static final java.util.Map<String, Prepared> PREPARED = new java.util.HashMap<>();
+
+    private static synchronized Prepared prepared(String haystack) {
+        Prepared p = PREPARED.get(haystack);
+        if (p == null) {
+            // سقف بسيط: لو تجمّع كثير (تحديثات بيانات متكررة) نبدأ من جديد
+            if (PREPARED.size() > 20000) PREPARED.clear();
+            p = new Prepared(haystack);
+            PREPARED.put(haystack, p);
+        }
+        return p;
+    }
+
     static boolean fuzzyIncludes(String haystack, String query) {
-        String hay = normalizeArabic(haystack == null ? "" : haystack.toLowerCase());
         String q = normalizeArabic(query == null ? "" : query.trim().toLowerCase());
         if (q.isEmpty()) return true;
-        if (hay.contains(q)) return true;
+        Prepared hay = prepared(haystack == null ? "" : haystack);
+        if (hay.norm.contains(q)) return true;
 
-        String[] hayWords = hay.trim().split("\\s+");
         String[] qWords = q.split("\\s+");
-
         for (String qw : qWords) {
             if (qw.isEmpty()) continue;
             boolean matched = false;
             int maxDist = qw.length() <= 4 ? 1 : 2;
-            for (String hw : hayWords) {
-                if (hw.contains(qw) || levenshtein(hw, qw) <= maxDist) {
+            for (String hw : hay.words) {
+                // فرق الطول وحده أكبر من المسموح = مستحيل يتطابق، بلا حساب المسافة
+                if (hw.contains(qw) || (Math.abs(hw.length() - qw.length()) <= maxDist && levenshtein(hw, qw) <= maxDist)) {
                     matched = true;
                     break;
                 }

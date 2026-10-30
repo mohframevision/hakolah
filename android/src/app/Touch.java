@@ -91,4 +91,52 @@ final class Touch {
             return !v.isClickable() && e.getActionMasked() == MotionEvent.ACTION_DOWN;
         }
     }
+
+    // "اختار لي": ينضغط وينبسط مثل كائن طري (squash & stretch) — نفس روح
+    // الشخصية الزرقاء بالمراجع. اللمسة على touchView والحركة على الأيقونة
+    static void squishy(View touchView, View target) {
+        touchView.setOnTouchListener(new Squash(target));
+    }
+
+    // نطّة هبوط واحدة (تُستدعى لما تفتح شاشة "اختار لي")
+    static void squashLand(View target) {
+        target.setScaleX(1.18f);
+        target.setScaleY(0.82f);
+        target.animate().scaleX(1f).scaleY(1f).setDuration(520)
+                .setInterpolator(new OvershootInterpolator(3.2f)).start();
+    }
+
+    private static final class Squash implements View.OnTouchListener {
+        private final View target;
+
+        Squash(View target) {
+            this.target = target;
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent e) {
+            int a = e.getActionMasked();
+            if (a == MotionEvent.ACTION_DOWN) {
+                target.animate().cancel();
+                target.animate().scaleX(1.16f).scaleY(0.84f).setDuration(130).setInterpolator(new DecelerateInterpolator(2f)).start();
+            } else if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) {
+                target.animate().scaleX(0.9f).scaleY(1.12f).setDuration(110).setInterpolator(new DecelerateInterpolator())
+                        .withEndAction(new Settle(target)).start();
+            }
+            return false;
+        }
+    }
+
+    private static final class Settle implements Runnable {
+        private final View target;
+
+        Settle(View target) {
+            this.target = target;
+        }
+
+        @Override
+        public void run() {
+            target.animate().scaleX(1f).scaleY(1f).setDuration(420).setInterpolator(new OvershootInterpolator(2.6f)).start();
+        }
+    }
 }

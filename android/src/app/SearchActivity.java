@@ -113,12 +113,13 @@ public class SearchActivity extends Activity implements View.OnClickListener, Te
                 if (item == null || !SearchUtil.fuzzyIncludes(MainActivity.searchText(item), q)) continue;
                 total++;
                 if (results.length() >= MAX_RESULTS) continue;
+                // كل عنصر ينتمي لقسم واحد، فوسم قسمه على العنصر نفسه آمن — النسخ
+                // (toString ثم تحليل، مع منيو بمئات الأصناف) مع كل حرف كان ثقيلاً
                 try {
-                    JSONObject clone = new JSONObject(item.toString());
-                    clone.put("_section", slug);
-                    results.put(clone);
+                    item.put("_section", slug);
                 } catch (Exception ignored) {
                 }
+                results.put(item);
             }
         }
         status.setText(total == 0 ? getString(R.string.search_none) : getString(R.string.search_count, total));

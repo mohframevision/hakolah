@@ -81,7 +81,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
     // كلاس أعلى (مو مجهول) يخزّن مراجع عناصر الصف — نفس نمط ViewHolder
     // المعتاد بـListView، يمنع إعادة findViewById() وinflate() بكل سكرول
     private static class ViewHolder {
-        TextView icon;
+        ImageView icon;
         TextView title;
         ImageView favBtn;
         TextView desc;
@@ -128,8 +128,9 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
 
         JSONObject item = items.get(position);
         String id = item.optString("id", "");
-        holder.icon.setText(item.optString("icon", "⭐"));
-        holder.icon.setBackground(Ui.rounded(context, Ui.tint(context, itemSection(item)), 14));
+        holder.icon.setImageResource(Icons.item(item, itemSection(item)));
+        holder.icon.setColorFilter(context.getColor(R.color.text));
+        holder.icon.setBackgroundResource(R.drawable.icon_tile_bg);
         holder.title.setText(highlightMatch(Lang.title(context, item)));
         String itemSection = itemSection(item);
         holder.favBtn.setTag("fav:" + position);
@@ -149,7 +150,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         // مني" مفعّلاً وله إحداثيات (annotateDistance بـMainActivity حاطّته)
         if (item.has("_distanceKm")) {
             double km = item.optDouble("_distanceKm");
-            sb.append("📍 ").append(km < 1
+            sb.append(km < 1
                     ? context.getString(R.string.dist_m, (int) Math.round(km * 1000))
                     : String.format(java.util.Locale.US, context.getString(R.string.dist_km), km));
             String branchLabel = item.optString("_branchLabel", "");
@@ -263,7 +264,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         } else if (tag.startsWith("open:")) {
             JSONObject item = items.get(Integer.parseInt(tag.substring(5)));
             Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
-            open(context, item, itemSection(item));
+            open(context, item, itemSection(item), v);
         }
     }
 
@@ -293,6 +294,12 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
 
     // نقطة فتح واحدة لأي عنصر من أي شاشة (القائمة، اختيار اليوم، المفضلة، اختار لي، الروابط)
     static void open(Activity a, JSONObject item, String section) {
+        open(a, item, section, null);
+    }
+
+    // from: الكرت المضغوط — الشاشة الجديدة "تتمدد" منه (مرجع البطاقات المتمددة).
+    // makeScaleUpAnimation من الإطار نفسه، بلا مكتبة. بلا كرت: فتح فوري كالعادة
+    static void open(Activity a, JSONObject item, String section, View from) {
         Intent intent;
         if ("ai-experiments".equals(section)) {
             intent = new Intent(a, WebViewActivity.class);
@@ -301,14 +308,18 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         } else if (isArticle(item)) {
             intent = new Intent(a, ArticleActivity.class);
             intent.putExtra(ArticleActivity.EXTRA_TITLE, Lang.title(a, item));
-            intent.putExtra(ArticleActivity.EXTRA_ICON, item.optString("icon", "⭐"));
             intent.putExtra(ArticleActivity.EXTRA_CONTENT, Lang.content(a, item));
             intent.putExtra(ArticleActivity.EXTRA_DETAIL_URL, Lang.detailPath(a, item));
         } else {
             intent = PlaceActivity.intent(a, item, section);
         }
-        a.startActivity(intent);
-        a.overridePendingTransition(0, 0);
+        if (from != null && from.getWidth() > 0 && from.isAttachedToWindow()) {
+            a.startActivity(intent, android.app.ActivityOptions
+                    .makeScaleUpAnimation(from, 0, 0, from.getWidth(), from.getHeight()).toBundle());
+        } else {
+            a.startActivity(intent);
+            a.overridePendingTransition(0, 0);
+        }
     }
 
     // نفس buildShareText/buildShareUrl بالموقع بالضبط: يفضّل detailUrl لو

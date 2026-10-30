@@ -23,13 +23,12 @@
         android:orientation="horizontal"
         android:gravity="top">
 
-        <TextView
+        <ImageView
             android:id="@+id/itemIcon"
             android:layout_width="46dp"
             android:layout_height="46dp"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:textSize="23sp"
+            android:padding="11dp"
+            android:importantForAccessibility="no"
             android:layout_gravity="center_vertical" />
 
         <TextView

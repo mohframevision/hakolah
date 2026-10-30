@@ -3,7 +3,7 @@
 <ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/ripple_on_secondary">
     <item>
         <shape android:shape="oval">
-            <solid android:color="@color/tonal" />
+            <solid android:color="@color/field" />
         </shape>
     </item>
 </ripple>

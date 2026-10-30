@@ -84,7 +84,7 @@ public class SectionActivity extends Activity implements View.OnClickListener, T
             return;
         }
         setContentView(R.layout.activity_section);
-        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(R.color.surface));
+        Ui.edgeToEdge(this, getColor(R.color.bg), getColor(R.color.surface));
         createdLang = Prefs.getLang(this);
 
         itemList = findViewById(R.id.itemList);
@@ -106,7 +106,7 @@ public class SectionActivity extends Activity implements View.OnClickListener, T
         BottomNav.attach(this, findViewById(R.id.bottomNav), BottomNav.HOME);
 
         TextView headerTitle = findViewById(R.id.headerTitle);
-        headerTitle.setText(section.optString("icon", "") + "  " + Lang.title(this, section));
+        headerTitle.setText(Lang.title(this, section));
         Ui.display(headerTitle);
         currentItems = section.optJSONArray("items");
         if (currentItems == null) currentItems = new JSONArray();

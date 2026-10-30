@@ -70,18 +70,17 @@ public class MenuActivity extends Activity implements View.OnClickListener, Text
 
         LinearLayout bar = new LinearLayout(this);
         bar.setGravity(Gravity.CENTER_VERTICAL);
-        bar.setBackgroundColor(getColor(R.color.brand_primary));
         bar.setPadding(dp(8), dp(8), dp(16), dp(8));
         ImageView back = new ImageView(this);
         back.setImageResource(R.drawable.ic_arrow_back);
-        back.setColorFilter(0xFFFFFFFF);
+        back.setColorFilter(getColor(R.color.text));
         back.setPadding(dp(12), dp(12), dp(12), dp(12));
-        back.setBackgroundResource(android.R.drawable.list_selector_background);
+        back.setBackgroundResource(R.drawable.row_bg);
         back.setContentDescription(getString(R.string.back));
         back.setTag("back");
         back.setOnClickListener(this);
         bar.addView(back, new LinearLayout.LayoutParams(dp(48), dp(48)));
-        TextView title = Ui.text(this, getString(R.string.place_menu) + " · " + Lang.title(this, item), 18, 0xFFFFFFFF, true);
+        TextView title = Ui.text(this, getString(R.string.place_menu) + " · " + Lang.title(this, item), 18, getColor(R.color.text), true);
         title.setMaxLines(1);
         title.setEllipsize(android.text.TextUtils.TruncateAt.END);
         LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
@@ -131,7 +130,7 @@ public class MenuActivity extends Activity implements View.OnClickListener, Text
         list.setAdapter(adapter);
         root.addView(list, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         setContentView(root);
-        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(R.color.bg));
+        Ui.edgeToEdge(this, getColor(R.color.bg), getColor(R.color.bg));
         refresh();
     }
 
@@ -182,7 +181,7 @@ public class MenuActivity extends Activity implements View.OnClickListener, Text
         row.addView(n, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         String priceText = m == null ? "" : m.optString("price", "");
         if (!priceText.isEmpty()) {
-            TextView pr = Ui.text(c, Ui.ltr(priceText), 14.5f, c.getColor(R.color.brand_accent), true);
+            TextView pr = Ui.text(c, Ui.ltr(priceText), 14.5f, c.getColor(R.color.text), true);
             pr.setFontFeatureSettings("tnum");
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             lp.setMarginStart(Ui.dp(c, 12));

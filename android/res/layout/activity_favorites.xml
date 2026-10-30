@@ -11,8 +11,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@color/brand_primary"
-        android:elevation="4dp"
+        android:background="@color/bg"
+        android:elevation="0dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="16dp"
@@ -23,11 +23,11 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/favorites_title"
-            android:textColor="@color/white"
+            android:textColor="@color/text"
             android:textSize="20sp"
             android:textStyle="bold"
             android:drawableStart="@drawable/ic_favorite_fill_small"
-            android:drawableTint="@color/white"
+            android:drawableTint="@color/text"
             android:drawablePadding="8dp" />
 
     </LinearLayout>

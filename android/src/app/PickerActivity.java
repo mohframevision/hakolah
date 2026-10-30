@@ -97,19 +97,19 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         categoriesWrap.removeAllViews();
         JSONArray order = MainActivity.cachedSectionOrder;
         if (sections == null || order == null) return;
-        addChip("✨", getString(R.string.chip_all), ALL);
+        addChip(getString(R.string.chip_all), ALL);
         for (int i = 0; i < order.length(); i++) {
             String slug = order.optString(i);
             JSONObject section = sections.optJSONObject(slug);
             if (!MainActivity.isBrowsable(section)) continue;
-            addChip(section.optString("icon", "⭐"), Lang.title(this, section), slug);
+            addChip(Lang.title(this, section), slug);
         }
         Ui.scrollToStart(categoriesScroll);
     }
 
-    private void addChip(String icon, String title, String slug) {
+    private void addChip(String title, String slug) {
         TextView chip = new TextView(this);
-        chip.setText(icon + "  " + title);
+        chip.setText(title);
         chip.setTextSize(14f);
         chip.setTextColor(0xFFFFFFFF);
         chip.setBackgroundResource(R.drawable.picker_chip_bg);
@@ -151,6 +151,13 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
             JSONObject t = pool.get(i);
             pool.set(i, pool.get(j));
             pool.set(j, t);
+        }
+        // أيقونة كل عنصر محسوبة مرة قبل الكرة (الكرة ما تعرف أقسام العناصر)
+        for (JSONObject it : pool) {
+            try {
+                it.put("_iconRes", Icons.item(it, sectionSlugOf(it)));
+            } catch (Exception ignored) {
+            }
         }
         orb.setItems(pool);
         String tag = PREFIX_CATEGORY + slug;
@@ -196,7 +203,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
             LinkButtons.handleClick(this, tag);
         } else if ("open".equals(tag) && chosen != null) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
-            ItemAdapter.open(this, chosen, sectionSlugOf(chosen));
+            ItemAdapter.open(this, chosen, sectionSlugOf(chosen), v);
         } else if (ACTION_BACK.equals(tag)) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.CLOSE);
             hideReveal();
@@ -219,7 +226,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
     // ---- OrbView.Listener ----
     @Override
     public void onFrontItem(JSONObject item, boolean spinning) {
-        if (spinning && item != null) pill.setText(item.optString("icon", "⭐") + "  " + Lang.title(this, item));
+        if (spinning && item != null) pill.setText(Lang.title(this, item));
     }
 
     @Override
@@ -259,11 +266,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         FrameLayout.LayoutParams clp = new FrameLayout.LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
         card.setLayoutParams(clp);
 
-        TextView icon = new TextView(this);
-        icon.setText(item.optString("icon", "⭐"));
-        icon.setTextSize(52f);
-        icon.setGravity(Gravity.CENTER);
-        card.addView(icon);
+        card.addView(Ui.iconTile(this, Icons.item(item, sectionSlugOf(item)), 68, 0x24FFFFFF, 0xFFFFFFFF));
 
         TextView title = new TextView(this);
         title.setText(Lang.title(this, item));
@@ -300,6 +303,9 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
         LinkButtons.build(this, actions, item, HakolahApi.ORIGIN, this);
+        // زر واحد فقط (الأساسي) — الباقي بصفحة المكان، والبطاقة نفسها تفتحها
+        while (actions.getChildCount() > 1) actions.removeViewAt(actions.getChildCount() - 1);
+        if (actions.getChildCount() == 1) ((LinearLayout.LayoutParams) actions.getChildAt(0).getLayoutParams()).setMarginEnd(0);
         actionsScroll.addView(actions);
         card.addView(actionsScroll);
         // البطاقة نفسها تفتح صفحة المكان (المنيو، الساعات، كل الأرقام)
@@ -322,7 +328,7 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
     // الوسوم الطايرة حول البطاقة: القسم أولاً ثم تصنيفات العنصر (أول 3)
     private List<String> tagsFor(JSONObject item) {
         List<String> tags = new ArrayList<>();
-        tags.add(sectionIconOf(item) + " " + sectionTitleOf(item));
+        tags.add(sectionTitleOf(item));
         JSONArray t = item.optJSONArray("tags");
         if (t != null) {
             for (int i = 0; i < t.length() && tags.size() < 4; i++) {
@@ -353,10 +359,6 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         return section == null ? "" : Lang.title(this, section);
     }
 
-    private String sectionIconOf(JSONObject item) {
-        JSONObject section = sections == null ? null : sections.optJSONObject(sectionSlugOf(item));
-        return section == null ? "✨" : section.optString("icon", "✨");
-    }
 
     // بعد ما تتخطّط البطاقة ونعرف حدودها، نوزّع الوسوم على زواياها وحوافها
     private static final class PlaceTags implements Runnable {
@@ -374,7 +376,9 @@ public class PickerActivity extends Activity implements View.OnClickListener, Or
         public void run() {
             // مواضع نسبية لحدود البطاقة: [x كنسبة من العرض، y كنسبة من الارتفاع،
             // مرساة الوسم أفقياً] — زوايا متقابلة عشان تتوزّع بتوازن
-            float[][] spots = {{0.0f, -0.02f, 0.3f}, {1.0f, 0.3f, 0.7f}, {0.0f, 0.66f, 0.25f}, {1.0f, 1.0f, 0.75f}};
+            // الحافتان العلوية والسفلية فقط (فوق مسافة الحشو): مواضع جانبية بنص
+            // الارتفاع كانت تغطي عنوان البطاقة لما يطول لثلاثة أسطر
+            float[][] spots = {{0.0f, -0.02f, 0.3f}, {1.0f, 1.0f, 0.75f}, {1.0f, -0.02f, 0.75f}};
             int frameW = a.reveal.getWidth();
             int margin = LinkButtons.dp(a, 8);
             for (int i = 0; i < tags.size() && i < spots.length; i++) {

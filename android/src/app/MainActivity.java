@@ -129,7 +129,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         cachedSections = sections;
         cachedSectionOrder = sectionOrder;
         cachedTagsEn = data.optJSONObject("tagsEn");
-        cachedOrder = orderedSlugs();
         findViewById(R.id.offlineNote).setVisibility(fromCache ? View.VISIBLE : View.GONE);
         buildGrid();
         buildDaily();
@@ -211,13 +210,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         return places;
     }
 
-    // للألوان: ترتيب الأقسام حتى قبل وصول البيانات (قائمة فاضية بدل خطأ)
-    static List<String> orderedSlugsSafe() {
-        return cachedOrder;
-    }
-
-    private static List<String> cachedOrder = new ArrayList<>();
-
     // ---- مربعات الأقسام: 3 بكل صف ----
     private void buildGrid() {
         categoryGrid.removeAllViews();
@@ -253,7 +245,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         t.setOnClickListener(this);
         t.setContentDescription(Lang.title(this, sec));
         Touch.springy(t, 0.94f);
-        t.addView(Ui.iconTile(this, sec.optString("icon", "⭐"), slug, 52, 26));
+        t.addView(Ui.iconTile(this, Icons.section(slug), 52, getColor(R.color.field), getColor(R.color.text)));
         TextView label = Ui.text(this, shortTitle(Lang.title(this, sec)), 13.5f, getColor(R.color.text), true);
         label.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         label.setMaxLines(2);
@@ -314,63 +306,40 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         dailyHolder.setVisibility(views.size() >= 2 ? View.VISIBLE : View.GONE);
     }
 
+    // بطاقة "اختيار اليوم": سطح أبيض هادي بنفس لغة باقي البطاقات (كانت تدرّجاً
+    // أخضر يسرق العين من كل الشاشة). البطاقة كلها تفتح صفحة المكان
     private View buildDailyCard(JSONObject item, String slug, int index) {
         JSONObject section = sections.optJSONObject(slug);
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setBackgroundResource(R.drawable.daily_card_bg);
-        card.setElevation(dp(6));
-        int pad = dp(22);
-        card.setPadding(pad, pad, pad, dp(18));
+        card.setElevation(dp(3));
+        int pad = dp(20);
+        card.setPadding(pad, pad, pad, pad);
         card.setLayoutParams(new android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        TextView badge = new TextView(this);
-        badge.setText(section.optString("icon", "⭐") + "  " + Lang.title(this, section));
-        badge.setTextSize(12f);
-        badge.setTextColor(0xFFFFFFFF);
-        badge.setBackgroundResource(R.drawable.glass_pill);
-        badge.setPadding(dp(12), dp(5), dp(12), dp(5));
-        badge.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        card.addView(badge);
+        LinearLayout top = new LinearLayout(this);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        top.addView(Ui.iconTile(this, Icons.item(item, slug), 48, getColor(R.color.field), getColor(R.color.text)));
+        TextView badge = Ui.text(this, shortTitle(Lang.title(this, section)), 13, getColor(R.color.text_muted), false);
+        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        blp.setMarginStart(dp(12));
+        top.addView(badge, blp);
+        card.addView(top);
 
-        TextView icon = new TextView(this);
-        icon.setText(item.optString("icon", "⭐"));
-        icon.setTextSize(38f);
-        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        ilp.topMargin = dp(10);
-        icon.setLayoutParams(ilp);
-        card.addView(icon);
-
-        TextView title = new TextView(this);
-        title.setText(Lang.title(this, item));
-        title.setTextSize(20f);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setTextColor(0xFFFFFFFF);
+        TextView title = Ui.text(this, Lang.title(this, item), 20, getColor(R.color.text), false);
+        Ui.display(title);
         title.setMaxLines(1);
         title.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        // اسم لاتيني (Milanote) كان يلتصق باليسار — المحاذاة لبداية الواجهة
-        // (اليمين) مهما كانت لغة النص
-        title.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        title.setPadding(0, dp(14), 0, 0);
         card.addView(title);
 
-        TextView desc = new TextView(this);
-        desc.setText(Lang.desc(this, item));
-        desc.setTextSize(14f);
-        desc.setTextColor(0xD9FFFFFF);
+        TextView desc = Ui.text(this, Lang.desc(this, item), 14, getColor(R.color.text_muted), false);
         desc.setMaxLines(3);
         desc.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        desc.setLineSpacing(0, 1.2f);
-        desc.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
-        LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dlp.topMargin = dp(4);
-        desc.setLayoutParams(dlp);
+        desc.setPadding(0, dp(4), 0, 0);
         card.addView(desc);
 
-        View spacer = new View(this);
-        card.addView(spacer, new LinearLayout.LayoutParams(1, 0, 1f));
-
-        // بلا أزرار: البطاقة كلها تفتح صفحة المكان (فيها الاتصال والاتجاهات والمنيو)
-        // البطاقة نفسها تفتح صفحة المكان (الأزرار داخلها تبقى لها)
         card.setTag("daily:" + index);
         card.setOnClickListener(this);
         return card;
@@ -420,7 +389,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         c.setTag("new:" + i);
         c.setOnClickListener(this);
         Touch.springy(c, 0.95f);
-        c.addView(Ui.iconTile(this, item.optString("icon", "⭐"), newSlugs.get(i), 44, 22));
+        c.addView(Ui.iconTile(this, Icons.item(item, newSlugs.get(i)), 44, getColor(R.color.field), getColor(R.color.text)));
         TextView title = Ui.text(this, Lang.title(this, item), 15, getColor(R.color.text), true);
         title.setMaxLines(2);
         title.setPadding(0, dp(10), 0, 0);
@@ -494,12 +463,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             int i = Integer.parseInt(value.substring(6));
             if (i < dailyItems.size()) {
                 Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
-                ItemAdapter.open(this, dailyItems.get(i), dailySlugs.get(i));
+                ItemAdapter.open(this, dailyItems.get(i), dailySlugs.get(i), v);
             }
         } else if (value.startsWith("new:")) {
             int i = Integer.parseInt(value.substring(4));
             Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
-            ItemAdapter.open(this, newItems.get(i), newSlugs.get(i));
+            ItemAdapter.open(this, newItems.get(i), newSlugs.get(i), v);
         } else if (value.startsWith("url:") || value.startsWith("tel:")) {
             Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
             LinkButtons.handleClick(this, value);

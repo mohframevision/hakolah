@@ -31,7 +31,7 @@ public class OrbView extends View {
     private static final double TILT = 0.32;
 
     private final List<JSONObject> items = new ArrayList<>();
-    private final Map<String, Bitmap> glyphs = new HashMap<>();
+    private final Map<Integer, Bitmap> glyphs = new HashMap<>();
     private final double[] px = new double[POINTS], py = new double[POINTS], pz = new double[POINTS];
     private final double[] sx = new double[POINTS], sy = new double[POINTS], sz = new double[POINTS];
     private final int[] order = new int[POINTS];
@@ -149,7 +149,7 @@ public class OrbView extends View {
             canvas.drawRoundRect(rect, corner, corner, tilePaint);
             strokePaint.setAlpha((int) (alpha * 0.22));
             canvas.drawRoundRect(rect, corner, corner, strokePaint);
-            Bitmap g = glyph(item.optString("icon", "⭐"));
+            Bitmap g = glyph(item.optInt("_iconRes", R.drawable.ic_location_on));
             glyphPaint.setAlpha(alpha);
             float inset = size * 0.18f;
             rect.inset(inset, inset);
@@ -232,20 +232,19 @@ public class OrbView extends View {
         }
     }
 
-    // الإيموجي يُرسم مرة وحدة لصورة صغيرة ويُعاد استخدامه بكل إطار — رسم نص
-    // إيموجي ملوّن 56 مرة بكل إطار أثقل بكثير من رسم صورة جاهزة
-    private Bitmap glyph(String emoji) {
-        Bitmap b = glyphs.get(emoji);
+    // الأيقونة الخطية تُرسم مرة وحدة لصورة صغيرة بيضاء ويُعاد استخدامها بكل
+    // إطار — رسم متجه 56 مرة بكل إطار أثقل بكثير من رسم صورة جاهزة
+    private Bitmap glyph(int res) {
+        Bitmap b = glyphs.get(res);
         if (b != null) return b;
         int size = (int) dp(40);
         b = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(b);
-        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-        p.setTextSize(size * 0.78f);
-        p.setTextAlign(Paint.Align.CENTER);
-        Paint.FontMetrics fm = p.getFontMetrics();
-        c.drawText(emoji, size / 2f, size / 2f - (fm.ascent + fm.descent) / 2, p);
-        glyphs.put(emoji, b);
+        android.graphics.drawable.Drawable d = getContext().getDrawable(res).mutate();
+        d.setTint(0xFFFFFFFF);
+        d.setBounds(0, 0, size, size);
+        d.draw(c);
+        glyphs.put(res, b);
         return b;
     }
 

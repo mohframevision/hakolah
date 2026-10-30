@@ -67,7 +67,7 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
         if (android.os.Build.VERSION.SDK_INT >= 33) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, new Ui.BackCallback(this));
         }
-        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(tab != null ? R.color.surface : R.color.bg));
+        Ui.edgeToEdge(this, getColor(R.color.bg), getColor(tab != null ? R.color.surface : R.color.bg));
         ((TextView) findViewById(R.id.webviewTitle)).setText(title == null ? "" : title);
         findViewById(R.id.webviewCloseButton).setOnClickListener(this);
         if (tab != null) {

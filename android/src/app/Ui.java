@@ -8,6 +8,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -87,20 +88,6 @@ final class Ui {
         t.setTypeface(null, Typeface.BOLD);
     }
 
-    // لون مربع الأيقونة لكل قسم: ألوان فاتحة هادية (وأغمق بالوضع الداكن)، ثابتة
-    // حسب ترتيب القسم — الإيموجي داخل مربع ناعم بدل ما يطفو بلا إطار
-    private static final int[] TINTS_LIGHT = {0xFFFDE6D8, 0xFFDDF3E6, 0xFFDCEAFA, 0xFFFBF0CF, 0xFFE9E3FB, 0xFFFBE0E7, 0xFFE3EEDA, 0xFFD8F0F1, 0xFFF0E7D8};
-    private static final int[] TINTS_DARK = {0xFF3D2A20, 0xFF1D3428, 0xFF1F2D3D, 0xFF3A331C, 0xFF2B2541, 0xFF3C232B, 0xFF283320, 0xFF1C3536, 0xFF352D23};
-
-    static int tint(Context c, String slug) {
-        int i = MainActivity.orderedSlugsSafe().indexOf(slug);
-        if (i < 0) i = Math.abs(slug == null ? 0 : slug.hashCode());
-        boolean night = (c.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
-                == android.content.res.Configuration.UI_MODE_NIGHT_YES;
-        int[] p = night ? TINTS_DARK : TINTS_LIGHT;
-        return p[i % p.length];
-    }
-
     static android.graphics.drawable.GradientDrawable rounded(Context c, int color, float radiusDp) {
         android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable();
         d.setColor(color);
@@ -108,17 +95,18 @@ final class Ui {
         return d;
     }
 
-    // إيموجي داخل مربع بزوايا ناعمة بلون القسم
-    static TextView iconTile(Context c, String emoji, String slug, int sizeDp, float emojiSp) {
-        TextView t = new TextView(c);
-        t.setText(emoji);
-        t.setTextSize(emojiSp);
-        t.setGravity(android.view.Gravity.CENTER);
-        t.setIncludeFontPadding(false);
-        t.setBackground(rounded(c, tint(c, slug), sizeDp * 0.3f));
-        t.setLayoutParams(new LinearLayout.LayoutParams(dp(c, sizeDp), dp(c, sizeDp)));
-        t.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        return t;
+    // أيقونة خطية داخل مربع بزوايا ناعمة. لون واحد هادي للكل (بلا ألوان
+    // لكل قسم): العين ترتاح، والأخضر محجوز للأزرار المهمة والحالة النشطة
+    static ImageView iconTile(Context c, int iconRes, int sizeDp, int bgColor, int iconColor) {
+        ImageView v = new ImageView(c);
+        v.setImageResource(iconRes);
+        v.setColorFilter(iconColor);
+        int pad = Math.round(dp(c, sizeDp) * 0.24f);
+        v.setPadding(pad, pad, pad, pad);
+        v.setBackground(rounded(c, bgColor, sizeDp * 0.3f));
+        v.setLayoutParams(new LinearLayout.LayoutParams(dp(c, sizeDp), dp(c, sizeDp)));
+        v.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        return v;
     }
 
     // ---- حافة لحافة (إجباري من Android 15/16 مع targetSdk 35+) ----

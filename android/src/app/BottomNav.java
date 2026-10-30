@@ -76,7 +76,9 @@ class BottomNav implements View.OnClickListener {
         tab.setLayoutParams(lp);
         tab.setTag(tag);
         tab.setOnClickListener(this);
-        Touch.springy(tab, 0.9f);
+        View icon = tab.findViewById(R.id.tabIcon);
+        Touch.squishy(tab, icon);
+        if (PICKER.equals(active)) icon.post(new Land(icon));
         container.addView(tab);
     }
 
@@ -101,5 +103,18 @@ class BottomNav implements View.OnClickListener {
         // تبويب يحل محل تبويب (مكدّس ضحل) — إلا الرئيسية نفسها، تبقى بالأسفل
         if (!(activity instanceof MainActivity)) activity.finish();
         activity.overridePendingTransition(0, 0);
+    }
+
+    private static final class Land implements Runnable {
+        private final View icon;
+
+        Land(View icon) {
+            this.icon = icon;
+        }
+
+        @Override
+        public void run() {
+            Touch.squashLand(icon);
+        }
     }
 }

@@ -17,4 +17,6 @@
     <!-- خلفية خافتة بلون الهوية (أزرار الإجراءات، الشارات) والنص عليها -->
     <color name="tonal">#E2EFE9</color>
     <color name="on_tonal">#1B4D3E</color>
+    <!-- سطح محايد للحقول ومربعات الأيقونات والأزرار الثانوية (بلا لون) -->
+    <color name="field">#ECE8E1</color>
 </resources>

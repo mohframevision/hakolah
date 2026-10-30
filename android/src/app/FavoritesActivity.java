@@ -23,7 +23,7 @@ public class FavoritesActivity extends Activity implements View.OnClickListener 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
-        Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(R.color.surface));
+        Ui.edgeToEdge(this, getColor(R.color.bg), getColor(R.color.surface));
         findViewById(R.id.favoritesBrowse).setOnClickListener(this);
         Touch.springy(findViewById(R.id.favoritesBrowse));
         BottomNav.attach(this, findViewById(R.id.bottomNav), BottomNav.FAVORITES);
