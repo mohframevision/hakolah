@@ -74,6 +74,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         pill.setOnClickListener(this);
         Touch.springy(pill, 0.97f);
         BottomNav.attach(this, findViewById(R.id.bottomNav), BottomNav.HOME);
+        Ui.display((TextView) findViewById(R.id.homeGreeting));
+        Ui.display((TextView) daily.findViewById(R.id.dailyTitle));
+        Ui.display((TextView) findViewById(R.id.newTitle));
         SoundPlayer.warmUp();
         loadData();
     }
@@ -85,7 +88,22 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
             recreate();
             return;
         }
+        greet();
         if (sections != null && System.currentTimeMillis() - lastFetchTime > STALE_AFTER_MS) loadData();
+    }
+
+    // التاريخ والتحية وسؤال البحث حسب ساعة اليوم — تتحدث كل رجوع للشاشة.
+    // نصوص فقط: ما ندّعي إن مكاناً مفتوح (الساعات نص حر، وما نخترع معلومة)
+    private void greet() {
+        java.util.Calendar now = java.util.Calendar.getInstance();
+        int h = now.get(java.util.Calendar.HOUR_OF_DAY);
+        java.util.Locale locale = new java.util.Locale(Prefs.getLang(this));
+        ((TextView) findViewById(R.id.homeDate)).setText(
+                new java.text.SimpleDateFormat("EEEE d MMMM", locale).format(now.getTime()));
+        ((TextView) findViewById(R.id.homeGreeting)).setText(
+                h >= 5 && h < 12 ? R.string.greet_morning : h >= 12 && h < 17 ? R.string.greet_afternoon : R.string.greet_evening);
+        ((TextView) findViewById(R.id.searchPill)).setText(
+                h >= 5 && h < 11 ? R.string.ask_breakfast : h >= 11 && h < 16 ? R.string.ask_lunch : h >= 16 ? R.string.ask_dinner : R.string.ask_night);
     }
 
     private void loadData() {
@@ -111,6 +129,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         cachedSections = sections;
         cachedSectionOrder = sectionOrder;
         cachedTagsEn = data.optJSONObject("tagsEn");
+        cachedOrder = orderedSlugs();
         findViewById(R.id.offlineNote).setVisibility(fromCache ? View.VISIBLE : View.GONE);
         buildGrid();
         buildDaily();
@@ -192,6 +211,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         return places;
     }
 
+    // للألوان: ترتيب الأقسام حتى قبل وصول البيانات (قائمة فاضية بدل خطأ)
+    static List<String> orderedSlugsSafe() {
+        return cachedOrder;
+    }
+
+    private static List<String> cachedOrder = new ArrayList<>();
+
     // ---- مربعات الأقسام: 3 بكل صف ----
     private void buildGrid() {
         categoryGrid.removeAllViews();
@@ -227,13 +253,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         t.setOnClickListener(this);
         t.setContentDescription(Lang.title(this, sec));
         Touch.springy(t, 0.94f);
-        TextView icon = Ui.text(this, sec.optString("icon", "⭐"), 30, getColor(R.color.text), false);
-        icon.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        t.addView(icon, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        t.addView(Ui.iconTile(this, sec.optString("icon", "⭐"), slug, 52, 26));
         TextView label = Ui.text(this, shortTitle(Lang.title(this, sec)), 13.5f, getColor(R.color.text), true);
         label.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         label.setMaxLines(2);
-        label.setPadding(0, dp(6), 0, 0);
+        label.setPadding(0, dp(8), 0, 0);
         t.addView(label, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return t;
     }
@@ -396,10 +420,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         c.setTag("new:" + i);
         c.setOnClickListener(this);
         Touch.springy(c, 0.95f);
-        c.addView(Ui.text(this, item.optString("icon", "⭐"), 28, getColor(R.color.text), false));
+        c.addView(Ui.iconTile(this, item.optString("icon", "⭐"), newSlugs.get(i), 44, 22));
         TextView title = Ui.text(this, Lang.title(this, item), 15, getColor(R.color.text), true);
         title.setMaxLines(2);
-        title.setPadding(0, dp(6), 0, 0);
+        title.setPadding(0, dp(10), 0, 0);
         c.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         TextView where = Ui.text(this, shortTitle(Lang.title(this, sec)), 12.5f, getColor(R.color.text_muted), false);
         where.setMaxLines(1);

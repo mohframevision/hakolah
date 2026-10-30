@@ -74,6 +74,53 @@ final class Ui {
         }
     }
 
+    // خط العناوين (المسيري، نفس مصمم Cairo) — شخصية للعناوين الكبيرة، والنص
+    // العادي يبقى Cairo. getFont من API 26؛ الأقدم يبقى Cairo عريضاً
+    static void display(TextView t) {
+        if (android.os.Build.VERSION.SDK_INT >= 26) {
+            try {
+                t.setTypeface(t.getResources().getFont(R.font.elmessiri_bold));
+                return;
+            } catch (Exception ignored) {
+            }
+        }
+        t.setTypeface(null, Typeface.BOLD);
+    }
+
+    // لون مربع الأيقونة لكل قسم: ألوان فاتحة هادية (وأغمق بالوضع الداكن)، ثابتة
+    // حسب ترتيب القسم — الإيموجي داخل مربع ناعم بدل ما يطفو بلا إطار
+    private static final int[] TINTS_LIGHT = {0xFFFDE6D8, 0xFFDDF3E6, 0xFFDCEAFA, 0xFFFBF0CF, 0xFFE9E3FB, 0xFFFBE0E7, 0xFFE3EEDA, 0xFFD8F0F1, 0xFFF0E7D8};
+    private static final int[] TINTS_DARK = {0xFF3D2A20, 0xFF1D3428, 0xFF1F2D3D, 0xFF3A331C, 0xFF2B2541, 0xFF3C232B, 0xFF283320, 0xFF1C3536, 0xFF352D23};
+
+    static int tint(Context c, String slug) {
+        int i = MainActivity.orderedSlugsSafe().indexOf(slug);
+        if (i < 0) i = Math.abs(slug == null ? 0 : slug.hashCode());
+        boolean night = (c.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+        int[] p = night ? TINTS_DARK : TINTS_LIGHT;
+        return p[i % p.length];
+    }
+
+    static android.graphics.drawable.GradientDrawable rounded(Context c, int color, float radiusDp) {
+        android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable();
+        d.setColor(color);
+        d.setCornerRadius(dp(c, radiusDp));
+        return d;
+    }
+
+    // إيموجي داخل مربع بزوايا ناعمة بلون القسم
+    static TextView iconTile(Context c, String emoji, String slug, int sizeDp, float emojiSp) {
+        TextView t = new TextView(c);
+        t.setText(emoji);
+        t.setTextSize(emojiSp);
+        t.setGravity(android.view.Gravity.CENTER);
+        t.setIncludeFontPadding(false);
+        t.setBackground(rounded(c, tint(c, slug), sizeDp * 0.3f));
+        t.setLayoutParams(new LinearLayout.LayoutParams(dp(c, sizeDp), dp(c, sizeDp)));
+        t.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        return t;
+    }
+
     // ---- حافة لحافة (إجباري من Android 15/16 مع targetSdk 35+) ----
     // التطبيق يرسم تحت شريط الحالة وشريط التنقّل، وكل شاشة تعطي لونَي الحافتين:
     // لون = شريط بنفس اللون بارتفاع الشريط الفعلي (رأس أخضر، سطح الشريط السفلي...)،

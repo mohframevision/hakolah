@@ -105,7 +105,9 @@ public class SectionActivity extends Activity implements View.OnClickListener, T
         Touch.springy(emptyResetButton);
         BottomNav.attach(this, findViewById(R.id.bottomNav), BottomNav.HOME);
 
-        ((TextView) findViewById(R.id.headerTitle)).setText(section.optString("icon", "") + "  " + Lang.title(this, section));
+        TextView headerTitle = findViewById(R.id.headerTitle);
+        headerTitle.setText(section.optString("icon", "") + "  " + Lang.title(this, section));
+        Ui.display(headerTitle);
         currentItems = section.optJSONArray("items");
         if (currentItems == null) currentItems = new JSONArray();
         searchBox.setHint(getString(R.string.search_in, Lang.title(this, section)));

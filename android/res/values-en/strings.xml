@@ -16,10 +16,10 @@
     <string name="near_active">Nearest ✕</string>
     <string name="near_desc">Sort by nearest to me</string>
     <string name="chip_all">All</string>
-    <string name="load_error">Couldn\'t load the data — check your internet connection</string>
+    <string name="load_error">We couldn\'t reach the data. Check your connection and try again.</string>
     <string name="bad_data">Invalid data</string>
     <string name="retry">Try again</string>
-    <string name="empty_section">No items in this section yet</string>
+    <string name="empty_section">Nothing here yet. New places are added all the time.</string>
     <string name="browse_all">Browse all</string>
     <string name="no_content">No content right now</string>
     <string name="offline_suffix">" (offline)"</string>
@@ -165,4 +165,12 @@
     <string name="search_none">Nothing found by that name. Try another word.</string>
     <string name="search_count">%1$d results</string>
     <string name="favorites_browse">Browse sections</string>
+
+    <string name="greet_morning">Good morning</string>
+    <string name="greet_afternoon">Good afternoon</string>
+    <string name="greet_evening">Good evening</string>
+    <string name="ask_breakfast">Where\'s breakfast today?</string>
+    <string name="ask_lunch">Where\'s lunch today?</string>
+    <string name="ask_dinner">Where\'s dinner tonight?</string>
+    <string name="ask_night">Where to tonight?</string>
 </resources>

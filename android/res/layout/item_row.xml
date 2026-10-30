@@ -25,9 +25,11 @@
 
         <TextView
             android:id="@+id/itemIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="28sp"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:textSize="23sp"
             android:layout_gravity="center_vertical" />
 
         <TextView
@@ -37,7 +39,7 @@
             android:layout_weight="1"
             android:textSize="17sp"
             android:textStyle="bold"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="12dp"
             android:textColor="@color/text"
             android:layout_gravity="center_vertical"
             android:maxLines="3" />

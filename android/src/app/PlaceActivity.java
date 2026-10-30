@@ -96,9 +96,12 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
         body.setPadding(dp(16), 0, dp(16), 0);
-        body.addView(Ui.text(this, item.optString("icon", "⭐"), 44, 0xFFFFFFFF, false));
-        TextView title = Ui.text(this, Lang.title(this, item), 25, 0xFFFFFFFF, true);
-        title.setPadding(0, dp(6), 0, 0);
+        TextView icon = Ui.iconTile(this, item.optString("icon", "⭐"), section, 72, 38);
+        icon.setBackground(Ui.rounded(this, 0x2EFFFFFF, 22));
+        body.addView(icon);
+        TextView title = Ui.text(this, Lang.title(this, item), 27, 0xFFFFFFFF, false);
+        Ui.display(title);
+        title.setPadding(0, dp(12), 0, 0);
         body.addView(title);
         String desc = Lang.desc(this, item);
         if (!desc.isEmpty()) {

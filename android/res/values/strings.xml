@@ -18,10 +18,10 @@
     <string name="near_active">الأقرب ✕</string>
     <string name="near_desc">رتّب حسب الأقرب مني</string>
     <string name="chip_all">الكل</string>
-    <string name="load_error">تعذّر تحميل البيانات — تأكد من الاتصال بالإنترنت</string>
+    <string name="load_error">تعذّر الوصول إلى البيانات. تأكّد من اتصالك بالإنترنت ثم حاول مجدداً.</string>
     <string name="bad_data">بيانات غير صالحة</string>
     <string name="retry">إعادة المحاولة</string>
-    <string name="empty_section">لا توجد عناصر بهذا القسم بعد</string>
+    <string name="empty_section">لا شيء هنا بعد، ونضيف أماكن جديدة باستمرار.</string>
     <string name="browse_all">تصفّح الكل</string>
     <string name="no_content">لا يوجد محتوى حالياً</string>
     <string name="offline_suffix">" (بلا اتصال)"</string>
@@ -160,11 +160,19 @@
 
     <string name="nav_search">بحث</string>
     <string name="search_in">ابحث في %1$s…</string>
-    <string name="home_search_hint">وين تبي تروح؟ مطعم، أكلة، محل…</string>
-    <string name="offline_note">بلا اتصال: تعرض آخر بيانات وصلت</string>
+    <string name="home_search_hint">ابحث عن مكان، أو طبق، أو متجر…</string>
+    <string name="offline_note">دون اتصال: نعرض آخر بيانات وصلتنا</string>
     <string name="home_new">جديد على هكوله</string>
-    <string name="search_intro">ابحث بكل الأقسام مرة وحدة: أسماء الأماكن، وأصناف المنيو، والتصنيفات.</string>
-    <string name="search_none">ما لقينا شي بهذا الاسم — جرّب كلمة ثانية</string>
+    <string name="search_intro">ابحث في كل الأقسام دفعة واحدة: أسماء الأماكن، وأصناف المنيو، والتصنيفات.</string>
+    <string name="search_none">لم نجد شيئاً بهذا الاسم، جرّب كلمة أخرى</string>
     <string name="search_count">%1$d نتيجة</string>
     <string name="favorites_browse">تصفّح الأقسام</string>
+
+    <string name="greet_morning">صباح الخير</string>
+    <string name="greet_afternoon">مساء الخير</string>
+    <string name="greet_evening">مساء الخير</string>
+    <string name="ask_breakfast">أين نفطر اليوم؟</string>
+    <string name="ask_lunch">أين نتغدّى اليوم؟</string>
+    <string name="ask_dinner">أين نتعشّى الليلة؟</string>
+    <string name="ask_night">إلى أين الليلة؟</string>
 </resources>

@@ -129,6 +129,7 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         JSONObject item = items.get(position);
         String id = item.optString("id", "");
         holder.icon.setText(item.optString("icon", "⭐"));
+        holder.icon.setBackground(Ui.rounded(context, Ui.tint(context, itemSection(item)), 14));
         holder.title.setText(highlightMatch(Lang.title(context, item)));
         String itemSection = itemSection(item);
         holder.favBtn.setTag("fav:" + position);
