@@ -159,4 +159,14 @@
     <string name="menu_search_hint">ابحث في المنيو…</string>
     <string name="menu_sort_cheap">الأرخص أولاً</string>
     <string name="menu_empty">لا يوجد صنف بهذا الاسم</string>
+
+    <string name="nav_search">بحث</string>
+    <string name="search_in">ابحث في %1$s…</string>
+    <string name="home_search_hint">وين تبي تروح؟ مطعم، أكلة، محل…</string>
+    <string name="offline_note">بلا اتصال: تعرض آخر بيانات وصلت</string>
+    <string name="home_new">جديد على هكوله</string>
+    <string name="search_intro">ابحث بكل الأقسام مرة وحدة: أسماء الأماكن، وأصناف المنيو، والتصنيفات.</string>
+    <string name="search_none">ما لقينا شي بهذا الاسم — جرّب كلمة ثانية</string>
+    <string name="search_count">%1$d نتيجة</string>
+    <string name="favorites_browse">تصفّح الأقسام</string>
 </resources>

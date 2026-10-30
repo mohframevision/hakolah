@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- مؤشر التبويب النشط بالشريط السفلي (Material 3: حبة 56×32 خلف الأيقونة) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/tonal" />
+    <corners android:radius="16dp" />
+</shape>

@@ -157,4 +157,14 @@
     <string name="menu_search_hint">Search the menu…</string>
     <string name="menu_sort_cheap">Cheapest first</string>
     <string name="menu_empty">No item by that name</string>
+
+    <string name="nav_search">Search</string>
+    <string name="search_in">Search %1$s…</string>
+    <string name="home_search_hint">Where to? A restaurant, a dish, a shop…</string>
+    <string name="offline_note">Offline: showing the last data received</string>
+    <string name="home_new">New on Hakolah</string>
+    <string name="search_intro">Search every section at once: place names, menu items and tags.</string>
+    <string name="search_none">Nothing found by that name. Try another word.</string>
+    <string name="search_count">%1$d results</string>
+    <string name="favorites_browse">Browse sections</string>
 </resources>

@@ -86,13 +86,31 @@
                 android:textColor="@color/text_muted"
                 android:textSize="14sp"
                 android:gravity="center" />
+
+            <!-- طريق مسدود بدون زر: يرجّع للرئيسية يتصفح الأقسام -->
+            <TextView
+                android:id="@+id/favoritesBrowse"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/favorites_browse"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:background="@drawable/btn_pill_primary"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:clickable="true"
+                android:focusable="true" />
         </LinearLayout>
     </FrameLayout>
 
     <LinearLayout
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="64dp"
         android:orientation="horizontal"
         android:gravity="bottom"
         android:clipChildren="false"

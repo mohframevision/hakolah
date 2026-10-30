@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- مربع البحث بالرئيسية (شريط بحث Material 3: ارتفاع 56dp، حبة كاملة) -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/ripple_on_secondary">
+    <item>
+        <shape>
+            <solid android:color="@color/tonal" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+</ripple>

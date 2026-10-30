@@ -8,7 +8,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-// شريط التنقّل السفلي الثابت (5 عناصر)، مشترك بين كل شاشة غير MainActivity —
+// شريط التنقّل السفلي الثابت (5 عناصر)، مشترك بين كل الشاشات —
 // بدونه، فتح "اختار لي" أو "المفضلة" كان يحسّ المستخدم إنه طلع من التطبيق
 // كلياً (لا بار، شاشة سوداء فاضية أسفلها). MainActivity نفسها تبني نسختها
 // الخاصة (فيها سلوك إضافي: نقرة "الرئيسية" وهي نشطة أصلاً تصفّر الفلاتر) —
@@ -19,7 +19,7 @@ class BottomNav implements View.OnClickListener {
     static final String HOME = "home";
     static final String PICKER = "picker";
     static final String FAVORITES = "favorites";
-    static final String SETTINGS = "settings";
+    static final String SEARCH = "search";
     static final String SOUNDS = "sounds";
 
     private final Activity activity;
@@ -37,21 +37,26 @@ class BottomNav implements View.OnClickListener {
     private void build(LinearLayout container) {
         container.removeAllViews();
         addTab(container, R.drawable.ic_home, activity.getString(R.string.nav_home), HOME);
-        addTab(container, R.drawable.ic_music_note, activity.getString(R.string.nav_sounds), SOUNDS);
+        addTab(container, R.drawable.ic_search, activity.getString(R.string.nav_search), SEARCH);
         addFab(container, PICKER);
         addTab(container, R.drawable.ic_favorite_fill, activity.getString(R.string.nav_favorites), FAVORITES);
-        addTab(container, R.drawable.ic_settings, activity.getString(R.string.nav_settings), SETTINGS);
+        addTab(container, R.drawable.ic_music_note, activity.getString(R.string.nav_sounds), SOUNDS);
     }
 
     private void addTab(LinearLayout container, int iconRes, String label, String tag) {
         View tab = LayoutInflater.from(activity).inflate(R.layout.nav_tab_icon, container, false);
-        int color = tag.equals(active) ? activity.getColor(R.color.brand_accent) : activity.getColor(R.color.text_muted);
+        boolean on = tag.equals(active);
+        int color = on ? activity.getColor(R.color.on_tonal) : activity.getColor(R.color.text_muted);
         ImageView iconView = tab.findViewById(R.id.tabIcon);
         iconView.setImageResource(iconRes);
         iconView.setColorFilter(color);
+        if (on) iconView.setBackgroundResource(R.drawable.nav_indicator);
+        tab.setSelected(on);
+        tab.setContentDescription(label);
         TextView labelView = tab.findViewById(R.id.tabLabel);
         labelView.setText(label);
-        labelView.setTextColor(color);
+        labelView.setTextColor(on ? activity.getColor(R.color.text) : color);
+        if (on) labelView.setTypeface(null, android.graphics.Typeface.BOLD);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tab.getLayoutParams();
         lp.width = 0;
         lp.weight = 1;
@@ -78,23 +83,23 @@ class BottomNav implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         String tag = (String) v.getTag();
-        if (tag.equals(active)) return;
-        if (SETTINGS.equals(tag)) Touch.haptic(v, Touch.TAP);
-        else Touch.feedback(v, PICKER.equals(tag) ? Touch.CONFIRM : Touch.TAP, PICKER.equals(tag) ? SoundPlayer.OPEN : SoundPlayer.TAP);
+        // الرئيسية "نشطة" بشاشة القسم أيضاً، وضغطها هناك يرجّع للرئيسية
+        if (tag.equals(active) && (!HOME.equals(tag) || activity instanceof MainActivity)) return;
+        Touch.feedback(v, PICKER.equals(tag) ? Touch.CONFIRM : Touch.TAP, PICKER.equals(tag) ? SoundPlayer.OPEN : SoundPlayer.TAP);
+        // الرئيسية تحت كل شي بالمكدّس: الرجوع لها = إغلاق الشاشة الحالية
         if (HOME.equals(tag)) {
             activity.finish();
             activity.overridePendingTransition(0, 0);
-        } else if (SETTINGS.equals(tag)) {
-            SettingsPanel.show(activity);
-        } else {
-            if (SOUNDS.equals(tag)) {
-                activity.startActivity(WebViewActivity.soundsIntent(activity));
-            } else {
-                Class<?> target = PICKER.equals(tag) ? PickerActivity.class : FavoritesActivity.class;
-                activity.startActivity(new Intent(activity, target));
-            }
-            activity.finish();
-            activity.overridePendingTransition(0, 0);
+            return;
         }
+        Intent next;
+        if (SOUNDS.equals(tag)) next = WebViewActivity.soundsIntent(activity);
+        else if (SEARCH.equals(tag)) next = new Intent(activity, SearchActivity.class);
+        else if (PICKER.equals(tag)) next = new Intent(activity, PickerActivity.class);
+        else next = new Intent(activity, FavoritesActivity.class);
+        activity.startActivity(next);
+        // تبويب يحل محل تبويب (مكدّس ضحل) — إلا الرئيسية نفسها، تبقى بالأسفل
+        if (!(activity instanceof MainActivity)) activity.finish();
+        activity.overridePendingTransition(0, 0);
     }
 }

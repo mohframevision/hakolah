@@ -1,132 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- الرئيسية: بحث شامل فوق، مربعات الأقسام، "اختيار اليوم"، و"جديد على هكوله".
+     كل قسم يفتح قائمته بشاشة خاصة (SectionActivity). المحتوى يُبنى بالكود
+     بعد الجلب (الأقسام بيانات من الموقع، مو قائمة ثابتة) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:layoutDirection="locale"
     android:background="@color/bg">
-
-    <LinearLayout
-        android:id="@+id/headerBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@color/brand_primary"
-        android:elevation="4dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp">
-
-        <TextView
-            android:id="@+id/headerTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/brand"
-            android:textColor="@color/white"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- شريط الأقسام: صف أفقي أعلى الصفحة (نفس فكرة صف التصنيفات بتطبيقات
-         التوصيل مثل Keeta) بدل تبويبات بالشريط السفلي — الشريط السفلي محجوز
-         الآن لـ4 وجهات ثابتة بس (الرئيسية/اختار لي/المفضلة/الإعدادات) بدل
-         ما يتمدد مع كل قسم جديد يُضاف بالموقع -->
-    <HorizontalScrollView
-        android:id="@+id/sectionTabsScroll"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/surface"
-        android:elevation="2dp"
-        android:scrollbars="none"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
-
-        <LinearLayout
-            android:id="@+id/sectionTabs"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical" />
-    </HorizontalScrollView>
-
-    <!-- منطقة البحث مضغوطة: البحث و"الأقرب" بسطر واحد بدل سطرين، ورقاقات
-         أصغر — كانت تاخذ قرابة نص الشاشة قبل أول كرت. وتنطوي مع العنوان
-         وقت النزول بالقائمة (searchArea بـMainActivity) -->
-    <LinearLayout
-        android:id="@+id/searchArea"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/bg"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="2dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <EditText
-                android:id="@+id/searchBox"
-                android:layout_width="0dp"
-                android:layout_height="46dp"
-                android:layout_weight="1"
-                android:hint="@string/search_hint"
-                android:inputType="text"
-                android:maxLines="1"
-                android:background="@drawable/search_box_bg"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="0dp"
-                android:paddingBottom="0dp"
-                android:textSize="14sp"
-                android:textColor="@color/text"
-                android:textColorHint="@color/text_muted"
-                android:drawableStart="@drawable/ic_search_small"
-                android:drawableTint="@color/text_muted"
-                android:drawablePadding="8dp" />
-
-            <TextView
-                android:id="@+id/nearMeButton"
-                android:layout_width="wrap_content"
-                android:layout_height="46dp"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:text="@string/near"
-                android:textSize="13sp"
-                android:textColor="@color/text"
-                android:background="@drawable/filter_chip_bg"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:drawableStart="@drawable/ic_location_on_small"
-                android:drawableTint="@color/text"
-                android:drawablePadding="4dp"
-                android:contentDescription="@string/near_desc"
-                android:clickable="true"
-                android:focusable="true" />
-        </LinearLayout>
-
-        <HorizontalScrollView
-            android:id="@+id/filterChipsScroll"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:scrollbars="none">
-
-            <LinearLayout
-                android:id="@+id/filterChips"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" />
-        </HorizontalScrollView>
-    </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -172,73 +53,136 @@
                 android:background="@drawable/btn_pill_primary"
                 android:paddingStart="24dp"
                 android:paddingEnd="24dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
                 android:clickable="true"
                 android:focusable="true" />
         </LinearLayout>
 
-        <ListView
-            android:id="@+id/itemList"
+        <ScrollView
+            android:id="@+id/homeScroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone"
-            android:scrollbarStyle="outsideOverlay"
-            android:divider="@null"
-            android:dividerHeight="16dp"
-            android:clipChildren="false"
-            android:clipToPadding="false"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="16dp" />
-
-        <LinearLayout
-            android:id="@+id/emptyView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="vertical"
-            android:gravity="center"
             android:visibility="gone">
 
-            <TextView
-                android:id="@+id/emptyText"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/homeContent"
+                android:focusableInTouchMode="true"
+                android:descendantFocusability="beforeDescendants"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/empty_section"
-                android:textColor="@color/text_muted"
-                android:textSize="15sp"
-                android:gravity="center" />
+                android:orientation="vertical"
+                android:clipChildren="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="24dp">
 
-            <!-- يظهر فقط لما السبب بحث/فلترة نشطة — يمسحهما بدل ما يترك
-                 المستخدم بطريق مسدود -->
-            <TextView
-                android:id="@+id/emptyResetButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/browse_all"
-                android:textColor="@color/white"
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:background="@drawable/btn_pill_primary"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:visibility="gone" />
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/brand"
+                        android:textColor="@color/brand_accent"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/settingsButton"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_settings"
+                        android:tint="@color/text_muted"
+                        android:contentDescription="@string/settings_title"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?android:attr/selectableItemBackgroundBorderless" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/searchPill"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/search_pill_bg"
+                    android:gravity="center_vertical|start"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="@string/home_search_hint"
+                    android:textColor="@color/text_muted"
+                    android:textSize="16sp"
+                    android:drawableStart="@drawable/ic_search"
+                    android:drawableTint="@color/on_tonal"
+                    android:drawablePadding="12dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/offlineNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/offline_note"
+                    android:textColor="@color/text_muted"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/categoryGrid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:orientation="vertical" />
+
+                <FrameLayout
+                    android:id="@+id/dailyHolder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:clipChildren="false" />
+
+                <TextView
+                    android:id="@+id/newTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_new"
+                    android:textColor="@color/text"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <HorizontalScrollView
+                    android:id="@+id/newScroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="-16dp"
+                    android:layout_marginEnd="-16dp"
+                    android:clipToPadding="false"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/newRow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+            </LinearLayout>
+        </ScrollView>
     </FrameLayout>
 
-    <!-- 4 وجهات ثابتة بس (لا تتمدد مع الأقسام) — نفس حد الـ5 عناصر الموصى به
-         بأي شريط تنقّل سفلي، ونفس نمط تطبيقات فعلية شفناها (كيتا: 3 عناصر) -->
     <LinearLayout
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="64dp"
         android:orientation="horizontal"
         android:gravity="bottom"
         android:clipChildren="false"
