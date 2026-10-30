@@ -13,7 +13,7 @@ const SIZE = 1080;
 const SITE_URL = "https://hakolah.com/";
 const COUNT = "+160";
 const outDir =
-  require("path").join(__dirname, "..", "هكوله", "بوسترات");
+  require("path").join(__dirname, "..", "ملفات-العمل", "بوسترات");
 
 async function main() {
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });

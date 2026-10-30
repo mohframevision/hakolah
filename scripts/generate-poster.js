@@ -10,7 +10,7 @@ const { fitGlyphInRect } = require("./heh-glyph.js");
 const SIZE = 1080;
 const SITE_URL = "https://hakolah.com/";
 const outDir =
-  require("path").join(__dirname, "..", "هكوله", "بوسترات");
+  require("path").join(__dirname, "..", "ملفات-العمل", "بوسترات");
 
 function pill(x, y, w, h, icon, label) {
   const cx = x + w / 2;

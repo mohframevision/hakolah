@@ -8,7 +8,7 @@ const path = require("path");
 const { chromium } = require("playwright");
 
 const outDir =
-  require("path").join(__dirname, "..", "هكوله", "بوسترات");
+  require("path").join(__dirname, "..", "ملفات-العمل", "بوسترات");
 const SITE = "https://hakolah.com/";
 const G = "#34d399";
 

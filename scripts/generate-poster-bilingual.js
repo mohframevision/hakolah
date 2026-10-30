@@ -11,7 +11,7 @@ const { fitGlyphInRect } = require("./heh-glyph.js");
 
 const SIZE = 1080;
 const outDir =
-  require("path").join(__dirname, "..", "هكوله", "بوسترات");
+  require("path").join(__dirname, "..", "ملفات-العمل", "بوسترات");
 
 const VARIANTS = {
   ar: {

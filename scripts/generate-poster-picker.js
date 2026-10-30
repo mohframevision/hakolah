@@ -10,7 +10,7 @@ const { fitGlyphInRect } = require("./heh-glyph.js");
 const SIZE = 1080;
 const PICKER_URL = "https://hakolah.com/picker.html";
 const outDir =
-  require("path").join(__dirname, "..", "هكوله", "بوسترات");
+  require("path").join(__dirname, "..", "ملفات-العمل", "بوسترات");
 
 function miniIcon(cx, cy, r, icon) {
   return `
