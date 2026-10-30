@@ -61,6 +61,10 @@ function ensureSectionFolders() {
 
 module.exports = function (eleventyConfig) {
   ensureSectionFolders();
+
+  // المكان الناقص لا يُنشر حتى يكتمل (CLAUDE.md): incomplete: true يُستبعد من البناء كله
+  // (الأقسام، البحث، app-data.json، خريطة الموقع). احذف السطر من الملف لما يكتمل.
+  eleventyConfig.addPreprocessor("incomplete", "md", (data) => (data.incomplete ? false : undefined));
   eleventyConfig.on("eleventy.before", ensureSectionFolders);
   // ملفات البيانات المولَّدة نفسها (src/*/*.11tydata.js) ما لازم تُراقَب — حتى بعد
   // إصلاح الكتابة غير المشروطة أعلاه، راقبنا السيرفر ولقينا Eleventy نفسه يبلّغ
