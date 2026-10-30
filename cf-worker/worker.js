@@ -4,7 +4,8 @@ import webpush from "web-push";
 
 const VAPID_SUBJECT = "mailto:mohframevision@outlook.com";
 const SITE_ORIGIN = "https://hakolah.com";
-const DATA_URL = `${SITE_ORIGIN}/js/data.js`;
+// app-data.json لا data.js: الأخير يمرّ على terser فيصير JS لا JSON، وكان JSON.parse يفشل كل يوم بصمت
+const DATA_URL = `${SITE_ORIGIN}/app-data.json`;
 
 function corsHeaders() {
   return {
@@ -35,9 +36,11 @@ function forbidden() {
 
 // جسم طلب تالف (فارغ أو JSON غير صالح) يرمي استثناء من request.json() —
 // نرجع null هنا بدل ما نخلي الاستثناء يفلت غير مُمسوك لكل نقطة استدعاء
+// كل طلباتنا صغيرة (اشتراك/إعجاب)؛ أي جسم فوق 4KB يُرفض قبل ما يوصل KV
 async function readJson(request) {
   try {
-    return await request.json();
+    const text = await request.text();
+    return text.length > 4096 ? null : JSON.parse(text);
   } catch {
     return null;
   }
@@ -134,8 +137,9 @@ function isValidSubscription(sub) {
   if (endpointUrl.protocol !== "https:") return false;
   const keys = sub.keys;
   if (!keys || typeof keys !== "object") return false;
-  if (typeof keys.p256dh !== "string" || !keys.p256dh) return false;
-  if (typeof keys.auth !== "string" || !keys.auth) return false;
+  if (sub.endpoint.length > 1024) return false;
+  if (typeof keys.p256dh !== "string" || !/^[A-Za-z0-9_=-]{40,200}$/.test(keys.p256dh)) return false;
+  if (typeof keys.auth !== "string" || !/^[A-Za-z0-9_=-]{8,64}$/.test(keys.auth)) return false;
   return true;
 }
 
@@ -232,7 +236,7 @@ export default {
         return new Response("Bad Request", { status: 400, headers: corsHeaders() });
       }
       if (await isRateLimited(request, env, "subscribe")) return tooManyRequests();
-      await env.SUBSCRIPTIONS.put(await keyFor(sub.endpoint), JSON.stringify(sub));
+      await env.SUBSCRIPTIONS.put(await keyFor(sub.endpoint), JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } }));
       return new Response("OK", { headers: corsHeaders() });
     }
 
@@ -338,8 +342,8 @@ async function sendDailyPick(env) {
   webpush.setVapidDetails(VAPID_SUBJECT, env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
 
   const res = await fetch(`${DATA_URL}?_=${Date.now()}`, { cf: { cacheTtl: 0 } });
-  const text = await res.text();
-  const SITE_DATA = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+  if (!res.ok) throw new Error(`data ${res.status}`);
+  const SITE_DATA = (await res.json()).sections;
 
   const allItems = [];
   for (const section of Object.keys(SITE_DATA)) {
