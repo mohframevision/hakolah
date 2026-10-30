@@ -1267,7 +1267,7 @@
     return "rgb(" + m(n >> 16) + "," + m((n >> 8) & 255) + "," + m(n & 255) + ")";
   }
   function look(c) {  // a colour index or a custom "#hex"
-    if (typeof c === "string" && c[0] === "#") return { c1: hexMix(c, 255, .45), c2: c, c3: hexMix(c, 0, .45) };
+    if (typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c)) return { c1: hexMix(c, 255, .45), c2: c, c3: hexMix(c, 0, .45) };
     var p = PCOLORS[c] || PCOLORS[0]; return { c1: p[0], c2: p[1], c3: p[2] };
   }
   function swatchBg(c) { var l = look(c); return "radial-gradient(circle at 38% 32%, " + l.c1 + ", " + l.c2 + " 55%, " + l.c3 + ")"; }

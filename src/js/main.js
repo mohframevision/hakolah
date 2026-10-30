@@ -66,6 +66,8 @@ function escapeHtml(text) {
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
   );
 }
+// رابط من البيانات داخل href: بروتوكولات معروفة فقط
+const safeUrl = (u) => (/^(https?:|tel:|mailto:|\/)/i.test(String(u ?? "")) ? escapeHtml(u) : "#");
 
 /* ===== بحث ذكي متسامح مع الأخطاء الإملائية ===== */
 function levenshtein(a, b) {
@@ -200,7 +202,7 @@ function initSearchSuggestions(searchInput, items, onSelect) {
       .map(
         (item) =>
           `<div class="search-suggestion" data-id="${escapeHtml(item.id)}">
-            <span>${item.icon || "⭐"}</span>
+            <span>${escapeHtml(item.icon || "⭐")}</span>
             <span>${escapeHtml(itemTitle(item))}</span>
           </div>`
       )
@@ -868,7 +870,9 @@ async function fetchLikeCounts() {
   if (!config || !config.workerUrl) return;
   try {
     const res = await fetch(`${config.workerUrl}/likes`);
-    LIKE_COUNTS = await res.json();
+    if (!res.ok) return;
+    LIKE_COUNTS = {};
+    for (const [k, v] of Object.entries(await res.json())) if (Number.isFinite(v)) LIKE_COUNTS[k] = v;
   } catch {
     return;
   }
@@ -1351,13 +1355,13 @@ function buildMeatSourceHtml(item) {
   const parts = [];
   if (viaKey) parts.push(t(viaKey));
   if (meat.checked)
-    parts.push(`${t("meat_source_checked")}: <span dir="ltr">${meat.checked}</span>`);
+    parts.push(`${t("meat_source_checked")}: <span dir="ltr">${escapeHtml(meat.checked)}</span>`);
   const age = meatSourceAgeLabel(meat.checked);
   if (age) parts.push(age);
   return `
       <details class="meat-source">
         <summary>🥩 ${t("meat_source_label")}</summary>
-        <p class="meat-source-text">${text}</p>
+        <p class="meat-source-text">${escapeHtml(text)}</p>
         <p class="meat-source-meta">${parts.join(" · ")}</p>
       </details>`;
 }
@@ -1392,13 +1396,13 @@ function buildActionsHtml(item) {
         return numbers
           .map((num, idx) => {
             const label = numbers.length > 1 ? `${metaLabel} ${idx + 1}` : metaLabel;
-            return `<button type="button" class="${cls} phone-copy-btn" data-phone="${num}">${meta.icon} ${label}</button>`;
+            return `<button type="button" class="${cls} phone-copy-btn" data-phone="${escapeHtml(num)}">${meta.icon} ${escapeHtml(label)}</button>`;
           })
           .join("");
       }
       const cta = window.SITE_LANG === "en" ? item.cta_en || item.cta : item.cta;
       const label = key === "website" && cta ? cta : metaLabel;
-      return `<a class="${cls}" href="${url}" target="_blank" rel="noopener noreferrer">${meta.icon} ${label}</a>`;
+      return `<a class="${cls}" href="${safeUrl(url)}" target="_blank" rel="noopener noreferrer">${meta.icon} ${escapeHtml(label)}</a>`;
     })
     .join("");
   if (hasStructuredMenu) {
@@ -1485,7 +1489,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
 
   const fav = isFavorite(section, item.id);
   const liked = isLikedByMe(section, item.id);
-  const likeCount = LIKE_COUNTS[`${section}:${item.id}`] || 0;
+  const likeCount = Number(LIKE_COUNTS[`${section}:${item.id}`]) || 0;  // من الـWorker: رقم فقط
   const title = itemTitle(item);
   const desc = itemDesc(item);
   const isLongDesc = desc.length > 100;
@@ -1496,9 +1500,9 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     <div class="item-body">
       ${sectionBadge(section)}
       <div class="item-top">
-        ${item.illus ? `<img class="item-illus" src="/assets/illus/${escapeHtml(item.illus)}.webp" alt="" width="56" height="56" loading="lazy" decoding="async" />` : `<span class="item-icon" aria-hidden="true">${item.icon || "⭐"}</span>`}
+        ${item.illus ? `<img class="item-illus" src="/assets/illus/${escapeHtml(item.illus)}.webp" alt="" width="56" height="56" loading="lazy" decoding="async" />` : `<span class="item-icon" aria-hidden="true">${escapeHtml(item.icon || "⭐")}</span>`}
         <div class="item-top-actions">
-          <button class="like-btn ${liked ? "active" : ""}" data-section="${section}" data-id="${item.id}" title="${t("like_action")}" aria-label="${t("like_action")}" aria-pressed="${liked}">
+          <button class="like-btn ${liked ? "active" : ""}" data-section="${escapeHtml(section)}" data-id="${escapeHtml(item.id)}" title="${t("like_action")}" aria-label="${t("like_action")}" aria-pressed="${liked}">
             <span class="like-icon">${liked ? "♥" : "♡"}</span> <span class="like-count">${likeCount}</span>
           </button>
           <button class="share-btn" title="${t("share_whatsapp")}" aria-label="${t("share_whatsapp")}">${ICON_SVG.share}</button>
@@ -1507,14 +1511,14 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
           </button>
         </div>
       </div>
-      <h3><bdi>${title}</bdi>${item.verified ? ` <span class="verified-badge" title="${t("verified_badge")}">${t("verified_badge")}</span>` : ""}${item.liked ? ` <span class="liked-badge" title="${t("liked_badge")}">${t("liked_badge")}</span>` : ""}</h3>
-      <p class="item-desc${isLongDesc ? " clamped" : ""}">${desc}</p>
+      <h3><bdi>${escapeHtml(title)}</bdi>${item.verified ? ` <span class="verified-badge" title="${t("verified_badge")}">${t("verified_badge")}</span>` : ""}${item.liked ? ` <span class="liked-badge" title="${t("liked_badge")}">${t("liked_badge")}</span>` : ""}</h3>
+      <p class="item-desc${isLongDesc ? " clamped" : ""}">${escapeHtml(desc)}</p>
       ${isLongDesc ? `<button class="desc-toggle" aria-expanded="false">${t("read_more")}</button>` : ""}
-      ${itemHours(item) ? `<p class="item-hours">${ICON_SVG.schedule} ${itemHours(item)}</p>` : ""}
+      ${itemHours(item) ? `<p class="item-hours">${ICON_SVG.schedule} ${escapeHtml(itemHours(item))}</p>` : ""}
       <div class="item-meta">
         ${item.isNew ? `<span class="tag new-tag">${t("new_badge")}</span>` : ""}
-        ${distanceKm !== null ? `<span class="tag distance-tag">${ICON_SVG["location-pin"]} ${formatDistance(distanceKm)}${branchLabel ? ` — ${t("nearest_branch")} ${branchLabel}` : ""}</span>` : ""}
-        ${(item.tags || []).map((tag) => `<span class="tag">${tagIcon(tag) ? `<span class="tag-icon" aria-hidden="true">${tagIcon(tag)}</span>` : ""}${tagLabel(tag)}</span>`).join("")}
+        ${distanceKm !== null ? `<span class="tag distance-tag">${ICON_SVG["location-pin"]} ${formatDistance(distanceKm)}${branchLabel ? ` — ${t("nearest_branch")} ${escapeHtml(branchLabel)}` : ""}</span>` : ""}
+        ${(item.tags || []).map((tag) => `<span class="tag">${tagIcon(tag) ? `<span class="tag-icon" aria-hidden="true">${escapeHtml(tagIcon(tag))}</span>` : ""}${escapeHtml(tagLabel(tag))}</span>`).join("")}
       </div>
       ${buildMeatSourceHtml(item)}
       <div class="item-actions">
@@ -1987,7 +1991,11 @@ async function renderTrendingSection() {
       const res = await fetch(`${config.workerUrl}/likes/week`);
       const weekCounts = await res.json();
       ranked = Object.entries(weekCounts)
-        .filter(([, count]) => count > 0)
+        // الأماكن الحقيقية فقط قبل أخذ أول ٦: معرّفات مخترعة كانت تفرّغ «الأكثر إعجاباً»
+        .filter(([key, count]) => {
+          const i = key.indexOf(":");
+          return Number.isFinite(count) && count > 0 && (SITE_DATA[key.slice(0, i)]?.items || []).some((it) => it.id === key.slice(i + 1));
+        })
         .sort((a, b) => b[1] - a[1])
         .slice(0, 6);
     } catch {
@@ -2259,7 +2267,7 @@ function openMenuOverlay(item) {
   const card = document.createElement("div");
   card.className = "menu-card";
   card.innerHTML = `
-    <h3>${item.icon || "🍽️"} ${itemTitle(item)}</h3>
+    <h3>${escapeHtml(item.icon || "🍽️")} ${escapeHtml(itemTitle(item))}</h3>
     <ul class="menu-items"><li aria-busy="true">…</li></ul>
   `;
   overlay.appendChild(card);
@@ -2272,7 +2280,7 @@ function openMenuOverlay(item) {
         .menuOf(item)
         .map((mi) => {
           const name = window.SITE_LANG === "en" && mi.name_en ? mi.name_en : mi.name;
-          return `<li><span class="menu-item-name">${name}</span>${mi.price ? `<span class="menu-item-price">${mi.price}</span>` : ""}</li>`;
+          return `<li><span class="menu-item-name">${escapeHtml(name)}</span>${mi.price ? `<span class="menu-item-price">${escapeHtml(mi.price)}</span>` : ""}</li>`;
         })
         .join("");
       card.querySelector(".menu-items").innerHTML = rows;

@@ -375,7 +375,7 @@ function createTrip(stage, { onStart, onDone }) {
     el.className = "trip-card";
     const hue = Math.floor(Math.random() * 360);
     el.style.setProperty("--h", hue);
-    el.innerHTML = `<span class="trip-card-icon">${item.icon || "⭐"}</span><span class="trip-card-title">${itemTitle(item)}</span>`;
+    el.innerHTML = `<span class="trip-card-icon">${escapeHtml(item.icon || "⭐")}</span><span class="trip-card-title">${escapeHtml(itemTitle(item))}</span>`;
     const sh = document.createElement("div");
     sh.className = "trip-shadow";
     lanes[z].sh.append(sh);
@@ -749,11 +749,11 @@ function createTrip(stage, { onStart, onDone }) {
     // الخريطة صارت ضمن buildActionsHtml لكل العناصر؛ هنا بس لو ما لها رابط بالبيانات
     const maps =
       item.mapsUrl && !item.links?.maps
-        ? `<a class="btn secondary" href="${item.mapsUrl}" target="_blank" rel="noopener noreferrer">${LINK_META.maps.icon} ${t("link_maps")}</a>`
+        ? `<a class="btn secondary" href="${safeUrl(item.mapsUrl)}" target="_blank" rel="noopener noreferrer">${LINK_META.maps.icon} ${t("link_maps")}</a>`
         : "";
     box.innerHTML = `
-      <div class="trip-result-top"><span class="trip-result-icon">${item.icon || "⭐"}</span><h2>${itemTitle(item)}</h2></div>
-      ${meta ? `<p class="trip-result-meta">${meta}</p>` : ""}
+      <div class="trip-result-top"><span class="trip-result-icon">${escapeHtml(item.icon || "⭐")}</span><h2>${escapeHtml(itemTitle(item))}</h2></div>
+      ${meta ? `<p class="trip-result-meta">${escapeHtml(meta)}</p>` : ""}
       <div class="trip-result-actions">${buildActionsHtml(item)}${maps}</div>
       <button type="button" class="trip-again">${t("try_again")}</button>`;
     stage.append(box);

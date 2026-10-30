@@ -83,7 +83,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/admin");
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
 
-  eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
+  // "<" يصير <: نص فيه </script> ما يقدر يقفل وسم السكربت اللي حوله
+  eleventyConfig.addFilter("json", (value) => JSON.stringify(value).replace(/</g, "\\u003c"));
   // رسمة نوع المكان لبطاقة عنصر (src/_data/illus.js) — فلتر لأن الماكرو ما يشوف البيانات العامة
   eleventyConfig.addFilter("illusFor", (categories, section) => require("./src/_data/illus.js").illusFor(section, categories));
   // صفحة من مجموعة برابطها (العربي مكتوب أحياناً بلا ترميز) — الإنجليزية تقرا شارات صفحتها العربية منها
