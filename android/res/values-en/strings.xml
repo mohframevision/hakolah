@@ -44,7 +44,6 @@
     <string name="btn_instagram">Instagram</string>
 
     <string name="daily_title">Today\'s picks</string>
-    <string name="daily_hint">Swipe the card left or right to see more</string>
 
     <string name="favorites_title">Favorites</string>
     <string name="favorites_empty">You haven\'t added anything to your favorites yet.\nBrowse the sections and tap the heart icon to save what you like.</string>
@@ -144,7 +143,6 @@
     <string name="back">Back</string>
     <string name="place_directions">Directions</string>
     <string name="place_menu_link">Menu</string>
-    <string name="place_open_map">Open on the map</string>
     <string name="place_copy_hint">Long-press to copy</string>
     <string name="copied">Number copied</string>
     <string name="place_meat">Meat source</string>

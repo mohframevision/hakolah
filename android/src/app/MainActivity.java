@@ -333,7 +333,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         desc.setText(Lang.desc(this, item));
         desc.setTextSize(14f);
         desc.setTextColor(0xD9FFFFFF);
-        desc.setMaxLines(2);
+        desc.setMaxLines(3);
         desc.setEllipsize(android.text.TextUtils.TruncateAt.END);
         desc.setLineSpacing(0, 1.2f);
         desc.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
@@ -345,30 +345,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hako
         View spacer = new View(this);
         card.addView(spacer, new LinearLayout.LayoutParams(1, 0, 1f));
 
-        android.widget.HorizontalScrollView scroll = new android.widget.HorizontalScrollView(this);
-        scroll.setHorizontalScrollBarEnabled(false);
-        LinearLayout actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.HORIZONTAL);
-        LinkButtons.build(this, actions, item, HakolahApi.ORIGIN, this);
-        // عنصر له صفحة (مقال/تجربة): نفس سلوك القائمة — يفتح داخل التطبيق
-        // (قارئ المقال أو WebView) لا بالمتصفح الخارجي
-        if (ItemAdapter.isArticle(item) && actions.getChildCount() > 0) {
-            TextView open = (TextView) actions.getChildAt(0);
-            boolean experiment = "ai-experiments".equals(slug);
-            open.setText(getString(experiment ? R.string.open_experiment : R.string.read_article));
-            open.setTag("daily:" + index);
-        }
-        // على الأخضر: الزر الأول أبيض بنص أخضر، والباقي زجاج شفاف بنص أبيض
-        for (int i = 0; i < actions.getChildCount(); i++) {
-            TextView b = (TextView) actions.getChildAt(i);
-            int color = i == 0 ? 0xFF1B4D3E : 0xFFFFFFFF;
-            b.setBackgroundResource(i == 0 ? R.drawable.btn_pill_white : R.drawable.glass_pill);
-            b.setTextColor(color);
-            android.graphics.drawable.Drawable d = b.getCompoundDrawables()[0];
-            if (d != null) d.setTint(color);
-        }
-        scroll.addView(actions);
-        card.addView(scroll);
+        // بلا أزرار: البطاقة كلها تفتح صفحة المكان (فيها الاتصال والاتجاهات والمنيو)
         // البطاقة نفسها تفتح صفحة المكان (الأزرار داخلها تبقى لها)
         card.setTag("daily:" + index);
         card.setOnClickListener(this);

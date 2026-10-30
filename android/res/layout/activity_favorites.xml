@@ -30,16 +30,6 @@
             android:drawableTint="@color/white"
             android:drawablePadding="8dp" />
 
-        <ImageView
-            android:id="@+id/favoritesCloseButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:padding="12dp"
-            android:src="@drawable/ic_close"
-            android:tint="@color/white"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
     </LinearLayout>
 
     <FrameLayout

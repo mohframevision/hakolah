@@ -5,7 +5,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
@@ -203,12 +202,6 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
             p = p.trim();
             if (!p.isEmpty()) infoRow(box, R.drawable.ic_call, Ui.ltr(p), "tel:" + p, getString(R.string.place_copy_hint));
         }
-        String maps = mapsUrl();
-        if (!maps.isEmpty()) infoRow(box, R.drawable.ic_location_on, getString(R.string.place_open_map), "url:" + maps, null);
-        if (links != null) {
-            String web = links.optString("website", "");
-            if (!web.isEmpty()) infoRow(box, R.drawable.ic_language, Ui.ltr(host(web)), "url:" + web, null);
-        }
         JSONObject meat = item.optJSONObject("meatSource");
         if (meat != null) {
             String text = Lang.en(this) && !meat.optString("text_en", "").isEmpty() ? meat.optString("text_en") : meat.optString("text", "");
@@ -320,15 +313,6 @@ public class PlaceActivity extends Activity implements View.OnClickListener, Vie
         JSONObject links = item.optJSONObject("links");
         String m = links == null ? "" : links.optString("maps", "");
         return m.isEmpty() ? item.optString("mapsUrl", "") : m;
-    }
-
-    private static String host(String url) {
-        try {
-            String h = Uri.parse(url).getHost();
-            return h == null ? url : h.replaceFirst("^www\\.", "");
-        } catch (Exception e) {
-            return url;
-        }
     }
 
     private void applyFav() {

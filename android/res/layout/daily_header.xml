@@ -37,14 +37,6 @@
             android:textDirection="ltr" />
     </LinearLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="@string/daily_hint"
-        android:textColor="@color/text_muted"
-        android:textSize="12sp" />
-
     <bh.mohframevision.hakolah.CardStackView
         android:id="@+id/dailyStack"
         android:layout_width="match_parent"

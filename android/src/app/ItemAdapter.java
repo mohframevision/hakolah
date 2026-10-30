@@ -83,7 +83,6 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
     private static class ViewHolder {
         TextView icon;
         TextView title;
-        ImageView shareBtn;
         ImageView favBtn;
         TextView desc;
         TextView hours;
@@ -100,18 +99,15 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             holder = new ViewHolder();
             holder.icon = row.findViewById(R.id.itemIcon);
             holder.title = row.findViewById(R.id.itemTitle);
-            holder.shareBtn = row.findViewById(R.id.shareButton);
             holder.favBtn = row.findViewById(R.id.favButton);
             holder.desc = row.findViewById(R.id.itemDesc);
             holder.hours = row.findViewById(R.id.itemHours);
             holder.tags = row.findViewById(R.id.itemTags);
             holder.actions = row.findViewById(R.id.itemActions);
-            holder.shareBtn.setOnClickListener(this);
             holder.favBtn.setOnClickListener(this);
             // البطاقة كلها تنضغط بخفة تحت الإصبع، والقلب ينبض أقوى
             Touch.springy(row, 0.98f);
             Touch.springy(holder.favBtn, 0.8f);
-            Touch.springy(holder.shareBtn, 0.85f);
             row.setTag(holder);
         } else {
             row = convertView;
@@ -135,7 +131,6 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         holder.icon.setText(item.optString("icon", "⭐"));
         holder.title.setText(highlightMatch(Lang.title(context, item)));
         String itemSection = itemSection(item);
-        holder.shareBtn.setTag("share:" + position);
         holder.favBtn.setTag("fav:" + position);
         applyFavStyle(holder.favBtn, Prefs.isFavorite(context, itemSection, id));
         holder.desc.setText(Lang.desc(context, item));
@@ -161,7 +156,8 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
         }
         JSONArray tags = item.optJSONArray("tags");
         if (tags != null && tags.length() > 0) {
-            for (int i = 0; i < tags.length(); i++) {
+            // أول 3 تصنيفات بس — الباقي بصفحة المكان
+            for (int i = 0; i < Math.min(3, tags.length()); i++) {
                 if (sb.length() > 0) sb.append(" · ");
                 sb.append(Lang.tag(context, tags.optString(i)));
             }
@@ -196,9 +192,14 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             readBtn.setOnClickListener(this);
             Touch.springy(readBtn);
             holder.actions.addView(readBtn);
+        } else if (MainActivity.isPlaceSection(MainActivity.cachedSections == null ? null : MainActivity.cachedSections.optJSONObject(itemSection))) {
+            // مكان: الكرت كله يفتح صفحته، وفيها الاتصال والاتجاهات والمنيو —
+            // أزرار هنا كانت تكرار يزحم القائمة
+            holder.actions.removeAllViews();
         } else {
             LinkButtons.build(context, holder.actions, item, HakolahApi.ORIGIN, this);
         }
+        ((View) holder.actions.getParent()).setVisibility(holder.actions.getChildCount() > 0 ? View.VISIBLE : View.GONE);
         row.setTag(R.id.itemTitle, "open:" + position);
         row.setOnClickListener(this);
 
@@ -258,10 +259,6 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
             Touch.feedback(v, nowFav ? Touch.TOGGLE_ON : Touch.TOGGLE_OFF, nowFav ? SoundPlayer.ON : SoundPlayer.OFF);
             applyFavStyle((ImageView) v, nowFav);
             if (nowFav) popHeart(v);
-        } else if (tag.startsWith("share:")) {
-            int position = Integer.parseInt(tag.substring(6));
-            Touch.feedback(v, Touch.TAP, SoundPlayer.TAP);
-            shareItem(items.get(position));
         } else if (tag.startsWith("open:")) {
             JSONObject item = items.get(Integer.parseInt(tag.substring(5)));
             Touch.feedback(v, Touch.TAP, SoundPlayer.OPEN);
@@ -316,10 +313,6 @@ class ItemAdapter extends BaseAdapter implements View.OnClickListener {
     // نفس buildShareText/buildShareUrl بالموقع بالضبط: يفضّل detailUrl لو
     // موجود (أقسام المقالات)، وإلا رابط القسم مع ?q=العنوان — عبر مشاركة
     // النظام الأصلية (ACTION_SEND) بدل Web Share API
-    private void shareItem(JSONObject item) {
-        share(context, item, itemSection(item));
-    }
-
     static void share(Activity context, JSONObject item, String section) {
         String title = Lang.title(context, item);
         String detailUrl = item.optString("detailUrl", "");

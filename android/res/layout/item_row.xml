@@ -43,17 +43,6 @@
             android:maxLines="3" />
 
         <ImageView
-            android:id="@+id/shareButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:padding="12dp"
-            android:src="@drawable/ic_share"
-            android:tint="@color/text_muted"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
-
-        <ImageView
             android:id="@+id/favButton"
             android:layout_width="48dp"
             android:layout_height="48dp"

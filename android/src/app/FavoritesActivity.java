@@ -24,7 +24,6 @@ public class FavoritesActivity extends Activity implements View.OnClickListener 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
         Ui.edgeToEdge(this, getColor(R.color.brand_primary), getColor(R.color.surface));
-        findViewById(R.id.favoritesCloseButton).setOnClickListener(this);
         findViewById(R.id.favoritesBrowse).setOnClickListener(this);
         Touch.springy(findViewById(R.id.favoritesBrowse));
         BottomNav.attach(this, findViewById(R.id.bottomNav), BottomNav.FAVORITES);
@@ -46,7 +45,7 @@ public class FavoritesActivity extends Activity implements View.OnClickListener 
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.favoritesCloseButton || v.getId() == R.id.favoritesBrowse) {
+        if (v.getId() == R.id.favoritesBrowse) {
             finish();
             overridePendingTransition(0, 0);
         }

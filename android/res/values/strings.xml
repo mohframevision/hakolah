@@ -46,7 +46,6 @@
     <string name="btn_instagram">إنستقرام</string>
 
     <string name="daily_title">اختيار اليوم</string>
-    <string name="daily_hint">اسحب البطاقة يميناً أو يساراً لترى غيرها</string>
 
     <string name="favorites_title">المفضلة</string>
     <string name="favorites_empty">لم تُضِف أي عنصر إلى المفضلة بعد.\nتصفّح الأقسام واضغط على أيقونة القلب لحفظ ما يعجبك.</string>
@@ -146,7 +145,6 @@
     <string name="back">رجوع</string>
     <string name="place_directions">الاتجاهات</string>
     <string name="place_menu_link">المنيو</string>
-    <string name="place_open_map">افتح الموقع على الخريطة</string>
     <string name="place_copy_hint">اضغط مطولاً للنسخ</string>
     <string name="copied">تم نسخ الرقم</string>
     <string name="place_meat">مصدر اللحوم</string>
