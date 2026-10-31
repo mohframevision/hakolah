@@ -6,6 +6,9 @@
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches, TOUCH = matchMedia("(pointer: coarse)").matches;
   var R = 48, HALF = 70, K = 1, G = 40, labels = document.getElementById("labels");
   function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
+  // a bubble/name only changes size when its text, the stage or the loaded font changes; reading offsetWidth every frame
+  // forced a synchronous layout ~60 times a second, so measure once per change
+  function boxOf(el, key) { key = el.textContent + "|" + key + (document.fonts ? document.fonts.status : ""); if (el._mk !== key) { el._mk = key; el._mw = el.offsetWidth; el._mh = el.offsetHeight; } return el; }
   function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
   function spring(v, k, d) { return { v: v, t: v, vel: 0, k: k, d: d }; }
 
@@ -1234,13 +1237,13 @@
       { ey: -3.84, rx: erx, ry: [ery, ery], mx: 0, mcy: 17.76, mrx: mrx, mry: Math.max(mry, mrx * 1.02), dd: b.bp.getAttribute("d"), busy: !!sp3 || !!sn }, t, bdt);
     if (hp) b.body.setAttribute("transform", b.body.getAttribute("transform") + " scale(" + (1 + .035 * hp).toFixed(3) + ")");
     if (b.tag) b.tag.style.opacity = b.bub.hidden ? "" : "0";  // the name steps aside while its owner talks
-    if (b.tag) b.tag.style.transform = "translate(" + (b.x * K - b.tag.offsetWidth / 2).toFixed(1) + "px," + ((b.y - r) * K - 20).toFixed(1) + "px)";
+    if (b.tag) b.tag.style.transform = "translate(" + (b.x * K - boxOf(b.tag, K)._mw / 2).toFixed(1) + "px," + ((b.y - r) * K - 20).toFixed(1) + "px)";
     var fy = surfaceY(b), sc = clamp(1 - (fy - b.y) / 300, .35, 1);
     b.sh.style.transform = "translate(" + (b.x - r * .8).toFixed(1) + "px," + (fy + r - 6).toFixed(1) + "px) scale(" + sc.toFixed(2) + ")"; b.sh.style.opacity = sc.toFixed(2);
     if (!b.bub.hidden) {
       if (t > b.sayUntil) b.bub.hidden = true;
       else {
-        var bw = b.bub.offsetWidth, bh = b.bub.offsetHeight, bx = clamp(b.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (b.y - r) * K - 12 - bh;
+        var bw = boxOf(b.bub, W + "x" + K)._mw, bh = b.bub._mh, bx = clamp(b.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (b.y - r) * K - 12 - bh;
         if (by < 8) by = (b.y + r) * K + 12;
         b.bub._x = bx; b.bub._y = by; b.bub._w = bw; b.bub._h = bh;
       }
@@ -2446,7 +2449,7 @@
       if (mood.sleepy <= .85 && t > +bub.dataset.until) bub.hidden = true;
       else {
         // keep the whole bubble inside the stage: clamp sideways, flip below him when there is no room above
-        var bw = bub.offsetWidth, bh = bub.offsetHeight, bx = clamp(pos.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (pos.y - R) * K - 14 - bh;
+        var bw = boxOf(bub, W + "x" + K)._mw, bh = bub._mh, bx = clamp(pos.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (pos.y - R) * K - 14 - bh;
         if (by < 8) by = Math.min((pos.y + R) * K + 14, (ground + R) * K - bh - 4);
         bub._x = bx; bub._y = Math.max(8, by); bub._w = bw; bub._h = bh;  // placed by layoutBubbles()
       }

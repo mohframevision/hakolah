@@ -2606,8 +2606,9 @@ document.addEventListener("keydown", (e) => {
    حركة FLIP: نحرّك الصورة الكبيرة نفسها بـtransform + clip-path + opacity فقط (على الـGPU)
    — View Transitions كانت تصوّر الصفحة كاملة كل مرة فالحركة تقطّع على الشاشات السريعة */
 (function photoLightbox() {
-  const strip = document.querySelector(".photo-strip");
-  if (!strip) return;
+  // الصورة الرئيسية تتكبّر حتى لو المكان بلا معرض صور
+  const hero = document.querySelector(".detail-hero-photo");
+  if (!hero && !document.querySelector(".photo-strip")) return;
   const dlg = document.createElement("dialog");
   dlg.className = "photo-lightbox";
   dlg.innerHTML = '<button type="button" class="photo-lightbox-close">✕</button><img alt="" />';
@@ -2676,7 +2677,6 @@ document.addEventListener("keydown", (e) => {
   }
 
   // كيبورد: Enter على رابط المصغّرة يجي الحدث على <a> مو <img>؛ والصورة الرئيسية نخليها زر قابل للتركيز
-  const hero = document.querySelector(".detail-hero-photo");
   if (hero) {
     hero.tabIndex = 0;
     hero.setAttribute("role", "button");
