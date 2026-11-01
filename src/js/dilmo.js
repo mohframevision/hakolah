@@ -335,7 +335,14 @@
   };
   var mood = { joy: .2, startle: 0, dizzy: 0, annoy: 0, sleepy: 0, shy: 0, tickle: 0, curious: 0, fear: 0, sad: 0, love: 0, conf: 0, heart: 0 };
   var FK = null, hbPulse = 0, lastDraw = 0;  // Dilmo's face kit (made at start), his heartbeat pulse
-  var W = 0, ground = 0, pos = { x: 0, y: 0, vx: 0, vy: 0 };
+  var W = 0, ground = 0, pos = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 };
+  // the 3D world (dilmo3d.js): DZ = the arena's depth while it is open (0 when flat), D3 = the renderer. Positions stay in world px
+  // with z for depth; sv(b) = where a body sits on the stage, in world px, with the on-screen size of one px there (identity when flat),
+  // so pointer maths (pokes, drags, feeding) works in both worlds
+  var DZ = 0, D3 = null;
+  function sv(b) { return D3 ? D3.scr(b.x, b.y, b.z) : { x: b.x, y: b.y, s: 1 }; }
+  function nearZ(o, r) { return D3 ? clamp(o.z + (Math.random() - .5) * 70, r, DZ - r) : 0; }
+  function randZ(r) { return D3 ? r + Math.random() * Math.max(0, DZ - 2 * r) : 0; }
   var ptr = { x: 0, y: 0, has: false, out: false }, drag = null;
   var t0 = performance.now(), last = t0, lastInput = t0, running = false, raf = 0;
   var gaze = { x: 0, y: 0, until: 0 }, nextIdle = t0 + 3000, nextBlink = t0 + 2500, blinkAt = -1e4;
@@ -565,7 +572,7 @@
   }
   function adiff(a, b) { var d = a - b; return Math.atan2(Math.sin(d), Math.cos(d)); }
   function local(px, py) {
-    var dx = px - pos.x, dy = py - pos.y, r = -(sp.spin.v + sp.tilt.v) * Math.PI / 180;
+    var s0 = sv(pos), dx = (px - s0.x) / s0.s, dy = (py - s0.y) / s0.s, r = -(sp.spin.v + sp.tilt.v) * Math.PI / 180;
     return { x: dx * Math.cos(r) - dy * Math.sin(r), y: dx * Math.sin(r) + dy * Math.cos(r) };
   }
   function newRim() { var a = []; for (var q = 0; q < N; q++) a.push({ a: q / N * Math.PI * 2, x: 0, y: 0, vx: 0, vy: 0 }); return a; }
@@ -664,7 +671,7 @@
     if (idle > 20000) say(line("bored"), "bored", 25000);
     if (r < .35) gaze = { x: Math.random() * 2 - 1, y: Math.random() * 1.2 - .7, until: t + 900 + Math.random() * 1400 };
     else if (r < .55 && !reduce) pos.vy = -4 - Math.random() * 4;
-    else if (r < .7 && !reduce) { var hd = roomSide(pos.x, R); if (hd) { pos.vx = hd * (2 + Math.random() * 3); pos.vy = -3; } }  // a little hop, toward the side with room
+    else if (r < .7 && !reduce) { var hd = roomSide(pos.x, R); if (hd) { pos.vx = hd * (2 + Math.random() * 3); pos.vz = D3 ? (Math.random() - .5) * 4 : 0; pos.vy = -3; } }  // a little hop, toward the side with room
     else if (r < .85 && others().length) {  // glances at one of his friends
       var o = pick(others()), dx = o.x - pos.x, dy = o.y - pos.y, d = Math.hypot(dx, dy) || 1;
       gaze = { x: dx / d, y: dy / d, until: t + 1600 };
@@ -674,12 +681,13 @@
   addEventListener("pointermove", function (e) {
     var p = toStage(e), dx = p.x - ptr.x, speed = ptr.has ? Math.hypot(dx, p.y - ptr.y) : 0;
     ptr.x = p.x; ptr.y = p.y; ptr.has = true; ptr.out = false; ptr.moveT = performance.now();
+    if (D3) { var g0 = D3.ground(p.x, p.y); ptr.gx = g0 && g0.inside ? g0.x : null; ptr.gz = g0 && g0.inside ? g0.z : null; }
     if (!running) return;
     stir();
     if (foodDrag) return;
-    var d = Math.hypot(p.x - pos.x, p.y - pos.y), now = performance.now();
+    var sp0 = sv(pos), d = Math.hypot(p.x - sp0.x, p.y - sp0.y) / sp0.s, now = performance.now();
     if (!drag && d > R + 10 && d < R + 100) {  // circling him
-      var ang = Math.atan2(p.y - pos.y, p.x - pos.x);
+      var ang = Math.atan2(p.y - sp0.y, p.x - sp0.x);
       circ.sum = circ.last != null && now - circ.t < 600 ? circ.sum + adiff(ang, circ.last) : 0;
       circ.last = ang; circ.t = now;
       if (Math.abs(circ.sum) > Math.PI * 4 && !song) { circ.sum = 0; sing(); }
@@ -697,8 +705,8 @@
     } else if (drag && !drag.slipped) {
       if (!drag.moved && Math.hypot(p.x - drag.sx, p.y - drag.sy) > 6) { drag.moved = true; mood.shy = 0; say(line("lift"), "lift", 5000); }
       if (drag.moved) {
-        var nx = clamp(p.x - drag.ox, R, W - R), ny = clamp(p.y - drag.oy, R, ground);
-        drag.vx = nx - pos.x; drag.vy = ny - pos.y; pos.x = nx; pos.y = ny;
+        var wp = D3 ? D3.unscr(p.x, p.y, pos) : p, nx = clamp(wp.x - drag.ox, R, W - R), ny = clamp(wp.y - drag.oy, R, ground), nz = D3 ? clamp(wp.z - drag.oz, R, DZ - R) : 0;
+        drag.vx = nx - pos.x; drag.vy = ny - pos.y; drag.vz = nz - pos.z; pos.x = nx; pos.y = ny; pos.z = nz;
         var sg = Math.abs(drag.vx) > 8 ? Math.sign(drag.vx) : 0;
         if (sg && sg !== drag.lastSign) { drag.lastSign = sg; drag.rev.push(now); }
         drag.rev = drag.rev.filter(function (x) { return now - x < 1000; });
@@ -718,13 +726,14 @@
       if (rubTimes.length >= 5) { mood.tickle = 1; mood.joy = Math.min(1, mood.joy + .04); befriend(.002); say(line("tickle"), "tickle", 3000); }
     }
     buddies.forEach(function (b) {
-      if (b.drag || Math.hypot(p.x - b.x, p.y - b.y) > b.f.r) return;
+      var sb = sv(b);
+      if (b.drag || Math.hypot(p.x - sb.x, p.y - sb.y) > b.f.r * sb.s) return;
       var s2 = Math.sign(dx);
       if (s2 && s2 !== b.rubSign) { b.rubSign = s2; b.rubs = (b.rubs || []).filter(function (x) { return now - x < 900; }); b.rubs.push(now); }
       if ((b.rubs || []).length >= 5) {
         b.rubs = []; b.joy = 1; b.tickleUntil = now + 900;
         if (!b.f.player && now - (b.tickAt || 0) > 3000) { b.tickAt = now; bsay(b, line("tickle")); if (!b.f.player) bfAdd(b, .01); }
-      } else if (p.y < b.y - b.f.r * .3 && speed > .5 && speed < 9 && ++b.petN > 40) {  // slow strokes on the top of the head
+      } else if (p.y < sb.y - b.f.r * sb.s * .3 && speed > .5 && speed < 9 && ++b.petN > 40) {  // slow strokes on the top of the head
         b.petN = 0; b.joy = Math.min(1, b.joy + .3); feel(b.em, "love", .55); feel(b.em, "shy", .4);
         if (!b.f.player && now - (b.petAt || 0) > 6000) { b.petAt = now; bsay(b, line("pet")); bfAdd(b, .01); }
       }
@@ -732,7 +741,8 @@
   }, { passive: true });
   orb.addEventListener("pointerdown", function (e) {
     var p = toStage(e); stir(); stick = null;
-    drag = { sx: p.x, sy: p.y, ox: p.x - pos.x, oy: p.y - pos.y, t: performance.now(), moved: false, shy: false, vx: 0, vy: 0, rev: [], lastSign: 0, crad: [], cSign: 0 };
+    var w0 = D3 ? D3.unscr(p.x, p.y, pos) : p;
+    drag = { sx: p.x, sy: p.y, ox: w0.x - pos.x, oy: w0.y - pos.y, oz: D3 ? w0.z - pos.z : 0, t: performance.now(), moved: false, shy: false, vx: 0, vy: 0, rev: [], lastSign: 0, crad: [], cSign: 0 };
     var l = local(p.x, p.y); drag.lx = l.x; drag.ly = l.y;
     cheek = Math.hypot(l.x, l.y) > R * .6 ? { a: Math.atan2(l.y, l.x), gx: l.x, gy: l.y, px: 0, py: 0, side: Math.abs(l.x) > Math.abs(l.y) } : null;
     orb.setPointerCapture(e.pointerId); e.preventDefault();
@@ -745,7 +755,7 @@
       if (pulled > 8) { mood.joy = Math.min(1, mood.joy + .2); sfx("snap"); return; }
     }
     if (d.moved) {
-      pos.vx = clamp(d.vx, -45, 45); pos.vy = clamp(d.vy, -45, 45);
+      pos.vx = clamp(d.vx, -45, 45); pos.vy = clamp(d.vy, -45, 45); pos.vz = clamp(d.vz || 0, -45, 45);
       var s = Math.hypot(pos.vx, pos.vy);
       if (s > 20) { mood.dizzy = Math.min(1, mood.dizzy + s / 60); feel(mood, "fear", Math.min(1, s / 40)); mood.heart = Math.min(1, mood.heart + .5); sfx("whoosh"); say(line("throw"), "throw", 2500); }
     } else if (d.shy) { mood.shy = 0; pos.vy = -7; sp.sy.vel += .15; say(line("unshy"), "unshy", 4000); }
@@ -771,8 +781,9 @@
     if (!foodDrag) return;
     var c = foodCenter(), el = foodDrag.el; foodDrag = null; el.classList.remove("dragging");
     var friend = null;  // any friend can be fed too; each has a favourite
-    buddies.forEach(function (b) { if (!b.f.player && Math.hypot(c.x - b.x, c.y - b.y) < b.f.r + 16) friend = b; });
-    if (!mainAway && Math.hypot(c.x - pos.x, c.y - pos.y) < R + 14 && mood.sleepy < .85) eat(el);
+    buddies.forEach(function (b) { var sb = sv(b); if (!b.f.player && Math.hypot(c.x - sb.x, c.y - sb.y) < (b.f.r + 16) * sb.s) friend = b; });
+    var sp1 = sv(pos);
+    if (!mainAway && Math.hypot(c.x - sp1.x, c.y - sp1.y) < (R + 14) * sp1.s && mood.sleepy < .85) eat(el);
     else if (friend) feedBuddy(friend, el);
     else el.style.transform = "";
   }
@@ -864,16 +875,17 @@
     labels.appendChild(tag);
     if (f.player) { el.setAttribute("aria-label", T("شخصيتك ", "Your character ") + f.name); el.style.zIndex = 4; }  // the visitor walks in front of the bushes
     var b = { f: f, el: el, sh: sh, bub: bb, body: el.querySelector(".bb"), face: el.querySelector(".bf"),
-      x: x, y: ground + R - r - (fromEdge ? 140 : 0), vx: fromEdge ? -5 : 0, vy: 0, sx: 1, sy: 1, svx: 0, svy: 0, tilt: 0, lx: 0, ly: 0, joy: .2,
+      x: x, y: ground + R - r - (fromEdge ? 140 : 0), z: randZ(r), vx: fromEdge ? -5 : 0, vy: 0, vz: 0, tz: null, sx: 1, sy: 1, svx: 0, svy: 0, tilt: 0, lx: 0, ly: 0, joy: .2,
       next: performance.now() + 1500 + Math.random() * 2500, blink: -1e4, nextBlink: 0, sayUntil: 0, speech: null, mode: "wander", tx: null, other: null, drag: null, size: S, lastBump: 0, tag: tag, home: x,
       petN: 0, pts: newRim(), bp: el.querySelector(".bp"), bg: el.querySelector(".bg"), cheek: null, spin: 0, spinA: 0, flat: false,
       em: { anger: 0, fear: 0, sad: 0, shy: 0, love: 0, conf: 0, heart: 0 }, lastDraw: 0 };
-    b.FK = faceKit(b.face, b.body);
+    b.homeZ = b.z; b.FK = faceKit(b.face, b.body);
     var sc = r / R;  // everything a pull or poke does to him, scaled to this body's size
     updateTag(b);
     el.addEventListener("pointerdown", function (e) {
       var p = toStage(e), l = blocal(b, p.x, p.y); stir(); e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId);
-      b.drag = { ox: p.x - b.x, oy: p.y - b.y, sx: p.x, sy: p.y, moved: false, vx: 0, vy: 0, lx: l.x, ly: l.y };
+      var w0 = D3 ? D3.unscr(p.x, p.y, b) : p;
+      b.drag = { ox: w0.x - b.x, oy: w0.y - b.y, oz: D3 ? w0.z - b.z : 0, sx: p.x, sy: p.y, moved: false, vx: 0, vy: 0, vz: 0, lx: l.x, ly: l.y };
       // grabbed near the edge: that's a cheek to pull, like Dilmo's
       b.cheek = Math.hypot(l.x, l.y) > r * .6 ? { a: Math.atan2(l.y, l.x), gx: l.x, gy: l.y, px: 0, py: 0, side: Math.abs(l.x) > Math.abs(l.y) } : null;
     });
@@ -891,19 +903,19 @@
       }
       if (d.slipped) return;
       if (!d.moved && Math.hypot(p.x - d.sx, p.y - d.sy) > 6) { d.moved = true; bsay(b, line("buddyLift")); }
-      if (d.moved) { var nx = clamp(p.x - d.ox, r, W - r), ny = clamp(p.y - d.oy, r, floorY(b)); d.vx = nx - b.x; d.vy = ny - b.y; b.x = nx; b.y = ny; }
+      if (d.moved) { var wp = D3 ? D3.unscr(p.x, p.y, b) : p, nx = clamp(wp.x - d.ox, r, W - r), ny = clamp(wp.y - d.oy, r, floorY(b)), nz = D3 ? clamp(wp.z - d.oz, r, DZ - r) : 0; d.vx = nx - b.x; d.vy = ny - b.y; d.vz = nz - b.z; b.x = nx; b.y = ny; b.z = nz; }
     });
     function up() {
       var d = b.drag; if (!d) return; b.drag = null;
       if (b.cheek) { var pulled = Math.hypot(b.cheek.px, b.cheek.py); b.cheek = null; if (pulled > 8 * sc) { b.joy = 1; sfx("snap"); return; } }
-      if (d.moved) { b.vx = clamp(d.vx, -40, 40); b.vy = clamp(d.vy, -40, 40); var ts = Math.hypot(b.vx, b.vy); if (ts > 18) { feel(b.em, "fear", Math.min(1, ts / 35)); b.em.heart = Math.min(1, b.em.heart + .5); bsay(b, line("buddyThrow")); } return; }
+      if (d.moved) { b.vx = clamp(d.vx, -40, 40); b.vy = clamp(d.vy, -40, 40); b.vz = clamp(d.vz || 0, -40, 40); var ts = Math.hypot(b.vx, b.vy); if (ts > 18) { feel(b.em, "fear", Math.min(1, ts / 35)); b.em.heart = Math.min(1, b.em.heart + .5); bsay(b, line("buddyThrow")); } return; }
       if (hs && hs.b === b) { endHideSeek(true); return; }
       b.awakeUntil = performance.now() + 20000;
       if (b.asleep) { b.asleep = false; b.vy = -6; bsay(b, line("buddyWoke")); return; }
       b.vy = -7 * f.energy; b.joy = 1; b.svy -= .2; sfx("pop"); dent(d.lx, d.ly, 10 * sc, b.pts);
       if (f.player) return;  // your own character just squishes, it doesn't talk back at you
       bsay(b, line(f.shy ? "buddyShyPoke" : "buddyPoke"));
-      if (f.shy) { b.mode = "hide"; b.tx = clamp(pos.x + (b.x < pos.x ? 1 : -1) * (R + r + 10), r, W - r); b.next = performance.now() + 2500; }
+      if (f.shy) { b.mode = "hide"; b.tx = clamp(pos.x + (b.x < pos.x ? 1 : -1) * (R + r + 10), r, W - r); b.tz = nearZ(pos, r); b.next = performance.now() + 2500; }
     }
     el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
     el.addEventListener("dblclick", function () { b.spin += 360; b.joy = 1; feel(b.em, "conf", .7); b.vy = -9 * f.energy; if (!f.player) bsay(b, line("spin")); });
@@ -911,7 +923,7 @@
     buddies.push(b); return b;
   }
   function blocal(b, px, py) {  // a point in this body's own (tilted, spinning) frame
-    var dx = px - b.x, dy = py - b.y, a = -(b.tilt + b.spinA) * Math.PI / 180;
+    var s0 = sv(b), dx = (px - s0.x) / s0.s, dy = (py - s0.y) / s0.s, a = -(b.tilt + b.spinA) * Math.PI / 180;
     return { x: dx * Math.cos(a) - dy * Math.sin(a), y: dx * Math.sin(a) + dy * Math.cos(a) };
   }
   function bsay(b, text) {
@@ -940,7 +952,7 @@
   function chat(b, t) {
     if (t - lastChat < 7000 || (!bub.hidden && t < +bub.dataset.until)) return;
     lastChat = t; var pair = pick(DIALOGS);
-    b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + b.f.r + 30), b.f.r, W - b.f.r); b.mode = "chat"; b.next = t + 4000;
+    b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + b.f.r + 30), b.f.r, W - b.f.r); b.tz = nearZ(pos, b.f.r); b.mode = "chat"; b.next = t + 4000;
     setTimeout(function () { bsay(b, pair[0]); }, 700);
     setTimeout(function () { say(pair[1], "chat", 1000); }, 2500);
   }
@@ -952,25 +964,26 @@
   function think(b, t) {
     var r = b.f.r;
     b.next = t + (1800 + Math.random() * 2600) / b.f.energy; b.mode = "wander"; b.other = null;
-    if (song) { b.mode = "sing"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 14), r, W - r); b.next = t + 800; return; }
-    if (isNight && t > (b.awakeUntil || 0)) { b.mode = "sleep"; b.tx = b.home; b.next = t + 6000; return; }  // bedtime in Bahrain
+    if (song) { b.mode = "sing"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 14), r, W - r); b.tz = nearZ(pos, r); b.next = t + 800; return; }
+    if (isNight && t > (b.awakeUntil || 0)) { b.mode = "sleep"; b.tx = b.home; b.tz = b.homeZ; b.next = t + 6000; return; }  // bedtime in Bahrain
     if (player && bfOf(b) >= .5 && Math.random() < .5) { b.mode = "follow"; b.next = t + 5000; return; }  // close friends tag along
-    if (mood.annoy > .5 || mood.joy < -.2) { b.mode = "comfort"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 12), r, W - r); b.next = t + 2500; return; }
-    if (b.f.shy && ptr.has && !ptr.out && Math.hypot(ptr.x - b.x, ptr.y - b.y) < 140) {  // hides behind him, on the side away from the pointer
-      b.mode = "hide"; b.tx = clamp(pos.x + (ptr.x < pos.x ? 1 : -1) * (R + r + 10), r, W - r); feel(b.em, "shy", .7); feel(b.em, "fear", .3); return;
+    if (mood.annoy > .5 || mood.joy < -.2) { b.mode = "comfort"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 12), r, W - r); b.tz = nearZ(pos, r); b.next = t + 2500; return; }
+    var sh0 = sv(b);
+    if (b.f.shy && ptr.has && !ptr.out && Math.hypot(ptr.x - sh0.x, ptr.y - sh0.y) < 140 * sh0.s) {  // hides behind him, on the side away from the pointer
+      b.mode = "hide"; b.tx = clamp(pos.x + ((D3 ? ptr.gx != null && ptr.gx < pos.x : ptr.x < pos.x) ? 1 : -1) * (R + r + 10), r, W - r); b.tz = nearZ(pos, r); feel(b.em, "shy", .7); feel(b.em, "fear", .3); return;
     }
     if (player && Math.random() < .18 && !buddies.some(function (x) { return x.mode === "visit"; })) {  // one at a time goes over to talk to the visitor's character
-      b.mode = "visit"; b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 20), r, W - r); feel(b.em, "shy", b.f.shy ? .7 : .35);
+      b.mode = "visit"; b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 20), r, W - r); b.tz = nearZ(player, r); feel(b.em, "shy", b.f.shy ? .7 : .35);
       setTimeout(function () { if (player) bsay(b, line("toPlayer", { n: player.f.name })); }, 900);
       return;
     }
     var k = Math.random();
-    if (k < .3) b.tx = roomy(b);
+    if (k < .3) { b.tx = roomy(b); b.tz = randZ(r); }
     else if (k < .5 && !mainAway) chat(b, t);
     else if (k < .55 && buddies.length > 2 && !crowd(b) && !buddies.some(function (x) { return x.mode === "tag"; })) startTag(b, t);  // a short game of tag now and then, one at a time
     else if (k < .75 && !reduce) b.vy = -6 * b.f.energy;
     else if (k < .88 && buddies.filter(function (x) { return x.mode === "ball"; }).length < 2) { b.mode = "ball"; b.next = t + 3500; }  // two chasing the ball is a game, seven is a pile
-    else b.tx = null;
+    else { b.tx = null; b.tz = null; }
   }
   // a spot to wander to: of a few tries, the one farthest from everyone else
   function roomy(b, dir) {  // dir: only look that way (after bumping into someone)
@@ -982,10 +995,11 @@
     return best;
   }
   // free floor ahead of b in direction dir before it would touch Dilmo or a friend (the visitor walks through)
-  function gapAhead(b, dir) {
-    var L = buddies.filter(function (x) { return x !== b && !x.f.player; }).map(function (x) { return { x: x.x, y: x.y, r: x.f.r }; });
-    if (!mainAway) L.push({ x: pos.x, y: pos.y, r: R });
-    return L.reduce(function (m, o) { var d = (o.x - b.x) * dir; return d > 0 && Math.abs(o.y - b.y) < b.f.r + o.r ? Math.min(m, d - b.f.r - o.r - 6) : m; }, 1e9);
+  function gapAhead(b, ux, uz) {  // (ux, uz): a unit direction on the floor; a plain -1/1 means along x
+    uz = uz || 0;
+    var L = buddies.filter(function (x) { return x !== b && !x.f.player; }).map(function (x) { return { x: x.x, y: x.y, z: x.z, r: x.f.r }; });
+    if (!mainAway) L.push({ x: pos.x, y: pos.y, z: pos.z, r: R });
+    return L.reduce(function (m, o) { var rx = o.x - b.x, rz = o.z - b.z, d = rx * ux + rz * uz, lat = Math.abs(rx * uz - rz * ux); return d > 0 && lat < b.f.r + o.r && Math.abs(o.y - b.y) < b.f.r + o.r ? Math.min(m, d - b.f.r - o.r - 6) : m; }, 1e9);
   }
   // which way has room for a hop from x: -1, 1, or 0 when both sides are taken
   function roomSide(x, r) {
@@ -997,58 +1011,59 @@
   function slot(b, mode) { return buddies.filter(function (x) { return x.mode === mode; }).indexOf(b); }
   // the nearest body standing almost on top of this one (Dilmo, a friend or the visitor), if any
   function crowd(b) {
-    var L = buddies.filter(function (x) { return x !== b; }).map(function (x) { return { x: x.x, y: x.y, r: x.f.r }; });
-    if (!mainAway) L.push({ x: pos.x, y: pos.y, r: R });
+    var L = buddies.filter(function (x) { return x !== b; }).map(function (x) { return { x: x.x, y: x.y, z: x.z, r: x.f.r }; });
+    if (!mainAway) L.push({ x: pos.x, y: pos.y, z: pos.z, r: R });
     var best = null, bd = 1e9;
-    L.forEach(function (o) { var d = Math.abs(o.x - b.x); if (d < o.r + b.f.r + 10 && Math.abs(o.y - b.y) < o.r + b.f.r && d < bd) { bd = d; best = o; } });
+    L.forEach(function (o) { var d = Math.hypot(o.x - b.x, o.z - b.z); if (d < o.r + b.f.r + 10 && Math.abs(o.y - b.y) < o.r + b.f.r && d < bd) { bd = d; best = o; } });
     return best;
   }
   function buddyStep(b, t, dt) {
     var r = b.f.r, fy = surfaceY(b);
     b.joy += (.15 - b.joy) * .004 * dt;
-    b.asleep = b.mode === "sleep" && Math.abs(b.x - b.home) < 20 && b.y >= fy - 1;
+    b.asleep = b.mode === "sleep" && Math.hypot(b.x - b.home, b.z - b.homeZ) < 20 && b.y >= fy - 1;
     if (b.asleep && !quiet && t > (b.zzzAt || 0)) { b.zzzAt = t + 7000; b.bub.textContent = "Zzz…"; b.bub.hidden = false; b.bub._since = t; b.sayUntil = t + 2500; b.speech = null; }
     if (!b.drag || !b.drag.moved) {
       if (b.f.player) playerControl(b, fy, dt, t); else if (!b.drag && t > b.next) think(b, t);
       if (b.mode === "flee") { feel(b.em, "fear", .3); b.em.heart = Math.max(b.em.heart, .45); }  // being chased: a playful fright
       if (b.f.player) b.tx = null;  // the visitor steers their own character, even during tag
-      else if (b.mode === "tag" && b.other) b.tx = b.other.x;
+      else if (b.mode === "tag" && b.other) { b.tx = b.other.x; b.tz = b.other.z; }
       else if (b.mode === "flee" && b.other) {  // run away from the chaser, toward open floor (not into the others)
         var away = b.x < b.other.x ? -1 : 1, rs = gapAhead(b, away) > 40 ? away : gapAhead(b, -away) > 120 ? -away : away;
-        b.tx = clamp(b.x + rs * 120, r, W - r);
+        b.tx = clamp(b.x + rs * 120, r, W - r); b.tz = D3 ? clamp(b.z + (b.z < b.other.z ? -1 : 1) * 90, r, DZ - r) : 0;
       }
-      else if (b.mode === "follow" && player) b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 16 + slot(b, "follow") * 46), r, W - r);
-      else if (b.mode === "ball") b.tx = ball.x;
-      if (b.mode === "comfort" && Math.hypot(pos.x - b.x, pos.y - b.y) < R + r + 24) {
+      else if (b.mode === "follow" && player) { b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 16 + slot(b, "follow") * 46), r, W - r); b.tz = D3 ? clamp(player.z, r, DZ - r) : 0; }
+      else if (b.mode === "ball") { b.tx = ball.x; b.tz = ball.z; }
+      if (b.mode === "comfort" && Math.hypot(pos.x - b.x, pos.y - b.y, pos.z - b.z) < R + r + 24) {
         b.mode = "wander"; feel(b.em, "love", .45); bsay(b, line("comfort")); mood.annoy *= .4; mood.joy = Math.max(mood.joy, .3); befriend(.01);
         setTimeout(function () { say(line("thanks"), "thanks", 4000); }, 1500);
       }
       if (b.tx == null && b.y >= fy - 1 && !b.f.player && /^(wander|follow|ball)$/.test(b.mode) && t > (b.roomAt || 0)) {  // too crowded here: step aside
         b.roomAt = t + 900;
         var near = crowd(b);
-        if (near) b.tx = clamp(b.x + (b.x < near.x ? -1 : 1) * (60 + Math.random() * 60), r, W - r);
+        if (near) { b.tx = clamp(b.x + (b.x < near.x ? -1 : 1) * (60 + Math.random() * 60), r, W - r); b.tz = D3 ? clamp(b.z + (Math.random() - .5) * 120, r, DZ - r) : 0; }
       }
-      if (b.tx != null && b.y >= fy - 1) {  // walks in little hops
-        var dx = b.tx - b.x;
-        if (Math.abs(dx) > 14) {
+      if (b.tx != null && b.y >= fy - 1) {  // walks in little hops (in the 3D world the target has a depth too)
+        var dx = b.tx - b.x, dz = b.tz != null ? b.tz - b.z : 0, dist = Math.hypot(dx, dz);
+        if (dist > 14) {
           // each hop is sized to the room ahead and the distance left, so they walk up to someone and stop
           // beside them (or land on their spot) instead of hopping into them and bouncing around
-          var dir = Math.sign(dx), chase = b.mode === "tag" || b.mode === "flee", hvy = 3 + 1.5 * b.f.energy, airT = 2 * hvy / .75;
-          var room = gapAhead(b, dir), step = Math.min(2.5 + 2.5 * b.f.energy, Math.abs(dx) / airT, room / airT);
-          if (room < 6 && chase) { b.vx = dir * (3 + 2.5 * b.f.energy); b.vy = -9 - 2 * b.f.energy; }  // in a chase: leap over
-          else if (step < .6) { b.vx = 0; if (!chase) { b.tx = b.mode === "wander" ? roomy(b, -dir) : null; if (b.mode !== "wander") b.next = Math.min(b.next, t + 900); } }  // someone's right there: turn round (or wait beside them)
-          else { b.vx = dir * step; b.vy = -hvy; }
-        } else if (b.mode !== "tag" && b.mode !== "flee") b.tx = null;
+          var ux = dx / dist, uz = dz / dist, dir = Math.sign(dx) || 1, chase = b.mode === "tag" || b.mode === "flee", hvy = 3 + 1.5 * b.f.energy, airT = 2 * hvy / .75;
+          var room = gapAhead(b, ux, uz), step = Math.min(2.5 + 2.5 * b.f.energy, dist / airT, room / airT);
+          if (room < 6 && chase) { b.vx = ux * (3 + 2.5 * b.f.energy); b.vz = uz * (3 + 2.5 * b.f.energy); b.vy = -9 - 2 * b.f.energy; }  // in a chase: leap over
+          else if (step < .6) { b.vx = b.vz = 0; if (!chase) { b.tx = b.mode === "wander" ? roomy(b, -dir) : null; b.tz = b.mode === "wander" ? randZ(r) : null; if (b.mode !== "wander") b.next = Math.min(b.next, t + 900); } }  // someone's right there: turn round (or wait beside them)
+          else { b.vx = ux * step; b.vz = uz * step; b.vy = -hvy; }
+        } else if (b.mode !== "tag" && b.mode !== "flee") { b.tx = null; b.tz = null; }
       }
       var me2 = b.f.player;
       b.vy += (me2 ? playerGravity(b) : .75) * dt; if (me2 && !b.pound) b.vy = Math.min(b.vy, 18);  // terminal velocity
-      b.x += b.vx * dt; b.y += b.vy * dt; if (!me2) b.vx *= Math.pow(.99, dt);
+      b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; if (!me2) { b.vx *= Math.pow(.99, dt); b.vz *= Math.pow(.99, dt); }
       if (b.y > fy) {  // the visitor's character lands dead, no bounce; friends stay bouncy
-        var hit = b.vy; b.y = fy; b.vy = hit > 2.5 && !me2 ? -hit * .45 : 0; if (!me2) b.vx *= .8;
+        var hit = b.vy; b.y = fy; b.vy = hit > 2.5 && !me2 ? -hit * .45 : 0; if (!me2) { b.vx *= .8; b.vz *= .8; }
         if (hit > 2.5) { b.svy -= Math.min(hit, 18) * .012; b.svx += Math.min(hit, 18) * .009; dent(0, r, Math.min(hit, 20) * .5 * r / R, b.pts); }
-        if (me2 && hit > 9) dust(b.x, fy + r);
+        if (me2 && hit > 9) { var sd0 = sv(b); dust(sd0.x, sd0.y + r * sd0.s); }
       }
       if (b.x < r || b.x > W - r) { b.x = clamp(b.x, r, W - r); b.vx = me2 ? 0 : -b.vx * .6; }
+      if (D3 && (b.z < r || b.z > DZ - r)) { b.z = clamp(b.z, r, DZ - r); b.vz = me2 ? 0 : -b.vz * .6; }
       if (b.y < r) { b.y = r; b.vy = -b.vy * .5; }
     }
     if (b.drag && b.drag.moved && b.y < surfaceY(b) - 120) { b.em.fear = Math.min(1, b.em.fear + .006 * dt); b.em.heart = Math.min(1, b.em.heart + .005 * dt); }
@@ -1056,8 +1071,8 @@
     b.svx = b.svx * Math.pow(.7, dt) + (1 - air * .6 + (b.crouch ? .14 : 0) - b.sx) * .18 * dt; b.sx += b.svx * dt;
     b.svy = b.svy * Math.pow(.7, dt) + (1 + air - (b.crouch ? .22 : 0) - b.sy) * .18 * dt; b.sy += b.svy * dt;
     b.tilt += (clamp(b.vx * 1.4, -25, 25) + (song ? Math.sin(t / 650 + r) * 7 : 0) - b.tilt) * .15 * dt;
-    var tg = ptr.has && !ptr.out && Math.hypot(ptr.x - b.x, ptr.y - b.y) < 200 ? ptr : (b.other || (mainAway ? (b === player ? b : player || b) : pos));
-    var ldx = tg.x - b.x, ldy = tg.y - b.y, ld = Math.hypot(ldx, ldy) || 1, k = Math.min(1, ld / 200);
+    var sb2 = sv(b), tg = ptr.has && !ptr.out && Math.hypot(ptr.x - sb2.x, ptr.y - sb2.y) < 200 * sb2.s ? ptr : sv(b.other || (mainAway ? (b === player ? b : player || b) : pos));
+    var ldx = tg.x - sb2.x, ldy = tg.y - sb2.y, ld = Math.hypot(ldx, ldy) || 1, k = Math.min(1, ld / sb2.s / 200);
     b.lx += (ldx / ld * k - b.lx) * .15 * dt; b.ly += (ldy / ld * k - b.ly) * .15 * dt;
     if (t > b.nextBlink) { b.blink = t; b.nextBlink = t + 2000 + Math.random() * 4500; }
     b.spinA += (b.spin - b.spinA) * .08 * dt;
@@ -1072,7 +1087,7 @@
     [A, B].forEach(function (X, i) {
       if (X.ball) return;
       var Y = i ? A : B;
-      if (X.main) { var l = local(Y.o.x, Y.o.y); dent(l.x, l.y, Math.min(s, 20) * .5); if (talk && !said) { said = true; say(line("bumpMain"), "bump", 4000); } }
+      if (X.main) { var sy0 = sv(Y.o), l = local(sy0.x, sy0.y); dent(l.x, l.y, Math.min(s, 20) * .5); if (talk && !said) { said = true; say(line("bumpMain"), "bump", 4000); } }
       else if (!X.b.f.player) { X.b.svy -= .12; if (s > 12) { feel(X.b.em, t - (X.b.hardAt || 0) < 3000 ? "anger" : "conf", .55); X.b.hardAt = t; } if (talk && !said && t - X.b.lastBump > 2500) { said = true; X.b.lastBump = t; bsay(X.b, line("bump")); } }
     });
     if (said) lastBumpTalk = t;
@@ -1090,20 +1105,20 @@
     buddies.forEach(function (b) { L.push({ o: b, r: b.f.r, fixed: !!(b.drag && b.drag.moved), b: b }); });
     L.push({ o: ball, r: ball.r, ball: true });
     for (var i = 0; i < L.length; i++) for (var j = i + 1; j < L.length; j++) {
-      var A = L[i], B = L[j], dx = B.o.x - A.o.x, dy = B.o.y - A.o.y, d = Math.hypot(dx, dy) || .01, min = A.r + B.r;
+      var A = L[i], B = L[j], dx = B.o.x - A.o.x, dy = B.o.y - A.o.y, dz = B.o.z - A.o.z, d = Math.hypot(dx, dy, dz) || .01, min = A.r + B.r;
       if (d >= min) continue;
-      var nx = dx / d, ny = dy / d, ma = A.fixed ? 0 : 1 / (A.r * A.r), mb = B.fixed ? 0 : 1 / (B.r * B.r), ms = ma + mb;
+      var nx = dx / d, ny = dy / d, nz = dz / d, ma = A.fixed ? 0 : 1 / (A.r * A.r), mb = B.fixed ? 0 : 1 / (B.r * B.r), ms = ma + mb;
       // the visitor walks past others (like NPCs in a platformer) and only collides when landing on or under them
       if (((A.b && A.b.f.player) || (B.b && B.b.f.player)) && !A.ball && !B.ball && Math.abs(ny) < .6) continue;
       var kicker = A.ball ? B : B.ball ? A : null;  // whoever runs into the ball gives it a kick
-      if (kicker && kicker.o.vx && Math.abs(ny) < .8) { ball.vx += kicker.o.vx * .5; if (ball.y >= ground + R - ball.r - 1) ball.vy -= 2.5; }
+      if (kicker && (kicker.o.vx || kicker.o.vz) && Math.abs(ny) < .8) { ball.vx += kicker.o.vx * .5; ball.vz += kicker.o.vz * .5; if (ball.y >= ground + R - ball.r - 1) ball.vy -= 2.5; }
       if (!ms) continue;
       var over = min - d;
-      A.o.x -= nx * over * ma / ms; A.o.y -= ny * over * ma / ms; B.o.x += nx * over * mb / ms; B.o.y += ny * over * mb / ms;
-      var rv = (B.o.vx - A.o.vx) * nx + (B.o.vy - A.o.vy) * ny;
+      A.o.x -= nx * over * ma / ms; A.o.y -= ny * over * ma / ms; A.o.z -= nz * over * ma / ms; B.o.x += nx * over * mb / ms; B.o.y += ny * over * mb / ms; B.o.z += nz * over * mb / ms;
+      var rv = (B.o.vx - A.o.vx) * nx + (B.o.vy - A.o.vy) * ny + (B.o.vz - A.o.vz) * nz;
       if (rv < 0) {
         var jm = -1.5 * rv / ms;
-        A.o.vx -= jm * ma * nx; A.o.vy -= jm * ma * ny; B.o.vx += jm * mb * nx; B.o.vy += jm * mb * ny;
+        A.o.vx -= jm * ma * nx; A.o.vy -= jm * ma * ny; A.o.vz -= jm * ma * nz; B.o.vx += jm * mb * nx; B.o.vy += jm * mb * ny; B.o.vz += jm * mb * nz;
         if (-rv > 7) bumped(A, B, -rv, t);
       }
       tagContact(A, B, t);
@@ -1226,7 +1241,8 @@
   function drawBuddy(b, t) {
     var r = b.f.r, S = b.size, i;
     var jit = t < (b.tickleUntil || 0) && !reduce ? (Math.random() - .5) * 3 : 0;
-    b.el.style.transform = "translate(" + (b.x - S / 2 + jit).toFixed(1) + "px," + (b.y - S / 2).toFixed(1) + "px)";
+    var sb = sv(b);
+    b.el.style.transform = "translate(" + (sb.x - S / 2 + jit).toFixed(1) + "px," + (sb.y - S / 2).toFixed(1) + "px)" + (D3 ? " scale(" + sb.s.toFixed(3) + ")" : "");
     var mx = 0; for (i = 0; i < b.pts.length; i++) mx = Math.max(mx, Math.abs(b.pts[i].x), Math.abs(b.pts[i].y));
     if (mx > .05 || !b.flat) { var dd = pathD(b.pts, r); b.bp.setAttribute("d", dd); b.bg.setAttribute("d", dd); b.flat = mx <= .05; }
     b.body.setAttribute("transform", "rotate(" + b.spinA.toFixed(1) + ") translate(0 " + r + ") rotate(" + b.tilt.toFixed(2) + ") scale(" + clamp(b.sx, .8, 1.25).toFixed(3) + " " + clamp(b.sy, .75, 1.22).toFixed(3) + ") translate(0 " + -r + ")");
@@ -1241,21 +1257,21 @@
       { ey: -3.84, rx: erx, ry: [ery, ery], mx: 0, mcy: 17.76, mrx: mrx, mry: Math.max(mry, mrx * 1.02), dd: b.bp.getAttribute("d"), busy: !!sp3 || !!sn }, t, bdt);
     if (hp) b.body.setAttribute("transform", b.body.getAttribute("transform") + " scale(" + (1 + .035 * hp).toFixed(3) + ")");
     if (b.tag) b.tag.style.opacity = b.bub.hidden ? "" : "0";  // the name steps aside while its owner talks
-    if (b.tag) b.tag.style.transform = "translate(" + (b.x * K - boxOf(b.tag, K)._mw / 2).toFixed(1) + "px," + ((b.y - r) * K - 20).toFixed(1) + "px)";
+    if (b.tag) b.tag.style.transform = "translate(" + (sb.x * K - boxOf(b.tag, K)._mw / 2).toFixed(1) + "px," + ((sb.y - r * sb.s) * K - 20).toFixed(1) + "px)";
     var fy = surfaceY(b), sc = clamp(1 - (fy - b.y) / 300, .35, 1);
     b.sh.style.transform = "translate(" + (b.x - r * .8).toFixed(1) + "px," + (fy + r - 6).toFixed(1) + "px) scale(" + sc.toFixed(2) + ")"; b.sh.style.opacity = sc.toFixed(2);
     if (!b.bub.hidden) {
       if (t > b.sayUntil) b.bub.hidden = true;
       else {
-        var bw = boxOf(b.bub, W + "x" + K)._mw, bh = b.bub._mh, bx = clamp(b.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (b.y - r) * K - 12 - bh;
-        if (by < 8) by = (b.y + r) * K + 12;
+        var bw = boxOf(b.bub, W + "x" + K)._mw, bh = b.bub._mh, bx = clamp(sb.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (sb.y - r * sb.s) * K - 12 - bh;
+        if (by < 8) by = (sb.y + r * sb.s) * K + 12;
         b.bub._x = bx; b.bub._y = by; b.bub._w = bw; b.bub._h = bh;
       }
     }
   }
 
   // ---- the visitor's own playable character ----
-  var player = null, keys = { left: false, right: false, down: false, jumpAt: 0, jumpHeld: false }, hitStopUntil = 0;
+  var player = null, keys = { left: false, right: false, down: false, far: false, near: false, jumpAt: 0, jumpHeld: false }, hitStopUntil = 0;
   // jump from designer numbers, not a guessed gravity (Pittman, GDC 2016): g = 2h/t², v0 = 2h/t
   var JUMP_H = 110, JUMP_T = 15, PG = 2 * JUMP_H / (JUMP_T * JUMP_T), PV = 2 * JUMP_H / JUMP_T;
   function playerGravity(b) {
@@ -1304,10 +1320,10 @@
   }
   function restylePlayer(c) {  // rebuild the character in place with its new colour or photo
     if (!player) return;
-    var keep = { x: player.x, y: player.y }; store.player.c = c; saveStore();
+    var keep = { x: player.x, y: player.y, z: player.z }; store.player.c = c; saveStore();
     [player.el, player.sh, player.bub, player.tag].forEach(function (x) { x.remove(); });
     buddies.splice(buddies.indexOf(player), 1);
-    player = makePlayer(store.player, keep.x, false); player.y = keep.y;
+    player = makePlayer(store.player, keep.x, false); player.y = keep.y; player.z = keep.z;
     buddies.forEach(function (b) { if (b.other && !buddies.includes(b.other)) { b.other = null; b.mode = "wander"; } });
     bsay(player, T("لون جديد!", "New colour!"));
   }
@@ -1349,16 +1365,19 @@
   function playerControl(b, fy, dt, t) {
     var onF = b.y >= fy - 1 || t - (b.supportT || 0) < 60;
     if (onF) { b.coyote = t; if (b.vy >= 0) b.jumps = 0; }
-    var dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), charged = b.crouchT && t - b.crouchT > 300;
+    var ix = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), iz = (keys.far ? 1 : 0) - (keys.near ? 1 : 0), charged = b.crouchT && t - b.crouchT > 300;
+    // in the 3D world the keys are relative to the camera: right = screen right, far = away from you
+    var mx = ix, mz = 0;
+    if (D3) { var ax = D3.axes(); mx = ax.rx * ix + ax.fx * iz; mz = ax.rz * ix + ax.fz * iz; var ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; } }
     if (!keys.down) b.poundLock = false;
     b.crouch = keys.down && onF;
     if (b.crouch) b.crouchT = b.crouchT || t; else if (onF && !keys.down) b.crouchT = 0;
     // separate acceleration, turn speed and deceleration, weaker in the air (GMTK Platformer Toolkit)
-    if (dir && !b.crouch) {
-      var turning = b.vx * dir < 0;
-      b.vx += (dir * 6 - b.vx) * (onF ? (turning ? .55 : .3) : (turning ? .25 : .15)) * dt;
-      if (onF && turning && Math.abs(b.vx) > 3 && t - (b.dustAt || 0) > 250) { b.dustAt = t; dust(b.x, b.y + b.f.r); }
-    } else b.vx *= Math.pow(onF ? .7 : .97, dt);
+    if ((mx || mz) && !b.crouch) {
+      var turning = b.vx * mx + b.vz * mz < 0, acc = (onF ? (turning ? .55 : .3) : (turning ? .25 : .15)) * dt;
+      b.vx += (mx * 6 - b.vx) * acc; b.vz += (mz * 6 - b.vz) * acc;
+      if (onF && turning && Math.hypot(b.vx, b.vz) > 3 && t - (b.dustAt || 0) > 250) { b.dustAt = t; var sd1 = sv(b); dust(sd1.x, sd1.y + b.f.r * sd1.s); }
+    } else { var fr = Math.pow(onF ? .7 : .97, dt); b.vx *= fr; b.vz *= fr; }
     if (t - keys.jumpAt < 120) {
       if (t - (b.coyote || 0) < 100 && !b.jumps) {
         b.vy = charged ? -PV * 1.3 : -PV; b.jumps = 1; b.cut = false; keys.jumpAt = 0; b.svy += .25; b.crouchT = 0;
@@ -1366,10 +1385,12 @@
       } else if (b.jumps < 2) { b.vy = -PV * .85; b.jumps = 2; b.cut = false; keys.jumpAt = 0; dust(b.x, b.y + b.f.r); tone(520, 940, .12, "sine", .1); }
     }
     if (!keys.jumpHeld && b.vy < 0 && !b.cut && !b.pound) { b.vy *= .5; b.cut = true; }  // let go early = short hop
-    if (keys.down && !onF && !b.pound && !b.poundLock) { b.pound = true; b.vx *= .3; tone(700, 200, .2, "sine", .08); }
+    if (keys.down && !onF && !b.pound && !b.poundLock) { b.pound = true; b.vx *= .3; b.vz *= .3; tone(700, 200, .2, "sine", .08); }
     if (b.pound) { if (onF) { b.pound = false; slam(b); } else b.vy = Math.max(b.vy, 17); }
     if (b.other && b.other.mode !== (b.mode === "tag" ? "flee" : "tag")) { b.mode = "wander"; b.other = null; }
     var h = b.mode === "tag" && b.other ? T("أنت المطارِد! المس " + b.other.f.name + ".", "You're it! Tag " + b.other.f.name + ".") : b.mode === "flee" && b.other ? T("اهرب! " + b.other.f.name + " يطاردك.", "Run! " + b.other.f.name + " is chasing you.") :
+      D3 ? (TOUCH ? T("◀ ▶ و«أبعد» و«أقرب» للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية", "◀ ▶, Away and Closer to move · Jump (again in the air) · ▼ in the air slams down")
+        : T("A وD وW وS للحركة · المسافة للقفز (مرة ثانية في الهواء) · السهم للأسفل في الهواء ضربة أرضية · اسحب الأرض لتدوير الكاميرا", "A, D, W and S to move · Space to jump (again in the air) · Down arrow in the air slams down · drag the ground to turn the camera")) :
       TOUCH ? T("◀ ▶ للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية، واضغطه مع «قفز» لقفزة عالية", "◀ ▶ to move · Jump (again in the air) · ▼ in the air slams down; hold it, then Jump, for a high jump") :
       T("A وD للحركة · المسافة للقفز (مرة ثانية في الهواء) · S في الهواء ضربة أرضية، وعلى الأرض تجمّع لقفزة عالية", "A and D to move · Space to jump (again in the air) · S in the air slams down, on the ground it charges a high jump");
     if (hud.textContent !== h) hud.textContent = h;
@@ -1380,7 +1401,9 @@
     var c = e.code;
     if (c === "KeyA" || c === "ArrowLeft") keys.left = down;
     else if (c === "KeyD" || c === "ArrowRight") keys.right = down;
-    else if (c === "KeyS" || c === "ArrowDown") keys.down = down;
+    else if (c === "ArrowDown" || (c === "KeyS" && !D3)) keys.down = down;
+    else if (c === "KeyW" || c === "ArrowUp") keys.far = down;
+    else if (c === "KeyS") keys.near = down;
     else if (c === "Space") { if (down && !e.repeat) keys.jumpAt = performance.now(); keys.jumpHeld = down; }
     else return;
     e.preventDefault();
@@ -1391,7 +1414,7 @@
     hitStopUntil = performance.now() + 70;  // a few frozen frames sell the impact
     dust(b.x, fy + b.f.r);
     [pos].concat(others()).forEach(function (o) {
-      var d = Math.abs(o.x - b.x); if (d > 170) return;
+      var d = Math.hypot(o.x - b.x, o.z - b.z); if (d > 170) return;
       var k = 1 - d / 170; o.vy -= 9 * k; o.vx += (o.x < b.x ? -1 : 1) * 4 * k; hit = true;
     });
     if (hit) say(line("pound"), "pound", 2500);
@@ -1406,7 +1429,7 @@
   }
   addEventListener("keydown", function (e) { moveKey(e, true); });
   addEventListener("keyup", function (e) { moveKey(e, false); });
-  addEventListener("blur", function () { keys.left = keys.right = keys.down = keys.jumpHeld = false; });  // no stuck keys after switching windows
+  addEventListener("blur", function () { keys.left = keys.right = keys.down = keys.far = keys.near = keys.jumpHeld = false; });  // no stuck keys after switching windows
   // touch buttons: hold to move
   function holdBtn(id, on, off) {
     var bt = document.getElementById(id);
@@ -1417,6 +1440,8 @@
   holdBtn("pp-right", function () { keys.right = true; }, function () { keys.right = false; });
   holdBtn("pp-down", function () { keys.down = true; }, function () { keys.down = false; });
   holdBtn("pp-jump", function () { keys.jumpAt = performance.now(); keys.jumpHeld = true; }, function () { keys.jumpHeld = false; });
+  holdBtn("pp-far", function () { keys.far = true; }, function () { keys.far = false; });
+  holdBtn("pp-near", function () { keys.near = true; }, function () { keys.near = false; });
   function others() { return buddies.filter(function (x) { return x !== player; }); }
 
   // ---- who is in the place: remove anyone (even him), play alone, bring them back one by one ----
@@ -2065,15 +2090,15 @@
     clock.appendChild(tz); clock.appendChild(document.createTextNode(" · ★ " + num(store.stars || 0)));
   }
   // props: a bench you can stand on, two bushes to hide behind, a ball everyone can kick
-  var benchEl = document.getElementById("bench"), bench = { x: 0, w: 96, top: 0 };
-  var bushes = [0, 1].map(function (i) { return { el: document.getElementById("bush" + i), cx: 0 }; });
-  var ballEl = document.getElementById("ball"), ball = { x: 0, y: 0, vx: 0, vy: 0, r: 11, rot: 0 };
+  var benchEl = document.getElementById("bench"), bench = { x: 0, w: 96, top: 0, z: 0 };
+  var bushes = [0, 1].map(function (i) { return { el: document.getElementById("bush" + i), cx: 0, cz: 0 }; });
+  var ballEl = document.getElementById("ball"), ball = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, r: 11, rot: 0 };
   function placeProps() {
     var fl = ground + R;
-    bench.x = W * .3 - bench.w / 2; bench.top = fl - 28;
+    bench.x = W * .3 - bench.w / 2; bench.top = fl - 28; bench.z = DZ * .3;
     benchEl.style.transform = "translate(" + bench.x.toFixed(1) + "px," + bench.top.toFixed(1) + "px)";
     bushes.forEach(function (b, i) {
-      b.cx = i ? W * .68 : W * .1;
+      b.cx = i ? W * .68 : W * .1; b.cz = DZ * (i ? .22 : .78);
       var at = "translate(" + (b.cx - 35).toFixed(1) + "px," + (fl - 44).toFixed(1) + "px)";  // bottom edge exactly on the floor line
       b.el.style.setProperty("--at", at); b.el.style.transform = at;
     });
@@ -2135,19 +2160,25 @@
     moonEl.style.display = mup ? "" : "none";
     if (mup) { skyNow.moon = { x: W * (.1 + .8 * tn), y: fl - 30 - span * .8 * Math.sin(Math.PI * tn) }; moonEl.style.transform = "translate(" + skyNow.moon.x.toFixed(1) + "px," + skyNow.moon.y.toFixed(1) + "px)"; }
   }
-  function onBenchX(x) { return x > bench.x + 4 && x < bench.x + bench.w - 4; }
-  function surfaceY(b) { var fy = floorY(b); return onBenchX(b.x) && b.y <= bench.top - b.f.r + 3 ? bench.top - b.f.r : fy; }
+  function onBench(x, z) { return x > bench.x + 4 && x < bench.x + bench.w - 4 && (!D3 || Math.abs(z - bench.z) < 20); }
+  function surfaceY(b) { var fy = floorY(b); return onBench(b.x, b.z) && b.y <= bench.top - b.f.r + 3 ? bench.top - b.f.r : fy; }
   function ballStep(dt) {
     var fl = ground + R - ball.r, py = ball.y;
-    ball.vy += .7 * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt;
-    if (ball.vy > 0 && onBenchX(ball.x) && py + ball.r <= bench.top + 2 && ball.y + ball.r > bench.top) { ball.y = bench.top - ball.r; ball.vy = -ball.vy * .55; }
+    ball.vy += .7 * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt; ball.z += ball.vz * dt;
+    if (ball.vy > 0 && onBench(ball.x, ball.z) && py + ball.r <= bench.top + 2 && ball.y + ball.r > bench.top) { ball.y = bench.top - ball.r; ball.vy = -ball.vy * .55; }
     if (ball.y > fl) { var h = ball.vy; ball.y = fl; ball.vy = h > 1.5 ? -h * .62 : 0; if (h > 4) tone(220, 160, .06, "sine", .05); }
-    if (ball.y >= fl - .5) ball.vx *= Math.pow(.985, dt);
+    if (ball.y >= fl - .5) { ball.vx *= Math.pow(.985, dt); ball.vz *= Math.pow(.985, dt); }
     if (ball.x < ball.r || ball.x > W - ball.r) { ball.x = clamp(ball.x, ball.r, W - ball.r); ball.vx = -ball.vx * .75; }
+    if (D3 && (ball.z < ball.r || ball.z > DZ - ball.r)) { ball.z = clamp(ball.z, ball.r, DZ - ball.r); ball.vz = -ball.vz * .75; }
     if (ball.y < ball.r) { ball.y = ball.r; ball.vy = -ball.vy * .6; }
-    ball.rot += ball.vx * dt / ball.r * 57.3;
+    ball.rot += (D3 ? Math.hypot(ball.vx, ball.vz) : ball.vx) * dt / ball.r * 57.3;
   }
-  ballEl.addEventListener("click", function () { stir(); ball.vx = (ptr.x < ball.x ? 1 : -1) * (5 + Math.random() * 4); ball.vy = -8; });
+  ballEl.addEventListener("click", function () {
+    stir(); var kp = 5 + Math.random() * 4;
+    if (D3 && ptr.gx != null) { var kx = ball.x - ptr.gx, kz = ball.z - ptr.gz, kl = Math.hypot(kx, kz) || 1; ball.vx = kx / kl * kp; ball.vz = kz / kl * kp; }  // away from where you tapped the ground
+    else ball.vx = (ptr.x < ball.x ? 1 : -1) * kp;
+    ball.vy = -8;
+  });
   // per-friend friendship and favourite food
   store.bf = store.bf || {};
   function bfOf(b) { return store.bf[b.f.id] || 0; }
@@ -2185,10 +2216,10 @@
     if (!hs) return;
     var b = hs.b;
     if (b.mode !== "hs") { hs = null; return; }
-    b.tx = hs.bush.cx;
-    if (!hs.hidden && Math.abs(b.x - hs.bush.cx) < 14) hs.hidden = true;
+    b.tx = hs.bush.cx; b.tz = hs.bush.cz;
+    if (!hs.hidden && Math.hypot(b.x - hs.bush.cx, b.z - hs.bush.cz) < 14) hs.hidden = true;
     b.crouch = hs.hidden;
-    if (hs.hidden && player && Math.hypot(player.x - b.x, player.y - b.y) < player.f.r + b.f.r + 14) endHideSeek(true);
+    if (hs.hidden && player && Math.hypot(player.x - b.x, player.y - b.y, player.z - b.z) < player.f.r + b.f.r + 14) endHideSeek(true);
     else if (t > hs.until) endHideSeek(false);
   }
   bushes.forEach(function (bu) {
@@ -2200,7 +2231,7 @@
   // stars to collect: walk your character into one, or click it; they unlock colours
   var gems = [], nextGem = performance.now() + 15000;
   function spawnGem() {
-    var g = { x: 40 + Math.random() * (W - 120), y: ground + R - 40 - Math.random() * 120, el: document.createElement("button") };
+    var g = { x: 40 + Math.random() * (W - 120), y: ground + R - 40 - Math.random() * 120, z: randZ(17), el: document.createElement("button") };
     g.el.type = "button"; g.el.className = "gem"; g.el.setAttribute("aria-label", T("نجمة، اجمعها", "A star, collect it"));
     g.el.addEventListener("click", function () { stir(); collectGem(g); });
     world.appendChild(g.el); gems.push(g);
@@ -2215,20 +2246,23 @@
   }
   function gemStep(t) {
     if (!gems.length && t > nextGem) spawnGem();
-    gems.slice().forEach(function (g) { if (player && Math.hypot(player.x - g.x, player.y - g.y) < player.f.r + 12) collectGem(g); });
+    gems.slice().forEach(function (g) { if (player && Math.hypot(player.x - g.x, player.y - g.y, player.z - g.z) < player.f.r + 12) collectGem(g); });
   }
   // photo: the scene redrawn on a canvas (characters with their current faces), offered as a PNG
   var photoModal = document.getElementById("photo-modal");
   // resolved CSS colours can be oklab()/color(); normalised through a canvas, with a fallback when it can't parse them
   var ccx = document.createElement("canvas").getContext("2d");
   function cssColor(v, fb) { ccx.fillStyle = "#010203"; ccx.fillStyle = v; return ccx.fillStyle === "#010203" ? fb : v; }
-  function paintOrb(x, el, cx, cy, r, cols, sx, sy, tilt, faceOnly) {
+  function paintOrb(x, el, cx, cy, r, cols, sx, sy, tilt) {
     x.save(); x.translate(cx, cy + r); x.rotate(tilt * Math.PI / 180); x.scale(sx, sy); x.translate(0, -r);
-    if (!faceOnly) {  // in the 3D photo the body is already in the picture
-      var g = x.createRadialGradient(-r * .24, -r * .36, r * .1, 0, 0, r * 1.3);
-      g.addColorStop(0, cols[0]); g.addColorStop(.55, cols[1]); g.addColorStop(1, cols[2]);
-      x.fillStyle = g; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill();
-    }
+    var g = x.createRadialGradient(-r * .24, -r * .36, r * .1, 0, 0, r * 1.3);
+    g.addColorStop(0, cols[0]); g.addColorStop(.55, cols[1]); g.addColorStop(1, cols[2]);
+    x.fillStyle = g; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill();
+    paintFace(x, el);
+    x.restore();
+  }
+  // the face as it is right now (eyes, mouth, brows, blush), in body units about the centre; the 3D world paints it onto its spheres too
+  function paintFace(x, el) {
     var face = el.querySelector(".pf, .bf"), m = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(face.getAttribute("transform") || "") || [0, 0, 0];
     x.translate(+m[1], +m[2]); x.fillStyle = "#fff";
     face.querySelectorAll(".pk").forEach(function (e) { var o = +e.style.opacity || 0; if (!o) return; x.globalAlpha = o; x.fillStyle = "#ff7a9c"; x.beginPath(); x.ellipse(+e.getAttribute("cx"), +e.getAttribute("cy"), +e.getAttribute("rx"), +e.getAttribute("ry"), 0, 0, Math.PI * 2); x.fill(); });
@@ -2236,7 +2270,6 @@
     face.querySelectorAll(".pe, .pm").forEach(function (e) { if (e.getAttribute("d")) x.fill(new Path2D(e.getAttribute("d"))); });
     face.querySelectorAll(".pbr").forEach(function (e) { var o = +e.style.opacity || 0; if (!o || !e.getAttribute("d")) return; x.globalAlpha = o; x.lineWidth = parseFloat(e.style.strokeWidth) || 2.6; x.stroke(new Path2D(e.getAttribute("d"))); });
     x.globalAlpha = 1;
-    x.restore();
   }
   // a background layer drawn from its own SVG, with the hour's colours written into the copy
   function svgImage(el, fill, fix) {
@@ -2288,17 +2321,16 @@
     x.fillStyle = "#9a6a42"; x.fillRect(bench.x, bench.top, bench.w, 8); x.fillRect(bench.x + 10, bench.top + 8, 5, 20); x.fillRect(bench.x + bench.w - 15, bench.top + 8, 5, 20);
     x.fillStyle = tok("--surface"); x.beginPath(); x.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); x.fill(); x.strokeStyle = tok("--border"); x.stroke();
     }
-    var fo = !!bg;
-    buddies.forEach(function (b) { if (!b.f.player) paintOrb(x, b.el, b.x, b.y, b.f.r, [b.f.c1, b.f.c2, b.f.c3], clamp(b.sx, .8, 1.25), clamp(b.sy, .75, 1.22), b.tilt, fo); });
-    if (!mainAway) paintOrb(x, orb, pos.x, pos.y, R, mainColours(), clamp(sp.sx.v, .8, 1.25), clamp(sp.sy.v, .75, 1.22), sp.tilt.v, fo);
-    if (player) paintOrb(x, player.el, player.x, player.y, player.f.r, [player.f.c1, player.f.c2, player.f.c3], clamp(player.sx, .8, 1.25), clamp(player.sy, .75, 1.22), player.tilt, fo);
-    if (!bg) {
+    if (!bg) {  // the 3D picture already holds the bodies with their faces
+    buddies.forEach(function (b) { if (!b.f.player) paintOrb(x, b.el, b.x, b.y, b.f.r, [b.f.c1, b.f.c2, b.f.c3], clamp(b.sx, .8, 1.25), clamp(b.sy, .75, 1.22), b.tilt); });
+    if (!mainAway) paintOrb(x, orb, pos.x, pos.y, R, mainColours(), clamp(sp.sx.v, .8, 1.25), clamp(sp.sy.v, .75, 1.22), sp.tilt.v);
+    if (player) paintOrb(x, player.el, player.x, player.y, player.f.r, [player.f.c1, player.f.c2, player.f.c3], clamp(player.sx, .8, 1.25), clamp(player.sy, .75, 1.22), player.tilt);
     var bc = getComputedStyle(document.querySelector(".play")).getPropertyValue("--bush").trim() || tok("--cmp");
     x.fillStyle = bc; bushes.forEach(function (b) { var fl = ground + R; [[-17, -16, 17], [3, -24, 22], [21, -15, 16]].forEach(function (k) { x.beginPath(); x.arc(b.cx + k[0], fl + k[1] + 4, k[2], 0, Math.PI * 2); x.fill(); }); });
     x.globalCompositeOperation = "multiply"; x.fillStyle = col("--tint"); x.fillRect(0, 0, W, H); x.globalCompositeOperation = "source-over";  // the light of the hour
     }
     x.font = "700 12px Cairo, sans-serif"; x.textAlign = "center"; x.fillStyle = tok("--muted");
-    buddies.forEach(function (b) { x.fillText(b.tag.textContent, b.x, b.y - b.f.r - 10); });
+    buddies.forEach(function (b) { var sb = sv(b); x.fillText(b.tag.textContent, sb.x, sb.y - b.f.r * sb.s - 10); });
     var ex = EN ? 16 : W - 16; x.direction = EN ? "ltr" : "rtl"; x.textAlign = EN ? "left" : "right"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 4; x.fillStyle = "#fff"; x.font = "800 16px Cairo, sans-serif"; x.fillText(T("هكوله · دلمو", "Hakolah · Dilmo"), ex, 30);
     x.font = "600 11px Cairo, sans-serif"; x.fillText(clock.textContent, ex, 48); x.shadowBlur = 0;
     return c;
@@ -2328,20 +2360,30 @@
     return mainCols;
   }
   function scene3(t) {
-    var one = function (b) { return { x: b.x, y: b.y, r: b.f.r, pts: b.pts, sx: clamp(b.sx, .8, 1.25), sy: clamp(b.sy, .75, 1.22), tilt: b.tilt, spin: b.spinA, cols: [b.f.c1, b.f.c2, b.f.c3], crouch: !!b.crouch && !b.f.player, floor: surfaceY(b) + b.f.r }; };
-    return { t: t, W: W, H: world.offsetHeight, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce,
-      main: mainAway ? null : { x: pos.x, y: pos.y, r: R, pts: pts, sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
-      buddies: buddies.map(one), ball: ball, bench: bench, bushes: bushes.map(function (b) { return b.cx; }) };
+    var one = function (b) { return { x: b.x, y: b.y, z: b.z, vx: b.vx, vz: b.vz, r: b.f.r, pts: b.pts, el: b.el, drag: !!(b.drag && b.drag.moved), sx: clamp(b.sx, .8, 1.25), sy: clamp(b.sy, .75, 1.22), tilt: b.tilt, spin: b.spinA, cols: [b.f.c1, b.f.c2, b.f.c3], crouch: !!b.crouch && !b.f.player, floor: surfaceY(b) + b.f.r }; };
+    return { t: t, W: W, H: world.offsetHeight, DZ: DZ, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce,
+      main: mainAway ? null : { x: pos.x, y: pos.y, z: pos.z, vx: pos.vx, vz: pos.vz, r: R, pts: pts, el: orb, drag: !!(drag && drag.moved), sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
+      buddies: buddies.map(one), ball: ball, bench: bench, bushes: bushes.map(function (b) { return { x: b.cx, z: b.cz }; }) };
   }
   function load3d() {
     return window.Dilmo3D ? Promise.resolve() : new Promise(function (res, rej) { var s = document.createElement("script"); s.src = d3Btn.dataset.src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
   }
+  var depthPad = document.querySelector(".pp-depth");
+  function spread(on) {  // everyone takes a depth when the arena opens, and gives it back when it closes
+    DZ = on ? clamp(Math.round(W * .55), 240, 560) : 0;
+    placeProps();
+    pos.z = on ? DZ * .55 : 0; pos.vz = 0;
+    buddies.forEach(function (b) { b.z = randZ(b.f.r); b.homeZ = b.z; b.vz = 0; b.tz = null; });
+    ball.z = on ? DZ * .4 : 0; ball.vz = 0;
+    gems.forEach(function (g) { g.z = randZ(17); });
+  }
   function portal(on) {
-    d3Busy = true;
+    d3Busy = true; depthPad.hidden = !on;
     var cx = mainAway ? W / 2 : pos.x, cy = mainAway ? ground : pos.y, H = world.offsetHeight;
     var Rm = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 20, dur = reduce ? 400 : 1500, t0 = performance.now();
     stage.classList.toggle("is3d", on);
     tone(on ? 160 : 720, on ? 820 : 150, dur / 1000, "sine", .05); hiss(dur / 1000, .05, 2400);
+    view3.intro(dur, !on);  // the camera rises from the flat view into the arena, and settles back on the way out
     (function step(t) {
       var p = clamp((t - t0) / dur, 0, 1), r = Rm * (on ? p * p * p : Math.pow(1 - p, 3));  // slow, then it rushes to swallow the stage
       view3.canvas.style.clipPath = "circle(" + r.toFixed(0) + "px at " + cx.toFixed(0) + "px " + cy.toFixed(0) + "px)";
@@ -2350,7 +2392,7 @@
       if (p < 1) return requestAnimationFrame(step);
       portalEl.style.opacity = "0"; d3Busy = false;
       if (on) view3.canvas.style.clipPath = "";
-      else { view3.destroy(); view3 = null; }
+      else { view3.destroy(); view3 = null; D3 = null; spread(false); }
       d3Btn.setAttribute("aria-pressed", String(on)); d3Btn.textContent = on ? T("عودة إلى العالم المسطّح", "Back to the flat world") : T("عالم ثلاثي الأبعاد", "3D world");
       say(line(on ? "portalIn" : "portalOut"), "portal", 1000);
     })(t0);
@@ -2358,9 +2400,11 @@
   function enter3d() {
     d3Btn.disabled = true;
     load3d().then(function () {
-      view3 = window.Dilmo3D.create(world, W, world.offsetHeight, K);
-      if (!view3) throw new Error("no WebGL");
+      spread(true);
+      view3 = window.Dilmo3D.create(world, W, world.offsetHeight, K, DZ, paintFace);
+      if (!view3) { spread(false); throw new Error("no WebGL"); }
       view3.canvas.style.clipPath = "circle(0px at 0 0)";
+      D3 = view3; view3.frame(scene3(performance.now()));  // one frame now, so the camera is placed before anything is positioned by it
       portal(true);
     }).catch(function (e) { console.warn("dilmo3d", e); d3Btn.hidden = true; say(T("جهازك لا يفتح العالم ثلاثي الأبعاد.", "Your device can't open the 3D world."), "portal", 1000); })
       .then(function () { d3Btn.disabled = false; });
@@ -2400,18 +2444,19 @@
     }
     // anticipation: food on the way
     if (foodDrag) {
-      var fc = foodCenter(), fdx = fc.x - pos.x, fdy = fc.y - pos.y, fd = Math.hypot(fdx, fdy) || 1;
+      var fc = foodCenter(), sp2 = sv(pos), fdx = fc.x - sp2.x, fdy = fc.y - sp2.y, fd = Math.hypot(fdx, fdy) / sp2.s || 1;
       mood.hungry = clamp(1 - (fd - R) / 220, 0, 1); gaze = { x: fdx / fd, y: fdy / fd, until: t + 100 };
       if (mood.hungry > .5) say(line("want"), "want", 5000);
     } else mood.hungry *= Math.pow(.9, dt);
     // chase the pointer along the floor in little hops, pounce when close
-    var inStage = ptr.has && !ptr.out && ptr.x > 0 && ptr.x < W && ptr.y > 0 && ptr.y < ground + R;
-    var pdx = ptr.x - pos.x, onFloor = pos.y >= ground - 1;
-    if (!song && !circ.last && !drag && !anyBuddyDrag() && !foodDrag && !asleep && !stick && inStage && t - ptr.moveT < 1200 && Math.abs(pdx) > 120) chaseT += 16.67 * dt;
-    else if (!inStage || Math.abs(pdx) < 80) chaseT = 0;
+    var inStage = D3 ? ptr.has && !ptr.out && ptr.gx != null && !D3.cam.orbiting : ptr.has && !ptr.out && ptr.x > 0 && ptr.x < W && ptr.y > 0 && ptr.y < ground + R;
+    var pdx = (D3 ? ptr.gx : ptr.x) - pos.x, pdz = D3 ? ptr.gz - pos.z : 0, pd = Math.hypot(pdx, pdz), onFloor = pos.y >= ground - 1;
+    if (!song && !circ.last && !drag && !anyBuddyDrag() && !foodDrag && !asleep && !stick && inStage && t - ptr.moveT < 1200 && pd > 120) chaseT += 16.67 * dt;
+    else if (!inStage || pd < 80) chaseT = 0;
     if (chaseT > 900 && onFloor && !drag) {
-      if (Math.abs(pdx) < 130) { pos.vy = -7; pos.vx = Math.sign(pdx) * 3; chaseT = 0; mood.joy = Math.min(1, mood.joy + .3); say(line("catch"), "catch", 6000); }
-      else { pos.vx = Math.sign(pdx) * 5; pos.vy = -3.5; }
+      var ux = pdx / (pd || 1), uz = pdz / (pd || 1);
+      if (pd < 130) { pos.vy = -7; pos.vx = ux * 3; pos.vz = uz * 3; chaseT = 0; mood.joy = Math.min(1, mood.joy + .3); say(line("catch"), "catch", 6000); }
+      else { pos.vx = ux * 5; pos.vz = uz * 5; pos.vy = -3.5; }
     }
 
     mood.joy += (.15 - mood.joy) * .004 * dt;
@@ -2423,9 +2468,9 @@
     if (drag && drag.moved && pos.y < ground - 120) { mood.fear = Math.min(1, mood.fear + .006 * dt); mood.heart = Math.min(1, mood.heart + .005 * dt); }
     if (stick && t > stick.until) stick = null;
     if (!drag || !drag.moved) {
-      pos.vy += (stick ? .02 : .75) * dt; pos.x += pos.vx * dt; pos.y += pos.vy * dt; pos.vx *= Math.pow(.99, dt);
+      pos.vy += (stick ? .02 : .75) * dt; pos.x += pos.vx * dt; pos.y += pos.vy * dt; pos.z += pos.vz * dt; pos.vx *= Math.pow(.99, dt); pos.vz *= Math.pow(.99, dt);
       if (pos.y > ground) {
-        var hit = pos.vy; pos.y = ground; pos.vy = hit > 2.5 ? -hit * .45 : 0; pos.vx *= .82;
+        var hit = pos.vy; pos.y = ground; pos.vy = hit > 2.5 ? -hit * .45 : 0; pos.vx *= .82; pos.vz *= .82;
         if (hit > 2.5) { sp.sy.vel -= Math.min(hit, 18) * .012; sp.sx.vel += Math.min(hit, 18) * .009; dent(0, R, Math.min(hit, 20) * .5); if (hit > 5) sfx("boing", hit); }
         if (hit > 22) { mood.annoy = Math.min(1, mood.annoy + .25); feel(mood, "conf", .5); say(line("ouch"), "ouch", 2500); }
       }
@@ -2436,6 +2481,7 @@
         if (wv > 12 && pos.y < ground - 30) { stick = { until: t + 1100 }; pos.vx = 0; pos.vy = 0; sfx("splat"); say(line("wall"), "wall", 5000); }
         else pos.vx = -pos.vx * .6;
       }
+      if (D3 && (pos.z < R || pos.z > DZ - R)) { pos.z = clamp(pos.z, R, DZ - R); pos.vz = -pos.vz * .6; }
       if (pos.y < R) { pos.y = R; pos.vy = -pos.vy * .5; }
     }
 
@@ -2448,11 +2494,11 @@
     else if (t - typing < 1500) ly = .9;
     else if (t < gaze.until) { lx = gaze.x; ly = gaze.y; }
     else if (player && t - (ptr.moveT || 0) > 1500) {  // keeps an eye on your character when the pointer is still
-      var pdx2 = player.x - pos.x, pdy2 = player.y - pos.y, pd2 = Math.hypot(pdx2, pdy2) || 1;
+      var sP = sv(player), sM = sv(pos), pdx2 = sP.x - sM.x, pdy2 = sP.y - sM.y, pd2 = Math.hypot(pdx2, pdy2) || 1;
       lx = pdx2 / pd2; ly = pdy2 / pd2 * .6;
     }
     else if (ptr.has && !ptr.out) {
-      var dx = ptr.x - pos.x, dy = ptr.y - pos.y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 220);
+      var sM2 = sv(pos), dx = ptr.x - sM2.x, dy = ptr.y - sM2.y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / sM2.s / 220);
       lx = dx / d * k; ly = dy / d * k;
     }
     if (mood.shy > .3) { ly = .8; lx *= .3; }
@@ -2503,7 +2549,8 @@
     var ey = -4 + sp.ey.v, dd = pathD();
     bodyPath.setAttribute("d", dd); grainPath.setAttribute("d", dd);
     var cpx = cheek ? cheek.px * .2 : 0, cpy = cheek ? cheek.py * .2 : 0;
-    orb.style.transform = "translate(" + (pos.x - HALF + jx).toFixed(1) + "px," + (pos.y - HALF).toFixed(1) + "px)";
+    var sM3 = sv(pos);
+    orb.style.transform = "translate(" + (sM3.x - HALF + jx).toFixed(1) + "px," + (sM3.y - HALF).toFixed(1) + "px)" + (D3 ? " scale(" + sM3.s.toFixed(3) + ")" : "");
     body.setAttribute("transform", "rotate(" + sp.spin.v.toFixed(1) + ") translate(0 " + R + ") rotate(" + sp.tilt.v.toFixed(2) +
       ") scale(" + clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25).toFixed(3) + " " + clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22).toFixed(3) + ") translate(0 " + -R + ")");
     face.setAttribute("transform", "translate(" + (sp.lx.v * 7 + ox + cpx).toFixed(2) + " " + (sp.ly.v * 5 + oy + cpy).toFixed(2) + ")");
@@ -2524,15 +2571,20 @@
       if (mood.sleepy <= .85 && t > +bub.dataset.until) bub.hidden = true;
       else {
         // keep the whole bubble inside the stage: clamp sideways, flip below him when there is no room above
-        var bw = boxOf(bub, W + "x" + K)._mw, bh = bub._mh, bx = clamp(pos.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (pos.y - R) * K - 14 - bh;
-        if (by < 8) by = Math.min((pos.y + R) * K + 14, (ground + R) * K - bh - 4);
+        var bw = boxOf(bub, W + "x" + K)._mw, bh = bub._mh, bx = clamp(sM3.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (sM3.y - R * sM3.s) * K - 14 - bh;
+        if (by < 8) by = Math.min((sM3.y + R * sM3.s) * K + 14, (ground + R) * K - bh - 4);
         bub._x = bx; bub._y = Math.max(8, by); bub._w = bw; bub._h = bh;  // placed by layoutBubbles()
       }
     }
     buddies.forEach(function (b) { drawBuddy(b, t); });
     layoutBubbles();
-    ballEl.style.transform = "translate(" + (ball.x - 11).toFixed(1) + "px," + (ball.y - 11).toFixed(1) + "px) rotate(" + ball.rot.toFixed(1) + "deg)";
-    gems.forEach(function (g) { g.el.style.transform = "translate(" + (g.x - 17).toFixed(1) + "px," + (g.y - 17 + Math.sin(t / 400) * 4).toFixed(1) + "px)"; });
+    var sB = sv(ball);
+    ballEl.style.transform = "translate(" + (sB.x - 11).toFixed(1) + "px," + (sB.y - 11).toFixed(1) + "px) rotate(" + ball.rot.toFixed(1) + "deg)" + (D3 ? " scale(" + sB.s.toFixed(3) + ")" : "");
+    gems.forEach(function (g) { var sg = sv(g); g.el.style.transform = "translate(" + (sg.x - 17).toFixed(1) + "px," + (sg.y - 17 + Math.sin(t / 400) * 4).toFixed(1) + "px)" + (D3 ? " scale(" + sg.s.toFixed(3) + ")" : ""); });
+    if (D3) bushes.forEach(function (bu) {  // the bushes are drawn in 3D; their click targets follow them
+      var sb3 = sv({ x: bu.cx, y: ground + R, z: bu.cz }), at = "translate(" + (sb3.x - 35).toFixed(1) + "px," + (sb3.y - 44).toFixed(1) + "px) scale(" + sb3.s.toFixed(3) + ")";
+      bu.el.style.setProperty("--at", at); bu.el.style.transform = at;
+    });
     if (view3) view3.frame(scene3(t));
   }
 
