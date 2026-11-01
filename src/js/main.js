@@ -2268,7 +2268,7 @@ function openMenuOverlay(item) {
   card.className = "menu-card";
   card.innerHTML = `
     <h3>${escapeHtml(item.icon || "🍽️")} ${escapeHtml(itemTitle(item))}</h3>
-    <ul class="menu-items"><li aria-busy="true">…</li></ul>
+    <ul class="menu-items" aria-live="polite"><li aria-busy="true">…</li></ul>
   `;
   overlay.appendChild(card);
   // الأصناف تتحمّل عند الفتح (js/menus.js) — القائمة تظهر فوراً بنقاط تحميل ثم تتعبّى

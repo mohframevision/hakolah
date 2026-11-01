@@ -22,7 +22,7 @@
         a.href = href;
         a.target = "_blank";
         a.rel = "noopener";
-        a.innerHTML = '<span class="contact-ic"></span><span class="contact-tx"><small></small><b></b></span>';
+        a.innerHTML = '<span class="contact-ic" aria-hidden="true"></span><span class="contact-tx"><small></small><b></b></span>';
         a.querySelector(".contact-ic").textContent = icon;
         a.querySelector("small").textContent = label;
         const b = a.querySelector("b");
@@ -36,7 +36,9 @@
       close.setAttribute("aria-label", d.close || "Close");
       close.textContent = "✕";
       const h = document.createElement("h2");
+      h.id = "contactCardTitle";
       h.textContent = d.title || "";
+      dlg.setAttribute("aria-labelledby", h.id);
       dlg.append(
         close,
         h,

@@ -77,13 +77,14 @@ function scanDuplicateMenus() {
     console.log(`  [${g.files.length} ملفات بمنيو مطابق حرفياً، ~${g.items} صنفاً، ${human(g.bytes)} للنسخة الواحدة — ${human(wasted)} مكرَّر زيادة]`);
     g.files.forEach((f) => console.log(`      ${f}`));
   }
-  console.log(`\n  إجمالي تقديري مكرَّر زيادة بمصدر src/ (قبل gzip): ${human(totalWasted)} — كله يُشحَن حالياً عبر js/data.js بلا شرط بكل صفحة بالموقع.`);
-  console.log("  هذا رصد فقط، ليس إصلاحاً تلقائياً — دمج منيو الفروع بمصدر واحد مشترك تغيير بنية بيانات حقيقي يحتاج قراراً وجلسة تفاعلية.");
+  console.log(`\n  إجمالي تكرار بمصدر src/ (قبل gzip): ${human(totalWasted)} — هذا تكرار بملفات src/*.md نفسها فقط (صيانة المصدر).`);
+  console.log("  منذ commit a08eb35 (2026-10-25): eleventy-app-data.js يدمج هذي المنيوهات المطابقة تلقائياً وقت البناء (menuRef/MENU_POOL، js/menus.js) — فلا تُشحَن مكرَّرة فعلياً بالموقع المنشور، رغم بقاء التكرار بملفات src/*.md المصدرية نفسها. هذا الرصد الآن معلومة صيانة مصدر فقط، ليس مقياس حجم حزمة فعلياً.");
 }
 
 function main() {
-  console.log("== حجم الحزمة (js/data.js الرئيسي + main.js) ==");
+  console.log("== حجم الحزمة (js/data.js الرئيسي + js/menus.js + main.js) ==");
   reportFileSize("js/data.js", path.join(SITE_DIR, "js", "data.js"));
+  reportFileSize("js/menus.js (يتحمّل عند الحاجة فقط)", path.join(SITE_DIR, "js", "menus.js"));
   reportFileSize("js/main.js", path.join(SITE_DIR, "js", "main.js"));
   console.log("\n== تكرار menuItems كامل بين ملفات مختلفة (فروع محتملة) ==");
   scanDuplicateMenus();
