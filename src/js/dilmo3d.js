@@ -40,7 +40,7 @@
     "    if (vL.z > 0.0) { vec4 fc = texture2D(uFace, vec2(0.5 + vL.x * 0.4, 0.5 + vL.y * 0.4)); c = mix(c, fc.rgb, fc.a); }",
     "  }",
     "  else if (uMode == 2) {",  // the ball: six colour sectors turning with it
-    "    float a = mod(atan(vL.y, vL.x) + uRot, 6.2831853); int s = int(floor(a / 1.0471976));",
+    "    float a = mod(atan(vL.y, vL.z) + uRot, 6.2831853); int s = int(floor(a / 1.0471976));",
     "    c = s == 0 ? uB0 : s == 2 ? uB2 : s == 4 ? vec3(0.95, 0.76, 0.3) : uB1;",
     "    c *= 0.6 + 0.4 * max(nd, 0.0); vec3 h2 = normalize(uLight + V); c += vec3(pow(max(dot(n, h2), 0.0), 50.0) * 0.5);",
     "  }",
@@ -111,6 +111,8 @@
     var gl = canvas.getContext("webgl", { antialias: true, alpha: false, premultipliedAlpha: false, powerPreference: "low-power" });
     if (!gl) return null;
     host.insertBefore(canvas, host.firstChild);
+    var api = null;  // the renderer dies with its context (a phone dropping the GPU): tell dilmo.js so it can step back to the flat world
+    canvas.addEventListener("webglcontextlost", function (e) { e.preventDefault(); if (api && api.onLost) api.onLost(); });
 
     function shader(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
     var prog = gl.createProgram(); gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
@@ -236,19 +238,22 @@
       if (!fc) { fc = { cv: document.createElement("canvas"), tex: gl.createTexture(), yaw: 0, up: 0, at: 0 }; fc.cv.width = fc.cv.height = 128; fc.ctx = fc.cv.getContext("2d"); faces.set(b.el, fc); fc.touched = t;
         gl.bindTexture(gl.TEXTURE_2D, fc.tex); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); }
       fc.touched = t;
+      if (t - fc.at < 30) return fc;  // faces change at 30 fps at most: half the texture uploads
+      fc.at = t;
       var x = fc.ctx; x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, 128, 128); x.translate(64, 64); x.scale(64 / (1.25 * b.r), 64 / (1.25 * b.r));
       paintFace(x, b.el);
       gl.bindTexture(gl.TEXTURE_2D, fc.tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, fc.cv);
       return fc;
     }
-    function body(b, t, dt) {
+    function body(b, t, dt, sink) {
       var r = b.r, fc = faceTex(b, t);
       // faces the way it moves; standing still, it turns to the camera
+      gl.bindTexture(gl.TEXTURE_2D, fc.tex);
       var sp = Math.hypot(b.vx, b.vz), toCam = !(sp > .9 && !b.drag), want = toCam ? Math.atan2(eye[0] - b.x, eye[2] - b.z) : Math.atan2(b.vx, b.vz);
       var da = Math.atan2(Math.sin(want - fc.yaw), Math.cos(want - fc.yaw)); fc.yaw += da * Math.min(1, .12 * dt);
       // looking at you, it also lifts its face toward the camera (you see it from above)
       var wantUp = toCam ? Math.atan2(b.y - eye[1], Math.hypot(eye[0] - b.x, eye[2] - b.z)) : 0; fc.up += (wantUp - fc.up) * Math.min(1, .12 * dt);
-      var M = chain(T(b.x, b.y, b.z), Ry(fc.yaw), Rx(fc.up * 180 / Math.PI), Rz(b.spin), T(0, r, 0), Rz(b.tilt), S(r * b.sx, r * b.sy, r * Math.min(b.sx, b.sy)), T(0, -1, 0));
+      var M = chain(T(b.x, b.y + (sink || 0), b.z), Ry(fc.yaw), Rx(fc.up * 180 / Math.PI - (toCam ? 0 : Math.min(25, sp * 3))), Rz(b.spin), T(0, r, 0), Rz(toCam ? b.tilt : 0), S(r * b.sx, r * b.sy, r * Math.min(b.sx, b.sy)), T(0, -1, 0));
       for (var i = 0; i < 48; i++) { var p = b.pts[i]; rimBuf[i * 2] = p.x; rimBuf[i * 2 + 1] = p.y; }
       gl.uniform4fv(U.uRim, rimBuf); gl.uniform1f(U.uR, r);
       draw(SPH, 1, M, col(b.cols[0]), col(b.cols[1]), col(b.cols[2]));
@@ -338,16 +343,15 @@
       all.forEach(function (b) {
         var fy2 = b.floor || fl, sc2 = Math.max(.35, Math.min(1, 1 - (fy2 - b.r - b.y) / 300));
         shadow(b.x, b.z, b.r * 1.7 * sc2, .38 * sc2);
-        if (b.crouch) b.y += b.r * .45;
-        body(b, t, dt);
+        body(b, t, dt, b.crouch ? b.r * .45 : 0);
       });
       faces.forEach(function (fc, el) { if (t - fc.touched > 5000) { gl.deleteTexture(fc.tex); faces.delete(el); } });
     }
-    return { canvas: canvas, frame: frame, resize: resize, scr: scr, unscr: unscr, ground: ground, cam: cam,
-      axes: function () { return { rx: right[0], rz: right[2], fx: fwd[0], fz: fwd[2] }; },
-      intro: function (dur, back) { intro = { t0: performance.now(), dur: dur, back: back, yaw: cam.yaw, pitch: cam.pitch, zoom: cam.zoom }; },
+    return (api = { canvas: canvas, frame: frame, resize: resize, scr: scr, unscr: unscr, ground: ground, cam: cam,
+      axes: function () { var l = Math.hypot(fwd[0], fwd[2]) || 1; return { rx: right[0], rz: right[2], fx: fwd[0] / l, fz: fwd[2] / l }; },
+      intro: function (dur, back) { cam.yaw = Math.atan2(Math.sin(cam.yaw), Math.cos(cam.yaw)); intro = { t0: performance.now(), dur: dur, back: back, yaw: cam.yaw, pitch: cam.pitch, zoom: cam.zoom }; },
       snapshot: function () { if (last) frame(last); return canvas; },
-      destroy: function () { var ext = gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); canvas.remove(); } };
+      destroy: function () { api.onLost = null; var ext = gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); canvas.remove(); } });
   }
   window.Dilmo3D = { create: create };
 })();

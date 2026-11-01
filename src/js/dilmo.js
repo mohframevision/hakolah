@@ -341,8 +341,8 @@
   // so pointer maths (pokes, drags, feeding) works in both worlds
   var DZ = 0, D3 = null;
   function sv(b) { return D3 ? D3.scr(b.x, b.y, b.z) : { x: b.x, y: b.y, s: 1 }; }
-  function nearZ(o, r) { return D3 ? clamp(o.z + (Math.random() - .5) * 70, r, DZ - r) : 0; }
-  function randZ(r) { return D3 ? r + Math.random() * Math.max(0, DZ - 2 * r) : 0; }
+  function nearZ(o, r) { return DZ ? clamp(o.z + (Math.random() - .5) * 70, r, DZ - r) : 0; }
+  function randZ(r) { return DZ ? r + Math.random() * Math.max(0, DZ - 2 * r) : 0; }
   var ptr = { x: 0, y: 0, has: false, out: false }, drag = null;
   var t0 = performance.now(), last = t0, lastInput = t0, running = false, raf = 0;
   var gaze = { x: 0, y: 0, until: 0 }, nextIdle = t0 + 3000, nextBlink = t0 + 2500, blinkAt = -1e4;
@@ -440,8 +440,9 @@
     if (reduce) return;
     var s = document.createElement("span");
     s.className = "note-fx"; s.textContent = "♪"; s.setAttribute("aria-hidden", "true");
-    s.style.setProperty("--x", (pos.x - 6 + (Math.random() - .5) * 30).toFixed(1) + "px");
-    s.style.setProperty("--y", (pos.y - R - 10).toFixed(1) + "px");
+    var sn = sv(pos);
+    s.style.setProperty("--x", (sn.x - 6 + (Math.random() - .5) * 30).toFixed(1) + "px");
+    s.style.setProperty("--y", (sn.y - R * sn.s - 10).toFixed(1) + "px");
     s.style.setProperty("--dx", ((Math.random() - .5) * 40).toFixed(1) + "px");
     world.appendChild(s); s.addEventListener("animationend", function () { s.remove(); });
   }
@@ -584,7 +585,7 @@
     var reachA = 0, reachAmt = 0;
     var tp = foodDrag ? foodCenter() : (!drag && ptr.has && !ptr.out && mood.sleepy < .6 && t - ptr.moveT > 300 ? ptr : null);
     if (tp) {
-      var d = Math.hypot(tp.x - pos.x, tp.y - pos.y), lim = foodDrag ? 140 : 80;
+      var s0 = sv(pos), d = Math.hypot(tp.x - s0.x, tp.y - s0.y) / s0.s, lim = foodDrag ? 140 : 80;
       if (d > R + 4 && d < R + lim) { var l = local(tp.x, tp.y); reachA = Math.atan2(l.y, l.x); reachAmt = (1 - (d - R) / lim) * (foodDrag ? 16 : 12); }
     }
     rim(pts, dt, cheek, reachA, reachAmt);
@@ -657,7 +658,7 @@
     pokes = pokes.filter(function (x) { return t - x < 2500; }); pokes.push(t);
     sp.sy.vel -= .25; sp.sx.vel += .2;
     if (pokes.length >= 5) {
-      side = ptr.x < pos.x ? 1 : -1;
+      side = ptr.x < sv(pos).x ? 1 : -1;
       mood.annoy = 1; mood.joy = Math.max(-.5, mood.joy - .4); pos.vx = side * 9; pos.vy = -8; befriend(-.08);
       say(line("annoy"), "annoy", 3000);
     } else {
@@ -684,7 +685,7 @@
     if (D3) { var g0 = D3.ground(p.x, p.y); ptr.gx = g0 && g0.inside ? g0.x : null; ptr.gz = g0 && g0.inside ? g0.z : null; }
     if (!running) return;
     stir();
-    if (foodDrag) return;
+    if (foodDrag || (D3 && D3.cam.orbiting)) return;  // turning the camera is not petting anyone
     var sp0 = sv(pos), d = Math.hypot(p.x - sp0.x, p.y - sp0.y) / sp0.s, now = performance.now();
     if (!drag && d > R + 10 && d < R + 100) {  // circling him
       var ang = Math.atan2(p.y - sp0.y, p.x - sp0.x);
@@ -1382,7 +1383,7 @@
       if (t - (b.coyote || 0) < 100 && !b.jumps) {
         b.vy = charged ? -PV * 1.3 : -PV; b.jumps = 1; b.cut = false; keys.jumpAt = 0; b.svy += .25; b.crouchT = 0;
         tone(charged ? 260 : 320, charged ? 820 : 620, .14, "sine", .12);
-      } else if (b.jumps < 2) { b.vy = -PV * .85; b.jumps = 2; b.cut = false; keys.jumpAt = 0; dust(b.x, b.y + b.f.r); tone(520, 940, .12, "sine", .1); }
+      } else if (b.jumps < 2) { b.vy = -PV * .85; b.jumps = 2; b.cut = false; keys.jumpAt = 0; var sj = sv(b); dust(sj.x, sj.y + b.f.r * sj.s); tone(520, 940, .12, "sine", .1); }
     }
     if (!keys.jumpHeld && b.vy < 0 && !b.cut && !b.pound) { b.vy *= .5; b.cut = true; }  // let go early = short hop
     if (keys.down && !onF && !b.pound && !b.poundLock) { b.pound = true; b.vx *= .3; b.vz *= .3; tone(700, 200, .2, "sine", .08); }
@@ -1402,7 +1403,7 @@
     if (c === "KeyA" || c === "ArrowLeft") keys.left = down;
     else if (c === "KeyD" || c === "ArrowRight") keys.right = down;
     else if (c === "ArrowDown" || (c === "KeyS" && !D3)) keys.down = down;
-    else if (c === "KeyW" || c === "ArrowUp") keys.far = down;
+    else if ((c === "KeyW" || c === "ArrowUp") && D3) keys.far = down;
     else if (c === "KeyS") keys.near = down;
     else if (c === "Space") { if (down && !e.repeat) keys.jumpAt = performance.now(); keys.jumpHeld = down; }
     else return;
@@ -1412,7 +1413,7 @@
     var fy = floorY(b), hit = false;
     b.vy = -3; b.svy -= .3; b.svx += .25; b.poundLock = true; sfx("splat");
     hitStopUntil = performance.now() + 70;  // a few frozen frames sell the impact
-    dust(b.x, fy + b.f.r);
+    var sl = sv({ x: b.x, y: fy, z: b.z }); dust(sl.x, sl.y + b.f.r * sl.s);
     [pos].concat(others()).forEach(function (o) {
       var d = Math.hypot(o.x - b.x, o.z - b.z); if (d > 170) return;
       var k = 1 - d / 170; o.vy -= 9 * k; o.vx += (o.x < b.x ? -1 : 1) * 4 * k; hit = true;
@@ -1495,7 +1496,7 @@
   });
   document.getElementById("pp-call").addEventListener("click", function () {
     if (!player) return; stir(); bsay(player, T("تعالوا!", "Come here!"));
-    others().forEach(function (b, i) { b.mode = "visit"; b.tx = clamp(player.x + (i % 2 ? 1 : -1) * (player.f.r + b.f.r + 10 + i * 20), b.f.r, W - b.f.r); b.next = performance.now() + 4000; });
+    others().forEach(function (b, i) { b.mode = "visit"; b.tx = clamp(player.x + (i % 2 ? 1 : -1) * (player.f.r + b.f.r + 10 + i * 20), b.f.r, W - b.f.r); b.tz = nearZ(player, b.f.r); b.next = performance.now() + 4000; });
     pos.vx = Math.sign(player.x - pos.x) * 6; pos.vy = -6;
     setTimeout(function () { if (player) say(line("comeToPlayer", { n: player.f.name }), "call", 1500); }, 700);
   });
@@ -2175,7 +2176,10 @@
   }
   ballEl.addEventListener("click", function () {
     stir(); var kp = 5 + Math.random() * 4;
-    if (D3 && ptr.gx != null) { var kx = ball.x - ptr.gx, kz = ball.z - ptr.gz, kl = Math.hypot(kx, kz) || 1; ball.vx = kx / kl * kp; ball.vz = kz / kl * kp; }  // away from where you tapped the ground
+    if (D3) {  // away from you, bent left or right by where on the ball you tapped
+      var ax = D3.axes(), sb = sv(ball), side = clamp((sb.x - ptr.x) / (ball.r * sb.s), -1, 1) * .8;
+      ball.vx = (ax.fx + ax.rx * side) * kp; ball.vz = (ax.fz + ax.rz * side) * kp;
+    }
     else ball.vx = (ptr.x < ball.x ? 1 : -1) * kp;
     ball.vy = -8;
   });
@@ -2376,9 +2380,11 @@
     buddies.forEach(function (b) { b.z = randZ(b.f.r); b.homeZ = b.z; b.vz = 0; b.tz = null; });
     ball.z = on ? DZ * .4 : 0; ball.vz = 0;
     gems.forEach(function (g) { g.z = randZ(17); });
+    ptr.gx = ptr.gz = null;
+    if (hs) { hs.hidden = false; hs.b.crouch = false; }
   }
   function portal(on) {
-    d3Busy = true; depthPad.hidden = !on;
+    d3Busy = true; depthPad.hidden = !on; keys.left = keys.right = keys.down = keys.far = keys.near = false;
     var cx = mainAway ? W / 2 : pos.x, cy = mainAway ? ground : pos.y, H = world.offsetHeight;
     var Rm = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 20, dur = reduce ? 400 : 1500, t0 = performance.now();
     stage.classList.toggle("is3d", on);
@@ -2404,9 +2410,10 @@
       view3 = window.Dilmo3D.create(world, W, world.offsetHeight, K, DZ, paintFace);
       if (!view3) { spread(false); throw new Error("no WebGL"); }
       view3.canvas.style.clipPath = "circle(0px at 0 0)";
-      D3 = view3; view3.frame(scene3(performance.now()));  // one frame now, so the camera is placed before anything is positioned by it
+      D3 = view3; view3.onLost = function () { if (view3 && !d3Busy) portal(false); };
+      view3.frame(scene3(performance.now()));  // one frame now, so the camera is placed before anything is positioned by it
       portal(true);
-    }).catch(function (e) { console.warn("dilmo3d", e); d3Btn.hidden = true; say(T("جهازك لا يفتح العالم ثلاثي الأبعاد.", "Your device can't open the 3D world."), "portal", 1000); })
+    }).catch(function (e) { if (!view3 || !D3) { if (view3) { view3.destroy(); view3 = null; } D3 = null; spread(false); stage.classList.remove("is3d"); } console.warn("dilmo3d", e); d3Btn.hidden = true; say(T("جهازك لا يفتح العالم ثلاثي الأبعاد.", "Your device can't open the 3D world."), "portal", 1000); })
       .then(function () { d3Btn.disabled = false; });
   }
   d3Btn.addEventListener("click", function () {

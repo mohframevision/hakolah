@@ -141,8 +141,8 @@ main.container:has(.dilmo) { max-width: none; }
    the 2D bodies, bushes, ball and hour tint cross-fade out while the portal grows */
 .dilmo .d3 { position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; }
 .dilmo .is3d .d3 { pointer-events: auto; touch-action: none; cursor: grab; }  /* drag the ground to turn the camera */
-.dilmo .orb .pbody, .dilmo .orb .grain, .dilmo .orb .bp, .dilmo .orb .pf, .dilmo .orb .bf, .dilmo .orb-shadow, .dilmo .bush, .dilmo .ball, .dilmo .tint { transition: opacity 1.2s ease; }
-.dilmo .is3d .orb .pbody, .dilmo .is3d .orb .grain, .dilmo .is3d .orb .bp, .dilmo .is3d .orb .pf, .dilmo .is3d .orb .bf, .dilmo .is3d .orb-shadow, .dilmo .is3d .bush, .dilmo .is3d .ball, .dilmo .is3d .tint { opacity: 0; }
+.dilmo .orb .pbody, .dilmo .orb .grain, .dilmo .orb .bp, .dilmo .orb .pf, .dilmo .orb .bf, .dilmo .orb .ptint, .dilmo .orb-shadow, .dilmo .bush, .dilmo .ball, .dilmo .tint { transition: opacity 1.2s ease; }
+.dilmo .is3d .orb .pbody, .dilmo .is3d .orb .grain, .dilmo .is3d .orb .bp, .dilmo .is3d .orb .pf, .dilmo .is3d .orb .bf, .dilmo .is3d .orb .ptint, .dilmo .is3d .orb-shadow, .dilmo .is3d .bush, .dilmo .is3d .ball, .dilmo .is3d .tint { opacity: 0; }
 .dilmo .pp-depth[hidden] { display: none; }
 .dilmo .portal { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; border-radius: 50%; opacity: 0; border: 3px solid #dffff2;
   box-shadow: 0 0 30px 10px color-mix(in oklab, var(--cmp) 70%, #fff), inset 0 0 44px 8px color-mix(in oklab, var(--cmp) 60%, transparent); }
