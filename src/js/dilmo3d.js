@@ -1,7 +1,10 @@
 /* دلمو ثلاثي الأبعاد: رسم فقط، بـWebGL بلا أي مكتبة، ويتحمّل عند الضغط على زر البوابة فقط.
    المنطق كله (الفيزياء، المزاج، الكلام، اللمس) يبقى في dilmo.js، وهذا الملف يستلم لقطة الحالة كل إطار ويرسمها،
    ويعيد لـdilmo.js ثلاث دوال: scr (نقطة في العالم → مكانها على الشاشة) وunscr (العكس، للسحب) وground (مؤشر → نقطة على الأرض).
-   الإحداثيات نفس إحداثيات dilmo.js: بكسل، x يميناً، y للأسفل، z العمق (0 الخلف، DZ الأمام). الساحة محاطة بسياج. */
+   الإحداثيات نفس إحداثيات dilmo.js: بكسل، x يميناً، y للأسفل، z العمق (0 الخلف، DZ الأمام). الساحة محاطة بسياج.
+   الشكل (بحث 2026-11-02): إضاءة ملفوفة (half-Lambert) مع إضاءة سماء/أرض، ضباب مسافة على كل شيء، سماء تتبع اتجاه النظر
+   مع قرص شمس وهالة، عشب مقصوص، رصيف حجري، سياج بأوراق، مبانٍ بنوافذ تضيء ليلاً، نخيل بسعف منحنٍ، أعمدة إنارة، وظلال
+   تمتد بعيداً عن الضوء. ثم تظليل نهائي خفيف (vignette + dither) بلا تمريرة ثانية. */
 (function () {
   var VS = [
     "attribute vec3 aPos; attribute vec3 aNrm; attribute vec2 aUv;",
@@ -19,35 +22,103 @@
     "  vec4 w = uM * vec4(p, 1.0); vW = w.xyz; vN = normalize(uN * aNrm);",
     "  gl_Position = uP * w; gl_PointSize = uPt;",
     "}"].join("\n");
+  // modes: 0 lit solid · 1 character · 2 ball · 3 sky · 4 ground · 5 soft disc (sun glow, moon, lamp glow) · 6 stars · 7 unlit
+  //        8 hedge · 9 building · 10 shadow (multiplied into the ground) · 11 palm trunk · 12 cloud puff · 13 frond
   var FS = [
-    "precision mediump float;",
+    "#ifdef GL_FRAGMENT_PRECISION_HIGH", "precision highp float;", "#else", "precision mediump float;", "#endif",
     "varying vec3 vN, vW, vL; varying vec2 vUv;",
-    "uniform int uMode; uniform vec4 uC0, uC1, uC2; uniform vec3 uLight, uLc, uAmb, uTint, uCam, uB0, uB1, uB2; uniform vec2 uArena;",
-    "uniform float uA, uRot, uHor; uniform sampler2D uFace;",
-    "float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
+    "uniform int uMode; uniform vec4 uC0, uC1, uC2; uniform vec3 uLight, uLc, uSky, uGnd, uTint, uCam, uFogC, uSunDir, uSunC, uB0, uB1, uB2, uRight, uUp, uFwd;",
+    "uniform vec2 uArena, uRes, uFxy; uniform float uA, uRot, uFl, uLights, uFlat, uT, uExpo; uniform sampler2D uFace;",
+    "float hash(vec2 p) { p = mod(p, 289.0); return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
+    "float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);",
+    "  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y); }",
+    "float fbm(vec2 p) { return vnoise(p) * 0.5 + vnoise(p * 2.03) * 0.3 + vnoise(p * 4.1) * 0.2; }",
+    // soft outdoor light: wrapped sun/moon + sky from above, warm ground bounce from below (y is down)
+    "vec3 shade(vec3 alb, vec3 n, float w) {",
+    "  float dif = clamp((dot(n, uLight) + w) / (1.0 + w), 0.0, 1.0);",
+    "  return alb * (mix(uGnd, uSky, 0.5 - 0.5 * n.y) * 0.62 + uLc * dif * 0.78);",
+    "}",
     "void main() {",
-    "  vec3 c = uC0.rgb; float al = uC0.a; vec3 n = normalize(vN); vec3 V = normalize(uCam - vW); float nd = dot(n, uLight);",
-    "  if (uMode == 3) c = mix(uC0.rgb, uC1.rgb, clamp(vUv.y / uHor, 0.0, 1.0)) + (hash(floor(gl_FragCoord.xy / 2.0)) - 0.5) * 0.025;",  // sky
-    "  else if (uMode == 4) {",  // ground: a lawn inside the hedge, soil outside, haze far away
-    "    float inA = smoothstep(-8.0, 8.0, vW.x) * smoothstep(-8.0, 8.0, uArena.x - vW.x) * smoothstep(-8.0, 8.0, vW.z) * smoothstep(-8.0, 8.0, uArena.y - vW.z);",
-    "    c = mix(mix(uC1.rgb, uC2.rgb, 0.5), uC0.rgb, inA) + (hash(floor(vW.xz / 3.0)) - 0.5) * 0.05;",
-    "    c = mix(c, uAmb, smoothstep(1400.0, 5200.0, length(uCam - vW)) * 0.9);",
+    "  vec3 c = uC0.rgb; float al = uC0.a; vec3 n = normalize(vN); vec3 V = normalize(uCam - vW); vec3 glow = vec3(0.0);",
+    "  float fogOn = 1.0;",
+    "#ifdef FLAT",
+    "  if (uFlat > 0.5) n = normalize(cross(dFdx(vW), dFdy(vW)));",  // faceted low-poly look for bushes, crowns, coconuts
+    "#endif",
+    "  if (dot(n, V) < 0.0 && (uMode == 13 || uMode == 0)) n = -n;",  // fronds and thin pieces are two-sided
+    "  if (uMode == 3) {",  // sky: the real view direction per pixel, so it stays put when the camera turns
+    "    vec3 d = normalize(uRight * ((vUv.x * 2.0 - 1.0) / uFxy.x) + uUp * ((1.0 - vUv.y * 2.0) / uFxy.y) + uFwd);",
+    "    float up = clamp(-d.y, 0.0, 1.0);",
+    "    c = mix(uC1.rgb, uC0.rgb, smoothstep(0.0, 0.55, up));",
+    "    c = mix(c, uC1.rgb * 1.06, exp(-up * 16.0) * 0.55);",  // bright haze hugging the horizon
+    "    float sd = max(dot(d, uSunDir), 0.0);",
+    "    c += uSunC * (smoothstep(0.99935, 0.99965, sd) * 1.4 + pow(sd, 10.0) * 0.32 + pow(sd, 2.0) * 0.08 * (1.0 - up));",
+    "    c *= uTint; fogOn = 0.0;",
     "  }",
-    "  else if (uMode == 1) {",  // a character: the three colours of the 2D gradient, a highlight, sky light on the edge, and its face as a decal on the front
-    "    c = mix(uC2.rgb, uC1.rgb, smoothstep(-0.75, 0.3, nd)); c = mix(c, uC0.rgb, smoothstep(0.35, 1.0, nd) * 0.9);",
-    "    vec3 h = normalize(uLight + V); c += uLc * pow(max(dot(n, h), 0.0), 36.0) * 0.3;",
-    "    c += uAmb * pow(1.0 - max(dot(n, V), 0.0), 3.0) * 0.3;",
-    "    if (vL.z > 0.0) { vec4 fc = texture2D(uFace, vec2(0.5 + vL.x * 0.4, 0.5 + vL.y * 0.4)); c = mix(c, fc.rgb, fc.a); }",
+    "  else if (uMode == 4) {",  // ground: a mown lawn inside the hedge, a stone walk round it, sand beyond
+    "    vec2 xz = vW.xz;",
+    "    float ring = max(max(-xz.x, xz.x - uArena.x), max(-xz.y, xz.y - uArena.y));",  // how far outside the hedge line (negative inside)
+    "    vec3 lawn = uC0.rgb * mix(0.93, 1.07, smoothstep(-0.25, 0.25, sin(xz.x * 0.05)));",  // mown stripes
+    "    lawn *= 1.0 + (fbm(xz * 0.018) - 0.5) * 0.22 + (hash(floor(xz * 0.5)) - 0.5) * 0.07;",
+    "    lawn = mix(lawn, lawn * vec3(1.05, 1.0, 0.72), smoothstep(0.62, 0.8, vnoise(xz * 0.006)) * 0.7);",  // a few dry patches
+    "    vec2 tg = xz / 26.0, tf = abs(fract(tg) - 0.5);",
+    "    vec3 stone = vec3(0.86, 0.82, 0.74) * (0.94 + 0.12 * hash(floor(tg))) * (1.0 - 0.25 * smoothstep(0.44, 0.49, max(tf.x, tf.y))) * uExpo;",  // paving with grout lines
+    "    vec3 sand = mix(uC1.rgb, uC2.rgb, 0.45) * (1.0 + (fbm(xz * 0.01) - 0.5) * 0.3 + sin(xz.x * 0.06 + fbm(xz * 0.004) * 9.0) * 0.025);",
+    "    c = ring < 0.0 ? lawn : mix(stone, sand, smoothstep(60.0, 72.0, ring));",
+    "    c *= 1.0 - 0.32 * exp(-abs(ring) * 0.09);",  // a dark gutter along both sides of the hedge
+    "    c = shade(c, vec3(0.0, -1.0, 0.0), 0.0);",
     "  }",
-    "  else if (uMode == 2) {",  // the ball: six colour sectors turning with it
+    "  else if (uMode == 1) {",  // a character: the three colours of the 2D gradient in soft bands, a rim of sky, a glossy pin, warmth in the shadow, its face on the front
+    "    float hl = dot(n, uLight) * 0.5 + 0.5;",
+    "    c = mix(uC2.rgb, uC1.rgb, smoothstep(0.2, 0.5, hl)); c = mix(c, uC0.rgb, smoothstep(0.62, 0.88, hl) * 0.85);",
+    "    c *= mix(vec3(1.0), uLc, 0.3);",
+    "    c += mix(uGnd, uSky, 0.5 - 0.5 * n.y) * pow(1.0 - max(dot(n, V), 0.0), 2.5) * 0.32;",
+    "    c += uC1.rgb * vec3(0.16, 0.05, 0.02) * smoothstep(0.45, 0.1, hl);",
+    "    vec3 h = normalize(uLight + V + vec3(0.1, -0.2, 0.0)); c = mix(c, vec3(1.0), smoothstep(0.5, 0.7, pow(max(dot(n, h), 0.0), 40.0)) * 0.42);",
+    "    if (vL.z > 0.0) { vec4 fc = texture2D(uFace, vec2(0.5 + vL.x * 0.4, 0.5 + vL.y * 0.4)); c = mix(c, fc.rgb * mix(0.8, 1.0, hl), fc.a); }",
+    "  }",
+    "  else if (uMode == 2) {",  // the ball: six colour panels rolling with it
     "    float a = mod(atan(vL.y, vL.z) + uRot, 6.2831853); int s = int(floor(a / 1.0471976));",
     "    c = s == 0 ? uB0 : s == 2 ? uB2 : s == 4 ? vec3(0.95, 0.76, 0.3) : uB1;",
-    "    c *= 0.6 + 0.4 * max(nd, 0.0); vec3 h2 = normalize(uLight + V); c += vec3(pow(max(dot(n, h2), 0.0), 50.0) * 0.5);",
+    "    c = shade(c, n, 0.4); vec3 h2 = normalize(uLight + V); c = mix(c, vec3(1.0), smoothstep(0.5, 0.7, pow(max(dot(n, h2), 0.0), 50.0)) * 0.5);",
     "  }",
-    "  else if (uMode == 5) { float d = length(vUv * 2.0 - 1.0); al *= 1.0 - smoothstep(uA, 1.0, d); }",  // a soft disc: shadows, sun, moon, clouds
-    "  else if (uMode == 6) { float d = length(gl_PointCoord - 0.5) * 2.0; al *= 1.0 - smoothstep(0.4, 1.0, d); }",  // stars
-    "  else if (uMode == 0) c = uC0.rgb * (0.55 + 0.45 * max(nd, 0.0)) + uAmb * 0.06;",  // plain lit solid
-    "  if (uMode != 5 && uMode != 6 && uMode != 7) c *= uTint;",
+    "  else if (uMode == 5) { float d = length(vUv * 2.0 - 1.0); al *= 1.0 - smoothstep(uA, 1.0, d); fogOn = 0.0; }",
+    "  else if (uMode == 12) { float d = length(vUv * 2.0 - 1.0); al *= 1.0 - smoothstep(0.55, 1.0, d); c *= 0.82 + 0.3 * vUv.y; fogOn = 0.3; }",  // cloud puffs, lit from above
+    "  else if (uMode == 6) { float d = length(gl_PointCoord - 0.5) * 2.0; al *= 1.0 - smoothstep(0.4, 1.0, d); fogOn = 0.0; }",
+    "  else if (uMode == 10) { float d = length(vUv * 2.0 - 1.0); gl_FragColor = vec4(0.0, 0.0, 0.0, al * (1.0 - smoothstep(0.25, 1.0, d * d))); return; }",
+    "  else if (uMode == 7) { fogOn = 0.4; }",
+    "  else if (uMode == 8) {",  // hedge: clipped leaves, darker toward its foot, a lighter top
+    "    float leaf = fbm(vec2(vW.x + vW.z, vW.y) * 0.13);",
+    "    c = mix(uC0.rgb * 0.72, uC0.rgb * 1.18, smoothstep(0.3, 0.7, leaf));",
+    "    c *= mix(0.68, 1.0, clamp((uFl - vW.y) / 26.0, 0.0, 1.0));",
+    "    if (n.y < -0.9) c *= 1.1;",
+    "    c = shade(c, n, 0.5);",
+    "  }",
+    "  else if (uMode == 9) {",  // a building: plaster walls, a grid of windows (some lit at night), a flat roof, dusky at its foot
+    "    vec2 fuv = abs(n.x) > 0.5 ? vec2(vL.z * uC2.z, vL.y * uC2.y) : vec2(vL.x * uC2.x, vL.y * uC2.y);",
+    "    vec2 g = fuv / vec2(19.0, 24.0), cell = floor(g), f = fract(g);",
+    "    float side = step(abs(n.y), 0.5), above = step(14.0, uFl - vW.y) * step(8.0, (vL.y + 0.5) * uC2.y);",
+    "    float win = side * above * step(0.28, f.x) * step(f.x, 0.72) * step(0.22, f.y) * step(f.y, 0.7) * step(0.3, hash(cell + uC1.xy));",
+    "    float far = 1.0 - smoothstep(1800.0, 3200.0, length(uCam - vW)); win *= far;",
+    "    c *= uExpo * mix(0.74, 1.0, clamp((uFl - vW.y) / 40.0, 0.0, 1.0));",
+    "    if (n.y < -0.5) c *= 0.9;",
+    "    c = mix(c, vec3(0.32, 0.38, 0.46), win * 0.85);",
+    "    c = shade(c, n, 0.35);",
+    "    glow = vec3(1.0, 0.8, 0.46) * win * step(hash(cell * 1.7 + uC1.yx), 0.55) * uLights * 0.95;",
+    "  }",
+    "  else if (uMode == 11) { c *= 0.86 + 0.14 * step(0.5, fract(vL.y * 16.0)); c = shade(c, n, 0.4); }",  // palm trunk with rings
+    "  else if (uMode == 13) { c *= 0.72 + 0.4 * vUv.x; c = shade(c, n, 0.6); }",  // frond, darker at its base
+    "  else if (uMode == 0) c = shade(c, n, 0.45);",
+    "  if (uMode != 3 && uMode != 5 && uMode != 6 && uMode != 7 && uMode != 12) c *= uTint;",
+    "  c += glow;",
+    // distance haze toward the horizon colour (warmer looking toward the sun): far things melt into the sky
+    "  float dist = length(uCam - vW), fog = (1.0 - exp(-max(dist - 900.0, 0.0) / 3000.0)) * fogOn;",
+    "  vec3 fc2 = mix(uFogC, uFogC * 0.6 + uSunC * 0.4, pow(max(dot(-V, uSunDir), 0.0), 6.0) * 0.6);",
+    "  c = mix(c, mix(vec3(dot(c, vec3(0.3, 0.59, 0.11))), c, 0.75), fog * 0.6);",
+    "  c = mix(c, fc2, clamp(fog, 0.0, 0.92));",
+    // finishing: a soft vignette and an ordered dither against banding in the sky and the haze
+    "  vec2 q = gl_FragCoord.xy / uRes; c *= mix(0.8, 1.0, smoothstep(1.15, 0.35, length(q - 0.5) * 1.4142));",
+    "  float bay = mod(floor(gl_FragCoord.x), 4.0) * 4.0 + mod(floor(gl_FragCoord.y), 4.0);",
+    "  c += (fract(bay * 0.6180339887) - 0.5) / 128.0;",
     "  gl_FragColor = vec4(c, al);",
     "}"].join("\n");
 
@@ -64,12 +135,17 @@
   function Rx(deg) { var a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), m = I(); m[5] = c; m[6] = s; m[9] = -s; m[10] = c; return m; }
   function Ry(rad) { var c = Math.cos(rad), s = Math.sin(rad), m = I(); m[0] = c; m[2] = -s; m[8] = s; m[10] = c; return m; }
   function chain() { var m = arguments[0]; for (var i = 1; i < arguments.length; i++) m = mul(m, arguments[i]); return m; }
-  function n3(m) { return new Float32Array([m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10]]); }
+  // normal matrix: the inverse-transpose of the upper 3×3, so squashed shapes (fronds, bodies) light correctly
+  function n3(m) {
+    var a = m[0], b = m[1], c = m[2], d = m[4], e = m[5], f = m[6], g = m[8], h = m[9], i = m[10];
+    var A = e * i - f * h, B = -(d * i - f * g), C = d * h - e * g, det = a * A + b * B + c * C || 1;
+    return new Float32Array([A / det, B / det, C / det, -(b * i - c * h) / det, (a * i - c * g) / det, -(a * h - b * g) / det, (b * f - c * e) / det, -(a * f - c * d) / det, (a * e - b * d) / det]);
+  }
   function norm(v) { var l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
   function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
   function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
 
-  // ---- meshes: a sphere, a cube, a quad, all unit sized ----
+  // ---- meshes, all unit sized ----
   function sphere(seg, rings) {
     var v = [], ix = [];
     for (var r = 0; r <= rings; r++) {
@@ -90,6 +166,21 @@
     });
     return { v: v, ix: ix };
   }
+  function cyl(seg, top) {  // a tapered tube from y = 0 (radius 1) up to y = -1 (radius top)
+    var v = [], ix = [];
+    for (var k = 0; k <= 1; k++) for (var s = 0; s <= seg; s++) { var a = s / seg * Math.PI * 2, r = k ? top : 1; v.push(Math.cos(a) * r, -k, Math.sin(a) * r, Math.cos(a), 0, Math.sin(a), s / seg, k); }
+    for (s = 0; s < seg; s++) ix.push(s, s + seg + 1, s + 1, s + 1, s + seg + 1, s + seg + 2);
+    return { v: v, ix: ix };
+  }
+  function frond(segs) {  // a palm leaf: unit length along +x, drooping (+y is down) toward a narrow tip
+    var v = [], ix = [];
+    for (var i = 0; i <= segs; i++) {
+      var t = i / segs, y = .55 * t * t, hw = .17 * Math.sin(Math.PI * Math.min(1, t * 1.1 + .06)), tn = Math.hypot(1, 1.1 * t), nx = 1.1 * t / tn, ny = -1 / tn;
+      v.push(t, y, -hw, nx, ny, 0, t, 0, t, y + .03, 0, nx, ny, 0, t, .5, t, y, hw, nx, ny, 0, t, 1);  // the middle rib sits a little low: a folded leaf
+      if (i) { var a = 3 * (i - 1), b = 3 * i; ix.push(a, b, a + 1, a + 1, b, b + 1, a + 1, b + 1, a + 2, a + 2, b + 1, b + 2); }
+    }
+    return { v: v, ix: ix };
+  }
   var QUAD = { v: [-.5, -.5, 0, 0, 0, 1, 0, 0, .5, -.5, 0, 0, 0, 1, 1, 0, .5, .5, 0, 0, 0, 1, 1, 1, -.5, .5, 0, 0, 0, 1, 0, 1], ix: [0, 1, 2, 0, 2, 3] };
 
   // colour strings ("#hex", "rgb()", "hsl()", oklab…) → [r,g,b] 0..1, through a 2D canvas so every CSS form works
@@ -102,8 +193,11 @@
     return (ccache[s] = out);
   }
   function mix(a, b, p) { return [a[0] + (b[0] - a[0]) * p, a[1] + (b[1] - a[1]) * p, a[2] + (b[2] - a[2]) * p]; }
+  function lum(c, to) { var l = .3 * c[0] + .59 * c[1] + .11 * c[2] || 1; return [c[0] * to / l, c[1] * to / l, c[2] * to / l]; }  // same hue, set brightness
   function seeded(s) { return function () { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }; }
   function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
+  // plaster colours of a Gulf town: sand, cream, white, a pale stone, a faded terracotta now and then
+  var PLASTER = [[.93, .87, .76], [.88, .82, .7], [.95, .93, .88], [.84, .78, .68], [.9, .85, .79], [.86, .7, .58]];
 
   // host: the .world element; W × DZ: the arena in world px; paintFace(ctx, el): dilmo.js draws a body's current face into a canvas
   function create(host, W, H, K, DZ, paintFace) {
@@ -114,11 +208,17 @@
     var api = null;  // the renderer dies with its context (a phone dropping the GPU): tell dilmo.js so it can step back to the flat world
     canvas.addEventListener("webglcontextlost", function (e) { e.preventDefault(); if (api && api.onLost) api.onLost(); });
 
+    var flatExt = gl.getExtension("OES_standard_derivatives");
     function shader(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
-    var prog = gl.createProgram(); gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+    var prog = gl.createProgram();
+    gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, (flatExt ? "#extension GL_OES_standard_derivatives : enable\n#define FLAT\n" : "") + FS));
+    gl.linkProgram(prog);
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
     gl.useProgram(prog);
-    var U = {}; ["uP", "uM", "uN", "uR", "uPt", "uRim", "uMode", "uC0", "uC1", "uC2", "uLight", "uLc", "uAmb", "uTint", "uCam", "uB0", "uB1", "uB2", "uA", "uRot", "uHor", "uFace", "uArena"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+    var U = {};
+    ["uP", "uM", "uN", "uR", "uPt", "uRim", "uMode", "uC0", "uC1", "uC2", "uLight", "uLc", "uSky", "uGnd", "uTint", "uCam", "uFogC", "uSunDir", "uSunC", "uB0", "uB1", "uB2",
+      "uRight", "uUp", "uFwd", "uArena", "uRes", "uFxy", "uA", "uRot", "uFl", "uLights", "uFlat", "uT", "uExpo", "uFace"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
     var A = { pos: gl.getAttribLocation(prog, "aPos"), nrm: gl.getAttribLocation(prog, "aNrm"), uv: gl.getAttribLocation(prog, "aUv") };
     function mesh(m) {
       var vb = gl.createBuffer(), ib = gl.createBuffer();
@@ -126,7 +226,7 @@
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(m.ix), gl.STATIC_DRAW);
       return { vb: vb, ib: ib, n: m.ix.length };
     }
-    var SPH = mesh(sphere(32, 20)), CUBE = mesh(cube()), QD = mesh(QUAD), starBuf = gl.createBuffer(), NSTAR = 110;
+    var SPH = mesh(sphere(32, 20)), LOW = mesh(sphere(9, 6)), CUBE = mesh(cube()), QD = mesh(QUAD), CYL = mesh(cyl(7, .62)), FROND = mesh(frond(7)), starBuf = gl.createBuffer(), NSTAR = 140;
     var bound = null;
     function bind(m) {
       if (bound === m) return; bound = m;
@@ -136,7 +236,7 @@
     gl.enableVertexAttribArray(A.pos); gl.enableVertexAttribArray(A.nrm); gl.enableVertexAttribArray(A.uv);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.enable(gl.DEPTH_TEST);
     var ZERO = new Float32Array(96), ID = I();
-    gl.uniform4fv(U.uRim, ZERO); gl.uniform1i(U.uFace, 0);
+    gl.uniform4fv(U.uRim, ZERO); gl.uniform1i(U.uFace, 0); gl.uniform1f(U.uFlat, 0);
     // a blank face texture for things that have none (the ball, props)
     var blank = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, blank); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
 
@@ -188,39 +288,43 @@
     canvas.addEventListener("pointerup", pup); canvas.addEventListener("pointercancel", pup);
     canvas.addEventListener("wheel", function (e) { cam.zoom = clamp(cam.zoom * (e.deltaY > 0 ? 1.08 : .93), .55, 1.8); e.preventDefault(); }, { passive: false });
 
-    var town = [], palms = [], clouds = [];
+    var town = [], palms = [], clouds = [], lamps = [];
     function resize(w, h, k, dz) {
       W = w; H = h; K = k || 1; if (dz) DZ = dz;
       var dpr = Math.min(2, devicePixelRatio || 1) * K;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); canvas.style.width = W + "px"; canvas.style.height = H + "px";
       gl.viewport(0, 0, canvas.width, canvas.height);
       base = Math.max(W * 1.25 / (.75 * W / H), (DZ + 500) / .75, 700);
-      // the town stands in two rings around the arena (the far ring paler), palms in the band between the hedge and the town
-      var rnd = seeded(7); town = []; palms = []; clouds = [];
+      // the town stands in two rings around the arena, palms in the sandy band between the walk and the town
+      var rnd = seeded(7); town = []; palms = []; clouds = []; lamps = [];
       // the side the camera starts on (south, +z) is kept clear right up to the far ring, so nothing stands between you and the arena
-      [[520, 40, 120, 1], [860, 70, 180, 0]].forEach(function (ring) {
-        var m = ring[0], ms = m + 1500, sides = [[-m, -m, W + m, -m, 0, 1], [-m, DZ + ms, W + m, DZ + ms, 0, -1], [-m, -m, -m, DZ + ms, 1, 0], [W + m, -m, W + m, DZ + ms, -1, 0]];  // x0 z0 x1 z1, inward normal
+      [[520, 46, 120], [860, 80, 190]].forEach(function (ring) {
+        var m = ring[0], ms = m + 1500, sides = [[-m, -m, W + m, -m], [-m, DZ + ms, W + m, DZ + ms], [-m, -m, -m, DZ + ms], [W + m, -m, W + m, DZ + ms]];
         sides.forEach(function (sd) {
           var len = Math.hypot(sd[2] - sd[0], sd[3] - sd[1]), ux = (sd[2] - sd[0]) / len, uz = (sd[3] - sd[1]) / len;
           for (var p = 0; p < len;) {
-            var w2 = 40 + rnd() * 80, hh = ring[1] + rnd() * (ring[2] - ring[1]), b = { x: sd[0] + ux * (p + w2 / 2), z: sd[1] + uz * (p + w2 / 2), w: ux ? w2 : 40, d: ux ? 40 : w2, h: hh, row: ring[3], nx: sd[4], nz: sd[5], win: [], tone: .88 + rnd() * .24 };
-            if (ring[3]) for (var q = 0; q < 1 + Math.floor(rnd() * 3); q++) b.win.push([(rnd() - .5) * (w2 - 16), hh - 10 - rnd() * (hh - 24)]);
-            town.push(b); p += w2 + 12 + rnd() * 60;
+            var w2 = 46 + rnd() * 80, dep = 36 + rnd() * 40, hh = ring[1] + rnd() * (ring[2] - ring[1]);
+            hh = Math.round(hh / 24) * 24 + 6;  // whole storeys, so the window rows line up
+            town.push({ x: sd[0] + ux * (p + w2 / 2), z: sd[1] + uz * (p + w2 / 2), w: ux ? w2 : dep, d: ux ? dep : w2, h: hh, col: PLASTER[Math.floor(rnd() * PLASTER.length)], seed: [rnd() * 97, rnd() * 89],
+              box: rnd() < .45 ? [(rnd() - .5) * .5, (rnd() - .5) * .5, 10 + rnd() * 8] : null });  // a water tank or a stair hut on some roofs
+            p += w2 + 8 + rnd() * 50;
           }
         });
       });
-      for (var i = 0; i < 12; i++) {
-        var side = [0, 2, 3][Math.floor(rnd() * 3)], off = 70 + rnd() * 380, along = rnd();  // none on the south side, where the camera starts
-        palms.push({ x: side === 0 ? -300 + along * (W + 600) : (side === 2 ? -off : W + off), z: side === 0 ? -off : -300 + along * (DZ + 600), h: 90 + rnd() * 70, ph: rnd() * 6 });
+      for (var i = 0; i < 14; i++) {
+        var side = [0, 2, 3][Math.floor(rnd() * 3)], off = 110 + rnd() * 340, along = rnd();  // none on the south side, where the camera starts
+        palms.push({ x: side === 0 ? -300 + along * (W + 600) : (side === 2 ? -off : W + off), z: side === 0 ? -off : -300 + along * (DZ + 600), h: 100 + rnd() * 80, ph: rnd() * 6, lean: (rnd() - .5) * 14, turn: rnd() * 6.28 });
       }
-      for (i = 0; i < 5; i++) clouds.push({ a: rnd() * 6.28, r: 1300 + rnd() * 900, y: 520 + rnd() * 300, k: .8 + rnd() * .8, sp: .6 + rnd() * .8 });
+      [[-34, -34], [W + 34, -34], [-34, DZ + 34], [W + 34, DZ + 34], [W / 2, -34]].forEach(function (p) { lamps.push({ x: p[0], z: p[1] }); });
+      for (i = 0; i < 6; i++) clouds.push({ a: rnd() * 6.28, r: 1500 + rnd() * 900, y: 560 + rnd() * 320, k: .8 + rnd() * .9, sp: .6 + rnd() * .8 });
       var st = [], sr = seeded(3);
       for (i = 0; i < NSTAR; i++) { var az = sr() * 6.2832, el = .08 + sr() * 1.3, cr = Math.cos(el); st.push(Math.cos(az) * cr * 4000, -Math.sin(el) * 4000, Math.sin(az) * cr * 4000, 0, 0, 0, 0, 0); }
       gl.bindBuffer(gl.ARRAY_BUFFER, starBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(st), gl.STATIC_DRAW); bound = null;
+      gl.uniform2f(U.uRes, canvas.width, canvas.height);
     }
     resize(W, H, K, DZ);
 
-    var rimBuf = new Float32Array(96), faces = new Map();
+    var rimBuf = new Float32Array(96), faces = new Map(), L = [0, -1, 0], sunUp = 1;
     function draw(m, mode, M, c0, c1, c2) {
       bind(m); gl.uniform1i(U.uMode, mode); gl.uniformMatrix4fv(U.uM, false, M); gl.uniformMatrix3fv(U.uN, false, n3(M));
       if (c0) gl.uniform4f(U.uC0, c0[0], c0[1], c0[2], c0.length > 3 ? c0[3] : 1);
@@ -228,10 +332,11 @@
       if (c2) gl.uniform4f(U.uC2, c2[0], c2[1], c2[2], 1);
       gl.drawElements(gl.TRIANGLES, m.n, gl.UNSIGNED_SHORT, 0);
     }
-    function billboard(x, y, z, w, h, c, soft) {  // a soft disc that always faces the camera
+    function flat(on) { if (flatExt) gl.uniform1f(U.uFlat, on ? 1 : 0); }
+    function billboard(x, y, z, w, h, c, soft, mode) {  // a soft disc that always faces the camera
       gl.uniform1f(U.uA, soft);
       var M = new Float32Array([right[0] * w, right[1] * w, right[2] * w, 0, cup[0] * h, cup[1] * h, cup[2] * h, 0, fwd[0], fwd[1], fwd[2], 0, x, y, z, 1]);
-      draw(QD, 5, M, c);
+      draw(QD, mode || 5, M, c);
     }
     function faceTex(b, t) {  // the body's face, as dilmo.js draws it right now, into a small texture on the front of the sphere
       var fc = faces.get(b.el);
@@ -247,8 +352,8 @@
     }
     function body(b, t, dt, sink) {
       var r = b.r, fc = faceTex(b, t);
-      // faces the way it moves; standing still, it turns to the camera
       gl.bindTexture(gl.TEXTURE_2D, fc.tex);
+      // faces the way it moves; standing still, it turns to the camera
       var sp = Math.hypot(b.vx, b.vz), toCam = !(sp > .9 && !b.drag), want = toCam ? Math.atan2(eye[0] - b.x, eye[2] - b.z) : Math.atan2(b.vx, b.vz);
       var da = Math.atan2(Math.sin(want - fc.yaw), Math.cos(want - fc.yaw)); fc.yaw += da * Math.min(1, .12 * dt);
       // looking at you, it also lifts its face toward the camera (you see it from above)
@@ -259,10 +364,18 @@
       draw(SPH, 1, M, col(b.cols[0]), col(b.cols[1]), col(b.cols[2]));
       gl.uniform4fv(U.uRim, ZERO); gl.bindTexture(gl.TEXTURE_2D, blank);
     }
-    function shadow(x, z, w, a) {
-      gl.depthMask(false); gl.uniform1f(U.uA, .15);
-      draw(QD, 5, chain(T(x, fl - .6, z), Rx(90), S(w, w, 1)), [.08, .09, .16, a]);
-      gl.depthMask(true);
+    // shadows darken the ground (multiplied, so they never turn it grey or blue) and stretch away from the light, longer when it is low
+    var shadows = [];
+    function shadow(x, z, w, a, hgt) {
+      var k = (hgt || 0) / Math.max(.3, -L[1]), len = Math.hypot(L[0], L[2]) || 1, off = Math.min(w * 1.4, k * .55), sx = x - L[0] / len * off, sz = z - L[2] / len * off;
+      var stretch = 1 + Math.min(1.2, .9 * (1 - Math.min(1, -L[1])));
+      shadows.push([sx, sz, w * stretch, w, Math.atan2(L[2], L[0]), a * sunUp]);
+      if (hgt != null && hgt < w * 2) shadows.push([x, z, w * .55, w * .55, 0, a * .55]);  // a tight dark core right under it: weight
+    }
+    function flushShadows() {
+      gl.depthMask(false); gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+      shadows.forEach(function (s) { draw(QD, 10, chain(T(s[0], fl - .6, s[1]), Ry(-s[4]), Rx(90), S(s[2], s[3], 1)), [0, 0, 0, s[5]]); });
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(true); shadows = [];
     }
 
     var last = null, lastT = 0;
@@ -275,21 +388,26 @@
       }
       viewUpdate();
       var sk = s.sky, cx = W / 2, cz = DZ / 2;
-      var skyTop = col(sk["--sky-top"]), skyHor = col(sk["--sky-hor"]), far1 = col(sk["--far1"]), far2 = col(sk["--far2"]), grass = col(sk["--grass"]);
+      var skyTop = col(sk["--sky-top"]), skyHor = col(sk["--sky-hor"]), grass = col(sk["--grass"]);
       var gBack = col(sk["--g-back"]), gFront = col(sk["--g-front"]), tint = col(sk["--tint"], [1, 1, 1]), cloud = col(sk["--cloud"], [1, 1, 1]);
-      var palm = mix(grass, [.12, .24, .18], .45), trunk = mix(palm, [.42, .29, .18], .45), bush = mix(grass, [.11, .23, .17], .2), soil = mix(gBack, gFront, .5);
-      // sun and moon on a big arc around the arena (east on the left of the flat view), the light of the hour comes from them
-      var span = fl * .86, sunP = null, moonP = null, L, lc;
+      // things with their own colour (stone, plaster, wood, metal) dim with the hour; the palette colours already do
+      var ex = 1 - .62 * (sk.stars || 0), X = function (c) { return [c[0] * ex, c[1] * ex, c[2] * ex]; };
+      var palm = mix(grass, [.16, .34, .2], .5), trunk = X([.55, .42, .3]), bush = mix(grass, [.13, .3, .18], .35), hedge = mix(grass, [.12, .28, .16], .45);
+      // sun and moon on a big arc around the arena (east on the left of the flat view); the light of the hour comes from them
+      var span = fl * .86, sunP = null, moonP = null, lc;
       if (sk.sun) { var az = sk.sun.x / W * Math.PI, el = (fl - 10 - sk.sun.y) / (span * .85); sunP = [cx - Math.cos(az) * 2600, fl - 150 - el * 2000, cz - Math.sin(az) * 2600]; }
       if (sk.moon) { var az2 = sk.moon.x / W * Math.PI, el2 = (fl - 30 - sk.moon.y) / (span * .8); moonP = [cx - Math.cos(az2) * 2600, fl - 150 - el2 * 1800, cz - Math.sin(az2) * 2600]; }
-      if (sunP) { L = [sunP[0] - cx, sunP[1] - fl, sunP[2] - cz]; lc = mix([1, .97, .9], [1, .78, .55], sk.sun.warm || 0); }
-      else if (moonP) { L = [moonP[0] - cx, moonP[1] - fl, moonP[2] - cz]; lc = [.6, .66, .9]; }
-      else { L = [-300, -600, 400]; lc = [.5, .55, .75]; }
+      var warm = sk.sun ? sk.sun.warm || 0 : 0;
+      if (sunP) { L = [sunP[0] - cx, sunP[1] - fl, sunP[2] - cz]; lc = mix([1, .96, .88], [1, .72, .5], warm); sunUp = 1; }
+      else if (moonP) { L = [moonP[0] - cx, moonP[1] - fl, moonP[2] - cz]; lc = [.62, .68, .92]; sunUp = .45; }
+      else { L = [-300, -600, 400]; lc = [.5, .55, .75]; sunUp = .3; }
       L = norm(L);
-      gl.uniform3fv(U.uLight, L); gl.uniform3fv(U.uLc, lc); gl.uniform3fv(U.uAmb, skyHor); gl.uniform3fv(U.uTint, tint); gl.uniform3fv(U.uCam, eye); gl.uniform2f(U.uArena, W, DZ);
-      // where the horizon falls on screen, for the sky gradient
-      var hz = norm([fwd[0], 0, fwd[2]]), hy = dot(hz, cup) / Math.max(.05, dot(hz, fwd));
-      gl.uniform1f(U.uHor, clamp((1 - fy * hy) / 2, .15, .95));
+      var sunC = sunP ? mix([1, .93, .78], [1, .58, .28], warm) : [0, 0, 0], sunDir = sunP ? norm([sunP[0] - eye[0], sunP[1] - eye[1], sunP[2] - eye[2]]) : [0, 0, 0];
+      gl.uniform3fv(U.uLight, L); gl.uniform3fv(U.uLc, lc); gl.uniform3fv(U.uTint, tint); gl.uniform3fv(U.uCam, eye);
+      gl.uniform3fv(U.uSky, lum(mix(skyHor, skyTop, .45), .78)); gl.uniform3fv(U.uGnd, lum(mix(grass, [.8, .66, .48], .5), .5));  // hue from the hour; the tint sets how dark
+      gl.uniform3fv(U.uFogC, [skyHor[0] * tint[0], skyHor[1] * tint[1], skyHor[2] * tint[2]]); gl.uniform3fv(U.uSunC, sunC); gl.uniform3fv(U.uSunDir, sunDir);
+      gl.uniform3fv(U.uRight, right); gl.uniform3fv(U.uUp, cup); gl.uniform3fv(U.uFwd, fwd); gl.uniform2f(U.uFxy, fx, fy);
+      gl.uniform2f(U.uArena, W, DZ); gl.uniform1f(U.uFl, fl); gl.uniform1f(U.uLights, sk.lights || 0); gl.uniform1f(U.uT, t / 1000); gl.uniform1f(U.uExpo, ex);
 
       gl.clearColor(skyTop[0], skyTop[1], skyTop[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.disable(gl.DEPTH_TEST);
@@ -301,50 +419,79 @@
         gl.uniform1i(U.uMode, 6); gl.uniformMatrix4fv(U.uM, false, T(cx, fl, cz)); gl.uniform1f(U.uPt, 2.8 * canvas.width / W); gl.uniform4f(U.uC0, 1, 1, 1, sk.stars * .9);
         gl.drawArrays(gl.POINTS, 0, NSTAR);
       }
-      if (sunP) { var sc = mix([1, .9, .66], [1, .6, .3], sk.sun.warm || 0); billboard(sunP[0], sunP[1], sunP[2], 900, 900, [sc[0], sc[1], sc[2], .35], .05); billboard(sunP[0], sunP[1], sunP[2], 190, 190, [1, .98, .92, 1], .7); }
-      if (moonP) { billboard(moonP[0], moonP[1], moonP[2], 460, 460, [.85, .88, 1, .14], .05); billboard(moonP[0], moonP[1], moonP[2], 120, 120, [.95, .94, .88, 1], .75); }
+      if (moonP) { billboard(moonP[0], moonP[1], moonP[2], 520, 520, [.85, .88, 1, .12], .05); billboard(moonP[0], moonP[1], moonP[2], 120, 120, [.96, .95, .88, 1], .8); }
       clouds.forEach(function (c) {
         var a = c.a + t / 1000 * c.sp * .01, x = cx + Math.cos(a) * c.r, z = cz + Math.sin(a) * c.r, y = fl - c.y;
-        [[-.2, .2, 100, 55], [.05, 0, 115, 75], [.28, .22, 90, 50], [.04, .36, 175, 30]].forEach(function (e) { billboard(x + e[0] * 300 * c.k, y + e[1] * 100 * c.k, z, e[2] * 2 * c.k, e[3] * 2 * c.k, [cloud[0], cloud[1], cloud[2], .85], .55); });
+        [[-.22, .22, 100, 60], [.05, 0, 120, 82], [.3, .2, 92, 56], [.04, .34, 190, 34], [-.08, .1, 80, 60]].forEach(function (e) { billboard(x + e[0] * 300 * c.k, y + e[1] * 100 * c.k, z, e[2] * 2 * c.k, e[3] * 2 * c.k, [cloud[0], cloud[1], cloud[2], .9], 0, 12); });
       });
       gl.enable(gl.DEPTH_TEST);
-      // the ground, the hedge round the arena, the town, the palms
+      // the ground, then every shadow multiplied into it
       draw(QD, 4, chain(T(cx, fl, cz), Rx(-90), S(9000, 9000, 1)), grass, gBack, gFront);
-      [[cx, -9, W + 36, 18], [cx, DZ + 9, W + 36, 18], [-9, cz, 18, DZ + 36], [W + 9, cz, 18, DZ + 36]].forEach(function (h) { draw(CUBE, 0, chain(T(h[0], fl - 13, h[1]), S(h[2], 26, h[3])), bush); });
-      town.forEach(function (b) { var tc = b.row ? far2 : far1; draw(CUBE, 0, chain(T(b.x, fl - b.h / 2, b.z), S(b.w, b.h, b.d)), [tc[0] * b.tone, tc[1] * b.tone, tc[2] * b.tone]); });
-      if (sk.lights > .02) {
-        gl.uniform1f(U.uA, 0);
-        town.forEach(function (b) {
-          if (!b.win.length) return;
-          var rot = b.nz === 1 ? Ry(0) : b.nz === -1 ? Ry(Math.PI) : b.nx === 1 ? Ry(Math.PI / 2) : Ry(-Math.PI / 2);
-          b.win.forEach(function (w) { draw(QD, 7, chain(T(b.x + b.nx * (b.w / 2 + .5) + (b.nz ? w[0] : 0), fl - w[1], b.z + b.nz * (b.d / 2 + .5) + (b.nx ? w[0] : 0)), rot, S(7, 9, 1)), [1, .82, .48, sk.lights * .9]); });
-        });
-      }
+      town.forEach(function (b) { shadow(b.x, b.z, Math.max(b.w, b.d) * .7, .22, b.h * .35); });
+      palms.forEach(function (p) { var tx = p.x + Math.sin(p.lean * Math.PI / 180) * p.h * .5; shadow(tx, p.z, p.h * .32, .17, p.h * .35); });
+      s.bushes.forEach(function (bu) { shadow(bu.x, bu.z, 40, .3, 12); });
+      shadow(s.bench.x + s.bench.w / 2, s.bench.z, s.bench.w * .55, .28, 20);
+      lamps.forEach(function (l) { shadow(l.x, l.z, 8, .25, 60); });
+      var bl = s.ball; shadow(bl.x, bl.z, bl.r * 1.3, .32 * Math.max(.3, 1 - (fl - bl.r - bl.y) / 200), fl - bl.y);
+      var all = s.buddies.slice(); if (s.main) all.push(s.main);
+      all.forEach(function (b) { var fy2 = b.floor || fl, sc2 = Math.max(.35, Math.min(1, 1 - (fy2 - b.r - b.y) / 300)); shadow(b.x, b.z, b.r * 1.05 * sc2, .42 * sc2, fl - b.y); });
+      flushShadows();
+      // the hedge round the lawn
+      [[cx, -9, W + 36, 18], [cx, DZ + 9, W + 36, 18], [-9, cz, 18, DZ + 36], [W + 9, cz, 18, DZ + 36]].forEach(function (h) { draw(CUBE, 8, chain(T(h[0], fl - 14, h[1]), S(h[2], 28, h[3])), hedge); });
+      // the town: plaster blocks with windows, a parapet, sometimes something on the roof
+      town.forEach(function (b) {
+        draw(CUBE, 9, chain(T(b.x, fl - b.h / 2, b.z), S(b.w, b.h, b.d)), b.col, [b.seed[0], b.seed[1], 0], [b.w, b.h, b.d]);
+        var pc = X(mix(b.col, [.5, .45, .4], .12));
+        draw(CUBE, 0, chain(T(b.x, fl - b.h - 2.5, b.z), S(b.w + 3, 5, b.d + 3)), pc);
+        if (b.box) draw(CUBE, 0, chain(T(b.x + b.box[0] * b.w, fl - b.h - b.box[2] / 2, b.z + b.box[1] * b.d), S(b.box[2] * 1.2, b.box[2], b.box[2] * 1.2)), X(mix(b.col, [1, 1, 1], .3)));
+      });
+      // palms: a ringed, slightly leaning trunk, a crown of drooping fronds swaying one by one, coconuts
       palms.forEach(function (p) {
-        draw(CUBE, 0, chain(T(p.x, fl - p.h / 2, p.z), S(7, p.h, 7)), trunk);
-        var sway = s.reduce ? 0 : Math.sin(t / 950 + p.ph) * 2.4, len = p.h * .5;
-        [200, 235, 262, 278, 305, 340].forEach(function (ang, k) { draw(SPH, 0, chain(T(p.x, fl - p.h + 2, p.z), Ry(k * 1.05), Rz(ang + sway), T(len / 2, 0, 0), S(len / 2, len * .11, 3)), palm); });
+        draw(CYL, 11, chain(T(p.x, fl, p.z), Rz(p.lean), S(6, p.h, 6)), trunk);
+        var tx = p.x + Math.sin(p.lean * Math.PI / 180) * p.h, ty = fl - Math.cos(p.lean * Math.PI / 180) * p.h, len = p.h * .55;
+        for (var k = 0; k < 8; k++) {
+          var sway = s.reduce ? 0 : Math.sin(t / 900 + p.ph + k * .7) * 3;
+          draw(FROND, 13, chain(T(tx, ty, p.z), Ry(p.turn + k * .785), Rz(-18 - (k % 2) * 10 + sway), S(len, len, len)), palm);
+        }
+        flat(true);
+        [[4, 3], [-3, 4], [0, -4]].forEach(function (o) { draw(LOW, 0, chain(T(tx + o[0], ty + 6, p.z + o[1]), S(4.5, 4.5, 4.5)), X([.45, .32, .18])); });
+        flat(false);
       });
-      // the bench, the bushes, the ball
-      var bn = s.bench;
-      draw(CUBE, 0, chain(T(bn.x + bn.w / 2, bn.top + 3.5, bn.z), S(bn.w, 7, 30)), [.6, .42, .26]);
-      draw(CUBE, 0, chain(T(bn.x + bn.w / 2, bn.top - 12, bn.z - 13), S(bn.w - 4, 7, 4)), [.69, .49, .31]);
-      [bn.x + 12, bn.x + bn.w - 12].forEach(function (lx) { draw(CUBE, 0, chain(T(lx, bn.top + 17, bn.z + 8), S(5, 20, 5)), [.43, .29, .17]); draw(CUBE, 0, chain(T(lx, bn.top + 17, bn.z - 10), S(5, 20, 5)), [.43, .29, .17]); });
+      // lamp posts at the corners of the walk; at night a warm head, a halo and a pool of light on the ground
+      lamps.forEach(function (l) {
+        draw(CYL, 0, chain(T(l.x, fl, l.z), S(2.6, 78, 2.6)), X([.24, .26, .28]));
+        draw(CUBE, 0, chain(T(l.x, fl - 80, l.z), S(10, 4, 10)), X([.22, .24, .26]));
+        var on = sk.lights || 0;
+        draw(SPH, 7, chain(T(l.x, fl - 74, l.z), S(5, 5, 5)), mix(X([.8, .8, .78]), [1, .86, .55], on));
+      });
+      if (sk.lights > .02) {
+        gl.depthMask(false); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        lamps.forEach(function (l) {
+          billboard(l.x, fl - 74, l.z, 70, 70, [1, .78, .45, .35 * sk.lights], 0);
+          gl.uniform1f(U.uA, 0); draw(QD, 5, chain(T(l.x, fl - .8, l.z), Rx(90), S(150, 150, 1)), [1, .75, .42, .3 * sk.lights]);
+        });
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(true);
+      }
+      // the bench: two seat planks, a backrest, legs
+      var bn = s.bench, wood = X([.62, .44, .28]);
+      [-6, 6].forEach(function (o) { draw(CUBE, 0, chain(T(bn.x + bn.w / 2, bn.top + 3.5, bn.z + o), S(bn.w, 5, 11)), wood); });
+      draw(CUBE, 0, chain(T(bn.x + bn.w / 2, bn.top - 12, bn.z - 13), S(bn.w - 4, 8, 4)), mix(wood, [1, 1, 1], .08));
+      [bn.x + 12, bn.x + bn.w - 12].forEach(function (lx) {
+        draw(CUBE, 0, chain(T(lx, bn.top + 17, bn.z + 8), S(5, 20, 5)), X([.3, .3, .32])); draw(CUBE, 0, chain(T(lx, bn.top + 8, bn.z - 12), S(5, 38, 5)), X([.3, .3, .32]));
+      });
+      // bushes: faceted clumps on a little mound
+      flat(true);
       s.bushes.forEach(function (bu) {
-        draw(SPH, 0, chain(T(bu.x, fl + 2, bu.z), S(42, 10, 30)), soil);
-        [[-17, -16, 17, 6], [3, -24, 22, -4], [21, -15, 16, 8], [-4, -14, 15, -14], [10, -12, 14, 16]].forEach(function (k) { draw(SPH, 0, chain(T(bu.x + k[0], fl + k[1] + 4, bu.z + k[3]), S(k[2], k[2], k[2])), bush); });
+        draw(LOW, 0, chain(T(bu.x, fl + 2, bu.z), S(42, 9, 30)), mix(gBack, [.45, .35, .25], .3));
+        [[-17, -16, 17, 6], [3, -24, 22, -4], [21, -15, 16, 8], [-4, -14, 15, -14], [10, -12, 14, 16], [-10, -28, 12, 2]].forEach(function (k, i) {
+          draw(LOW, 0, chain(T(bu.x + k[0], fl + k[1] + 4, bu.z + k[3]), Ry(i), S(k[2], k[2] * .92, k[2])), mix(bush, [.3, .5, .25], (i % 3) * .08));
+        });
       });
-      var bl = s.ball;
+      flat(false);
       gl.uniform3f(U.uB0, .94, .42, .36); gl.uniform3f(U.uB1, 1, 1, 1); gl.uniform3f(U.uB2, .25, .71, .78); gl.uniform1f(U.uRot, bl.rot * Math.PI / 180);
       draw(SPH, 2, chain(T(bl.x, bl.y, bl.z), Ry(Math.atan2(bl.vx, bl.vz || 1e-6)), S(bl.r, bl.r, bl.r)), [1, 1, 1]);
-      shadow(bl.x, bl.z, bl.r * 2.2, .3 * Math.max(.3, 1 - (fl - bl.r - bl.y) / 200));
       // the characters: Dilmo and everyone else; a crouching friend sinks into the bush
-      var all = s.buddies.slice(); if (s.main) all.push(s.main);
-      all.forEach(function (b) {
-        var fy2 = b.floor || fl, sc2 = Math.max(.35, Math.min(1, 1 - (fy2 - b.r - b.y) / 300));
-        shadow(b.x, b.z, b.r * 1.7 * sc2, .38 * sc2);
-        body(b, t, dt, b.crouch ? b.r * .45 : 0);
-      });
+      all.forEach(function (b) { body(b, t, dt, b.crouch ? b.r * .45 : 0); });
       faces.forEach(function (fc, el) { if (t - fc.touched > 5000) { gl.deleteTexture(fc.tex); faces.delete(el); } });
     }
     return (api = { canvas: canvas, frame: frame, resize: resize, scr: scr, unscr: unscr, ground: ground, cam: cam,
