@@ -21,6 +21,7 @@ pageCss: "dilmo"
       <button type="button" class="snd" id="snd" aria-pressed="true">الصوت: يعمل</button>
       <button type="button" class="snd" id="talk" aria-pressed="true">الكلام: يعمل</button>
       <button type="button" class="snd" id="photo-btn">صوّر المشهد</button>
+      <button type="button" class="snd" id="d3-btn" aria-pressed="false" data-src="{{ '/js/dilmo3d.js' | url }}?v={{ buildVersion }}">عالم ثلاثي الأبعاد</button>
     </div>
   </div>
 
@@ -90,6 +91,7 @@ pageCss: "dilmo"
           </g>
         </g>
       </svg>
+      <div class="portal" id="portal" aria-hidden="true"></div>
     </div>
     <div class="tint" id="tint" aria-hidden="true"></div>
     <span class="clock" id="clock"></span>
@@ -139,4 +141,8 @@ pageCss: "dilmo"
       </figcaption>
     </figure>
   </div>
+  <dialog class="portal-ask" id="d3-ask">
+    <p>عالم دلمو ثلاثي الأبعاد أثقل قليلاً، وقد يتباطأ على الأجهزة الضعيفة. يمكنك العودة إلى العالم المسطّح في أي وقت.</p>
+    <div><button type="button" class="game-btn" id="d3-go">ادخل البوابة</button><button type="button" class="snd" id="d3-no">ليس الآن</button></div>
+  </dialog>
 </div>

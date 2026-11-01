@@ -137,6 +137,18 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .gem { position: absolute; left: 0; top: 0; width: 34px; height: 34px; padding: 0; border: 0; background: none; z-index: 3; cursor: pointer; filter: drop-shadow(0 0 6px var(--gold)); }
 .dilmo .gem::before { content: ""; position: absolute; inset: 6px; background: var(--gold); clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
 
+/* the 3D world: a WebGL canvas under the characters (their SVG faces stay on top and land on the spheres);
+   the 2D bodies, bushes, ball and hour tint cross-fade out while the portal grows */
+.dilmo .d3 { position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; }
+.dilmo .orb .pbody, .dilmo .orb .grain, .dilmo .orb .bp, .dilmo .bush, .dilmo .ball, .dilmo .tint { transition: opacity 1.2s ease; }
+.dilmo .is3d .orb .pbody, .dilmo .is3d .orb .grain, .dilmo .is3d .orb .bp, .dilmo .is3d .bush, .dilmo .is3d .ball, .dilmo .is3d .tint { opacity: 0; }
+.dilmo .portal { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; border-radius: 50%; opacity: 0; border: 3px solid #dffff2;
+  box-shadow: 0 0 30px 10px color-mix(in oklab, var(--cmp) 70%, #fff), inset 0 0 44px 8px color-mix(in oklab, var(--cmp) 60%, transparent); }
+.dilmo .portal-ask { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--fg); padding: 16px 18px; max-width: min(380px, 92vw); font: inherit; }
+.dilmo .portal-ask::backdrop { background: rgba(0, 0, 0, .45); }
+.dilmo .portal-ask p { margin: 0 0 12px; font-size: .95rem; line-height: 1.6; }
+.dilmo .portal-ask div { display: flex; flex-wrap: wrap; gap: 8px; }
+
 /* the visitor's character: creator, then controls */
 .dilmo .player-panel, .dilmo .player-ui { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; display: grid; gap: 12px; }
 .dilmo .player-ui[hidden], .dilmo .player-panel[hidden] { display: none; }

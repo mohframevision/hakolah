@@ -22,6 +22,7 @@ pageCss: "dilmo"
       <button type="button" class="snd" id="snd" aria-pressed="true">Sound: on</button>
       <button type="button" class="snd" id="talk" aria-pressed="true">Talking: on</button>
       <button type="button" class="snd" id="photo-btn">Take a photo</button>
+      <button type="button" class="snd" id="d3-btn" aria-pressed="false" data-src="{{ '/js/dilmo3d.js' | url }}?v={{ buildVersion }}">3D world</button>
     </div>
   </div>
 
@@ -91,6 +92,7 @@ pageCss: "dilmo"
           </g>
         </g>
       </svg>
+      <div class="portal" id="portal" aria-hidden="true"></div>
     </div>
     <div class="tint" id="tint" aria-hidden="true"></div>
     <span class="clock" id="clock"></span>
@@ -140,4 +142,8 @@ pageCss: "dilmo"
       </figcaption>
     </figure>
   </div>
+  <dialog class="portal-ask" id="d3-ask">
+    <p>Dilmo's 3D world is a bit heavier and may slow down on weaker devices. You can return to the flat world any time.</p>
+    <div><button type="button" class="game-btn" id="d3-go">Enter the portal</button><button type="button" class="snd" id="d3-no">Not now</button></div>
+  </dialog>
 </div>

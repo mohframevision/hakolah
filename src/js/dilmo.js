@@ -87,6 +87,8 @@
     backIn: ["joy", ["عدتُ!", "اشتقتُ إلى المكان!", "ها أنا من جديد!"]],
     arrive2: ["joy", ["رجعتُ!", "مرحباً من جديد!", "أنا هنا!"]],
     pound: ["surprise", ["ارتجّت الأرض!", "يا لها من ضربة!", "قفزتُ من مكاني!", "ما هذه القوة؟!"]],
+    portalIn: ["surprise", ["صرتُ مجسّماً!", "انظر إليّ! صرتُ كرة حقيقية!", "ما هذا العالم؟ لكل شيء عمق!", "أشعر بالضوء على جسمي!"]],
+    portalOut: ["joy", ["عدتُ مسطّحاً من جديد!", "العالم القديم مريح أيضاً.", "كانت رحلة جميلة!"]],
     playerJoin: ["joy", ["أهلاً بك يا {n}!", "مرحباً {n}، انضمّ إلينا!", "صار عندنا صديق اسمه {n}!", "تشرّفنا بك يا {n}!"]],
     playerBack: ["joy", ["عاد {n}! اشتقنا إليك.", "أهلاً من جديد يا {n}!", "{n} هنا مرة أخرى!"]],
     buddyHiPlayer: ["joy", ["مرحباً {n}!", "هل تلعب معنا يا {n}؟", "لونك جميل يا {n}!", "أنا سعيد بلقائك يا {n}."]],
@@ -235,6 +237,8 @@
     backIn: ["joy", ["I'm back!", "I missed this place!", "Here I am again!"]],
     arrive2: ["joy", ["I'm back!", "Hello again!", "I'm here!"]],
     pound: ["surprise", ["The ground shook!", "What a stomp!", "I jumped right up!", "Such power!"]],
+    portalIn: ["surprise", ["I have depth now!", "Look at me! I'm a real ball!", "What is this world? Everything has depth!", "I can feel the light on me!"]],
+    portalOut: ["joy", ["Flat again!", "The old world is cosy too.", "What a trip!"]],
     playerJoin: ["joy", ["Welcome, {n}!", "Hi {n}, join us!", "We have a new friend called {n}!", "Nice to meet you, {n}!"]],
     playerBack: ["joy", ["{n} is back! We missed you.", "Welcome back, {n}!", "{n} is here again!"]],
     buddyHiPlayer: ["joy", ["Hi {n}!", "Will you play with us, {n}?", "Nice colour, {n}!", "Happy to meet you, {n}."]],
@@ -2111,23 +2115,25 @@
     var a = keys[i], b = keys[i + 1], p = clamp((h - a[0]) / ((b[0] - a[0]) || 1), 0, 1), A = PAL[a[1]], B = PAL[b[1]];
     VARS.forEach(function (v, k) { stage.style.setProperty(v, "color-mix(in oklab, " + A[k] + " " + ((1 - p) * 100).toFixed(1) + "%, " + B[k] + ")"); });
     VARS.forEach(function (v, k) { skyNow[v] = mixHex(A[k], B[k], p); });  // plain colours for the photo
-    stage.style.setProperty("--stars", (A[9] + (B[9] - A[9]) * p).toFixed(2));
-    stage.style.setProperty("--lights", (A[10] + (B[10] - A[10]) * p).toFixed(2));
+    skyNow.stars = A[9] + (B[9] - A[9]) * p; skyNow.lights = A[10] + (B[10] - A[10]) * p;
+    stage.style.setProperty("--stars", skyNow.stars.toFixed(2));
+    stage.style.setProperty("--lights", skyNow.lights.toFixed(2));
     stage.style.setProperty("--palm", "color-mix(in oklab, var(--grass) 55%, #1f3d2e)");
     // the sky's horizon colour meets the floor line
     stage.style.setProperty("--hor-at", ((ground + R) / world.offsetHeight * 100).toFixed(1) + "%");
     // sun on an arc from sunrise to sunset, moon on the night arc; warmer and lower near the horizon
     var fl = ground + R, top = Math.max(60, fl * .14), span = fl - top;
     var ts = (h - sr) / (ss - sr), up = ts > -.04 && ts < 1.04;
-    sunEl.style.display = up ? "" : "none";
+    sunEl.style.display = up ? "" : "none"; skyNow.sun = null; skyNow.moon = null;
     if (up) {
       var el = Math.sin(Math.PI * clamp(ts, 0, 1));
-      sunEl.style.transform = "translate(" + (W * (.08 + .84 * ts)).toFixed(1) + "px," + (fl - 10 - span * .85 * el).toFixed(1) + "px)";
-      stage.style.setProperty("--sun", "color-mix(in oklch, #ff9a4d " + (Math.max(0, 1 - el * 2.2) * 100).toFixed(0) + "%, #ffe7a8)");
+      skyNow.sun = { x: W * (.08 + .84 * ts), y: fl - 10 - span * .85 * el, warm: Math.max(0, 1 - el * 2.2) };
+      sunEl.style.transform = "translate(" + skyNow.sun.x.toFixed(1) + "px," + skyNow.sun.y.toFixed(1) + "px)";
+      stage.style.setProperty("--sun", "color-mix(in oklch, #ff9a4d " + (skyNow.sun.warm * 100).toFixed(0) + "%, #ffe7a8)");
     }
     var nightLen = 24 - ss + sr, tn = ((h - ss + 24) % 24) / nightLen, mup = tn > .07 && tn < .95;
     moonEl.style.display = mup ? "" : "none";
-    if (mup) moonEl.style.transform = "translate(" + (W * (.1 + .8 * tn)).toFixed(1) + "px," + (fl - 30 - span * .8 * Math.sin(Math.PI * tn)).toFixed(1) + "px)";
+    if (mup) { skyNow.moon = { x: W * (.1 + .8 * tn), y: fl - 30 - span * .8 * Math.sin(Math.PI * tn) }; moonEl.style.transform = "translate(" + skyNow.moon.x.toFixed(1) + "px," + skyNow.moon.y.toFixed(1) + "px)"; }
   }
   function onBenchX(x) { return x > bench.x + 4 && x < bench.x + bench.w - 4; }
   function surfaceY(b) { var fy = floorY(b); return onBenchX(b.x) && b.y <= bench.top - b.f.r + 3 ? bench.top - b.f.r : fy; }
@@ -2213,11 +2219,16 @@
   }
   // photo: the scene redrawn on a canvas (characters with their current faces), offered as a PNG
   var photoModal = document.getElementById("photo-modal");
-  function paintOrb(x, el, cx, cy, r, cols, sx, sy, tilt) {
+  // resolved CSS colours can be oklab()/color(); normalised through a canvas, with a fallback when it can't parse them
+  var ccx = document.createElement("canvas").getContext("2d");
+  function cssColor(v, fb) { ccx.fillStyle = "#010203"; ccx.fillStyle = v; return ccx.fillStyle === "#010203" ? fb : v; }
+  function paintOrb(x, el, cx, cy, r, cols, sx, sy, tilt, faceOnly) {
     x.save(); x.translate(cx, cy + r); x.rotate(tilt * Math.PI / 180); x.scale(sx, sy); x.translate(0, -r);
-    var g = x.createRadialGradient(-r * .24, -r * .36, r * .1, 0, 0, r * 1.3);
-    g.addColorStop(0, cols[0]); g.addColorStop(.55, cols[1]); g.addColorStop(1, cols[2]);
-    x.fillStyle = g; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill();
+    if (!faceOnly) {  // in the 3D photo the body is already in the picture
+      var g = x.createRadialGradient(-r * .24, -r * .36, r * .1, 0, 0, r * 1.3);
+      g.addColorStop(0, cols[0]); g.addColorStop(.55, cols[1]); g.addColorStop(1, cols[2]);
+      x.fillStyle = g; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill();
+    }
     var face = el.querySelector(".pf, .bf"), m = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(face.getAttribute("transform") || "") || [0, 0, 0];
     x.translate(+m[1], +m[2]); x.fillStyle = "#fff";
     face.querySelectorAll(".pk").forEach(function (e) { var o = +e.style.opacity || 0; if (!o) return; x.globalAlpha = o; x.fillStyle = "#ff7a9c"; x.beginPath(); x.ellipse(+e.getAttribute("cx"), +e.getAttribute("cy"), +e.getAttribute("rx"), +e.getAttribute("ry"), 0, 0, Math.PI * 2); x.fill(); });
@@ -2238,6 +2249,7 @@
     });
   }
   function snap() {
+    if (view3) return Promise.resolve(paintScene(null, view3.snapshot()));
     var lights = getComputedStyle(stage).getPropertyValue("--lights").trim() || "0";
     return Promise.all([
       svgImage(far1, skyNow["--far1"] || "#999"),
@@ -2248,11 +2260,13 @@
       svgImage(palmEl, getComputedStyle(palmEl.querySelector(".fronds")).fill, function (cl) { cl.querySelector(".trunk").setAttribute("fill", getComputedStyle(palmEl.querySelector(".trunk")).fill); })
     ]).then(function (img) { return paintScene(img); });
   }
-  function paintScene(img) {
+  function paintScene(img, bg) {  // bg: the 3D canvas, which already holds the world and the bodies
     var s = 2, H = world.offsetHeight, c = document.createElement("canvas"), x = c.getContext("2d"), cs = getComputedStyle(stage);
     var tok = function (n) { return cs.getPropertyValue(n).trim(); };
     c.width = W * s; c.height = H * s; x.scale(s, s);
     var col = function (v) { return skyNow[v] || "#808080"; }, fl = ground + R;
+    if (bg) x.drawImage(bg, 0, 0, W, H);
+    else {
     var gr = x.createLinearGradient(0, 0, 0, fl); gr.addColorStop(0, col("--sky-top")); gr.addColorStop(1, col("--sky-hor")); x.fillStyle = gr; x.fillRect(0, 0, W, H);
     x.globalAlpha = +tok("--stars") || 0; x.fillStyle = "#fff"; sky.querySelectorAll(".star").forEach(function (e) { x.fillRect(e.offsetLeft, e.offsetTop, 2, 2); }); x.globalAlpha = 1;
     [[sunEl, "#ffe7a8", 20], [moonEl, "#f3efe0", 13]].forEach(function (o) {  // sun or moon where it is now
@@ -2273,14 +2287,16 @@
     if (img[2] && pm) x.drawImage(img[2], +pm[1], +pm[2], 120, 150);
     x.fillStyle = "#9a6a42"; x.fillRect(bench.x, bench.top, bench.w, 8); x.fillRect(bench.x + 10, bench.top + 8, 5, 20); x.fillRect(bench.x + bench.w - 15, bench.top + 8, 5, 20);
     x.fillStyle = tok("--surface"); x.beginPath(); x.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); x.fill(); x.strokeStyle = tok("--border"); x.stroke();
-    buddies.forEach(function (b) { if (!b.f.player) paintOrb(x, b.el, b.x, b.y, b.f.r, [b.f.c1, b.f.c2, b.f.c3], clamp(b.sx, .8, 1.25), clamp(b.sy, .75, 1.22), b.tilt); });
-    // resolved stop colours can be oklab()/color(); fall back to the token if this canvas can't parse them
-    var mst = orb.querySelectorAll("stop"), okc = function (v, fb) { x.fillStyle = "#010203"; x.fillStyle = v; return x.fillStyle === "#010203" ? fb : v; };
-    paintOrb(x, orb, pos.x, pos.y, R, [0, 1, 2].map(function (i) { return okc(getComputedStyle(mst[i]).stopColor, tok(i === 2 ? "--cmp-deep" : "--cmp")); }), clamp(sp.sx.v, .8, 1.25), clamp(sp.sy.v, .75, 1.22), sp.tilt.v);
-    if (player) paintOrb(x, player.el, player.x, player.y, player.f.r, [player.f.c1, player.f.c2, player.f.c3], clamp(player.sx, .8, 1.25), clamp(player.sy, .75, 1.22), player.tilt);
+    }
+    var fo = !!bg;
+    buddies.forEach(function (b) { if (!b.f.player) paintOrb(x, b.el, b.x, b.y, b.f.r, [b.f.c1, b.f.c2, b.f.c3], clamp(b.sx, .8, 1.25), clamp(b.sy, .75, 1.22), b.tilt, fo); });
+    if (!mainAway) paintOrb(x, orb, pos.x, pos.y, R, mainColours(), clamp(sp.sx.v, .8, 1.25), clamp(sp.sy.v, .75, 1.22), sp.tilt.v, fo);
+    if (player) paintOrb(x, player.el, player.x, player.y, player.f.r, [player.f.c1, player.f.c2, player.f.c3], clamp(player.sx, .8, 1.25), clamp(player.sy, .75, 1.22), player.tilt, fo);
+    if (!bg) {
     var bc = getComputedStyle(document.querySelector(".play")).getPropertyValue("--bush").trim() || tok("--cmp");
     x.fillStyle = bc; bushes.forEach(function (b) { var fl = ground + R; [[-17, -16, 17], [3, -24, 22], [21, -15, 16]].forEach(function (k) { x.beginPath(); x.arc(b.cx + k[0], fl + k[1] + 4, k[2], 0, Math.PI * 2); x.fill(); }); });
     x.globalCompositeOperation = "multiply"; x.fillStyle = col("--tint"); x.fillRect(0, 0, W, H); x.globalCompositeOperation = "source-over";  // the light of the hour
+    }
     x.font = "700 12px Cairo, sans-serif"; x.textAlign = "center"; x.fillStyle = tok("--muted");
     buddies.forEach(function (b) { x.fillText(b.tag.textContent, b.x, b.y - b.f.r - 10); });
     var ex = EN ? 16 : W - 16; x.direction = EN ? "ltr" : "rtl"; x.textAlign = EN ? "left" : "right"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 4; x.fillStyle = "#fff"; x.font = "800 16px Cairo, sans-serif"; x.fillText(T("هكوله · دلمو", "Hakolah · Dilmo"), ex, 30);
@@ -2298,6 +2314,65 @@
   document.getElementById("photo-close").addEventListener("click", function () { photoModal.hidden = true; });
   photoModal.addEventListener("click", function (e) { if (e.target === photoModal) photoModal.hidden = true; });
   addEventListener("keydown", function (e) { if (e.key === "Escape") photoModal.hidden = true; });
+
+  // ---- the 3D world (dilmo3d.js, loaded only when asked): it draws, everything else stays here. A portal opens around
+  //      Dilmo and the other world shows through the hole as it grows; the 2D bodies cross-fade out underneath (CSS .is3d) ----
+  var view3 = null, d3Busy = false, d3Btn = document.getElementById("d3-btn"), d3Ask = document.getElementById("d3-ask"), portalEl = document.getElementById("portal");
+  var mainCols = null, mainColsAt = -1e4;
+  function mainColours() {  // Dilmo's three gradient colours, from the theme (re-read now and then: the theme can change)
+    var t = performance.now();
+    if (!mainCols || t - mainColsAt > 500) {
+      mainColsAt = t; var mst = orb.querySelectorAll("stop"), cs = getComputedStyle(stage);
+      mainCols = [0, 1, 2].map(function (i) { return cssColor(getComputedStyle(mst[i]).stopColor, cs.getPropertyValue(i === 2 ? "--cmp-deep" : "--cmp").trim()); });
+    }
+    return mainCols;
+  }
+  function scene3(t) {
+    var one = function (b) { return { x: b.x, y: b.y, r: b.f.r, pts: b.pts, sx: clamp(b.sx, .8, 1.25), sy: clamp(b.sy, .75, 1.22), tilt: b.tilt, spin: b.spinA, cols: [b.f.c1, b.f.c2, b.f.c3], crouch: !!b.crouch && !b.f.player, floor: surfaceY(b) + b.f.r }; };
+    return { t: t, W: W, H: world.offsetHeight, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce,
+      main: mainAway ? null : { x: pos.x, y: pos.y, r: R, pts: pts, sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
+      buddies: buddies.map(one), ball: ball, bench: bench, bushes: bushes.map(function (b) { return b.cx; }) };
+  }
+  function load3d() {
+    return window.Dilmo3D ? Promise.resolve() : new Promise(function (res, rej) { var s = document.createElement("script"); s.src = d3Btn.dataset.src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  }
+  function portal(on) {
+    d3Busy = true;
+    var cx = mainAway ? W / 2 : pos.x, cy = mainAway ? ground : pos.y, H = world.offsetHeight;
+    var Rm = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 20, dur = reduce ? 400 : 1500, t0 = performance.now();
+    stage.classList.toggle("is3d", on);
+    tone(on ? 160 : 720, on ? 820 : 150, dur / 1000, "sine", .05); hiss(dur / 1000, .05, 2400);
+    (function step(t) {
+      var p = clamp((t - t0) / dur, 0, 1), r = Rm * (on ? p * p * p : Math.pow(1 - p, 3));  // slow, then it rushes to swallow the stage
+      view3.canvas.style.clipPath = "circle(" + r.toFixed(0) + "px at " + cx.toFixed(0) + "px " + cy.toFixed(0) + "px)";
+      portalEl.style.left = (cx - r).toFixed(0) + "px"; portalEl.style.top = (cy - r).toFixed(0) + "px"; portalEl.style.width = portalEl.style.height = (2 * r).toFixed(0) + "px";
+      portalEl.style.opacity = Math.sin(Math.PI * p).toFixed(2);
+      if (p < 1) return requestAnimationFrame(step);
+      portalEl.style.opacity = "0"; d3Busy = false;
+      if (on) view3.canvas.style.clipPath = "";
+      else { view3.destroy(); view3 = null; }
+      d3Btn.setAttribute("aria-pressed", String(on)); d3Btn.textContent = on ? T("عودة إلى العالم المسطّح", "Back to the flat world") : T("عالم ثلاثي الأبعاد", "3D world");
+      say(line(on ? "portalIn" : "portalOut"), "portal", 1000);
+    })(t0);
+  }
+  function enter3d() {
+    d3Btn.disabled = true;
+    load3d().then(function () {
+      view3 = window.Dilmo3D.create(world, W, world.offsetHeight, K);
+      if (!view3) throw new Error("no WebGL");
+      view3.canvas.style.clipPath = "circle(0px at 0 0)";
+      portal(true);
+    }).catch(function (e) { console.warn("dilmo3d", e); d3Btn.hidden = true; say(T("جهازك لا يفتح العالم ثلاثي الأبعاد.", "Your device can't open the 3D world."), "portal", 1000); })
+      .then(function () { d3Btn.disabled = false; });
+  }
+  d3Btn.addEventListener("click", function () {
+    stir();
+    if (d3Busy) return;
+    if (view3) { portal(false); return; }
+    if (store.d3ok || !d3Ask.showModal) enter3d(); else d3Ask.showModal();  // a short warning, the first time only
+  });
+  document.getElementById("d3-go").addEventListener("click", function () { d3Ask.close(); store.d3ok = 1; saveStore(); enter3d(); });
+  document.getElementById("d3-no").addEventListener("click", function () { d3Ask.close(); });
 
   function update(t, dt) {
     if (mainAway) {  // only friends (and the visitor) are around
@@ -2458,6 +2533,7 @@
     layoutBubbles();
     ballEl.style.transform = "translate(" + (ball.x - 11).toFixed(1) + "px," + (ball.y - 11).toFixed(1) + "px) rotate(" + ball.rot.toFixed(1) + "deg)";
     gems.forEach(function (g) { g.el.style.transform = "translate(" + (g.x - 17).toFixed(1) + "px," + (g.y - 17 + Math.sin(t / 400) * 4).toFixed(1) + "px)"; });
+    if (view3) view3.frame(scene3(t));
   }
 
   function frame(t) {
@@ -2472,7 +2548,7 @@
     if (running && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
   }).observe(stage);
   // the stage height depends on the header height, which is only known after load: re-measure whenever it changes size
-  new ResizeObserver(function () { measure(); placeProps(); }).observe(stage);
+  new ResizeObserver(function () { measure(); placeProps(); if (view3) view3.resize(W, world.offsetHeight, K); }).observe(stage);
   var sideways = matchMedia("(orientation: landscape) and (max-height: 500px)");
   function fitSideways() { if (sideways.matches) stage.scrollIntoView({ block: "start" }); }
   sideways.addEventListener("change", fitSideways); fitSideways();
