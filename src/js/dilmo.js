@@ -1061,6 +1061,7 @@
       if (b.y > fy) {  // the visitor's character lands dead, no bounce; friends stay bouncy
         var hit = b.vy; b.y = fy; b.vy = hit > 2.5 && !me2 ? -hit * .45 : 0; if (!me2) { b.vx *= .8; b.vz *= .8; }
         if (hit > 2.5) { b.svy -= Math.min(hit, 18) * .012; b.svx += Math.min(hit, 18) * .009; dent(0, r, Math.min(hit, 20) * .5 * r / R, b.pts); }
+        if (me2 && hit > 4) { var sq = Math.min(1, hit / 18); b.sy = 1 - .35 * sq; b.sx = 1 + .28 * sq; }  // squash by how hard it landed, then spring back
         if (me2 && hit > 9) { var sd0 = sv(b); dust(sd0.x, sd0.y + r * sd0.s); }
       }
       if (b.x < r || b.x > W - r) { b.x = clamp(b.x, r, W - r); b.vx = me2 ? 0 : -b.vx * .6; }
@@ -1110,9 +1111,19 @@
       if (d >= min) continue;
       var nx = dx / d, ny = dy / d, nz = dz / d, ma = A.fixed ? 0 : 1 / (A.r * A.r), mb = B.fixed ? 0 : 1 / (B.r * B.r), ms = ma + mb;
       // the visitor walks past others (like NPCs in a platformer) and only collides when landing on or under them
-      if (((A.b && A.b.f.player) || (B.b && B.b.f.player)) && !A.ball && !B.ball && Math.abs(ny) < .6) continue;
-      var kicker = A.ball ? B : B.ball ? A : null;  // whoever runs into the ball gives it a kick
-      if (kicker && (kicker.o.vx || kicker.o.vz) && Math.abs(ny) < .8) { ball.vx += kicker.o.vx * .5; ball.vz += kicker.o.vz * .5; if (ball.y >= ground + R - ball.r - 1) ball.vy -= 2.5; }
+      if (((A.b && A.b.f.player) || (B.b && B.b.f.player)) && !A.ball && !B.ball && Math.abs(ny) < .6) {
+        if (!D3) continue;  // flat: the visitor walks past others, like NPCs in a platformer
+        // the 3D arena: your character shoulders them aside and carries them a little (it never bounces off them)
+        var pl = A.b && A.b.f.player ? A : B, ot = pl === A ? B : A, sg = pl === A ? 1 : -1, ov = min - d;
+        if (!ot.fixed) { ot.o.x += sg * nx * ov * .9; ot.o.z += sg * nz * ov * .9; ot.o.vx += pl.o.vx * .35; ot.o.vz += pl.o.vz * .35; if (ot.b) ot.b.svy -= .04; }
+        pl.o.x -= sg * nx * ov * .1; pl.o.z -= sg * nz * ov * .1;
+        continue;
+      }
+      var kicker = A.ball ? B : B.ball ? A : null;  // whoever runs into the ball scoops it up a little (the impulse below does the kick)
+      if (kicker && Math.abs(ny) < .8 && ball.y >= ground + R - ball.r - 1) {
+        var into = ((kicker === A ? 1 : -1) * (nx * kicker.o.vx + nz * (kicker.o.vz || 0)));  // speed toward the ball
+        if (into > 1) ball.vy -= 1.5 + .25 * Math.min(8, into);
+      }
       if (!ms) continue;
       var over = min - d;
       A.o.x -= nx * over * ma / ms; A.o.y -= ny * over * ma / ms; A.o.z -= nz * over * ma / ms; B.o.x += nx * over * mb / ms; B.o.y += ny * over * mb / ms; B.o.z += nz * over * mb / ms;
@@ -1242,7 +1253,8 @@
   function drawBuddy(b, t) {
     var r = b.f.r, S = b.size, i;
     var jit = t < (b.tickleUntil || 0) && !reduce ? (Math.random() - .5) * 3 : 0;
-    var sb = sv(b);
+    var sb = sv(b), hid = D3 && D3.hideEl === b.el;
+    b.el.style.visibility = hid ? "hidden" : ""; if (b.tag) b.tag.style.visibility = hid ? "hidden" : "";
     b.el.style.transform = "translate(" + (sb.x - S / 2 + jit).toFixed(1) + "px," + (sb.y - S / 2).toFixed(1) + "px)" + (D3 ? " scale(" + sb.s.toFixed(3) + ")" : "");
     var mx = 0; for (i = 0; i < b.pts.length; i++) mx = Math.max(mx, Math.abs(b.pts[i].x), Math.abs(b.pts[i].y));
     if (mx > .05 || !b.flat) { var dd = pathD(b.pts, r); b.bp.setAttribute("d", dd); b.bg.setAttribute("d", dd); b.flat = mx <= .05; }
@@ -1266,6 +1278,7 @@
       else {
         var bw = boxOf(b.bub, W + "x" + K)._mw, bh = b.bub._mh, bx = clamp(sb.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (sb.y - r * sb.s) * K - 12 - bh;
         if (by < 8) by = (sb.y + r * sb.s) * K + 12;
+        if (hid) { bx = (W * K - bw) / 2; by = world.offsetHeight * K - bh - 16; }
         b.bub._x = bx; b.bub._y = by; b.bub._w = bw; b.bub._h = bh;
       }
     }
@@ -1276,6 +1289,7 @@
   // jump from designer numbers, not a guessed gravity (Pittman, GDC 2016): g = 2h/t², v0 = 2h/t
   var JUMP_H = 110, JUMP_T = 15, PG = 2 * JUMP_H / (JUMP_T * JUMP_T), PV = 2 * JUMP_H / JUMP_T;
   function playerGravity(b) {
+    if (Math.abs(b.vy) < 1.5 && !b.pound) return PG * .6;  // a moment of float at the top makes landings deliberate
     return b.vy > 0 ? PG * 2 : PG;  // quick rise, heavier fall: no floating
   }
   // the last three colours unlock with collected stars
@@ -1346,6 +1360,7 @@
     renderTrain();
     loadWords();
     if (window.loadMenus) window.loadMenus().then(function () { index = null; }, function () { /* offline: search places without menus */ });  // dishes become searchable
+    if (view3 && !d3Busy && viewMode === "orbit") setView("third"); else if (view3) setView(viewMode);  // in 3D the camera goes behind you
   }
   function leaveGame() {
     if (!player) return;
@@ -1355,6 +1370,7 @@
     player = null; store.player = null; saveStore();
     panel.hidden = false; pui.hidden = true; renderTrain();
     say(line("playerBye", { n: n }), "pbye", 1000);
+    if (view3) setView(viewMode === "second" ? "third" : viewMode);
   }
   document.getElementById("pp-join").addEventListener("click", function () {
     var n = document.getElementById("pp-name").value.trim().slice(0, 12) || T("ضيف", "Guest");
@@ -1369,7 +1385,8 @@
     var ix = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), iz = (keys.far ? 1 : 0) - (keys.near ? 1 : 0), charged = b.crouchT && t - b.crouchT > 300;
     // in the 3D world the keys are relative to the camera: right = screen right, far = away from you
     var mx = ix, mz = 0;
-    if (D3) { var ax = D3.axes(); mx = ax.rx * ix + ax.fx * iz; mz = ax.rz * ix + ax.fz * iz; var ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; } }
+    if (!ix && !iz) b.basis = null;
+    if (D3) { var ax = b.basis || (b.basis = D3.axes()); mx = ax.rx * ix + ax.fx * iz; mz = ax.rz * ix + ax.fz * iz; var ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; } }
     if (!keys.down) b.poundLock = false;
     b.crouch = keys.down && onF;
     if (b.crouch) b.crouchT = b.crouchT || t; else if (onF && !keys.down) b.crouchT = 0;
@@ -1391,9 +1408,9 @@
     if (b.other && b.other.mode !== (b.mode === "tag" ? "flee" : "tag")) { b.mode = "wander"; b.other = null; }
     var h = b.mode === "tag" && b.other ? T("أنت المطارِد! المس " + b.other.f.name + ".", "You're it! Tag " + b.other.f.name + ".") : b.mode === "flee" && b.other ? T("اهرب! " + b.other.f.name + " يطاردك.", "Run! " + b.other.f.name + " is chasing you.") :
       D3 ? (TOUCH ? T("◀ ▶ و«أبعد» و«أقرب» للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية", "◀ ▶, Away and Closer to move · Jump (again in the air) · ▼ in the air slams down")
-        : T("A وD وW وS للحركة · المسافة للقفز (مرة ثانية في الهواء) · السهم للأسفل في الهواء ضربة أرضية · اسحب الأرض لتدوير الكاميرا", "A, D, W and S to move · Space to jump (again in the air) · Down arrow in the air slams down · drag the ground to turn the camera")) :
+        : T("\u2066W A S D\u2069 للحركة · المسافة للقفز (مرة ثانية في الهواء) · السهم للأسفل في الهواء ضربة أرضية · اسحب الأرض لتدوير الكاميرا · \u2066V\u2069 لتغيير المنظر", "A, D, W and S to move · Space to jump (again in the air) · Down arrow in the air slams down · drag the ground to turn the camera · V to change the view")) :
       TOUCH ? T("◀ ▶ للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية، واضغطه مع «قفز» لقفزة عالية", "◀ ▶ to move · Jump (again in the air) · ▼ in the air slams down; hold it, then Jump, for a high jump") :
-      T("A وD للحركة · المسافة للقفز (مرة ثانية في الهواء) · S في الهواء ضربة أرضية، وعلى الأرض تجمّع لقفزة عالية", "A and D to move · Space to jump (again in the air) · S in the air slams down, on the ground it charges a high jump");
+      T("\u2066A / D\u2069 للحركة · المسافة للقفز (مرة ثانية في الهواء) · \u2066S\u2069 في الهواء ضربة أرضية، وعلى الأرض تجمّع لقفزة عالية", "A and D to move · Space to jump (again in the air) · S in the air slams down, on the ground it charges a high jump");
     if (hud.textContent !== h) hud.textContent = h;
   }
   // e.code, not e.key: WASD stay in the same place on an Arabic keyboard layout
@@ -1413,6 +1430,7 @@
     var fy = floorY(b), hit = false;
     b.vy = -3; b.svy -= .3; b.svx += .25; b.poundLock = true; sfx("splat");
     hitStopUntil = performance.now() + 70;  // a few frozen frames sell the impact
+    if (D3) D3.shake(.55);
     var sl = sv({ x: b.x, y: fy, z: b.z }); dust(sl.x, sl.y + b.f.r * sl.s);
     [pos].concat(others()).forEach(function (o) {
       var d = Math.hypot(o.x - b.x, o.z - b.z); if (d > 170) return;
@@ -2168,7 +2186,10 @@
     ball.vy += .7 * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt; ball.z += ball.vz * dt;
     if (ball.vy > 0 && onBench(ball.x, ball.z) && py + ball.r <= bench.top + 2 && ball.y + ball.r > bench.top) { ball.y = bench.top - ball.r; ball.vy = -ball.vy * .55; }
     if (ball.y > fl) { var h = ball.vy; ball.y = fl; ball.vy = h > 1.5 ? -h * .62 : 0; if (h > 4) tone(220, 160, .06, "sine", .05); }
-    if (ball.y >= fl - .5) { ball.vx *= Math.pow(.985, dt); ball.vz *= Math.pow(.985, dt); }
+    if (ball.y >= fl - .5) {  // rolling on the lawn: a steady drag that brings it to a stop, not a crawl that never ends
+      var bs = Math.hypot(ball.vx, ball.vz), bk = bs ? Math.max(0, bs - .045 * dt) / bs * Math.pow(.995, dt) : 0;
+      ball.vx *= bk; ball.vz *= bk; if (bs < .05) ball.vx = ball.vz = 0;
+    }
     if (ball.x < ball.r || ball.x > W - ball.r) { ball.x = clamp(ball.x, ball.r, W - ball.r); ball.vx = -ball.vx * .75; }
     if (D3 && (ball.z < ball.r || ball.z > DZ - ball.r)) { ball.z = clamp(ball.z, ball.r, DZ - ball.r); ball.vz = -ball.vz * .75; }
     if (ball.y < ball.r) { ball.y = ball.r; ball.vy = -ball.vy * .6; }
@@ -2365,14 +2386,31 @@
   }
   function scene3(t) {
     var one = function (b) { return { x: b.x, y: b.y, z: b.z, vx: b.vx, vz: b.vz, r: b.f.r, pts: b.pts, el: b.el, drag: !!(b.drag && b.drag.moved), sx: clamp(b.sx, .8, 1.25), sy: clamp(b.sy, .75, 1.22), tilt: b.tilt, spin: b.spinA, cols: [b.f.c1, b.f.c2, b.f.c3], crouch: !!b.crouch && !b.f.player, floor: surfaceY(b) + b.f.r }; };
-    return { t: t, W: W, H: world.offsetHeight, DZ: DZ, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce,
+    return { t: t, W: W, H: world.offsetHeight, DZ: DZ, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce, idle: t - lastInput,
+      player: player ? { x: player.x, y: player.y, z: player.z, vx: player.vx, vz: player.vz, r: player.f.r, el: player.el } : null,
       main: mainAway ? null : { x: pos.x, y: pos.y, z: pos.z, vx: pos.vx, vz: pos.vz, r: R, pts: pts, el: orb, drag: !!(drag && drag.moved), sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
       buddies: buddies.map(one), ball: ball, bench: bench, bushes: bushes.map(function (b) { return { x: b.cx, z: b.cz }; }) };
   }
   function load3d() {
     return window.Dilmo3D ? Promise.resolve() : new Promise(function (res, rej) { var s = document.createElement("script"); s.src = d3Btn.dataset.src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
   }
-  var depthPad = document.querySelector(".pp-depth");
+  var depthPad = document.querySelector(".pp-depth"), viewBtn = document.getElementById("d3-view"), viewMode = "orbit";
+  // the views: the whole arena, behind a character, through its eyes, and through Dilmo's eyes looking at you (V on the keyboard)
+  function viewName(m) {
+    var me = !!player;
+    return { orbit: T("عام", "overview"), third: me ? T("من خلف شخصيتك", "behind you") : T("من خلف دلمو", "behind Dilmo"),
+      first: me ? T("بعين شخصيتك", "your eyes") : T("بعين دلمو", "Dilmo's eyes"), second: T("بعين دلمو نحوك", "Dilmo looking at you") }[m];
+  }
+  function setView(m) {
+    viewMode = m; if (view3) view3.setView(m);
+    viewBtn.textContent = T("المنظر: ", "View: ") + viewName(m);
+  }
+  function nextView() {
+    var order = ["orbit", "third", "first"].concat(player && !mainAway ? ["second"] : []), i = order.indexOf(viewMode);
+    setView(order[(i + 1) % order.length]); tone(900, 1200, .06, "sine", .04);
+  }
+  viewBtn.addEventListener("click", function () { stir(); if (view3 && !d3Busy) nextView(); });
+  addEventListener("keydown", function (e) { if (e.code === "KeyV" && view3 && !d3Busy && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) { e.preventDefault(); nextView(); } });
   function spread(on) {  // everyone takes a depth when the arena opens, and gives it back when it closes
     DZ = on ? clamp(Math.round(W * .55), 240, 560) : 0;
     placeProps();
@@ -2384,7 +2422,8 @@
     if (hs) { hs.hidden = false; hs.b.crouch = false; }
   }
   function portal(on) {
-    d3Busy = true; depthPad.hidden = !on; keys.left = keys.right = keys.down = keys.far = keys.near = false;
+    d3Busy = true; depthPad.hidden = !on; viewBtn.hidden = !on;
+    if (!on) setView("orbit"); else setView(player ? "third" : "orbit"); keys.left = keys.right = keys.down = keys.far = keys.near = false;
     var cx = mainAway ? W / 2 : pos.x, cy = mainAway ? ground : pos.y, H = world.offsetHeight;
     var Rm = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 20, dur = reduce ? 400 : 1500, t0 = performance.now();
     stage.classList.toggle("is3d", on);
@@ -2398,7 +2437,7 @@
       if (p < 1) return requestAnimationFrame(step);
       portalEl.style.opacity = "0"; d3Busy = false;
       if (on) view3.canvas.style.clipPath = "";
-      else { view3.destroy(); view3 = null; D3 = null; spread(false); }
+      else { view3.destroy(); view3 = null; D3 = null; spread(false); [orb].concat(buddies.map(function (b) { return b.el; }), buddies.map(function (b) { return b.tag; })).forEach(function (e) { if (e) e.style.visibility = ""; }); }
       d3Btn.setAttribute("aria-pressed", String(on)); d3Btn.textContent = on ? T("عودة إلى العالم المسطّح", "Back to the flat world") : T("عالم ثلاثي الأبعاد", "3D world");
       say(line(on ? "portalIn" : "portalOut"), "portal", 1000);
     })(t0);
@@ -2411,6 +2450,13 @@
       if (!view3) { spread(false); throw new Error("no WebGL"); }
       view3.canvas.style.clipPath = "circle(0px at 0 0)";
       D3 = view3; view3.onLost = function () { if (view3 && !d3Busy) portal(false); };
+      view3.onTap = function (e) {  // a tap on the lawn: Dilmo bounds over to that spot
+        var p = toStage(e), g = D3 && D3.ground(p.x, p.y); stir();
+        if (!g || !g.inside || mainAway || drag || mood.sleepy > .85) return;
+        var dx = g.x - pos.x, dz = g.z - pos.z, dd = Math.hypot(dx, dz) || 1, sp = Math.min(9, dd / 14);
+        pos.vx = dx / dd * sp; pos.vz = dz / dd * sp; pos.vy = -7 - sp * .4; gaze = { x: dx / dd, y: 0, until: performance.now() + 900 };
+        if (dd > 160) say(line("catch"), "catch", 6000);
+      };
       view3.frame(scene3(performance.now()));  // one frame now, so the camera is placed before anything is positioned by it
       portal(true);
     }).catch(function (e) { if (!view3 || !D3) { if (view3) { view3.destroy(); view3 = null; } D3 = null; spread(false); stage.classList.remove("is3d"); } console.warn("dilmo3d", e); d3Btn.hidden = true; say(T("جهازك لا يفتح العالم ثلاثي الأبعاد.", "Your device can't open the 3D world."), "portal", 1000); })
@@ -2529,6 +2575,8 @@
   }
 
   function draw(t) {
+    if (view3) view3.frame(scene3(t));
+    var hide = D3 && D3.hideEl;  // the body whose eyes you look through
     var b = t - blinkAt < 240 ? Math.sin(Math.PI * (t - blinkAt) / 240) : 0;
     var dz = mood.dizzy, ox = Math.cos(t / 90) * 2.5 * dz, oy = Math.sin(t / 90) * 2.5 * dz;
     var jx = reduce ? 0 : (Math.random() - .5) * 3 * mood.tickle;
@@ -2557,6 +2605,7 @@
     bodyPath.setAttribute("d", dd); grainPath.setAttribute("d", dd);
     var cpx = cheek ? cheek.px * .2 : 0, cpy = cheek ? cheek.py * .2 : 0;
     var sM3 = sv(pos);
+    orb.style.visibility = hide === orb ? "hidden" : "";
     orb.style.transform = "translate(" + (sM3.x - HALF + jx).toFixed(1) + "px," + (sM3.y - HALF).toFixed(1) + "px)" + (D3 ? " scale(" + sM3.s.toFixed(3) + ")" : "");
     body.setAttribute("transform", "rotate(" + sp.spin.v.toFixed(1) + ") translate(0 " + R + ") rotate(" + sp.tilt.v.toFixed(2) +
       ") scale(" + clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25).toFixed(3) + " " + clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22).toFixed(3) + ") translate(0 " + -R + ")");
@@ -2580,19 +2629,19 @@
         // keep the whole bubble inside the stage: clamp sideways, flip below him when there is no room above
         var bw = boxOf(bub, W + "x" + K)._mw, bh = bub._mh, bx = clamp(sM3.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (sM3.y - R * sM3.s) * K - 14 - bh;
         if (by < 8) by = Math.min((sM3.y + R * sM3.s) * K + 14, (ground + R) * K - bh - 4);
+        if (hide === orb) { bx = (W * K - bw) / 2; by = (world.offsetHeight * K) - bh - 16; }  // you are looking through his eyes: his words sit at the bottom, like subtitles
         bub._x = bx; bub._y = Math.max(8, by); bub._w = bw; bub._h = bh;  // placed by layoutBubbles()
       }
     }
     buddies.forEach(function (b) { drawBuddy(b, t); });
     layoutBubbles();
     var sB = sv(ball);
-    ballEl.style.transform = "translate(" + (sB.x - 11).toFixed(1) + "px," + (sB.y - 11).toFixed(1) + "px) rotate(" + ball.rot.toFixed(1) + "deg)" + (D3 ? " scale(" + sB.s.toFixed(3) + ")" : "");
-    gems.forEach(function (g) { var sg = sv(g); g.el.style.transform = "translate(" + (sg.x - 17).toFixed(1) + "px," + (sg.y - 17 + Math.sin(t / 400) * 4).toFixed(1) + "px)" + (D3 ? " scale(" + sg.s.toFixed(3) + ")" : ""); });
+    ballEl.style.transform = "translate(" + (sB.x - 11).toFixed(1) + "px," + (sB.y - 11).toFixed(1) + "px) rotate(" + ball.rot.toFixed(1) + "deg)" + (D3 ? " scale(" + Math.max(sB.s, 2).toFixed(3) + ")" : "");  // in 3D the tap target never shrinks below a finger
+    gems.forEach(function (g) { var sg = sv(g); g.el.style.transform = "translate(" + (sg.x - 17).toFixed(1) + "px," + (sg.y - 17 + Math.sin(t / 400) * 4).toFixed(1) + "px)" + (D3 ? " scale(" + Math.max(sg.s, .8).toFixed(3) + ")" : ""); });
     if (D3) bushes.forEach(function (bu) {  // the bushes are drawn in 3D; their click targets follow them
       var sb3 = sv({ x: bu.cx, y: ground + R, z: bu.cz }), at = "translate(" + (sb3.x - 35).toFixed(1) + "px," + (sb3.y - 44).toFixed(1) + "px) scale(" + sb3.s.toFixed(3) + ")";
       bu.el.style.setProperty("--at", at); bu.el.style.transform = at;
     });
-    if (view3) view3.frame(scene3(t));
   }
 
   function frame(t) {

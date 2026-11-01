@@ -241,11 +241,53 @@
     var blank = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, blank); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
 
     // ---- the camera: orbits the middle of the arena; drag on empty ground turns it, wheel or pinch zooms ----
-    var cam = { yaw: .55, pitch: .5, zoom: 1, orbiting: false }, base = 1000, fl = H * .85, eye = [0, 0, 0], fwd = [0, 0, -1], right = [1, 0, 0], cup = [0, -1, 0], PV = I(), fy = 1, fx = 1;
+    // views: "orbit" (the whole arena), "third" (behind a character), "first" (through its eyes), "second" (through Dilmo's eyes, looking at you)
+    var cam = { yaw: .55, pitch: .5, p3: .38, p1: .12, zoom: 1, orbiting: false, mode: "orbit" }, view = { mode: "orbit", subj: null, from: null, t0: -1e9 }, focus = null, lead = [0, 0], lastOrbit = -1e9, trauma = 0, base = 1000, fl = H * .85, eye = [0, 0, 0], fwd = [0, 0, -1], right = [1, 0, 0], cup = [0, -1, 0], PV = I(), fy = 1, fx = 1;
     var intro = null;  // the portal brings the camera from the flat view to its place
+    // the camera follows your character softly: small hops do not move it (a dead zone), it leads a little where you are going,
+    // and after a few seconds without touching the camera it swings round behind you. With nobody to follow and no one
+    // touching anything, it drifts slowly round the arena (Catlike Coding orbit camera)
+    function follow(s, dt) {
+      var p = view.mode === "third" ? view.subj : null, tx = W / 2, tz = DZ / 2;
+      if (p) {
+        lead[0] += (clamp(p.vx * 12, -70, 70) - lead[0]) * (1 - Math.pow(.85, dt)); lead[1] += (clamp(p.vz * 12, -70, 70) - lead[1]) * (1 - Math.pow(.85, dt));
+        tx = p.x + lead[0]; tz = p.z + lead[1];
+      }
+      if (!focus) focus = [W / 2, DZ / 2];
+      var dx = tx - focus[0], dz = tz - focus[1], d = Math.hypot(dx, dz);
+      if (d > 40) { focus[0] += dx * (1 - 40 / d); focus[1] += dz * (1 - 40 / d); }
+      var k = 1 - Math.pow(.4, dt / 60); focus[0] += (tx - focus[0]) * k; focus[1] += (tz - focus[1]) * k;
+      focus[0] = clamp(focus[0], -60, W + 60); focus[1] = clamp(focus[1], -60, DZ + 60);
+      if (cam.orbiting) return;
+      var sp = p ? Math.hypot(p.vx, p.vz) : 0;
+      if (p && s.t - lastOrbit > 3000 && sp > .5) {
+        var want = Math.atan2(-p.vx, -p.vz), delta = Math.atan2(Math.sin(want - cam.yaw), Math.cos(want - cam.yaw));
+        if (Math.abs(delta) < Math.PI * .75) {  // never flip round when you walk toward the camera
+          var step = Math.PI / 2 / 60 * dt * Math.min(1, sp / 4); if (Math.abs(delta) < Math.PI / 4) step *= Math.abs(delta) / (Math.PI / 4);
+          cam.yaw += clamp(delta, -step, step);
+        }
+      } else if (view.mode === "orbit" && s.idle > 20000 && !s.reduce) cam.yaw += .0012 * dt;
+    }
     function viewUpdate() {
-      var tgt = [W / 2, fl - 40 - DZ * .04, DZ / 2], d = base * cam.zoom;
-      eye = [tgt[0] + d * Math.sin(cam.yaw) * Math.cos(cam.pitch), tgt[1] - d * Math.sin(cam.pitch), tgt[2] + d * Math.cos(cam.yaw) * Math.cos(cam.pitch)];
+      var vm = view.mode, sj = view.subj, third = vm === "third";
+      var tgt = [focus ? focus[0] : W / 2, third ? sj.y - sj.r * .4 - 10 : fl - 40 - DZ * .04, focus ? focus[1] : DZ / 2], d = third ? 330 * cam.zoom : base * cam.zoom, pitch = third ? cam.p3 : cam.pitch, yaw = cam.yaw;
+      // the eye stays inside the ring of houses: where they are close, the camera looks down more steeply instead of going through them
+      var hx = Math.sin(yaw), hz = Math.cos(yaw), tMax = 1e9;
+      if (hx > .01) tMax = Math.min(tMax, (W + 470 - tgt[0]) / hx); if (hx < -.01) tMax = Math.min(tMax, (-470 - tgt[0]) / hx);
+      if (hz < -.01) tMax = Math.min(tMax, (-470 - tgt[2]) / hz); if (hz > .01) tMax = Math.min(tMax, (DZ + 1900 - tgt[2]) / hz);
+      if (!intro && d * Math.cos(pitch) > tMax) pitch = Math.acos(clamp(tMax / d, 0, 1));
+      if (trauma > 0) { var sh = trauma * trauma; yaw += (Math.random() - .5) * .03 * sh; pitch += (Math.random() - .5) * .03 * sh; tgt[1] += (Math.random() - .5) * 8 * sh; }
+      eye = [tgt[0] + d * Math.sin(yaw) * Math.cos(pitch), tgt[1] - d * Math.sin(pitch), tgt[2] + d * Math.cos(yaw) * Math.cos(pitch)];
+      if (vm === "first") {  // through the character's eyes: a little above its middle, looking where the camera yaw points
+        var p1 = cam.p1; eye = [sj.x, sj.y - sj.r * .45, sj.z];
+        tgt = [eye[0] - Math.sin(yaw) * Math.cos(p1) * 100, eye[1] + Math.sin(p1) * 100, eye[2] - Math.cos(yaw) * Math.cos(p1) * 100];
+      } else if (vm === "second") {  // through Dilmo's eyes, at you
+        var m = view.from; eye = [m.x, m.y - m.r * .45, m.z]; tgt = [sj.x, sj.y - sj.r * .3, sj.z];
+      }
+      // a short glide when the view changes, so you see where you went
+      var bt = clamp((performance.now() - view.t0) / 650, 0, 1);
+      if (bt < 1 && view.eye0) { var e2 = bt * bt * (3 - 2 * bt); for (var q = 0; q < 3; q++) { eye[q] = view.eye0[q] + (eye[q] - view.eye0[q]) * e2; tgt[q] = view.tgt0[q] + (tgt[q] - view.tgt0[q]) * e2; } }
+      view.eye = eye.slice(); view.tgt = tgt.slice();
       fwd = norm([tgt[0] - eye[0], tgt[1] - eye[1], tgt[2] - eye[2]]);
       right = norm(cross([0, -1, 0], fwd)); cup = cross(fwd, right);
       var V = new Float32Array([right[0], cup[0], -fwd[0], 0, right[1], cup[1], -fwd[1], 0, right[2], cup[2], -fwd[2], 0, -dot(right, eye), -dot(cup, eye), dot(fwd, eye), 1]);
@@ -255,7 +297,7 @@
     }
     function scr(x, y, z) {  // world → stage px (world units) + the on-screen scale of one world px there
       var cx = PV[0] * x + PV[4] * y + PV[8] * z + PV[12], cy = PV[1] * x + PV[5] * y + PV[9] * z + PV[13], cw = PV[3] * x + PV[7] * y + PV[11] * z + PV[15];
-      if (cw < 1) cw = 1;
+      if (cw < 1) return { x: -1e4, y: -1e4, s: .001 };
       return { x: (cx / cw + 1) / 2 * W, y: (1 - cy / cw) / 2 * H, s: fy * H / 2 / cw };
     }
     function ray(sx, sy) {
@@ -273,18 +315,31 @@
       return { x: eye[0] + d[0] * t, y: eye[1] + d[1] * t, z: eye[2] + d[2] * t };
     }
     var ptrs = {}, pinch = 0;
+    // a quick tap on the lawn is a tap (Dilmo comes over); a drag turns the camera; two fingers zoom
     canvas.addEventListener("pointerdown", function (e) {
-      ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); cam.orbiting = true; e.preventDefault();
-      var ks = Object.keys(ptrs); if (ks.length === 2) pinch = Math.hypot(ptrs[ks[0]].x - ptrs[ks[1]].x, ptrs[ks[0]].y - ptrs[ks[1]].y);
+      ptrs[e.pointerId] = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false }; canvas.setPointerCapture(e.pointerId); e.preventDefault();
+      var ks = Object.keys(ptrs); if (ks.length === 2) { pinch = Math.hypot(ptrs[ks[0]].x - ptrs[ks[1]].x, ptrs[ks[0]].y - ptrs[ks[1]].y); ks.forEach(function (k) { ptrs[k].moved = true; }); cam.orbiting = true; }
     });
     canvas.addEventListener("pointermove", function (e) {
       var p = ptrs[e.pointerId]; if (!p) return;
       var ks = Object.keys(ptrs);
-      if (ks.length === 1) { cam.yaw += (e.clientX - p.x) * .006; cam.pitch = clamp(cam.pitch - (e.clientY - p.y) * .005, .12, 1.15); }
+      if (!p.moved && Math.hypot(e.clientX - p.sx, e.clientY - p.sy) > 8) { p.moved = true; cam.orbiting = true; }
+      if (!p.moved) return;
+      lastOrbit = performance.now();
+      if (ks.length === 1) {
+        var ddx = (e.clientX - p.x), ddy = (e.clientY - p.y), vm = view.mode;
+        if (vm === "first") { cam.yaw += ddx * .005; cam.p1 = clamp(cam.p1 + ddy * .004, -.5, .9); }
+        else if (vm === "third") { cam.yaw += ddx * .006; cam.p3 = clamp(cam.p3 - ddy * .005, .1, 1.2); }
+        else if (vm === "orbit") { cam.yaw += ddx * .006; cam.pitch = clamp(cam.pitch - ddy * .005, .14, 1.15); }
+      }
       p.x = e.clientX; p.y = e.clientY;
       if (ks.length === 2) { var d = Math.hypot(ptrs[ks[0]].x - ptrs[ks[1]].x, ptrs[ks[0]].y - ptrs[ks[1]].y); if (pinch) cam.zoom = clamp(cam.zoom * pinch / d, .55, 1.8); pinch = d; }
     });
-    function pup(e) { delete ptrs[e.pointerId]; pinch = 0; if (!Object.keys(ptrs).length) cam.orbiting = false; }
+    function pup(e) {
+      var p = ptrs[e.pointerId]; delete ptrs[e.pointerId]; pinch = 0;
+      if (p && !p.moved && e.type === "pointerup" && performance.now() - p.t < 350 && api && api.onTap) api.onTap(e);
+      if (!Object.keys(ptrs).length) cam.orbiting = false;
+    }
     canvas.addEventListener("pointerup", pup); canvas.addEventListener("pointercancel", pup);
     canvas.addEventListener("wheel", function (e) { cam.zoom = clamp(cam.zoom * (e.deltaY > 0 ? 1.08 : .93), .55, 1.8); e.preventDefault(); }, { passive: false });
 
@@ -378,6 +433,19 @@
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(true); shadows = [];
     }
 
+    var ballR = I(), ballN = 0;
+    function rot3(ax, ay, az, a) {  // rotation by a radians about the unit axis (ax, ay, az), as a 4x4
+      var c = Math.cos(a), s2 = Math.sin(a), t2 = 1 - c, m = I();
+      m[0] = t2 * ax * ax + c; m[1] = t2 * ax * ay + s2 * az; m[2] = t2 * ax * az - s2 * ay;
+      m[4] = t2 * ax * ay - s2 * az; m[5] = t2 * ay * ay + c; m[6] = t2 * ay * az + s2 * ax;
+      m[8] = t2 * ax * az + s2 * ay; m[9] = t2 * ay * az - s2 * ax; m[10] = t2 * az * az + c;
+      return m;
+    }
+    function ortho(m) {  // keep the accumulated rotation a clean rotation (rounding drifts it over thousands of frames)
+      var x = norm([m[0], m[1], m[2]]), z = norm(cross(x, [m[4], m[5], m[6]])), y = cross(z, x), o = I();
+      o[0] = x[0]; o[1] = x[1]; o[2] = x[2]; o[4] = y[0]; o[5] = y[1]; o[6] = y[2]; o[8] = z[0]; o[9] = z[1]; o[10] = z[2];
+      return o;
+    }
     var last = null, lastT = 0;
     function frame(s) {
       last = s; fl = s.fl; var t = s.t, dt = Math.min(3, (t - lastT) / 16.67 || 1); lastT = t;
@@ -386,6 +454,15 @@
         cam.yaw = intro.yaw * e; cam.pitch = .03 + (intro.pitch - .03) * e; cam.zoom = intro.zoom + (1.25 - intro.zoom) * (1 - e);
         if (ip >= 1) intro = null;
       }
+      // which view can run now: first and third need someone to be (you, or Dilmo); second needs both you and Dilmo
+      var want = intro ? "orbit" : cam.mode, sj = s.player || s.main;
+      if (want === "second" && !(s.player && s.main)) want = "first";
+      if ((want === "first" || want === "third") && !sj) want = "orbit";
+      if (want !== view.mode) { view.eye0 = view.eye; view.tgt0 = view.tgt; view.t0 = performance.now(); if (want === "first" && sj && Math.hypot(sj.vx, sj.vz) > .5) cam.yaw = Math.atan2(-sj.vx, -sj.vz); }
+      view.mode = want; view.subj = want === "second" ? s.player : sj; view.from = s.main;
+      api.hideEl = want === "first" && sj ? sj.el : want === "second" ? s.main.el : null;
+      follow(s, dt);
+      trauma = Math.max(0, trauma - .025 * dt);
       viewUpdate();
       var sk = s.sky, cx = W / 2, cz = DZ / 2;
       var skyTop = col(sk["--sky-top"]), skyHor = col(sk["--sky-hor"]), grass = col(sk["--grass"]);
@@ -434,7 +511,7 @@
       lamps.forEach(function (l) { shadow(l.x, l.z, 8, .25, 60); });
       var bl = s.ball; shadow(bl.x, bl.z, bl.r * 1.3, .32 * Math.max(.3, 1 - (fl - bl.r - bl.y) / 200), fl - bl.y);
       var all = s.buddies.slice(); if (s.main) all.push(s.main);
-      all.forEach(function (b) { var fy2 = b.floor || fl, sc2 = Math.max(.35, Math.min(1, 1 - (fy2 - b.r - b.y) / 300)); shadow(b.x, b.z, b.r * 1.05 * sc2, .42 * sc2, fl - b.y); });
+      all.forEach(function (b) { if (b.el === api.hideEl) return; var fy2 = b.floor || fl, sc2 = Math.max(.35, Math.min(1, 1 - (fy2 - b.r - b.y) / 300)); shadow(b.x, b.z, b.r * 1.05 * sc2, .42 * sc2, fl - b.y); });
       flushShadows();
       // the hedge round the lawn
       [[cx, -9, W + 36, 18], [cx, DZ + 9, W + 36, 18], [-9, cz, 18, DZ + 36], [W + 9, cz, 18, DZ + 36]].forEach(function (h) { draw(CUBE, 8, chain(T(h[0], fl - 14, h[1]), S(h[2], 28, h[3])), hedge); });
@@ -488,14 +565,20 @@
         });
       });
       flat(false);
-      gl.uniform3f(U.uB0, .94, .42, .36); gl.uniform3f(U.uB1, 1, 1, 1); gl.uniform3f(U.uB2, .25, .71, .78); gl.uniform1f(U.uRot, bl.rot * Math.PI / 180);
-      draw(SPH, 2, chain(T(bl.x, bl.y, bl.z), Ry(Math.atan2(bl.vx, bl.vz || 1e-6)), S(bl.r, bl.r, bl.r)), [1, 1, 1]);
+      // rolling: it turns about the axis across its path (w = up x v / r), so the panels roll the right way whichever way it goes
+      var bsp = Math.hypot(bl.vx, bl.vz);
+      if (bsp > .01 && bl.y >= fl - bl.r - 1) ballR = mul(rot3(-bl.vz / bsp, 0, bl.vx / bsp, bsp * dt / bl.r), ballR);
+      if (++ballN % 120 === 0) ballR = ortho(ballR);
+      gl.uniform3f(U.uB0, .94, .42, .36); gl.uniform3f(U.uB1, 1, 1, 1); gl.uniform3f(U.uB2, .25, .71, .78); gl.uniform1f(U.uRot, 0);
+      draw(SPH, 2, chain(T(bl.x, bl.y, bl.z), ballR, S(bl.r, bl.r, bl.r)), [1, 1, 1]);
       // the characters: Dilmo and everyone else; a crouching friend sinks into the bush
-      all.forEach(function (b) { body(b, t, dt, b.crouch ? b.r * .45 : 0); });
+      all.forEach(function (b) { if (b.el !== api.hideEl) body(b, t, dt, b.crouch ? b.r * .45 : 0); });
       faces.forEach(function (fc, el) { if (t - fc.touched > 5000) { gl.deleteTexture(fc.tex); faces.delete(el); } });
     }
     return (api = { canvas: canvas, frame: frame, resize: resize, scr: scr, unscr: unscr, ground: ground, cam: cam,
       axes: function () { var l = Math.hypot(fwd[0], fwd[2]) || 1; return { rx: right[0], rz: right[2], fx: fwd[0] / l, fz: fwd[2] / l }; },
+      setView: function (m) { cam.mode = m; },
+      shake: function (a) { if (!(last && last.reduce)) trauma = Math.min(1, trauma + a); },
       intro: function (dur, back) { cam.yaw = Math.atan2(Math.sin(cam.yaw), Math.cos(cam.yaw)); intro = { t0: performance.now(), dur: dur, back: back, yaw: cam.yaw, pitch: cam.pitch, zoom: cam.zoom }; },
       snapshot: function () { if (last) frame(last); return canvas; },
       destroy: function () { api.onLost = null; var ext = gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); canvas.remove(); } });
