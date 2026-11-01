@@ -3399,7 +3399,41 @@ function initBeepMelodyExperiment() {
      كل مسار (صف بالجدول) سلسلة: معادل ٣ نطاقات → ضاغط (اختياري) → أتمتة → مستوى →
      توزيع يمين/يسار → الخروج، ومنه إرسالان: صدى المكان (مشترك) وترديد بطول نصف ضربة.
      نفس السلسلة تُبنى بالتشغيل الحي وبالتصدير، فالملف يطابق ما تسمعه. */
-  const newTrack = () => ({ vol: 1, pan: 0, mute: false, solo: false, eq: [0, 0, 0], reverb: 0, echo: 0, comp: false, auto: null });
+  const newTrack = () => ({ vol: 1, pan: 0, mute: false, solo: false, eq: [0, 0, 0], tone: "", reverb: 0, echo: 0, comp: false, auto: null });
+
+  // طابع الصوت: قوالب معادل جاهزة بأسماء تصف ما تسمعه (مدوٍّ، دافئ، حادّ...) بدل أرقام الترددات.
+  // كل قالب حتى ٣ مرشّحات [نوع، تردد، Q، كسب dB]؛ المرشّح الفارغ peaking بكسب 0 = لا أثر
+  const TONES = {
+    boomy: [["lowshelf", 180, 0.7, 7]],
+    warm: [["peaking", 100, 1, 5], ["peaking", 850, 1.2, 2]],
+    muddy: [["peaking", 200, 0.8, 6]],
+    thick: [["peaking", 175, 0.9, 5]],
+    boxy: [["peaking", 400, 1.2, 6]],
+    hollow: [["peaking", 700, 0.8, -9]],
+    harsh: [["peaking", 3500, 0.7, 6]],
+    clarity: [["peaking", 7000, 0.8, 5]],
+    shiny: [["highshelf", 8000, 0.7, 6]],
+    airy: [["highshelf", 10000, 0.7, 7]],
+    thin: [["highpass", 700, 0.7, 0]],
+    dull: [["lowpass", 5000, 0.7, 0]],
+    balanced: [["peaking", 120, 1, 2], ["peaking", 2500, 1, -1.5], ["peaking", 6000, 1, 1]],
+  };
+  function setTone(filters, key, at) {
+    const spec = TONES[key] || [];
+    filters.forEach((f, i) => {
+      const [type, freq, q, gain] = spec[i] || ["peaking", 1000, 1, 0];
+      f.type = type;
+      if (at == null) {
+        f.frequency.value = freq;
+        f.Q.value = q;
+        f.gain.value = gain;
+      } else {
+        f.frequency.setTargetAtTime(freq, at, 0.02);
+        f.Q.setTargetAtTime(q, at, 0.02);
+        f.gain.setTargetAtTime(gain, at, 0.02);
+      }
+    });
+  }
   const cloneTrack = (t) => ({ ...t, eq: [...t.eq], auto: t.auto ? t.auto.map((p) => ({ ...p })) : null });
 
   function buildTrackChain(ctx, dest, reverb, tr) {
@@ -3416,6 +3450,8 @@ function initBeepMelodyExperiment() {
       b.gain.value = tr.eq[i];
       return b;
     });
+    const tone = [0, 1, 2].map(() => ctx.createBiquadFilter());
+    setTone(tone, tr.tone);
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -24;
     comp.ratio.value = 4;
@@ -3433,9 +3469,9 @@ function initBeepMelodyExperiment() {
     vol.gain.value = tr.vol;
     const pan = ctx.createStereoPanner();
     pan.pan.value = tr.pan;
-    input.connect(eq[0]).connect(eq[1]).connect(eq[2]);
-    eq[2].connect(compIn).connect(comp).connect(compMakeup).connect(auto);
-    eq[2].connect(bypass).connect(auto);
+    input.connect(eq[0]).connect(eq[1]).connect(eq[2]).connect(tone[0]).connect(tone[1]).connect(tone[2]);
+    tone[2].connect(compIn).connect(comp).connect(compMakeup).connect(auto);
+    tone[2].connect(bypass).connect(auto);
     auto.connect(vol).connect(pan).connect(dest);
     const rev = ctx.createGain();
     rev.gain.value = tr.reverb;
@@ -3449,7 +3485,7 @@ function initBeepMelodyExperiment() {
     pan.connect(echo).connect(delay);
     delay.connect(feedback).connect(delay);
     delay.connect(dest);
-    return { input, eq, compIn, bypass, auto, vol, pan, rev, echo, delay };
+    return { input, eq, tone, compIn, bypass, auto, vol, pan, rev, echo, delay };
   }
 
   // يجهّز سلاسل كل المسارات داخل سياق صوتي (حي أو تصدير) فوق وجهة الخروج المعطاة
@@ -5025,6 +5061,19 @@ function initBeepMelodyExperiment() {
       const band = Number(input.dataset.band);
       slider(input, () => tr.eq[band], (v) => (tr.eq[band] = v), (c) => c?.eq[band].gain.setTargetAtTime(tr.eq[band], now(), 0.03));
     });
+    const toneSel = el.querySelector(".mix-tone");
+    const toneCurve = el.querySelector(".mix-tone-curve");
+    if (toneSel) {
+      toneSel.value = TONES[tr.tone] ? tr.tone : "";
+      drawToneCurve(toneCurve, tr.tone);
+      toneSel.addEventListener("change", () => {
+        tr.tone = toneSel.value;
+        const c = liveChain(r);
+        if (c) setTone(c.tone, tr.tone, now());
+        drawToneCurve(toneCurve, tr.tone);
+        scheduleSave();
+      });
+    }
     slider(el.querySelector(".mix-reverb"), () => tr.reverb, (v) => (tr.reverb = v), (c) => c?.rev.gain.setTargetAtTime(tr.reverb, now(), 0.03));
     slider(el.querySelector(".mix-echo"), () => tr.echo, (v) => (tr.echo = v), (c) => c?.echo.gain.setTargetAtTime(tr.echo * 0.6, now(), 0.03));
 
@@ -5069,6 +5118,36 @@ function initBeepMelodyExperiment() {
     fx.open = openFx.has(r);
     fx.addEventListener("toggle", () => (fx.open ? openFx.add(r) : openFx.delete(r)));
     return el;
+  }
+
+  // منحنى طابع الصوت (مثل معادل Audition): استجابة المرشّحات الحقيقية من 20Hz إلى 20kHz، ±12 dB
+  let curveCtx = null;
+  function drawToneCurve(svg, key) {
+    if (!svg) return;
+    if (!TONES[key]) {
+      svg.setAttribute("hidden", "");
+      return;
+    }
+    try {
+      curveCtx ||= new OfflineAudioContext(1, 1, 44100);
+    } catch {
+      svg.setAttribute("hidden", "");
+      return;
+    }
+    svg.removeAttribute("hidden"); // SVG بلا خاصية .hidden، فالسمة نفسها
+    const n = 96;
+    const freqs = new Float32Array(n).map((_, i) => 20 * Math.pow(1000, i / (n - 1)));
+    const db = new Float32Array(n);
+    const mag = new Float32Array(n);
+    const ph = new Float32Array(n);
+    const filters = [0, 1, 2].map(() => curveCtx.createBiquadFilter());
+    setTone(filters, key);
+    filters.forEach((f) => {
+      f.getFrequencyResponse(freqs, mag, ph);
+      mag.forEach((m, i) => (db[i] += 20 * Math.log10(Math.max(m, 1e-4))));
+    });
+    const pts = [...db].map((d, i) => ((i / (n - 1)) * 200).toFixed(1) + "," + (30 - (Math.max(-12, Math.min(12, d)) / 12) * 26).toFixed(1));
+    svg.querySelector("path").setAttribute("d", "M" + pts.join("L"));
   }
 
   // النقر على رقم المسار: يفتح الخلاط ويوصل لشريطه

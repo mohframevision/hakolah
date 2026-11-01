@@ -246,6 +246,8 @@ pageScript: "sounds"
             <label class="mix-row"><span>↔️ يسار / يمين</span><input type="range" class="mix-pan" min="-1" max="1" step="0.05" /></label>
             <details class="mix-fx">
               <summary>✨ المؤثرات والأتمتة</summary>
+              <label class="mix-row"><span>🎚️ طابع الصوت</span><select class="mix-tone"><option value="">بلا</option><option value="balanced">متوازن</option><option value="warm">دافئ</option><option value="boomy">مدوٍّ</option><option value="thick">سميك</option><option value="muddy">عكِر</option><option value="boxy">صندوقي</option><option value="hollow">أجوف</option><option value="harsh">حادّ</option><option value="clarity">واضح</option><option value="shiny">لامع</option><option value="airy">هوائي</option><option value="thin">رفيع</option><option value="dull">باهت</option></select></label>
+              <svg class="mix-tone-curve" viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true" hidden><line x1="0" y1="30" x2="200" y2="30" /><path d="" /></svg>
               <label class="mix-row"><span>جهير</span><input type="range" class="mix-eq" data-band="0" min="-12" max="12" step="1" /></label>
               <label class="mix-row"><span>وسط</span><input type="range" class="mix-eq" data-band="1" min="-12" max="12" step="1" /></label>
               <label class="mix-row"><span>حدّة</span><input type="range" class="mix-eq" data-band="2" min="-12" max="12" step="1" /></label>

@@ -247,6 +247,8 @@ pageScript: "sounds"
             <label class="mix-row"><span>↔️ Left / right</span><input type="range" class="mix-pan" min="-1" max="1" step="0.05" /></label>
             <details class="mix-fx">
               <summary>✨ Effects & automation</summary>
+              <label class="mix-row"><span>🎚️ Tone</span><select class="mix-tone"><option value="">None</option><option value="balanced">Balanced</option><option value="warm">Warm</option><option value="boomy">Boomy</option><option value="thick">Thick</option><option value="muddy">Muddy</option><option value="boxy">Boxy</option><option value="hollow">Hollow</option><option value="harsh">Harsh</option><option value="clarity">Clarity</option><option value="shiny">Shiny</option><option value="airy">Airy</option><option value="thin">Thin</option><option value="dull">Dull</option></select></label>
+              <svg class="mix-tone-curve" viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true" hidden><line x1="0" y1="30" x2="200" y2="30" /><path d="" /></svg>
               <label class="mix-row"><span>Bass</span><input type="range" class="mix-eq" data-band="0" min="-12" max="12" step="1" /></label>
               <label class="mix-row"><span>Mid</span><input type="range" class="mix-eq" data-band="1" min="-12" max="12" step="1" /></label>
               <label class="mix-row"><span>Treble</span><input type="range" class="mix-eq" data-band="2" min="-12" max="12" step="1" /></label>
