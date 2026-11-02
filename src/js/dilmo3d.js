@@ -10,7 +10,7 @@
     "attribute vec3 aPos; attribute vec3 aNrm; attribute vec2 aUv; attribute vec3 aLoc, aCol, aSize; attribute vec2 aSeed;",
     "uniform mediump float uBk; uniform float uTv;",
     "varying vec3 vCol, vSize; varying vec2 vSeed;",
-    "uniform mat4 uP, uM; uniform mat3 uN; uniform float uR, uPt; uniform vec4 uRim[24]; uniform mediump int uMode;",
+    "uniform mat4 uP, uM; uniform mat3 uN; uniform float uR, uPt, uFar; uniform vec4 uRim[24]; uniform mediump int uMode;",
     "varying vec3 vN, vW, vL; varying vec2 vUv;",
     // the 2D rim (48 points of x,y offsets, in px) packed two per vec4
     "vec2 rimAt(int i) { i = i - (i / 48) * 48; vec4 v = uRim[i / 2]; return (i - (i / 2) * 2) == 0 ? v.xy : v.zw; }",
@@ -25,13 +25,14 @@
     "  }",
     "  vec4 w = uM * vec4(p, 1.0); vW = w.xyz; vN = normalize(uN * aNrm);",
     "  gl_Position = uP * w; gl_PointSize = uPt;",
+    "  if (uFar > 0.5) gl_Position.z = gl_Position.w;",  // the sky layer sits on the far plane: drawn last, it only fills the pixels nothing else covered
     "}"].join("\n");
   // modes: 0 lit solid · 1 character · 2 ball · 3 sky · 4 ground · 5 soft disc (sun glow, moon, lamp glow) · 6 stars · 7 unlit
   //        8 hedge · 9 building · 10 shadow (multiplied into the ground) · 11 palm trunk · 12 cloud puff · 13 frond
   var FS = [
     "#ifdef GL_FRAGMENT_PRECISION_HIGH", "precision highp float;", "#else", "precision mediump float;", "#endif",
     "varying vec3 vN, vW, vL; varying vec2 vUv; varying vec3 vCol, vSize; varying vec2 vSeed; uniform mediump float uBk;",
-    "uniform int uMode; uniform vec4 uC0, uC1, uC2; uniform vec3 uLight, uLc, uSky, uGnd, uTint, uCam, uFogC, uSunDir, uSunC, uB0, uB1, uB2, uRight, uUp, uFwd;",
+    "const int uMode = MODE; uniform vec4 uC0, uC1, uC2; uniform vec3 uLight, uLc, uSky, uGnd, uTint, uCam, uFogC, uSunDir, uSunC, uB0, uB1, uB2, uRight, uUp, uFwd;",
     "uniform vec2 uArena, uRes, uFxy; uniform float uA, uRot, uFl, uLights, uFlat, uT, uExpo, uLite, uVig; uniform sampler2D uFace;",
     "float hash(vec2 p) { p = mod(p, 289.0); return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
     "float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);",
@@ -223,18 +224,42 @@
     var lite = weak || soft || /SwiftShader|llvmpipe|Software|Basic Render|Mali-[4T]|Adreno \(TM\) [2-4]\d\d|PowerVR SGX|Intel.*(GMA|HD Graphics( [2-5]\d{3})?\b)/i.test(gpuName) || gl.getParameter(gl.MAX_TEXTURE_SIZE) < 4096;
     var flatExt = gl.getExtension("OES_standard_derivatives");
     function shader(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
-    var prog = gl.createProgram();
-    gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS));
-    gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, (flatExt ? "#extension GL_OES_standard_derivatives : enable\n#define FLAT\n" : "") + FS));
-    gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-    gl.useProgram(prog);
+    // one small program per kind of surface (shader permutations): the same picture, but each pixel only runs its own branch.
+    // A single program with every branch made software renderers and weak GPUs pay for the sky, the lawn, the houses... on every pixel (3-4x slower)
+    var ATTR = ["aPos", "aNrm", "aUv", "aLoc", "aCol", "aSize", "aSeed"], vsh = shader(gl.VERTEX_SHADER, VS), progs = [], cur = null, vals = {}, ver = 0;
+    for (var pm = 0; pm <= 13; pm++) {
+      var pg = gl.createProgram(); gl.attachShader(pg, vsh);
+      gl.attachShader(pg, shader(gl.FRAGMENT_SHADER, (flatExt ? "#extension GL_OES_standard_derivatives : enable\n#define FLAT\n" : "") + "#define MODE " + pm + "\n" + FS));
+      ATTR.forEach(function (n, i) { gl.bindAttribLocation(pg, i, n); });  // the same slots in every program, so one vertex layout serves them all
+      gl.linkProgram(pg);
+      if (!gl.getProgramParameter(pg, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pg));
+      progs.push({ prog: pg, loc: {}, seen: {} });
+    }
+    // uniforms are set by name; each value is kept and handed to a program when it is next used (only what changed since it last ran)
+    function use(P) {
+      if (cur === P) return; cur = P; gl.useProgram(P.prog);
+      for (var n in vals) { var v = vals[n]; if (v.ver > (P.seen[n] || 0)) { P.seen[n] = v.ver; var l = P.loc[n]; if (l) v.fn.call(gl, l, v.a[0], v.a[1], v.a[2], v.a[3]); } }
+    }
+    ["uniform1f", "uniform2f", "uniform3f", "uniform4f", "uniform1i", "uniform3fv", "uniform4fv", "uniformMatrix3fv", "uniformMatrix4fv"].forEach(function (fn) {
+      var raw = gl[fn];
+      gl[fn] = function (n) {
+        if (n === "uMode") use(progs[arguments[1]]);  // choosing the mode chooses the program
+        var v = vals[n] || (vals[n] = { fn: raw, a: [], b: [] });
+        for (var i = 1; i < arguments.length; i++) {
+          var x = arguments[i];
+          if (x && x.length) { if (!v.b[i] || v.b[i].length !== x.length) v.b[i] = new Float32Array(x.length); v.b[i].set(x); x = v.b[i]; }  // a copy: callers reuse their arrays
+          v.a[i - 1] = x;
+        }
+        v.ver = ++ver; cur.seen[n] = v.ver;
+        var l = cur.loc[n]; if (l) raw.call(gl, l, v.a[0], v.a[1], v.a[2], v.a[3]);
+      };
+    });
+    use(progs[0]);
     var U = {};
     ["uP", "uM", "uN", "uR", "uPt", "uRim", "uMode", "uC0", "uC1", "uC2", "uLight", "uLc", "uSky", "uGnd", "uTint", "uCam", "uFogC", "uSunDir", "uSunC", "uB0", "uB1", "uB2",
-      "uRight", "uUp", "uFwd", "uArena", "uRes", "uFxy", "uA", "uRot", "uFl", "uLights", "uFlat", "uT", "uExpo", "uFace", "uBk", "uTv", "uLite", "uVig"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
-    var A = { pos: gl.getAttribLocation(prog, "aPos"), nrm: gl.getAttribLocation(prog, "aNrm"), uv: gl.getAttribLocation(prog, "aUv"),
-      loc: gl.getAttribLocation(prog, "aLoc"), col: gl.getAttribLocation(prog, "aCol"), size: gl.getAttribLocation(prog, "aSize"), seed: gl.getAttribLocation(prog, "aSeed") };
-    var EXTRA = [A.loc, A.col, A.size, A.seed].filter(function (a) { return a >= 0; });
+      "uRight", "uUp", "uFwd", "uArena", "uRes", "uFxy", "uA", "uRot", "uFl", "uLights", "uFlat", "uT", "uExpo", "uFace", "uBk", "uTv", "uLite", "uVig", "uFar"].forEach(function (n) { U[n] = n; progs.forEach(function (P) { P.loc[n] = gl.getUniformLocation(P.prog, n); }); });
+    var A = { pos: 0, nrm: 1, uv: 2, loc: 3, col: 4, size: 5, seed: 6 };
+    var EXTRA = [A.loc, A.col, A.size, A.seed];
     function mesh(m) {
       var vb = gl.createBuffer(), ib = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(m.v), gl.STATIC_DRAW);
@@ -607,35 +632,8 @@
       gl.uniform2f(U.uArena, W, DZ); gl.uniform1f(U.uFl, fl); gl.uniform1f(U.uLights, sk.lights || 0); gl.uniform1f(U.uT, t / 1000); gl.uniform1f(U.uExpo, ex);
 
       gl.clearColor(skyTop[0], skyTop[1], skyTop[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.disable(gl.DEPTH_TEST);
-      gl.uniformMatrix4fv(U.uP, false, ID); draw(QD, 3, S(2, -2, 1), skyTop, skyHor);
       gl.uniformMatrix4fv(U.uP, false, PV);
-      if (sk.stars > .02) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, starBuf); bound = null;
-        gl.vertexAttribPointer(A.pos, 3, gl.FLOAT, false, 32, 0); gl.vertexAttribPointer(A.nrm, 3, gl.FLOAT, false, 32, 12); gl.vertexAttribPointer(A.uv, 2, gl.FLOAT, false, 32, 24);
-        gl.uniform1i(U.uMode, 6); gl.uniformMatrix4fv(U.uM, false, T(cx, fl, cz)); gl.uniform1f(U.uPt, 2.8 * canvas.width / W); gl.uniform4f(U.uC0, 1, 1, 1, sk.stars * .9);
-        gl.drawArrays(gl.POINTS, 0, NSTAR);
-      }
-      if (moonP) { billboard(moonP[0], moonP[1], moonP[2], 520, 520, [.85, .88, 1, .12], .05); billboard(moonP[0], moonP[1], moonP[2], 120, 120, [.96, .95, .88, 1], .8); }
-      clouds.forEach(function (c) {
-        var a = c.a + t / 1000 * c.sp * .01, x = cx + Math.cos(a) * c.r, z = cz + Math.sin(a) * c.r, y = fl - c.y;
-        [[-.22, .22, 100, 60], [.05, 0, 120, 82], [.3, .2, 92, 56], [.04, .34, 190, 34], [-.08, .1, 80, 60]].forEach(function (e) { billboard(x + e[0] * 300 * c.k, y + e[1] * 100 * c.k, z, e[2] * 2 * c.k, e[3] * 2 * c.k, [cloud[0], cloud[1], cloud[2], .9], 0, 12); });
-      });
-      gl.enable(gl.DEPTH_TEST);
-      // the ground, then every shadow multiplied into it
-      draw(QD, 4, chain(T(cx, fl, cz), Rx(-90), S(9000, 9000, 1)), grass, gBack, gFront);
-      palms.forEach(function (p) { var tx = p.x + Math.sin(p.lean * Math.PI / 180) * p.h * .5; shadow(tx, p.z, p.h * .32, .17, p.h * .35); });
-      s.bushes.forEach(function (bu) { shadow(bu.x, bu.z, 40, .3, 12); });
-      shadow(s.bench.x + s.bench.w / 2, s.bench.z, s.bench.w * .55, .28, 20);
-      lamps.forEach(function (l) { shadow(l.x, l.z, 8, .25, 60); });
-      var bl = s.ball; shadow(bl.x, bl.z, bl.r * 1.3, .32 * Math.max(.3, 1 - (fl - bl.r - bl.y) / 200), fl - bl.y); contact(bl.x, bl.z, bl.r, fl - bl.r - bl.y);
-      var all = s.buddies.slice(); if (s.main) all.push(s.main);
-      all.forEach(function (b) {
-        if (b.el === api.hideEl) return;
-        var fy2 = b.floor != null ? b.floor : fl, sc2 = Math.max(.35, Math.min(1, 1 - (fy2 - b.r - b.y) / 300));
-        shadow(b.x, b.z, b.r * 1.05 * sc2, .3 * sc2, fy2 - b.y, fy2); contact(b.x, b.z, b.r, fy2 - b.r - b.y, fy2);
-      });
-      flushShadows();
+      // nearest first, sky last: each pixel is shaded about once (the depth test skips what is already hidden), the picture is the same
       // the hedge round the lawn
       [[cx, -9, W + 36, 18], [cx, DZ + 9, W + 36, 18], [-9, cz, 18, DZ + 36], [W + 9, cz, 18, DZ + 36]].forEach(function (h) { draw(CUBE, 8, chain(T(h[0], fl - 14, h[1]), S(h[2], 28, h[3])), hedge); });
       // the town: plaster blocks with windows, a parapet, sometimes something on the roof
@@ -650,6 +648,36 @@
         var on = sk.lights || 0;
         draw(SPH, 7, chain(T(l.x, fl - 74, l.z), S(5, 5, 5)), mix(X([.8, .8, .78]), [1, .86, .55], on));
       });
+      // the ground, then every shadow multiplied into it (a shadow behind a wall fails the depth test, as it should)
+      draw(QD, 4, chain(T(cx, fl, cz), Rx(-90), S(9000, 9000, 1)), grass, gBack, gFront);
+      palms.forEach(function (p) { var tx = p.x + Math.sin(p.lean * Math.PI / 180) * p.h * .5; shadow(tx, p.z, p.h * .32, .17, p.h * .35); });
+      s.bushes.forEach(function (bu) { shadow(bu.x, bu.z, 40, .3, 12); });
+      shadow(s.bench.x + s.bench.w / 2, s.bench.z, s.bench.w * .55, .28, 20);
+      lamps.forEach(function (l) { shadow(l.x, l.z, 8, .25, 60); });
+      var bl = s.ball; shadow(bl.x, bl.z, bl.r * 1.3, .32 * Math.max(.3, 1 - (fl - bl.r - bl.y) / 200), fl - bl.y); contact(bl.x, bl.z, bl.r, fl - bl.r - bl.y);
+      var all = s.buddies.slice(); if (s.main) all.push(s.main);
+      all.forEach(function (b) {
+        if (b.el === api.hideEl) return;
+        var fy2 = b.floor != null ? b.floor : fl, sc2 = Math.max(.35, Math.min(1, 1 - (fy2 - b.r - b.y) / 300));
+        shadow(b.x, b.z, b.r * 1.05 * sc2, .3 * sc2, fy2 - b.y, fy2); contact(b.x, b.z, b.r, fy2 - b.r - b.y, fy2);
+      });
+      flushShadows();
+      // the sky and what hangs in it, on the far plane: only where nothing else was drawn
+      gl.depthFunc(gl.LEQUAL); gl.depthMask(false); gl.uniform1f(U.uFar, 1);
+      gl.uniformMatrix4fv(U.uP, false, ID); draw(QD, 3, S(2, -2, 1), skyTop, skyHor);
+      gl.uniformMatrix4fv(U.uP, false, PV);
+      if (sk.stars > .02) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, starBuf); bound = null;
+        gl.vertexAttribPointer(A.pos, 3, gl.FLOAT, false, 32, 0); gl.vertexAttribPointer(A.nrm, 3, gl.FLOAT, false, 32, 12); gl.vertexAttribPointer(A.uv, 2, gl.FLOAT, false, 32, 24);
+        gl.uniform1i(U.uMode, 6); gl.uniformMatrix4fv(U.uM, false, T(cx, fl, cz)); gl.uniform1f(U.uPt, 2.8 * canvas.width / W); gl.uniform4f(U.uC0, 1, 1, 1, sk.stars * .9);
+        gl.drawArrays(gl.POINTS, 0, NSTAR);
+      }
+      if (moonP) { billboard(moonP[0], moonP[1], moonP[2], 520, 520, [.85, .88, 1, .12], .05); billboard(moonP[0], moonP[1], moonP[2], 120, 120, [.96, .95, .88, 1], .8); }
+      clouds.forEach(function (c) {
+        var a = c.a + t / 1000 * c.sp * .01, x = cx + Math.cos(a) * c.r, z = cz + Math.sin(a) * c.r, y = fl - c.y;
+        [[-.22, .22, 100, 60], [.05, 0, 120, 82], [.3, .2, 92, 56], [.04, .34, 190, 34], [-.08, .1, 80, 60]].forEach(function (e) { billboard(x + e[0] * 300 * c.k, y + e[1] * 100 * c.k, z, e[2] * 2 * c.k, e[3] * 2 * c.k, [cloud[0], cloud[1], cloud[2], .9], 0, 12); });
+      });
+      gl.uniform1f(U.uFar, 0); gl.depthMask(true); gl.depthFunc(gl.LESS);
       if (sk.lights > .02) {
         gl.depthMask(false); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
         lamps.forEach(function (l) {
