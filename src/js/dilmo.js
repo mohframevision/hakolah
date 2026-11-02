@@ -1534,10 +1534,10 @@
   function playerControl(b, fy, dt, t) {
     var onF = b.y >= fy - 1 || t - (b.supportT || 0) < 60;
     if (onF) { b.coyote = t; if (b.vy >= 0) b.jumps = 0; }
-    var ix = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), iz = (keys.far ? 1 : 0) - (keys.near ? 1 : 0), charged = b.crouchT && t - b.crouchT > 300;
+    var ix = keys.thumb ? keys.sx : (keys.right ? 1 : 0) - (keys.left ? 1 : 0), iz = keys.thumb ? keys.sz : (keys.far ? 1 : 0) - (keys.near ? 1 : 0), charged = b.crouchT && t - b.crouchT > 300;
     // in the 3D world the keys are relative to the camera: right = screen right, far = away from you
     var mx = ix, mz = 0;
-    var fp = D3 && D3.viewNow() === "first", ksig = ix + "," + iz;
+    var fp = D3 && D3.viewNow() === "first", ksig = Math.round(ix * 2) + "," + Math.round(iz * 2);  // the stick re-latches the direction only when it really turns
     if (!ix && !iz || fp || ksig !== b.ksig) b.basis = null;
     b.ksig = ksig;
     if (D3) { var ax = fp ? D3.axes() : b.basis || (b.basis = D3.axes()); mx = ax.rx * ix + ax.fx * iz; mz = ax.rz * ix + ax.fz * iz; var ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; } }
@@ -1581,7 +1581,7 @@
     var h = b.mode === "tag" && b.other ? T("أنت المطارِد! المس " + b.other.f.name + ".", "You're it! Tag " + b.other.f.name + ".") : b.mode === "flee" && b.other ? T("اهرب! " + b.other.f.name + " يطاردك.", "Run! " + b.other.f.name + " is chasing you.") :
       D3 && D3.viewNow() === "first" && !TOUCH ? (D3.locked() ? T("\u2066W A S D\u2069 للحركة · الفأرة للنظر · المسافة للقفز · انقر لتلمس ما في الوسط · \u2066Esc\u2069 لتحرير الفأرة", "W A S D to move · the mouse to look · Space to jump · click to touch what is in the middle · Esc to free the mouse")
         : T("انقر على الساحة لتتحكّم بالنظر بالفأرة", "Click the arena to look around with the mouse")) :
-      D3 ? (TOUCH ? T("◀ ▶ و«أبعد» و«أقرب» للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية", "◀ ▶, Away and Closer to move · Jump (again in the air) · ▼ in the air slams down")
+      D3 ? (TOUCH ? T("العصا في الزاوية للحركة (دفعة خفيفة تمشي) · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية · اسحب الأرض لتدوير الكاميرا", "The stick in the corner to move (a light push walks) · Jump (again in the air) · ▼ in the air slams down · drag the ground to turn the camera")
         : T("\u2066W A S D\u2069 للحركة · المسافة للقفز (مرة ثانية في الهواء) · السهم للأسفل في الهواء ضربة أرضية · اسحب الأرض لتدوير الكاميرا · \u2066V\u2069 لتغيير المنظر", "A, D, W and S to move · Space to jump (again in the air) · Down arrow in the air slams down · drag the ground to turn the camera · V to change the view")) :
       TOUCH ? T("◀ ▶ للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية، واضغطه مع «قفز» لقفزة عالية", "◀ ▶ to move · Jump (again in the air) · ▼ in the air slams down; hold it, then Jump, for a high jump") :
       T("\u2066A / D\u2069 للحركة · المسافة للقفز (مرة ثانية في الهواء) · \u2066S\u2069 في الهواء ضربة أرضية، وعلى الأرض تجمّع لقفزة عالية", "A and D to move · Space to jump (again in the air) · S in the air slams down, on the ground it charges a high jump");
@@ -1640,6 +1640,24 @@
   holdBtn("pp-jump", function () { keys.jumpAt = performance.now(); keys.jumpHeld = true; }, function () { keys.jumpHeld = false; });
   holdBtn("pp-far", function () { keys.far = true; }, function () { keys.far = false; });
   holdBtn("pp-near", function () { keys.near = true; }, function () { keys.near = false; });
+  // phones in the 3D world: a thumbstick under the left thumb, jump and slam under the right, inside the stage (CSS shows them on touch screens only)
+  var touchBox = document.createElement("div"); touchBox.className = "d3-touch"; touchBox.dir = "ltr";
+  touchBox.innerHTML = '<div class="d3-thumb" role="presentation"><span></span></div><button type="button" class="d3-tb d3-pound" id="d3-pound">▼</button><button type="button" class="d3-tb d3-jump" id="d3-jump"></button>';
+  touchBox.querySelector(".d3-pound").setAttribute("aria-label", T("نزول", "Down")); touchBox.querySelector(".d3-jump").textContent = T("قفز", "Jump");
+  stage.appendChild(touchBox);
+  holdBtn("d3-jump", function () { keys.jumpAt = performance.now(); keys.jumpHeld = true; }, function () { keys.jumpHeld = false; });
+  holdBtn("d3-pound", function () { keys.down = true; }, function () { keys.down = false; });
+  var thumb = touchBox.firstChild, knob = thumb.firstChild, thumbId = null;
+  function thumbMove(e) {  // analog: a light push walks, the rim runs; a small dead zone in the middle
+    var r = thumb.getBoundingClientRect(), rr = r.width / 2, dx = e.clientX - r.left - rr, dy = e.clientY - r.top - rr, l = Math.hypot(dx, dy), k = l > rr ? rr / l : 1;
+    knob.style.transform = "translate(" + (dx * k).toFixed(1) + "px," + (dy * k).toFixed(1) + "px)";
+    var m = Math.min(1, l / rr); m = m < .15 ? 0 : (m - .15) / .85;
+    keys.sx = l ? dx / l * m : 0; keys.sz = l ? -dy / l * m : 0;
+  }
+  function thumbEnd(e) { if (e.pointerId !== thumbId) return; thumbId = null; keys.thumb = false; keys.sx = keys.sz = 0; knob.style.transform = ""; }
+  thumb.addEventListener("pointerdown", function (e) { e.preventDefault(); thumbId = e.pointerId; try { thumb.setPointerCapture(e.pointerId); } catch { /* already gone */ } keys.thumb = true; thumbMove(e); });
+  thumb.addEventListener("pointermove", function (e) { if (e.pointerId === thumbId) thumbMove(e); });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (ev) { thumb.addEventListener(ev, thumbEnd); });
   function others() { return buddies.filter(function (x) { return x !== player; }); }
 
   // ---- who is in the place: remove anyone (even him), play alone, bring them back one by one ----
@@ -2651,7 +2669,7 @@
   function scene3(t) {
     var one = function (b) { return { x: b.x, y: b.y, z: b.z, vx: b.vx, vz: b.vz, r: b.f.r, pts: b.pts, el: b.el, drag: !!(b.drag && b.drag.moved), sx: clamp(b.sx, .8, 1.25), sy: clamp(b.sy, .75, 1.22), tilt: b.tilt, spin: b.spinA, cols: [b.f.c1, b.f.c2, b.f.c3], crouch: !!b.crouch && !b.f.player, floor: surfaceY(b) + b.f.r }; };
     return { t: t, W: W, H: WH, DZ: DZ, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce, idle: t - lastInput,
-      player: player ? { x: player.x, y: player.y, z: player.z, vx: player.vx, vz: player.vz, r: player.f.r, el: player.el, floor: surfaceY(player) + player.f.r, grounded: player.y >= surfaceY(player) - 1 || t - (player.supportT || 0) < 80, landT: player.landT || 0, landHit: player.landHit || 0, moving: !!(keys.left || keys.right || keys.far || keys.near) } : null,
+      player: player ? { x: player.x, y: player.y, z: player.z, vx: player.vx, vz: player.vz, r: player.f.r, el: player.el, floor: surfaceY(player) + player.f.r, grounded: player.y >= surfaceY(player) - 1 || t - (player.supportT || 0) < 80, landT: player.landT || 0, landHit: player.landHit || 0, moving: !!(keys.left || keys.right || keys.far || keys.near || keys.sx || keys.sz) } : null,
       main: mainAway ? null : { x: pos.x, y: pos.y, z: pos.z, vx: pos.vx, vz: pos.vz, r: R, floor: ground + R, grounded: pos.y >= ground - 1, pts: pts, el: orb, drag: !!(drag && drag.moved), sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
       buddies: buddies.map(one), ball: ball, bench: bench, bushes: bushes.map(function (b) { return { x: b.cx, z: b.cz }; }) };
   }
@@ -3003,11 +3021,13 @@
   }
 
   var shownAt = 0, fpsN = 0, fpsAt = 0;
+  var touchOn = false;
   function frame(t) {
     if (!running) { raf = 0; return; }
     raf = requestAnimationFrame(frame);
     var capIv = D3 && gfx.fps ? 1000 / gfx.fps : 0;
     if (capIv && t - shownAt < capIv - 1) return;  // the frame-rate cap: skip this screen refresh
+    var tch = !!(D3 && player); if (tch !== touchOn) { touchOn = tch; stage.parentNode.classList.toggle("touch3d", tch); if (!tch) { thumbEnd({ pointerId: thumbId }); keys.down = keys.jumpHeld = false; } }
     shownAt = capIv && t - shownAt < capIv * 2 ? shownAt + capIv : t;  // keep the beat, so 30 on a 60/144 Hz screen really is 30
     if (D3 && gfx.counter) { fpsN++; if (t - fpsAt > 500) { fpsBox.textContent = Math.round(fpsN * 1000 / (t - fpsAt)) + " FPS · " + gfxStatus(); fpsN = 0; fpsAt = t; } }
     // the world moves in small equal steps (at most half a 60 Hz frame each), so a jump, a throw or a slide comes out the same
