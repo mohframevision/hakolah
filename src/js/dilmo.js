@@ -364,11 +364,17 @@
     try { localStorage.setItem("hk-dilmo", JSON.stringify(store)); } catch { /* private window: forget */ }
   }
   // sound: tiny synthesized blips (Web Audio), nothing downloaded; starts only after the first touch or key
-  var echo = null, ac = null, master = null, soundOn = true, unlocked = false, lastSfx = {}, nextSnore = 0;
+  var echo = null, ac = null, master = null, kit = null, verb = null, NB = null, V = 1, soundOn = true, unlocked = false, lastSfx = {}, nextSnore = 0;
   function unlock() {
     if (unlocked) return; unlocked = true;
     try {
-      ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = volGain(); master.connect(ac.destination);
+      ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = volGain();
+      var comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4; master.connect(comp); comp.connect(ac.destination);
+      kit = ac.createGain(); kit.gain.value = 3.3; kit.connect(master);  // the sound kit is mixed at full scale; master keeps the old .3 headroom
+      verb = ac.createConvolver(); var vn = ac.sampleRate * 1.8, vb = ac.createBuffer(2, vn, ac.sampleRate);
+      for (var c = 0; c < 2; c++) { var vd = vb.getChannelData(c); for (var vi = 0; vi < vn; vi++) vd[vi] = (Math.random() * 2 - 1) * Math.pow(1 - vi / vn, 3.2); }
+      verb.buffer = vb; verb.connect(kit);
+      NB = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); var nd = NB.getChannelData(0); for (var ni = 0; ni < nd.length; ni++) nd[ni] = Math.random() * 2 - 1;
       // soft echo for the melodic notes
       echo = ac.createDelay(1); echo.delayTime.value = .28;
       var fb = ac.createGain(), lp = ac.createBiquadFilter(), wet = ac.createGain();
@@ -385,28 +391,65 @@
     g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
     o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .03);
   }
-  function hiss(dur, vol, freq, delay) {
+  // the sound kit (the owner picked each one from a listening board, 2026-11-02): bubbles, wooden bars, rubber and glass bells,
+  // all synthesized; every play shifts its pitch a little (V) so nothing repeats exactly
+  function kenv(g, t, o) { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(o.vol, t + (o.a || .006)); g.gain.exponentialRampToValueAtTime(.0001, t + o.dur); }
+  function kout(n, o) { n.connect(kit); if (o.rev) { var s = ac.createGain(); s.gain.value = o.rev; n.connect(s); s.connect(verb); } }
+  function kt(o) {  // a tone: glide (f to f1), vibrato [rate, depth], a filter chain, reverb send
     if (!ac || !soundOn) return;
-    var t = ac.currentTime + (delay || 0), n = Math.ceil(ac.sampleRate * dur), buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0);
-    for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
-    var s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
-    s.buffer = buf; f.type = "bandpass"; f.frequency.value = freq; f.Q.value = 1.2;
-    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur + .02);
+    var t = ac.currentTime + (o.t || 0), os = ac.createOscillator(), g = ac.createGain(), f = o.f * V;
+    os.type = o.type || "sine"; os.frequency.setValueAtTime(f, t);
+    if (o.f1) os.frequency.exponentialRampToValueAtTime(Math.max(20, o.f1 * V), t + (o.glide || o.dur));
+    if (o.vib) { var l = ac.createOscillator(), lg = ac.createGain(); l.frequency.value = o.vib[0]; lg.gain.value = o.vib[1]; l.connect(lg); lg.connect(os.frequency); l.start(t); l.stop(t + o.dur + .05); }
+    var node = os;
+    (o.filt || []).forEach(function (fl) { var bq = ac.createBiquadFilter(); bq.type = fl[0]; bq.frequency.value = fl[1]; bq.Q.value = fl[2] || 1; node.connect(bq); node = bq; });
+    node.connect(g); kenv(g, t, o); kout(g, o); os.start(t); os.stop(t + o.dur + .05);
   }
+  function kn(o) {  // filtered noise
+    if (!ac || !soundOn) return;
+    var t = ac.currentTime + (o.t || 0), s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    s.buffer = NB; f.type = o.ft || "bandpass"; f.frequency.setValueAtTime(o.f, t); f.Q.value = o.q || 1;
+    if (o.f1) f.frequency.exponentialRampToValueAtTime(o.f1, t + o.dur);
+    s.connect(f); f.connect(g); kenv(g, t, o); kout(g, o); s.start(t, Math.random()); s.stop(t + o.dur + .05);
+  }
+  function kb(o) {  // a glass bell (FM whose brightness fades)
+    if (!ac || !soundOn) return;
+    var t = ac.currentTime + (o.t || 0), c = ac.createOscillator(), m = ac.createOscillator(), mg = ac.createGain(), g = ac.createGain(), f = o.f * V;
+    c.frequency.value = f; m.frequency.value = f * (o.ratio || 3.5);
+    mg.gain.setValueAtTime(f * (o.index || 3), t); mg.gain.exponentialRampToValueAtTime(f * .01 + 1, t + o.dur * .7);
+    m.connect(mg); mg.connect(c.frequency); c.connect(g); kenv(g, t, o); kout(g, o);
+    c.start(t); m.start(t); c.stop(t + o.dur + .05); m.stop(t + o.dur + .05);
+  }
+  var MARIMBA = [[1, 1, 1], [3.93, .3, .28], [9.2, .1, .1]];
+  function kbar(o) { MARIMBA.forEach(function (p) { kt({ f: o.f * p[0], dur: Math.max(.03, o.dur * p[2]), vol: o.vol * p[1], t: o.t, a: .002, rev: o.rev }); }); }  // a struck wooden bar
+  function bubble(f, f1, dur, vol, t) { kt({ f: f, f1: f1, glide: Math.min(.05, dur * .6), dur: dur, vol: vol, t: t }); }
   function sfx(name, v) {
     var now = performance.now();
     if (now - (lastSfx[name] || 0) < (name === "squeak" ? 70 : 120)) return;
-    lastSfx[name] = now;
-    if (name === "pop") tone(480, 920, .09, "sine", .35);
-    else if (name === "boing") tone(150 + v * 5, 80, .22, "sine", Math.min(.4, .08 + v * .015));
-    else if (name === "squeak") tone(420 + v * 520, 460 + v * 560, .06, "triangle", .06);
-    else if (name === "snap") { tone(300, 760, .1, "sine", .3); tone(760, 520, .12, "sine", .15, .08); }
-    else if (name === "whoosh") hiss(.35, .18, 1400);
-    else if (name === "splat") { hiss(.12, .3, 500); tone(150, 70, .16, "sine", .3); }
-    else if (name === "munch") { for (var i = 0; i < 3; i++) hiss(.06, .25, 900 + i * 150, i * .2); }
-    else if (name === "beat") { tone(62, 48, .09, "sine", .05 + .07 * (v || 0)); tone(58, 44, .08, "sine", .03 + .05 * (v || 0), .16); }  // lub-dub
-    else if (name === "snore") { tone(110, 90, 1.1, "sine", .05); hiss(1, .03, 300, .1); }
+    lastSfx[name] = now; V = 1 + (Math.random() - .5) * .08; v = v || 0;
+    if (name === "pop") { bubble(380, 1100, .09, .12); bubble(620, 1500, .06, .04, .035); }  // a touch
+    else if (name === "boing") { kbar({ f: 196, dur: .45, vol: Math.min(.17, .04 + v * .012) }); kn({ ft: "lowpass", f: 260, dur: .05, vol: Math.min(.09, .02 + v * .006) }); }  // a bounce
+    else if (name === "squeak") bubble(480 + v * 420, 900 + v * 700, .05, .04);  // stretching: one small bubble per tug
+    else if (name === "snap") { tone(300, 760, .1, "sine", .3); tone(760, 520, .12, "sine", .15, .08); }  // a catch (kept)
+    else if (name === "whoosh") kt({ f: 500, f1: 1400, dur: .32, vol: .06, vib: [6, 14] });  // a throw: a slide whistle
+    else if (name === "splat") { kt({ f: 130, f1: 58, dur: .3, vol: .18, vib: [12, 14] }); kn({ ft: "lowpass", f: 320, dur: .1, vol: .15 }); }  // a hard landing
+    else if (name === "munch") { for (var i = 0; i < 3; i++) { kt({ f: 260, f1: 140, dur: .07, vol: .1, t: i * .18 }); bubble(480 + i * 60, 1200, .06, .05, i * .18 + .05); } }
+    else if (name === "beat") { kt({ f: 62, f1: 48, dur: .12, vol: .06 + .11 * v, rev: .3 }); kt({ f: 58, f1: 44, dur: .1, vol: .04 + .07 * v, t: .16, rev: .3 }); }  // lub-dub
+    else if (name === "snore") { kt({ type: "sawtooth", f: 70, f1: 86, dur: 1, vol: .04, a: .3, filt: [["lowpass", 500]] }); kt({ f: 900, f1: 1350, dur: .5, vol: .025, t: 1, a: .1 }); }
+    else if (name === "kick") { kt({ f: 300, f1: 100, dur: .1, vol: .1 + Math.min(.08, v * .01) }); kn({ ft: "highpass", f: 1800, dur: .03, vol: .08 }); }
+    else if (name === "jump") { bubble(300, 900, .15, .12); bubble(700, 1600, .05, .04, .13); }
+    else if (name === "jumpHi") { bubble(260, 1100, .2, .13); bubble(800, 1900, .06, .05, .17); }  // charged, or out of a slam
+    else if (name === "jump2") kt({ f: 700, f1: 1800, dur: .13, vol: .06, vib: [20, 30] });
+    else if (name === "pound") kt({ f: 1000, f1: 150, dur: .22, vol: .09 });
+    else if (name === "ui") bubble(700, 1500, .05, .05);
+    else if (name === "view") { kb({ f: 1500, dur: .2, vol: .025 }); kb({ f: 1800, dur: .25, vol: .025, t: .06 }); }
+  }
+  function kvoice(sy, q, base, vol) {  // speech: one bubble-chirp per syllable, pitched by its vowel, rising at the end of a question
+    V = 1;
+    sy.forEach(function (s, i) {
+      var last = q && i === sy.length - 1, f = base * (s.v === "ee" ? 1.18 : s.v === "oo" ? .86 : s.v === "aa" ? 1.04 : 1);
+      kt({ f: f, f1: f * (last ? 1.5 : 1.22), glide: .05, dur: .085, vol: vol, t: i * SYL / 1000 });
+    });
   }
   // speech: the line is split into rough syllables, each with a vowel shape read from the letters
   // (ا → aa open, و → oo round, ي → ee wide, else a short a). The chirps and the mouth both follow it.
@@ -429,11 +472,7 @@
   }
   // one chirp per syllable; pitch follows the vowel and the mood, and rises at the end of a question
   function babble(sy, q) {
-    var base = 430 + 220 * Math.max(mood.joy, 0) + 160 * mood.startle - 140 * mood.annoy - 160 * mood.sleepy;
-    sy.forEach(function (s, i) {
-      var last = q && i === sy.length - 1, f = base * (s.v === "ee" ? 1.15 : s.v === "oo" ? .88 : s.v === "aa" ? 1.05 : 1) * (last ? 1.2 : 1);
-      tone(f, f * (last ? 1.2 : .94), .09, "triangle", .07, i * SYL / 1000);
-    });
+    kvoice(sy, q, 520 + 260 * Math.max(mood.joy, 0) + 190 * mood.startle - 160 * mood.annoy - 190 * mood.sleepy, .075);
   }
   var singAt = -1e4;
   function noteFx() {
@@ -958,7 +997,7 @@
     if (quiet) return;
     var t = performance.now(), sy = syllables(text);
     b.bub.textContent = text; b.bub.hidden = false; b.sayUntil = t + clamp(text.length * 65, 2000, 7000); b.bub._since = t; b.speech = { t0: t, syl: sy };
-    sy.forEach(function (s, i) { var f = b.f.pitch * (s.v === "ee" ? 1.15 : s.v === "oo" ? .88 : 1); tone(f, f * .94, .08, "sine", .05, i * SYL / 1000); });
+    kvoice(sy, /[?؟]\s*$/.test(text), b.f.pitch * 1.2, .055);
   }
   function spawnFriends() {
     var cast = store.cast || {}, xs = [.2, .82, .65, .36, .93, .08, .55];
@@ -1245,7 +1284,7 @@
         if (ky > .75 && (kicker.o.vy || 0) > 1) { ball.vy = -10; kicker.o.kickAt = t; }  // came down on top of it: it pops up
         else if (krv > 4) {  // a real kick (a run into it, not a walk with it): faster than you, with a little lift
           var ks = 1.6 * kin + 1.5; ball.vx = hx2 * ks; if (D3) ball.vz = hz2 * ks; if (ball.y >= ground + R - ball.r - 1) ball.vy = -Math.min(7, 2.5 + .45 * kin);
-          kicker.o.kickAt = t; sfx("pop"); tone(200 + 20 * kin, 140, .07, "sine", .06); if (kin > 5.5 && kicker.b && kicker.b.f.player) hitStop(40);
+          kicker.o.kickAt = t; sfx("kick", kin); if (kin > 5.5 && kicker.b && kicker.b.f.player) hitStop(40);
         } else if (kin > 0) { var ds = Math.min(2.4, 1.1 * Math.max(kin, .6)); ball.vx = hx2 * ds; if (D3) ball.vz = hz2 * ds; }  // a gentle touch: a dribble
         continue;
       }
@@ -1576,18 +1615,18 @@
       if (onF && !tvx && !tvz && Math.hypot(b.vx, b.vz) < .8) b.vx = b.vz = 0;
       if (onF && rev && Math.hypot(b.vx, b.vz) > 3 && t - (b.dustAt || 0) > 250) { b.dustAt = t; b.sx = 1.12; var sd1 = sv(b); dust(sd1.x, sd1.y + b.f.r * sd1.s); }
     }
-    if (t - keys.jumpAt < 120 && t < (b.poundJumpUntil || 0)) { b.vy = -PV * 1.12; b.jumps = 1; keys.jumpAt = 0; b.poundJumpUntil = 0; b.spin += 360; tone(260, 900, .16, "sine", .12); }  // jump right out of a slam: higher
+    if (t - keys.jumpAt < 120 && t < (b.poundJumpUntil || 0)) { b.vy = -PV * 1.12; b.jumps = 1; keys.jumpAt = 0; b.poundJumpUntil = 0; b.spin += 360; sfx("jumpHi"); }  // jump right out of a slam: higher
     if (t - keys.jumpAt < 120) {
       if (t - (b.coyote || 0) < 100 && !b.jumps) {
         b.vy = charged ? -PV * 1.3 : -PV; b.jumps = 1; b.cut = false; keys.jumpAt = 0; b.sy = .82; b.sx = 1.12; b.svy = 0; b.crouchT = 0;
-        tone(charged ? 260 : 320, charged ? 820 : 620, .14, "sine", .12);
+        sfx(charged ? "jumpHi" : "jump");
       } else if (b.jumps < 2 && !b.pound) {
-        b.vy = -PV * .85; b.jumps = 2; b.cut = false; keys.jumpAt = 0; var sj = sv(b); dust(sj.x, sj.y + b.f.r * sj.s); tone(520, 940, .12, "sine", .1);
+        b.vy = -PV * .85; b.jumps = 2; b.cut = false; keys.jumpAt = 0; var sj = sv(b); dust(sj.x, sj.y + b.f.r * sj.s); sfx("jump2");
         if (mx || mz) { var asp = Math.max(Math.hypot(b.vx, b.vz), 3.5); b.vx = mx * asp; b.vz = mz * asp; }  // the air jump turns you where you point
         b.spin += 360;
       }
     }
-    if (keys.down && !onF && !b.pound && !b.poundLock) { b.pound = true; b.poundT = t; b.vx = b.vz = b.vy = 0; b.spin += 360; b.sy = .85; tone(700, 200, .2, "sine", .08); }
+    if (keys.down && !onF && !b.pound && !b.poundLock) { b.pound = true; b.poundT = t; b.vx = b.vz = b.vy = 0; b.spin += 360; b.sy = .85; sfx("pound"); }
     if (b.pound) { if (onF) { b.pound = false; slam(b); b.poundJumpUntil = Math.max(t, hitStopUntil) + 150; } else if (t - b.poundT >= 180) b.vy = Math.max(b.vy, 20); }
     if (b.other && b.other.mode !== (b.mode === "tag" ? "flee" : "tag")) { b.mode = "wander"; b.other = null; }
     var h = b.mode === "tag" && b.other ? T("أنت المطارِد! المس " + b.other.f.name + ".", "You're it! Tag " + b.other.f.name + ".") : b.mode === "flee" && b.other ? T("اهرب! " + b.other.f.name + " يطاردك.", "Run! " + b.other.f.name + " is chasing you.") :
@@ -2550,7 +2589,7 @@
     store.stars = (store.stars || 0) + 1; saveStore(); tickClock();
     notice(g.x, g.z, 150, "star");
     var tn = performance.now(); chimeN = tn - chimeAt < 2000 ? chimeN + 1 : 0; chimeAt = tn; var up = Math.pow(2, chimeN / 12);  // quick pickups climb a semitone each
-    tone(660 * up, 660 * up, .1, "sine", .08); tone(880 * up, 880 * up, .1, "sine", .08, .09); tone(1320 * up, 1320 * up, .18, "sine", .07, .18);
+    V = up; [1047, 1319, 1568, 2093].forEach(function (f, i) { kb({ f: f, dur: 1, vol: .04, t: i * .05, rev: .5 }); });  // glass bells
     var sg0 = sv(g), plus = document.createElement("span"); plus.className = "plus1"; plus.textContent = "+1"; plus.setAttribute("aria-hidden", "true");
     plus.style.setProperty("--x", (sg0.x * K - 8).toFixed(0) + "px"); plus.style.setProperty("--y", (sg0.y * K - 20).toFixed(0) + "px");
     labels.appendChild(plus); plus.addEventListener("animationend", function () { plus.remove(); });
@@ -2701,7 +2740,7 @@
   }
   function nextView() {
     var order = ["orbit", "third", "first"].concat(player && !mainAway ? ["second"] : []), i = order.indexOf(viewMode);
-    setView(order[(i + 1) % order.length]); tone(900, 1200, .06, "sine", .04);
+    setView(order[(i + 1) % order.length]); sfx("view");
   }
   viewBtn.addEventListener("click", function () { stir(); if (view3 && !d3Busy) nextView(); });
   addEventListener("keydown", function (e) { if (e.code === "KeyV" && view3 && !d3Busy && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) { e.preventDefault(); nextView(); } });
@@ -2769,7 +2808,7 @@
     var aaWas = view3 ? view3.stats().aa : gfx.aa;
     if (key === "preset") { gfx.preset = val; if (PRESETS[val]) Object.assign(gfx, PRESETS[val]); if (val === "auto") gfx.res = -1; }
     else { gfx[key] = val; if (["res", "aa", "far", "detail", "vig", "shadows"].indexOf(key) >= 0) gfx.preset = key === "res" && val === -1 ? "auto" : "custom"; }
-    saveGfx(); tone(900, 1200, .05, "sine", .03);
+    saveGfx(); sfx("ui");
     if (view3) {
       var o = gfxOpts(), wantAA = o.auto ? view3.stats().aa : o.aa;
       if (wantAA !== aaWas && !o.auto) restart3d(); else view3.setOptions(o);
@@ -2822,7 +2861,7 @@
       if (document.fullscreenElement) document.exitFullscreen().catch(function () { /* already out */ });
       else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
     }
-    stir(); tone(on ? 520 : 780, on ? 780 : 520, .08, "sine", .03);
+    stir(); sfx("ui");
   }
   function toggleFs() {
     if (root.classList.contains("fs")) { setFs(false); return; }
@@ -2864,7 +2903,7 @@
     });
     if (!best) { tone(300, 260, .05, "sine", .03); return; }
     var ax = D3.axes();
-    if (best.k === "ball") { ball.vx = ax.fx * 9; ball.vz = ax.fz * 9; ball.vy = -6; sfx("pop"); }
+    if (best.k === "ball") { ball.vx = ax.fx * 9; ball.vz = ax.fz * 9; ball.vy = -6; sfx("kick", 6); }
     else if (best.k === "main") { poke(0, 6); pos.vx += ax.fx * 4; pos.vz += ax.fz * 4; }
     else { var b = best.b; b.vy = -7 * b.f.energy; b.vx += ax.fx * 3; b.vz += ax.fz * 3; b.joy = 1; b.svy -= .2; sfx("pop"); bsay(b, line(b.f.shy ? "buddyShyPoke" : "buddyPoke")); }
   }
@@ -2874,7 +2913,9 @@
     var cx = mainAway ? W / 2 : pos.x, cy = mainAway ? ground : pos.y, H = world.offsetHeight;
     var Rm = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 20, dur = reduce ? 400 : 1500, t0 = performance.now();
     stage.classList.toggle("is3d", on); if (!on) stage.classList.remove("in3d");
-    tone(on ? 160 : 720, on ? 820 : 150, dur / 1000, "sine", .05); hiss(dur / 1000, .05, 2400);
+    // a cascade of wooden bars, rising on the way in and falling on the way out
+    V = 1; var pent = [392, 440, 523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760]; if (!on) pent.reverse();
+    pent.forEach(function (f, i) { kbar({ f: f, dur: .5, vol: .07, t: i * dur / 1000 / 13, rev: .35 }); });
     view3.intro(dur, !on);  // the camera rises from the flat view into the arena, and settles back on the way out
     (function step(t) {
       var p = clamp((t - t0) / dur, 0, 1), r = Rm * (on ? p * p * p : Math.pow(1 - p, 3));  // slow, then it rushes to swallow the stage
