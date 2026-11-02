@@ -2776,6 +2776,58 @@
   gear.addEventListener("click", function () { stir(); if (setPanel.hidden) openSettings(); else closeSettings(); });
   addEventListener("keydown", function (e) { if (e.key === "Escape" && !setPanel.hidden) closeSettings(); });
 
+  // ---- full screen, like a real game: the world fills the screen, the join form / chat bar sits under it,
+  // and every other control (characters, sound, talk, photo, 3D, view, tips) lives in a menu over the world ----
+  var FS_IN = '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>', FS_OUT = '<path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/>';
+  var fsBar = el("div", "fs-bar"), fsMenuBtn = el("button", "fs-b"), fsBtn = el("button", "fs-b"), fsMenu = el("div", "fs-menu"), fsHome = [];
+  fsMenuBtn.type = fsBtn.type = "button"; fsMenuBtn.hidden = fsMenu.hidden = true;
+  fsMenuBtn.setAttribute("aria-label", T("القائمة", "Menu")); fsMenuBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  fsMenu.setAttribute("role", "dialog"); fsMenu.setAttribute("aria-label", T("القائمة", "Menu"));
+  var fsHead = el("div", "d3-head"), fsClose = el("button", "snd", T("عودة إلى اللعب", "Back to the game"));
+  fsClose.type = "button"; fsHead.appendChild(el("h2", "", T("القائمة", "Menu"))); fsHead.appendChild(fsClose); fsMenu.appendChild(fsHead);
+  fsBar.appendChild(fsMenuBtn); fsBar.appendChild(fsBtn); stage.appendChild(fsBar); root.appendChild(fsMenu);
+  function fsLabel(on) { fsBtn.setAttribute("aria-label", on ? T("الخروج من ملء الشاشة", "Exit full screen") : T("ملء الشاشة", "Full screen")); if (!TOUCH) fsBtn.title = fsBtn.getAttribute("aria-label") + " (F)"; fsBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + (on ? FS_OUT : FS_IN) + "</svg>"; }
+  function setFs(on) {
+    if (on === root.classList.contains("fs")) return;
+    root.classList.toggle("fs", on); document.documentElement.classList.toggle("dilmo-fs", on); fsMenuBtn.hidden = !on; fsLabel(on);
+    if (on) [document.querySelector(".dilmo-top"), trainEl, document.querySelector(".tips")].forEach(function (e) { if (e) { fsHome.push([e, e.parentNode, e.nextSibling]); fsMenu.appendChild(e); } });
+    else {
+      fsHome.reverse().forEach(function (h) { h[1].insertBefore(h[0], h[2]); }); fsHome = []; fsMenu.hidden = true;
+      if (trainEl && trainEl.parentNode === fsMenu) document.querySelector(".tips").before(trainEl);  // made while the menu held the tips
+      if (document.fullscreenElement) document.exitFullscreen().catch(function () { /* already out */ });
+      else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
+    }
+    stir(); tone(on ? 520 : 780, on ? 780 : 520, .08, "sine", .03);
+  }
+  function toggleFs() {
+    if (root.classList.contains("fs")) { setFs(false); return; }
+    setFs(true);  // the layout works even where the browser can't go truly full screen (iPhone): then it fills the page
+    var rq = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (rq) { var p = rq.call(root, { navigationUI: "hide" }); if (p && p.catch) p.catch(function () { /* refused: the page-filling layout stays */ }); }
+  }
+  function fsMenuOpen(on) {
+    if (on && D3 && D3.locked() && document.exitPointerLock) document.exitPointerLock();
+    fsMenu.hidden = !on; (on ? fsClose : fsMenuBtn).focus({ preventScroll: true });
+  }
+  fsLabel(false);
+  fsBtn.addEventListener("click", toggleFs);
+  fsMenuBtn.addEventListener("click", function () { fsMenuOpen(fsMenu.hidden); });
+  fsClose.addEventListener("click", function () { fsMenuOpen(false); });
+  ["d3-btn", "d3-view", "photo-btn"].forEach(function (id) { document.getElementById(id).addEventListener("click", function () { fsMenu.hidden = true; }); });  // these change the world: show it
+  ["fullscreenchange", "webkitfullscreenchange"].forEach(function (ev) {
+    document.addEventListener(ev, function () { if (!document.fullscreenElement && !document.webkitFullscreenElement) setFs(false); });  // Esc in true full screen
+  });
+  addEventListener("keydown", function (e) {
+    var typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName), fs = root.classList.contains("fs");
+    if (e.code === "KeyF" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); toggleFs(); return; }
+    if (!fs) return;
+    if (e.key === "Escape") {  // in the page-filling layout (no true full screen) Esc steps back: chat → menu → out
+      if (typing) e.target.blur(); else if (!fsMenu.hidden) fsMenuOpen(false); else if (setPanel.hidden && !document.fullscreenElement) setFs(false);
+    } else if (e.key === "Enter" && !typing && player && fsMenu.hidden && !/^(BUTTON|A)$/.test(e.target.tagName)) {  // Enter opens the chat, as in most games
+      e.preventDefault(); document.getElementById("pp-msg").focus({ preventScroll: true });
+    }
+  });
+
   // the crosshair in the middle of a first-person view: the nearest thing under it gets touched
   var cross = document.getElementById("d3-cross");
   function useCrosshair() {
