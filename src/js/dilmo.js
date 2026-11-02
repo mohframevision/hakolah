@@ -375,6 +375,7 @@
       for (var c = 0; c < 2; c++) { var vd = vb.getChannelData(c); for (var vi = 0; vi < vn; vi++) vd[vi] = (Math.random() * 2 - 1) * Math.pow(1 - vi / vn, 3.2); }
       verb.buffer = vb; verb.connect(kit);
       NB = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); var nd = NB.getChannelData(0); for (var ni = 0; ni < nd.length; ni++) nd[ni] = Math.random() * 2 - 1;
+      setTimeout(function () { music.apply(); }, 0);
       // soft echo for the melodic notes
       echo = ac.createDelay(1); echo.delayTime.value = .28;
       var fb = ac.createGain(), lp = ac.createBiquadFilter(), wet = ac.createGain();
@@ -607,7 +608,141 @@
     soundOn = !soundOn; this.setAttribute("aria-pressed", String(soundOn));
     this.textContent = soundOn ? T("الصوت: يعمل", "Sound: on") : T("الصوت: متوقّف", "Sound: off");
     if (soundOn) sfx("pop"); else stopSong();
+    music.apply();
   });
+  // ---- background music (the owner took them all, with a pick in the menu, 2026-11-02): composed while it plays, so it never loops:
+  // slow chords drifting between near neighbours, sparse notes on top, never a beat; it steps back while Dilmo talks or sings ----
+  var music = (function () {
+    var KAL = [[1, 1, 1], [5.4, .12, .14], [11.9, .04, .06]], MAR = [[1, 1, 1], [3.93, .3, .28], [9.2, .1, .1]], PENT = [0, 2, 4, 7, 9];
+    var CH = { C: [48, 55, 64, 71], Am: [45, 52, 60, 67], F: [41, 48, 57, 64], Dm: [38, 45, 53, 64], G: [43, 50, 57, 64], Em: [40, 47, 55, 62] };
+    var NEXT = { C: ["Am", "F", "Em", "G"], Am: ["F", "Dm", "C", "Em"], F: ["C", "G", "Am", "Dm"], Dm: ["G", "F", "Am"], G: ["C", "Am", "Em"], Em: ["Am", "F", "C"] };
+    var M = null, mvol = null, mverb = null;
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+    function mid(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+    function mg() { var v = store.mvol == null ? 60 : store.mvol; return (v / 100) * (v / 100); }
+    function walk(m, lo, hi) {  // a melody that wanders by small steps on the five-note scale
+      var sc = []; for (var o = lo; o <= hi; o++) PENT.forEach(function (q) { sc.push(12 * o + q); });
+      if (m.w == null || m.w >= sc.length) m.w = Math.floor(sc.length / 2);
+      m.w = Math.max(0, Math.min(sc.length - 1, m.w + pick([-2, -1, -1, 0, 1, 1, 2]))); return sc[m.w];
+    }
+    function osc(m, o) {
+      var os = ac.createOscillator(), g = ac.createGain(); os.type = o.type || "sine"; os.frequency.value = o.f; if (o.det) os.detune.value = o.det;
+      var node = os; if (o.filt) { var f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = o.filt; f.Q.value = .7; os.connect(f); node = f; }
+      var a = o.a || .01, r = o.r || .5, end = o.t + o.dur;
+      g.gain.setValueAtTime(0, o.t); g.gain.linearRampToValueAtTime(o.vol, o.t + a); g.gain.setValueAtTime(o.vol, Math.max(o.t + a, end)); g.gain.linearRampToValueAtTime(0, end + r);
+      node.connect(g); g.connect(m.bus); os.start(o.t); os.stop(end + r + .05);
+    }
+    function pluck(m, f, t, vol, parts, len) {
+      (parts || KAL).forEach(function (q) {
+        var g = ac.createGain(), os = ac.createOscillator(), d = (len || 1.6) * q[2]; os.frequency.value = f * q[0];
+        g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol * q[1], t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+        os.connect(g); g.connect(m.bus); os.start(t); os.stop(t + d + .05);
+      });
+    }
+    function bell(m, f, t, vol, dur, ratio, index) {
+      var c = ac.createOscillator(), md = ac.createOscillator(), mgn = ac.createGain(), g = ac.createGain();
+      c.frequency.value = f; md.frequency.value = f * (ratio || 3.5);
+      mgn.gain.setValueAtTime(f * (index || 2.5), t); mgn.gain.exponentialRampToValueAtTime(f * .01 + 1, t + dur * .6);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      md.connect(mgn); mgn.connect(c.frequency); c.connect(g); g.connect(m.bus); c.start(t); md.start(t); c.stop(t + dur + .05); md.stop(t + dur + .05);
+    }
+    function pad(m, notes, t, len, type, filt, vol, det) {  // each chord swells in slowly and fades under the next one
+      notes.forEach(function (n, i) { [-det, det].forEach(function (d) { osc(m, { f: mid(n), t: t, dur: len, vol: vol * (i ? 1 : 1.3), type: type, a: len * .35, r: len * .45, det: d, filt: filt }); }); });
+    }
+    function bird(m, t) { var n = Math.floor(rnd(2, 4)), f = rnd(2600, 3400); for (var i = 0; i < n; i++) osc(m, { f: f * rnd(.95, 1.1), t: t + i * rnd(.09, .14), dur: .05, vol: .006, a: .01, r: .04 }); }
+    function wave(m, t) {  // the sea: filtered noise that swells and draws back
+      var sr = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), up = rnd(2, 3.5), dn = rnd(3, 5), v = rnd(.03, .055);
+      sr.buffer = NB; sr.loop = true; f.type = "lowpass"; f.frequency.setValueAtTime(380, t); f.frequency.linearRampToValueAtTime(rnd(800, 1100), t + up); f.frequency.linearRampToValueAtTime(350, t + up + dn);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + up); g.gain.linearRampToValueAtTime(0, t + up + dn);
+      sr.connect(f); f.connect(g); g.connect(m.bus); sr.start(t, Math.random()); sr.stop(t + up + dn + .1);
+    }
+    var TRACKS = {
+      garden: { name: T("صباح الحديقة", "Garden Morning"), len: [9, 13],
+        pad: function (m, n, t, l) { pad(m, n, t, l, "triangle", 900, .014, 6); },
+        note: function (m, t) { pluck(m, mid(walk(m, 5, 6)), t, .05); if (Math.random() < .3) pluck(m, mid(walk(m, 5, 6)), t + rnd(.15, .35), .035); },
+        gap: function () { return Math.random() < .2 ? rnd(3, 6) : rnd(.7, 1.9); },
+        extra: function (m, t) { bird(m, t); return rnd(6, 15); } },
+      marimba: { name: T("ظهيرة الماريمبا", "Marimba Noon"), len: [8, 12],
+        pad: function (m, n, t, l) { m.cur = n; pad(m, n, t, l, "triangle", 800, .01, 5); },
+        note: function (m, t) { var n = m.cur || CH.C, k = Math.floor(rnd(3, 5)), at = t; for (var i = 0; i < k; i++) { pluck(m, mid(n[(i + 1) % n.length] + 12), at, .045, MAR, 1.4); at += rnd(.28, .55); } },
+        gap: function () { return rnd(2.2, 4.5); } },
+      sea: { name: T("نسيم البحر", "Sea Breeze"), len: [10, 15],
+        pad: function (m, n, t, l) { pad(m, n, t, l, "sawtooth", 650, .009, 9); },
+        note: function (m, t) { bell(m, mid(walk(m, 4, 5)), t, .03, 3.5, 1.4, 1.5); },
+        gap: function () { return rnd(3.5, 8); },
+        extra: function (m, t) { wave(m, t); return rnd(4, 7); } },
+      evening: { name: T("دفء المساء", "Warm Evening"), len: [11, 16],
+        pad: function (m, n, t, l) { pad(m, n, t, l, "sawtooth", 1100, .008, 11); },
+        note: function (m, t) { var k = Math.floor(rnd(3, 6)), at = t; for (var i = 0; i < k; i++) { bell(m, mid(walk(m, 5, 6)), at, .035, 2.2, 1, 1.8); at += rnd(.4, .75); } },
+        gap: function () { return rnd(4, 8); } },
+      stars: { name: T("ليل النجوم", "Starry Night"), len: [12, 18],
+        start: function (m, t) {
+          [65.41, 98].forEach(function (f) {
+            var os = ac.createOscillator(), g = ac.createGain(), l = ac.createOscillator(), lg = ac.createGain();
+            os.frequency.value = f; g.gain.value = .012; l.frequency.value = rnd(.05, .09); lg.gain.value = .006;
+            l.connect(lg); lg.connect(g.gain); os.connect(g); g.connect(m.bus); os.start(t); l.start(t); m.keep.push(os, l);
+          });
+        },
+        pad: function (m, n, t, l) { pad(m, n, t, l, "sine", 0, .011, 4); },
+        note: function (m, t) { bell(m, mid(walk(m, 6, 7)), t, .022, 4.5, 3.5, 2); },
+        gap: function () { return rnd(1.3, 3.8); } }
+    };
+    function hourTrack() {  // the world follows Bahrain time, and so does the music
+      var h = bahrainNow().h;
+      return h >= 5 && h < 10 ? "garden" : h >= 10 && h < 15 ? "marimba" : h >= 15 && h < 18 ? "sea" : h >= 18 && h < 20 ? "evening" : "stars";
+    }
+    function start(id, want) {
+      if (!mvol) {
+        mvol = ac.createGain(); mvol.gain.value = mg(); mvol.connect(kit);
+        mverb = ac.createConvolver(); var n = ac.sampleRate * 4, b = ac.createBuffer(2, n, ac.sampleRate);
+        for (var c = 0; c < 2; c++) { var d = b.getChannelData(c); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.5); }
+        mverb.buffer = b; mverb.connect(mvol);
+      }
+      var bus = ac.createGain(), send = ac.createGain(), now = ac.currentTime;
+      bus.gain.setValueAtTime(.0001, now); bus.gain.exponentialRampToValueAtTime(1, now + 3); send.gain.value = .55;
+      bus.connect(mvol); bus.connect(send); send.connect(mverb);
+      M = { id: id, want: want, tr: TRACKS[id], bus: bus, keep: [], duck: 1, chord: pick(Object.keys(CH)), nextChord: now + .1, nextNote: now + rnd(1.5, 3), nextX: now + rnd(1, 4) };
+      if (M.tr.start) M.tr.start(M, now);
+      M.timer = setInterval(tick, 250); tick();
+    }
+    function stop() {
+      if (!M) return; var m = M; M = null; clearInterval(m.timer);
+      var now = ac.currentTime; m.bus.gain.cancelScheduledValues(now); m.bus.gain.setTargetAtTime(.0001, now, .5);
+      setTimeout(function () { m.keep.forEach(function (x) { try { x.stop(); } catch { /* already stopped */ } }); m.bus.disconnect(); }, 3000);
+    }
+    function tick() {  // schedules a little ahead of the clock, so a busy frame never makes it stumble
+      var m = M; if (!m) return; var now = ac.currentTime, ahead = now + 1.2, tr = m.tr;
+      var duck = song ? .25 : talkUntil > performance.now() ? .6 : 1;
+      if (duck !== m.duck) { m.duck = duck; m.bus.gain.setTargetAtTime(duck, now, .5); }
+      while (m.nextChord < ahead) {
+        if (m.want === "auto" && hourTrack() !== m.id) { apply(); return; }  // the hour turned: the next piece fades in
+        m.chord = pick(NEXT[m.chord]); var len = rnd(tr.len[0], tr.len[1]); tr.pad(m, CH[m.chord], m.nextChord, len); m.nextChord += len;
+      }
+      while (m.nextNote < ahead) { tr.note(m, m.nextNote); m.nextNote += tr.gap(); }
+      while (tr.extra && m.nextX < ahead) m.nextX += tr.extra(m, m.nextX);
+    }
+    function apply() {
+      var want = store.music || "auto";
+      if (!ac || !soundOn || want === "off" || document.hidden) { stop(); return; }
+      var id = want === "auto" ? hourTrack() : want;
+      if (M && M.id === id && M.want === want) return;
+      stop(); start(id, want);
+    }
+    document.addEventListener("visibilitychange", apply);
+    return { apply: apply, tracks: TRACKS, vol: function () { if (mvol) mvol.gain.setTargetAtTime(mg(), ac.currentTime, .05); } };
+  })();
+  // the pick and its own volume, beside the sound volume (in the game menu in full screen)
+  var musBox = el("label", "vol"), musSel = document.createElement("select"), musVolBox = el("label", "vol"), musVol = document.createElement("input");
+  musSel.id = "music"; [["auto", T("حسب وقت البحرين", "Follow Bahrain time")]].concat(Object.keys(music.tracks).map(function (k) { return [k, music.tracks[k].name]; }), [["off", T("متوقفة", "Off")]]).forEach(function (o) {
+    var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; musSel.appendChild(op);
+  });
+  musSel.value = store.music || "auto";
+  musBox.appendChild(document.createTextNode(T("الموسيقى", "Music"))); musBox.appendChild(musSel);
+  musVol.type = "range"; musVol.min = 0; musVol.max = 100; musVol.step = 5; musVol.value = store.mvol == null ? 60 : store.mvol;
+  musVolBox.appendChild(document.createTextNode(T("مستوى الموسيقى", "Music volume"))); musVolBox.appendChild(musVol);
+  volBox.after(musBox); musBox.after(musVolBox);
+  musSel.addEventListener("change", function () { store.music = musSel.value; saveStore(); music.apply(); });
+  musVol.addEventListener("input", function () { store.mvol = +musVol.value; saveStore(); music.vol(); });
   // «الكلام: متوقّف»: nobody talks and no text bubbles appear; faces, play and sounds stay
   var quiet = !!store.quiet, talkBtn = document.getElementById("talk"), root = stage.closest(".dilmo") || document.body;
   function applyQuiet() {
