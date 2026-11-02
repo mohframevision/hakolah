@@ -708,6 +708,7 @@
       if (drag.moved) {
         var wp = D3 ? D3.unscr(p.x, p.y, pos) : p, nx = clamp(wp.x - drag.ox, R, W - R), ny = clamp(wp.y - drag.oy, R, ground), nz = D3 ? clamp(wp.z - drag.oz, R, DZ - R) : 0;
         drag.vx = nx - pos.x; drag.vy = ny - pos.y; drag.vz = nz - pos.z; pos.x = nx; pos.y = ny; pos.z = nz;
+        track(drag, pos, now);
         var sg = Math.abs(drag.vx) > 8 ? Math.sign(drag.vx) : 0;
         if (sg && sg !== drag.lastSign) { drag.lastSign = sg; drag.rev.push(now); }
         drag.rev = drag.rev.filter(function (x) { return now - x < 1000; });
@@ -748,6 +749,18 @@
     cheek = Math.hypot(l.x, l.y) > R * .6 ? { a: Math.atan2(l.y, l.x), gx: l.x, gy: l.y, px: 0, py: 0, side: Math.abs(l.x) > Math.abs(l.y) } : null;
     orb.setPointerCapture(e.pointerId); e.preventDefault();
   });
+  // throw speed from the last 90 ms of the drag, in px per 60 Hz frame (one jittery last move no longer launches anyone)
+  function track(d, o, now) {
+    (d.hist = d.hist || []).push({ x: o.x, y: o.y, z: o.z || 0, t: now });
+    while (d.hist.length > 2 && now - d.hist[0].t > 90) d.hist.shift();
+  }
+  function throwV(d) {
+    var h = d.hist || [], now = performance.now();
+    if (h.length < 2 || now - h[h.length - 1].t > 60) return { x: 0, y: 0, z: 0 };  // held still before letting go: just drop
+    var a = h[0], b = h[h.length - 1], f = Math.max(1, (b.t - a.t) / 16.67), v = { x: (b.x - a.x) / f, y: (b.y - a.y) / f, z: (b.z - a.z) / f * .6 }, m = Math.hypot(v.x, v.y, v.z);
+    if (m > 26) { v.x *= 26 / m; v.y *= 26 / m; v.z *= 26 / m; }
+    return v;
+  }
   function release() {
     if (!drag) return;
     var d = drag; drag = null;
@@ -756,7 +769,7 @@
       if (pulled > 8) { mood.joy = Math.min(1, mood.joy + .2); sfx("snap"); return; }
     }
     if (d.moved) {
-      pos.vx = clamp(d.vx, -45, 45); pos.vy = clamp(d.vy, -45, 45); pos.vz = clamp(d.vz || 0, -45, 45);
+      var tv = throwV(d); pos.vx = tv.x; pos.vy = tv.y; pos.vz = tv.z;
       var s = Math.hypot(pos.vx, pos.vy);
       if (s > 20) { mood.dizzy = Math.min(1, mood.dizzy + s / 60); feel(mood, "fear", Math.min(1, s / 40)); mood.heart = Math.min(1, mood.heart + .5); sfx("whoosh"); say(line("throw"), "throw", 2500); }
     } else if (d.shy) { mood.shy = 0; pos.vy = -7; sp.sy.vel += .15; say(line("unshy"), "unshy", 4000); }
@@ -904,12 +917,12 @@
       }
       if (d.slipped) return;
       if (!d.moved && Math.hypot(p.x - d.sx, p.y - d.sy) > 6) { d.moved = true; bsay(b, line("buddyLift")); }
-      if (d.moved) { var wp = D3 ? D3.unscr(p.x, p.y, b) : p, nx = clamp(wp.x - d.ox, r, W - r), ny = clamp(wp.y - d.oy, r, floorY(b)), nz = D3 ? clamp(wp.z - d.oz, r, DZ - r) : 0; d.vx = nx - b.x; d.vy = ny - b.y; d.vz = nz - b.z; b.x = nx; b.y = ny; b.z = nz; }
+      if (d.moved) { var wp = D3 ? D3.unscr(p.x, p.y, b) : p, nx = clamp(wp.x - d.ox, r, W - r), ny = clamp(wp.y - d.oy, r, floorY(b)), nz = D3 ? clamp(wp.z - d.oz, r, DZ - r) : 0; d.vx = nx - b.x; d.vy = ny - b.y; d.vz = nz - b.z; b.x = nx; b.y = ny; b.z = nz; track(d, b, now); }
     });
     function up() {
       var d = b.drag; if (!d) return; b.drag = null;
       if (b.cheek) { var pulled = Math.hypot(b.cheek.px, b.cheek.py); b.cheek = null; if (pulled > 8 * sc) { b.joy = 1; sfx("snap"); return; } }
-      if (d.moved) { b.vx = clamp(d.vx, -40, 40); b.vy = clamp(d.vy, -40, 40); b.vz = clamp(d.vz || 0, -40, 40); var ts = Math.hypot(b.vx, b.vy); if (ts > 18) { feel(b.em, "fear", Math.min(1, ts / 35)); b.em.heart = Math.min(1, b.em.heart + .5); bsay(b, line("buddyThrow")); } return; }
+      if (d.moved) { var tv = throwV(d); b.vx = tv.x; b.vy = tv.y; b.vz = tv.z; var ts = Math.hypot(b.vx, b.vy); if (ts > 18) { feel(b.em, "fear", Math.min(1, ts / 35)); b.em.heart = Math.min(1, b.em.heart + .5); bsay(b, line("buddyThrow")); } return; }
       if (hs && hs.b === b) { endHideSeek(true); return; }
       b.awakeUntil = performance.now() + 20000;
       if (b.asleep) { b.asleep = false; b.vy = -6; bsay(b, line("buddyWoke")); return; }
@@ -1056,10 +1069,13 @@
         } else if (b.mode !== "tag" && b.mode !== "flee") { b.tx = null; b.tz = null; }
       }
       var me2 = b.f.player;
-      b.vy += (me2 ? playerGravity(b) : .75) * dt; if (me2 && !b.pound) b.vy = Math.min(b.vy, 18);  // terminal velocity
+      b.vy += (me2 ? playerGravity(b, t) : .75) * dt; if (me2 && !b.pound) b.vy = Math.min(b.vy, 18);  // terminal velocity
       b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; if (!me2) { b.vx *= Math.pow(.99, dt); b.vz *= Math.pow(.99, dt); }
       if (b.y > fy) {  // the visitor's character lands dead, no bounce; friends stay bouncy
-        var hit = b.vy; b.y = fy; b.vy = hit > 2.5 && !me2 ? -hit * .45 : 0; if (!me2) { b.vx *= .8; b.vz *= .8; }
+        var hit = b.vy; b.y = fy;
+        if (hit > 2.5 && !me2) { b.vy = -hit * .45; b.vx *= .8; b.vz *= .8; }
+        else { b.vy = 0; if (!me2) { var gf = Math.pow(.8, dt); b.vx *= gf; b.vz *= gf; } }
+        if (me2 && hit > 2.5) { b.landT = t; b.landHit = hit; }
         if (hit > 2.5) { b.svy -= Math.min(hit, 18) * .012; b.svx += Math.min(hit, 18) * .009; dent(0, r, Math.min(hit, 20) * .5 * r / R, b.pts); }
         if (me2 && hit > 4) { var sq = Math.min(1, hit / 18); b.sy = 1 - .35 * sq; b.sx = 1 + .28 * sq; }  // squash by how hard it landed, then spring back
         if (me2 && hit > 9) { var sd0 = sv(b); dust(sd0.x, sd0.y + r * sd0.s); }
@@ -1102,21 +1118,29 @@
     var y = x.other; x.mode = "flee"; y.mode = "tag"; x.tagAt = y.tagAt = t; x.joy = 1; feel(y.em, "conf", .45); if (talking() < 2) bsay(x, line("tagGot"));
   }
   // everyone pushes everyone: circle-circle collisions, heavier = bigger, held ones don't budge
-  function collideAll(t) {
+  function collideAll(t, dt) {
     var L = mainAway ? [] : [{ o: pos, r: R, fixed: !!(drag && drag.moved), main: true }];
     buddies.forEach(function (b) { L.push({ o: b, r: b.f.r, fixed: !!(b.drag && b.drag.moved), b: b }); });
     L.push({ o: ball, r: ball.r, ball: true });
     for (var i = 0; i < L.length; i++) for (var j = i + 1; j < L.length; j++) {
-      var A = L[i], B = L[j], dx = B.o.x - A.o.x, dy = B.o.y - A.o.y, dz = B.o.z - A.o.z, d = Math.hypot(dx, dy, dz) || .01, min = A.r + B.r;
+      var A = L[i], B = L[j], dx = B.o.x - A.o.x, dy = B.o.y - A.o.y, dz = B.o.z - A.o.z, d = Math.hypot(dx, dy, dz), min = A.r + B.r;
       if (d >= min) continue;
+      if (d < .01) { dx = (i % 2 ? 1 : -1) * .01; d = .01; }  // two dropped on the same spot still come apart
       var nx = dx / d, ny = dy / d, nz = dz / d, ma = A.fixed ? 0 : 1 / (A.r * A.r), mb = B.fixed ? 0 : 1 / (B.r * B.r), ms = ma + mb;
       // the visitor walks past others (like NPCs in a platformer) and only collides when landing on or under them
       if (((A.b && A.b.f.player) || (B.b && B.b.f.player)) && !A.ball && !B.ball && Math.abs(ny) < .6) {
         if (!D3) continue;  // flat: the visitor walks past others, like NPCs in a platformer
         // the 3D arena: your character shoulders them aside and carries them a little (it never bounces off them)
-        var pl = A.b && A.b.f.player ? A : B, ot = pl === A ? B : A, sg = pl === A ? 1 : -1, ov = min - d;
-        if (!ot.fixed) { ot.o.x += sg * nx * ov * .9; ot.o.z += sg * nz * ov * .9; ot.o.vx += pl.o.vx * .35; ot.o.vz += pl.o.vz * .35; if (ot.b) ot.b.svy -= .04; }
-        pl.o.x -= sg * nx * ov * .1; pl.o.z -= sg * nz * ov * .1;
+        var pl = A.b && A.b.f.player ? A : B, ot = pl === A ? B : A, sg = pl === A ? 1 : -1, ov = min - d, fpv = D3.viewNow() === "first";
+        var share = fpv ? .3 : ot.main ? .45 : .9;  // first person: a body is solid (you never end up inside it); Dilmo is heavier
+        if (!ot.fixed) {
+          ot.o.x += sg * nx * ov * share; ot.o.z += sg * nz * ov * share;
+          var push = sg * (nx * pl.o.vx + nz * pl.o.vz), kf = 1 - Math.pow(.65, dt);
+          if (push > 0) { ot.o.vx += (pl.o.vx - ot.o.vx) * kf; ot.o.vz += (pl.o.vz - ot.o.vz) * kf; }  // carried along, never faster than you
+          if (ot.b && t - (ot.b.shovedAt || 0) > 300) { ot.b.shovedAt = t; ot.b.svy -= .1; }
+        }
+        pl.o.x -= sg * nx * ov * (1 - share); pl.o.z -= sg * nz * ov * (1 - share);
+        tagContact(A, B, t);
         continue;
       }
       var kicker = A.ball ? B : B.ball ? A : null;  // whoever runs into the ball scoops it up a little (the impulse below does the kick)
@@ -1126,6 +1150,15 @@
       }
       if (!ms) continue;
       var over = min - d;
+      var top = A.b && A.b.f.player && ny > .6 ? A : B.b && B.b.f.player && ny < -.6 ? B : null;
+      if (top) {  // your character on someone's head: it stands there and rides along (no buzzing), they squash a little
+        var und = top === A ? B : A;
+        top.o.y = und.o.y - Math.sqrt(Math.max(0, min * min - Math.pow(top.o.x - und.o.x, 2) - Math.pow(top.o.z - und.o.z, 2)));  // lift straight up: a round top never slides you off
+        top.o.vy = Math.min(top.o.vy, und.o.vy); top.o.x += (und.o.vx || 0) * dt; top.o.z += (und.o.vz || 0) * dt;
+        top.b.supportT = t; if (und.b && t - (und.b.shovedAt || 0) > 400) { und.b.shovedAt = t; und.b.svy -= .15; }
+        tagContact(A, B, t);
+        continue;
+      }
       A.o.x -= nx * over * ma / ms; A.o.y -= ny * over * ma / ms; A.o.z -= nz * over * ma / ms; B.o.x += nx * over * mb / ms; B.o.y += ny * over * mb / ms; B.o.z += nz * over * mb / ms;
       var rv = (B.o.vx - A.o.vx) * nx + (B.o.vy - A.o.vy) * ny + (B.o.vz - A.o.vz) * nz;
       if (rv < 0) {
@@ -1289,10 +1322,13 @@
   // ---- the visitor's own playable character ----
   var player = null, keys = { left: false, right: false, down: false, far: false, near: false, jumpAt: 0, jumpHeld: false }, hitStopUntil = 0;
   // jump from designer numbers, not a guessed gravity (Pittman, GDC 2016): g = 2h/t², v0 = 2h/t
-  var JUMP_H = 110, JUMP_T = 15, PG = 2 * JUMP_H / (JUMP_T * JUMP_T), PV = 2 * JUMP_H / JUMP_T;
-  function playerGravity(b) {
-    if (Math.abs(b.vy) < 1.5 && !b.pound) return PG * .6;  // a moment of float at the top makes landings deliberate
-    return b.vy > 0 ? PG * 2 : PG;  // quick rise, heavier fall: no floating
+  var JUMP_H = 110, JUMP_T = 17, PG = 2 * JUMP_H / (JUMP_T * JUMP_T), PV = 2 * JUMP_H / JUMP_T;
+  function playerGravity(b, t) {
+    if (b.pound && t - b.poundT < 180) { b.vy = 0; return 0; }  // the ground pound hangs a moment in the air first (Mario's stall)
+    if (b.pound) return PG * 2;
+    if (keys.jumpHeld && Math.abs(b.vy) < 2) return PG * .5;  // holding the button floats a little at the top
+    if (b.vy < 0 && !keys.jumpHeld) return PG * 3.5;  // let go early: a much lower hop, smoothly (no sudden halving)
+    return b.vy > 0 ? PG * 1.7 : PG;  // heavier on the way down: no floaty fall (Celeste, GDC 2016 jump talk)
   }
   // the last three colours unlock with collected stars
   var PCOLORS = [["#d9c2f5", "#9b6fd6", "#5e3b96"], ["#f6b2c9", "#e5799d", "#9e3f62"], ["#dcef9c", "#a8cc3f", "#5f7a17"], ["#d3d9e0", "#8e99a6", "#525c68"], ["#f0d9b5", "#d4a96a", "#8a6233"],
@@ -1387,27 +1423,45 @@
     var ix = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), iz = (keys.far ? 1 : 0) - (keys.near ? 1 : 0), charged = b.crouchT && t - b.crouchT > 300;
     // in the 3D world the keys are relative to the camera: right = screen right, far = away from you
     var mx = ix, mz = 0;
-    var fp = D3 && D3.viewNow() === "first";
-    if (!ix && !iz || fp) b.basis = null;
+    var fp = D3 && D3.viewNow() === "first", ksig = ix + "," + iz;
+    if (!ix && !iz || fp || ksig !== b.ksig) b.basis = null;
+    b.ksig = ksig;
     if (D3) { var ax = fp ? D3.axes() : b.basis || (b.basis = D3.axes()); mx = ax.rx * ix + ax.fx * iz; mz = ax.rz * ix + ax.fz * iz; var ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; } }
     if (!keys.down) b.poundLock = false;
     b.crouch = keys.down && onF;
     if (b.crouch) b.crouchT = b.crouchT || t; else if (onF && !keys.down) b.crouchT = 0;
-    // separate acceleration, turn speed and deceleration, weaker in the air (GMTK Platformer Toolkit)
-    if ((mx || mz) && !b.crouch) {
-      var turning = b.vx * mx + b.vz * mz < 0, acc = (fp ? (onF ? .5 : .2) : onF ? (turning ? .55 : .3) : (turning ? .25 : .15)) * dt;
-      b.vx += (mx * 6 - b.vx) * acc; b.vz += (mz * 6 - b.vz) * acc;
-      if (onF && turning && Math.hypot(b.vx, b.vz) > 3 && t - (b.dustAt || 0) > 250) { b.dustAt = t; var sd1 = sv(b); dust(sd1.x, sd1.y + b.f.r * sd1.s); }
-    } else { var fr = Math.pow(onF ? (fp ? .5 : .7) : .97, dt); b.vx *= fr; b.vz *= fr; }
+    // into the hedge: keep only the part of the push along it, at nearly full speed (you slide along the wall, you don't stick)
+    if (D3 && (mx || mz)) {
+      var wl = Math.hypot(mx, mz);
+      if ((b.x <= b.f.r + .5 && mx < 0) || (b.x >= W - b.f.r - .5 && mx > 0)) mx = 0;
+      if ((b.z <= b.f.r + .5 && mz < 0) || (b.z >= DZ - b.f.r - .5 && mz > 0)) mz = 0;
+      var nl = Math.hypot(mx, mz); if (nl && nl < wl) { mx *= .9 * wl / nl; mz *= .9 * wl / nl; }
+    }
+    if (fp) {  // first person, like shooters: quick to full speed, quick to stop
+      if ((mx || mz) && !b.crouch) { var acc = (onF ? .5 : .2) * dt; b.vx += (mx * 6 - b.vx) * acc; b.vz += (mz * 6 - b.vz) * acc; }
+      else { var fr = Math.pow(onF ? .5 : .97, dt); b.vx *= fr; b.vz *= fr; }
+    } else {
+      // linear speed changes: full speed in ~8 frames, a stop in ~6, a reversal skids (with dust), weaker in the air (Game Feel; Mario Odyssey)
+      var tvx = (mx || mz) && !b.crouch ? mx * 6 : 0, tvz = (mx || mz) && !b.crouch ? mz * 6 : 0;
+      var rev = b.vx * tvx + b.vz * tvz < 0, maxDv = (!onF ? .35 : (tvx || tvz) ? (rev ? 1.6 : .75) : 1) * dt;
+      var ddx = tvx - b.vx, ddz = tvz - b.vz, dl = Math.hypot(ddx, ddz);
+      if (dl > maxDv) { b.vx += ddx / dl * maxDv; b.vz += ddz / dl * maxDv; } else { b.vx = tvx; b.vz = tvz; }
+      if (onF && !tvx && !tvz && Math.hypot(b.vx, b.vz) < .8) b.vx = b.vz = 0;
+      if (onF && rev && Math.hypot(b.vx, b.vz) > 3 && t - (b.dustAt || 0) > 250) { b.dustAt = t; b.sx = 1.12; var sd1 = sv(b); dust(sd1.x, sd1.y + b.f.r * sd1.s); }
+    }
+    if (t - keys.jumpAt < 120 && t < (b.poundJumpUntil || 0)) { b.vy = -PV * 1.12; b.jumps = 1; keys.jumpAt = 0; b.poundJumpUntil = 0; b.spin += 360; tone(260, 900, .16, "sine", .12); }  // jump right out of a slam: higher
     if (t - keys.jumpAt < 120) {
       if (t - (b.coyote || 0) < 100 && !b.jumps) {
         b.vy = charged ? -PV * 1.3 : -PV; b.jumps = 1; b.cut = false; keys.jumpAt = 0; b.svy += .25; b.crouchT = 0;
         tone(charged ? 260 : 320, charged ? 820 : 620, .14, "sine", .12);
-      } else if (b.jumps < 2) { b.vy = -PV * .85; b.jumps = 2; b.cut = false; keys.jumpAt = 0; var sj = sv(b); dust(sj.x, sj.y + b.f.r * sj.s); tone(520, 940, .12, "sine", .1); }
+      } else if (b.jumps < 2 && !b.pound) {
+        b.vy = -PV * .85; b.jumps = 2; b.cut = false; keys.jumpAt = 0; var sj = sv(b); dust(sj.x, sj.y + b.f.r * sj.s); tone(520, 940, .12, "sine", .1);
+        if (mx || mz) { var asp = Math.max(Math.hypot(b.vx, b.vz), 3.5); b.vx = mx * asp; b.vz = mz * asp; }  // the air jump turns you where you point
+        b.spin += 360;
+      }
     }
-    if (!keys.jumpHeld && b.vy < 0 && !b.cut && !b.pound) { b.vy *= .5; b.cut = true; }  // let go early = short hop
-    if (keys.down && !onF && !b.pound && !b.poundLock) { b.pound = true; b.vx *= .3; b.vz *= .3; tone(700, 200, .2, "sine", .08); }
-    if (b.pound) { if (onF) { b.pound = false; slam(b); } else b.vy = Math.max(b.vy, 17); }
+    if (keys.down && !onF && !b.pound && !b.poundLock) { b.pound = true; b.poundT = t; b.vx = b.vz = b.vy = 0; b.spin += 360; b.sy = .85; tone(700, 200, .2, "sine", .08); }
+    if (b.pound) { if (onF) { b.pound = false; slam(b); b.poundJumpUntil = Math.max(t, hitStopUntil) + 150; } else if (t - b.poundT >= 180) b.vy = Math.max(b.vy, 20); }
     if (b.other && b.other.mode !== (b.mode === "tag" ? "flee" : "tag")) { b.mode = "wander"; b.other = null; }
     var h = b.mode === "tag" && b.other ? T("أنت المطارِد! المس " + b.other.f.name + ".", "You're it! Tag " + b.other.f.name + ".") : b.mode === "flee" && b.other ? T("اهرب! " + b.other.f.name + " يطاردك.", "Run! " + b.other.f.name + " is chasing you.") :
       D3 && D3.viewNow() === "first" && !TOUCH ? (D3.locked() ? T("\u2066W A S D\u2069 للحركة · الفأرة للنظر · المسافة للقفز · انقر لتلمس ما في الوسط · \u2066Esc\u2069 لتحرير الفأرة", "W A S D to move · the mouse to look · Space to jump · click to touch what is in the middle · Esc to free the mouse")
@@ -1437,9 +1491,9 @@
     hitStopUntil = performance.now() + 70;  // a few frozen frames sell the impact
     if (D3) D3.shake(.55);
     var sl = sv({ x: b.x, y: fy, z: b.z }); dust(sl.x, sl.y + b.f.r * sl.s);
-    [pos].concat(others()).forEach(function (o) {
-      var d = Math.hypot(o.x - b.x, o.z - b.z); if (d > 170) return;
-      var k = 1 - d / 170; o.vy -= 9 * k; o.vx += (o.x < b.x ? -1 : 1) * 4 * k; hit = true;
+    (mainAway ? [] : [pos]).concat(others()).forEach(function (o) {
+      var dx = o.x - b.x, dz = o.z - b.z, d = Math.hypot(dx, dz) || 1, fy2 = o === pos ? ground : floorY(o); if (d > 170 || o.y < fy2 - 40) return;
+      var k = 1 - d / 170; o.vy -= 9 * k; o.vx += dx / d * 5 * k; o.vz += dz / d * 5 * k; hit = true;
     });
     if (hit) say(line("pound"), "pound", 2500);
   }
@@ -2184,12 +2238,37 @@
     moonEl.style.display = mup ? "" : "none";
     if (mup) { skyNow.moon = { x: W * (.1 + .8 * tn), y: fl - 30 - span * .8 * Math.sin(Math.PI * tn) }; moonEl.style.transform = "translate(" + skyNow.moon.x.toFixed(1) + "px," + skyNow.moon.y.toFixed(1) + "px)"; }
   }
-  function onBench(x, z) { return x > bench.x + 4 && x < bench.x + bench.w - 4 && (!D3 || Math.abs(z - bench.z) < 20); }
-  function surfaceY(b) { var fy = floorY(b); return onBench(b.x, b.z) && b.y <= bench.top - b.f.r + 3 ? bench.top - b.f.r : fy; }
+  // the bench footprint is a little forgiving (half a radius past the edge still lands on it)
+  function onBench(x, z, r) { var m = (r || 0) * .5; return x > bench.x + 4 - m && x < bench.x + bench.w - 4 + m && (!D3 || Math.abs(z - bench.z) < 20 + m); }
+  function surfaceY(b) { var fy = floorY(b); return onBench(b.x, b.z, b.f.r) && b.y <= bench.top - b.f.r + 3 ? bench.top - b.f.r : fy; }
+  // after everyone has moved: low steps are walked up (the bench is 28 px), anything else stops you at its side
+  function solidProps() {
+    var list = (mainAway ? [] : [{ o: pos, r: R, held: drag && drag.moved }]).concat(buddies.map(function (b) { return { o: b, r: b.f.r, held: b.drag && b.drag.moved, me: b.f.player, b: b }; }));
+    list.forEach(function (it) {
+      var o = it.o, r = it.r; if (it.held) return;
+      var x0 = bench.x, x1 = bench.x + bench.w, z0 = D3 ? bench.z - 20 : -1e9, z1 = D3 ? bench.z + 20 : 1e9;
+      var cx = clamp(o.x, x0, x1), cz = clamp(o.z || 0, z0, z1), hx = o.x - cx, hz = (o.z || 0) - cz, hd = Math.hypot(hx, hz);
+      if (hd < r * .7 && o.y + r > bench.top + 2) {
+        if (o.y + r - bench.top < 32 && o.vy >= -1) { o.y = bench.top - r; o.vy = Math.min(o.vy, 0); }  // step up onto it
+        else if (hd > .01) { var push = r * .7 - hd; o.x += hx / hd * push; if (D3) o.z += hz / hd * push; var vn = (o.vx * hx + (o.vz || 0) * hz) / hd; if (vn < 0) { o.vx -= hx / hd * vn; if (D3) o.vz -= hz / hd * vn; } }
+      }
+    });
+    if (!D3) return;
+    bushes.forEach(function (bu) {  // a bush is a soft wall for you and the ball (the friend hiding behind it walks in)
+      [player ? { o: player, r: player.f.r } : null, { o: ball, r: ball.r }].forEach(function (it) {
+        if (!it) return;
+        var o = it.o, dx = o.x - bu.cx, dz = o.z - bu.cz, d = Math.hypot(dx, dz), m = 30 + it.r * .8;
+        if (d >= m || d < .01 || o.y < ground + R - 50) return;
+        o.x = bu.cx + dx / d * m; o.z = bu.cz + dz / d * m;
+        var vn = (o.vx * dx + o.vz * dz) / d; if (vn < 0) { o.vx -= dx / d * vn * (it.o === ball ? 1.6 : 1); o.vz -= dz / d * vn * (it.o === ball ? 1.6 : 1); }
+      });
+    });
+  }
   function ballStep(dt) {
     var fl = ground + R - ball.r, py = ball.y;
     ball.vy += .7 * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt; ball.z += ball.vz * dt;
     if (ball.vy > 0 && onBench(ball.x, ball.z) && py + ball.r <= bench.top + 2 && ball.y + ball.r > bench.top) { ball.y = bench.top - ball.r; ball.vy = -ball.vy * .55; }
+    else if (ball.y + ball.r > bench.top + 2 && onBench(ball.x, ball.z, ball.r * 2) && !onBench(ball.x - ball.vx * dt, ball.z - ball.vz * dt, ball.r * 2)) { ball.x -= ball.vx * dt; ball.z -= ball.vz * dt; ball.vx *= -.55; ball.vz *= -.55; }  // off the bench's side
     if (ball.y > fl) { var h = ball.vy; ball.y = fl; ball.vy = h > 1.5 ? -h * .62 : 0; if (h > 4) tone(220, 160, .06, "sine", .05); }
     if (ball.y >= fl - .5) {  // rolling on the lawn: a steady drag that brings it to a stop, not a crawl that never ends
       var bs = Math.hypot(ball.vx, ball.vz), bk = bs ? Math.max(0, bs - .045 * dt) / bs * Math.pow(.995, dt) : 0;
@@ -2392,8 +2471,8 @@
   function scene3(t) {
     var one = function (b) { return { x: b.x, y: b.y, z: b.z, vx: b.vx, vz: b.vz, r: b.f.r, pts: b.pts, el: b.el, drag: !!(b.drag && b.drag.moved), sx: clamp(b.sx, .8, 1.25), sy: clamp(b.sy, .75, 1.22), tilt: b.tilt, spin: b.spinA, cols: [b.f.c1, b.f.c2, b.f.c3], crouch: !!b.crouch && !b.f.player, floor: surfaceY(b) + b.f.r }; };
     return { t: t, W: W, H: WH, DZ: DZ, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce, idle: t - lastInput,
-      player: player ? { x: player.x, y: player.y, z: player.z, vx: player.vx, vz: player.vz, r: player.f.r, el: player.el } : null,
-      main: mainAway ? null : { x: pos.x, y: pos.y, z: pos.z, vx: pos.vx, vz: pos.vz, r: R, pts: pts, el: orb, drag: !!(drag && drag.moved), sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
+      player: player ? { x: player.x, y: player.y, z: player.z, vx: player.vx, vz: player.vz, r: player.f.r, el: player.el, floor: surfaceY(player) + player.f.r, grounded: player.y >= surfaceY(player) - 1 || t - (player.supportT || 0) < 80, landT: player.landT || 0, landHit: player.landHit || 0, moving: !!(keys.left || keys.right || keys.far || keys.near) } : null,
+      main: mainAway ? null : { x: pos.x, y: pos.y, z: pos.z, vx: pos.vx, vz: pos.vz, r: R, floor: ground + R, grounded: pos.y >= ground - 1, pts: pts, el: orb, drag: !!(drag && drag.moved), sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
       buddies: buddies.map(one), ball: ball, bench: bench, bushes: bushes.map(function (b) { return { x: b.cx, z: b.cz }; }) };
   }
   function load3d() {
@@ -2508,7 +2587,7 @@
     });
     if (!best) { tone(300, 260, .05, "sine", .03); return; }
     var ax = D3.axes();
-    if (best.k === "ball") { ball.vx += ax.fx * 9; ball.vz += ax.fz * 9; ball.vy = -6; sfx("pop"); }
+    if (best.k === "ball") { ball.vx = ax.fx * 9; ball.vz = ax.fz * 9; ball.vy = -6; sfx("pop"); }
     else if (best.k === "main") { poke(0, 6); pos.vx += ax.fx * 4; pos.vz += ax.fz * 4; }
     else { var b = best.b; b.vy = -7 * b.f.energy; b.vx += ax.fx * 3; b.vz += ax.fz * 3; b.joy = 1; b.svy -= .2; sfx("pop"); bsay(b, line(b.f.shy ? "buddyShyPoke" : "buddyPoke")); }
   }
@@ -2569,7 +2648,7 @@
 
   function update(t, dt) {
     if (mainAway) {  // only friends (and the visitor) are around
-      buddies.forEach(function (b) { buddyStep(b, t, dt); }); collideAll(t); ballStep(dt); gemStep(t); hsStep(t); return;
+      buddies.forEach(function (b) { buddyStep(b, t, dt); }); collideAll(t, dt); solidProps(dt); ballStep(dt); gemStep(t); hsStep(t); return;
     }
     var idle = t - lastInput;
     if (drag && !cheek && !drag.moved && !drag.shy && !drag.slipped && t - drag.t > 650) { drag.shy = true; mood.shy = 1; say(line("shy"), "shy", 3000); }
@@ -2619,7 +2698,8 @@
     if (!drag || !drag.moved) {
       pos.vy += (stick ? .02 : .75) * dt; pos.x += pos.vx * dt; pos.y += pos.vy * dt; pos.z += pos.vz * dt; pos.vx *= Math.pow(.99, dt); pos.vz *= Math.pow(.99, dt);
       if (pos.y > ground) {
-        var hit = pos.vy; pos.y = ground; pos.vy = hit > 2.5 ? -hit * .45 : 0; pos.vx *= .82; pos.vz *= .82;
+        var hit = pos.vy; pos.y = ground;
+        if (hit > 2.5) { pos.vy = -hit * .45; pos.vx *= .82; pos.vz *= .82; } else { pos.vy = 0; var gf2 = Math.pow(.82, dt); pos.vx *= gf2; pos.vz *= gf2; }
         if (hit > 2.5) { sp.sy.vel -= Math.min(hit, 18) * .012; sp.sx.vel += Math.min(hit, 18) * .009; dent(0, R, Math.min(hit, 20) * .5); if (hit > 5) sfx("boing", hit); }
         if (hit > 22) { mood.annoy = Math.min(1, mood.annoy + .25); feel(mood, "conf", .5); say(line("ouch"), "ouch", 2500); }
       }
@@ -2635,7 +2715,7 @@
     }
 
     buddies.forEach(function (b) { buddyStep(b, t, dt); });
-    collideAll(t);
+    collideAll(t, dt); solidProps(dt);
     ballStep(dt); gemStep(t); hsStep(t);
 
     var lx = 0, ly = 0;
@@ -2750,8 +2830,10 @@
     if (capIv && t - shownAt < capIv - 1) return;  // the frame-rate cap: skip this screen refresh
     shownAt = capIv && t - shownAt < capIv * 2 ? shownAt + capIv : t;  // keep the beat, so 30 on a 60/144 Hz screen really is 30
     if (D3 && gfx.counter) { fpsN++; if (t - fpsAt > 500) { fpsBox.textContent = Math.round(fpsN * 1000 / (t - fpsAt)) + " FPS · " + gfxStatus(); fpsN = 0; fpsAt = t; } }
-    var dt = Math.min(2, (t - last) / 16.67); last = t;
-    if (t > hitStopUntil) update(t, dt);
+    // the world moves in small equal steps (at most half a 60 Hz frame each), so a jump, a throw or a slide comes out the same
+    // on a 30, 60 or 179 Hz screen, and a slow device no longer plays in slow motion (Gaffer, "Fix your timestep")
+    var raw = Math.min(250, t - last) / 16.67, n = Math.min(6, Math.max(1, Math.ceil(raw / .5))), sdt = raw / n; last = t;
+    if (t > hitStopUntil) for (var si = 0; si < n; si++) update(t - (n - 1 - si) * sdt * 16.67, sdt);
     draw(t);
   }
   new IntersectionObserver(function (en) {
