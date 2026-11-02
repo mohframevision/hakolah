@@ -2751,6 +2751,7 @@
     var note = el("p", "d3-note", gfx.preset === "auto" ? T("التلقائي يقرأ جهازك ويخفّف الرسوميات وحده إذا تباطأت، ويرفعها حين يتسع المجال.", "Auto reads your device, lowers the graphics by itself when frames slow down, and raises them again when there is room.") : "");
     if (note.textContent) setPanel.appendChild(note);
     var st = el("p", "d3-note", T("الآن: ", "Now: ") + gfxStatus()); setPanel.appendChild(st);
+    if (view3 && view3.stats().soft) setPanel.appendChild(el("p", "d3-note", SOFT_TIP()));
   }
   function setGfx(key, val) {
     var aaWas = view3 ? view3.stats().aa : gfx.aa;
@@ -2822,6 +2823,7 @@
       if (dd > 160) say(line("catch"), "catch", 6000);
     };
   }
+  function SOFT_TIP() { return T("متصفحك يرسم هذا العالم بدون كرت الشاشة، لذلك قد يتباطأ. فعّل «تسريع الرسومات» من إعدادات المتصفح ثم أعد تشغيله.", "Your browser is drawing this world without the graphics card, so it may be slow. Turn on graphics (hardware) acceleration in the browser settings, then restart it."); }
   function enter3d() {
     d3Btn.disabled = true;
     load3d().then(function () {
@@ -2832,6 +2834,7 @@
       D3 = view3; wire3d();
       view3.frame(scene3(performance.now()));  // one frame now, so the camera is placed before anything is positioned by it
       portal(true);
+      if (view3.stats().soft) setTimeout(function () { if (view3) say(SOFT_TIP(), "soft", 60000); }, 1800);  // the real fix is in the browser, not here: say so once
     }).catch(function (e) { if (!view3 || !D3) { if (view3) { view3.destroy(); view3 = null; } D3 = null; spread(false); stage.classList.remove("is3d"); } console.warn("dilmo3d", e); d3Btn.hidden = true; say(T("جهازك لا يفتح العالم ثلاثي الأبعاد.", "Your device can't open the 3D world."), "portal", 1000); })
       .then(function () { d3Btn.disabled = false; });
   }

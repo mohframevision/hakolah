@@ -219,7 +219,8 @@
     canvas.addEventListener("webglcontextlost", function (e) { e.preventDefault(); if (api && api.onLost) api.onLost(); });
 
     var dbg = gl.getExtension("WEBGL_debug_renderer_info"), gpuName = dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : "";
-    var lite = weak || /SwiftShader|llvmpipe|Software|Basic Render|Mali-[4T]|Adreno \(TM\) [2-4]\d\d|PowerVR SGX|Intel.*(GMA|HD Graphics( [2-5]\d{3})?\b)/i.test(gpuName) || gl.getParameter(gl.MAX_TEXTURE_SIZE) < 4096;
+    var soft = /SwiftShader|llvmpipe|Software|Basic Render/i.test(gpuName);  // the browser draws without the graphics card (acceleration off or blocked)
+    var lite = weak || soft || /SwiftShader|llvmpipe|Software|Basic Render|Mali-[4T]|Adreno \(TM\) [2-4]\d\d|PowerVR SGX|Intel.*(GMA|HD Graphics( [2-5]\d{3})?\b)/i.test(gpuName) || gl.getParameter(gl.MAX_TEXTURE_SIZE) < 4096;
     var flatExt = gl.getExtension("OES_standard_derivatives");
     function shader(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
     var prog = gl.createProgram();
@@ -691,7 +692,7 @@
       snapshot: function () { if (last) frame(last); return canvas; },
       lite: function () { return lite; },
       setOptions: function (o) { for (var k in o) opt[k] = o[k]; if (o.auto) { quality = lite ? .7 : 1; ft.sum = ft.n = ft.good = ft.slow = 0; } applyScale(); },
-      stats: function () { return { w: canvas.width, h: canvas.height, lite: lite, auto: opt.auto, aa: !!(gl.getContextAttributes() || {}).antialias }; },
+      stats: function () { return { w: canvas.width, h: canvas.height, lite: lite, soft: soft, auto: opt.auto, aa: !!(gl.getContextAttributes() || {}).antialias }; },
       destroy: function () { api.onLost = null; document.removeEventListener("mousemove", onMouseLook); if (locked()) document.exitPointerLock(); var ext = gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); canvas.remove(); } });
   }
   window.Dilmo3D = { create: create };
