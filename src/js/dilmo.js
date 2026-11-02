@@ -65,7 +65,7 @@
     bumpMain: ["surprise", ["أوه، صديقي!", "اصطدمتَ بي!", "على مهلك يا صديقي!", "انتبه لطريقك!"]],
     comfort: ["calm", ["لا تحزن، أنا هنا.", "هل أنت بخير؟", "تعال، سأبقى معك.", "كل شيء سيكون بخير."]],
     thanks: ["calm", ["شكراً لك يا صديقي.", "وجودك يريحني.", "أنت صديق حقيقي.", "صرتُ أفضل الآن."]],
-    tagStart: ["joy", ["لنلعب المطاردة!", "سأمسك بك!", "أنت المطارَد!", "استعد!"]],
+    tagStart: ["joy", ["لنلعب المطاردة! ثلاثة… اثنان… واحد!", "سأمسك بك! ثلاثة… اثنان… واحد!", "استعد! ثلاثة… اثنان… واحد!"]],
     tagGot: ["joy", ["أمسكتك! دورك!", "وصلتُ إليك!", "الآن أنت تطاردني!"]],
     buddyWant: ["neutral", ["وأنا؟", "هل بقي شيء لي؟", "رائحته شهيّة!", "أريد قطعة صغيرة."]],
     arrive: ["joy", ["سمعتُ أن هنا أصدقاء طيبين!", "مرحباً! هل يمكنني اللعب معكم؟", "وصلتُ! أنا جمرة."]],
@@ -215,7 +215,7 @@
     bumpMain: ["surprise", ["Oh, my friend!", "You bumped into me!", "Easy, friend!", "Watch where you're going!"]],
     comfort: ["calm", ["Don't be sad, I'm here.", "Are you okay?", "Come here, I'll stay with you.", "Everything will be fine."]],
     thanks: ["calm", ["Thank you, my friend.", "Having you here helps.", "You're a true friend.", "I feel better now."]],
-    tagStart: ["joy", ["Let's play tag!", "I'm going to catch you!", "You're it!", "Get ready!"]],
+    tagStart: ["joy", ["Let's play tag! Three… two… one!", "I'll catch you! Three… two… one!", "Ready? Three… two… one!"]],
     tagGot: ["joy", ["Got you! Your turn!", "Tagged!", "Now you chase me!"]],
     buddyWant: ["neutral", ["What about me?", "Is there any left for me?", "That smells good!", "Just a small piece for me?"]],
     arrive: ["joy", ["I heard there are nice friends here!", "Hi! Can I play with you?", "I'm here! I'm Jamra."]],
@@ -891,7 +891,7 @@
     var b = { f: f, el: el, sh: sh, bub: bb, body: el.querySelector(".bb"), face: el.querySelector(".bf"),
       x: x, y: ground + R - r - (fromEdge ? 140 : 0), z: randZ(r), vx: fromEdge ? -5 : 0, vy: 0, vz: 0, tz: null, sx: 1, sy: 1, svx: 0, svy: 0, tilt: 0, lx: 0, ly: 0, joy: .2,
       next: performance.now() + 1500 + Math.random() * 2500, blink: -1e4, nextBlink: 0, sayUntil: 0, speech: null, mode: "wander", tx: null, other: null, drag: null, size: S, lastBump: 0, tag: tag, home: x,
-      petN: 0, pts: newRim(), bp: el.querySelector(".bp"), bg: el.querySelector(".bg"), cheek: null, spin: 0, spinA: 0, flat: false,
+      petN: 0, ph: buddies.length * 1.7, pts: newRim(), bp: el.querySelector(".bp"), bg: el.querySelector(".bg"), cheek: null, spin: 0, spinA: 0, flat: false,
       em: { anger: 0, fear: 0, sad: 0, shy: 0, love: 0, conf: 0, heart: 0 }, lastDraw: 0 };
     b.homeZ = b.z; b.FK = faceKit(b.face, b.body);
     var sc = r / R;  // everything a pull or poke does to him, scaled to this body's size
@@ -926,6 +926,8 @@
       if (hs && hs.b === b) { endHideSeek(true); return; }
       b.awakeUntil = performance.now() + 20000;
       if (b.asleep) { b.asleep = false; b.vy = -6; bsay(b, line("buddyWoke")); return; }
+      b.pokes = (b.pokes || []).filter(function (x) { return performance.now() - x < 6000; }); b.pokes.push(performance.now());
+      if (b.pokes.length >= 4 && !f.player) { b.pokes = []; feel(b.em, "anger", .4); bsay(b, "…"); b.vx = (b.x < (player ? player.x : pos.x) ? -1 : 1) * 3; b.vy = -4; b.next = performance.now() + 5000; b.mode = "wander"; return; }  // enough: turns away
       b.vy = -7 * f.energy; b.joy = 1; b.svy -= .2; sfx("pop"); dent(d.lx, d.ly, 10 * sc, b.pts);
       if (f.player) return;  // your own character just squishes, it doesn't talk back at you
       bsay(b, line(f.shy ? "buddyShyPoke" : "buddyPoke"));
@@ -970,14 +972,19 @@
     setTimeout(function () { bsay(b, pair[0]); }, 700);
     setTimeout(function () { say(pair[1], "chat", 1000); }, 2500);
   }
+  // tag: a countdown, a 12 s round, no tag-back for 1.5 s, and if nobody is caught by 8 s the runner trips (Fall Guys-style fairness)
+  var tagNext = 0;
   function startTag(b, t) {
-    var o = pick(buddies.filter(function (x) { return x !== b && !x.drag; })); if (!o) return;
-    b.mode = "tag"; b.other = o; o.mode = "flee"; o.other = b; b.next = o.next = t + 4500;
-    bsay(b, line("tagStart"));
+    if (t < tagNext) return;
+    var o = pick(buddies.filter(function (x) { return x !== b && !x.drag && !x.asleep && !/^(hs|sleep|hide|tag|flee)$/.test(x.mode) && !(hs && hs.b === x); })); if (!o) return;
+    b.mode = "tag"; b.other = o; o.mode = "flee"; o.other = b; b.next = o.next = t + 12000; b.tagGo = t + 1000; b.round = o.round = t; b.tagged = o.tagged = false;
+    tagNext = t + 45000 + Math.random() * 15000;
+    b.vy = -5; o.vy = -5; bsay(b, line("tagStart"));
   }
   function think(b, t) {
     var r = b.f.r;
-    b.next = t + (1800 + Math.random() * 2600) / b.f.energy; b.mode = "wander"; b.other = null;
+    if ((b.mode === "tag" || b.mode === "flee") && b.other) { b.vy = -6; }  // the round ends: a happy hop
+    b.next = t + (1800 + Math.random() * 2600) / b.f.energy; b.mode = "wander"; b.other = null; b.tx = b.tz = null; b.crouch = false; b.fslot = null;
     if (song) { b.mode = "sing"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 14), r, W - r); b.tz = nearZ(pos, r); b.next = t + 800; return; }
     if (isNight && t > (b.awakeUntil || 0)) { b.mode = "sleep"; b.tx = b.home; b.tz = b.homeZ; b.next = t + 6000; return; }  // bedtime in Bahrain
     if (player && bfOf(b) >= .5 && Math.random() < .5) { b.mode = "follow"; b.next = t + 5000; return; }  // close friends tag along
@@ -992,7 +999,7 @@
       return;
     }
     var k = Math.random();
-    if (k < .3) { b.tx = roomy(b); b.tz = randZ(r); }
+    if (k < .3) { var rs0 = roomySpot(b); b.tx = rs0[0]; b.tz = D3 ? rs0[1] : null; }
     else if (k < .5 && !mainAway) chat(b, t);
     else if (k < .55 && buddies.length > 2 && !crowd(b) && !buddies.some(function (x) { return x.mode === "tag"; })) startTag(b, t);  // a short game of tag now and then, one at a time
     else if (k < .75 && !reduce) b.vy = -6 * b.f.energy;
@@ -1000,11 +1007,17 @@
     else { b.tx = null; b.tz = null; }
   }
   // a spot to wander to: of a few tries, the one farthest from everyone else
-  function roomy(b, dir) {  // dir: only look that way (after bumping into someone)
-    var r = b.f.r, xs = buddies.filter(function (x) { return x !== b; }).map(function (x) { return x.x; }).concat(mainAway ? [] : [pos.x]), best = b.x, bd = -1;
-    for (var i = 0; i < 4; i++) {
-      var x = clamp(b.x + (dir ? dir * (80 + Math.random() * 260) : (Math.random() - .5) * 520), r, W - r), d = xs.reduce(function (m, o) { return Math.min(m, Math.abs(o - x)); }, 1e9);
-      if (d > bd) { bd = d; best = x; }
+  // a spot to go to: of six tries, the one farthest from everyone (and from where they are heading), never on the bench or in a bush
+  function roomySpot(b, dir) {
+    var r = b.f.r, L = buddies.filter(function (x) { return x !== b; }).map(function (x) { return [x.tx != null ? x.tx : x.x, x.tz != null ? x.tz : x.z]; });
+    if (!mainAway) L.push([pos.x, pos.z]);
+    var best = [b.x, b.z], bd = -1;
+    for (var i = 0; i < 6; i++) {
+      var x = dir ? clamp(b.x + dir * (80 + Math.random() * 260), r, W - r) : r + Math.random() * (W - 2 * r), z = D3 ? r + Math.random() * Math.max(0, DZ - 2 * r) : 0;
+      if (D3 && (Math.abs(x - bench.x - bench.w / 2) < bench.w / 2 + 50 && Math.abs(z - bench.z) < 70)) continue;
+      if (D3 && bushes.some(function (bu) { return Math.hypot(x - bu.cx, z - bu.cz) < 60; })) continue;
+      var d = L.reduce(function (m, o) { return Math.min(m, Math.hypot(o[0] - x, o[1] - z)); }, 1e9);
+      if (d > bd) { bd = d; best = [x, z]; }
     }
     return best;
   }
@@ -1040,13 +1053,37 @@
       if (b.f.player) playerControl(b, fy, dt, t); else if (!b.drag && t > b.next) think(b, t);
       if (b.mode === "flee") { feel(b.em, "fear", .3); b.em.heart = Math.max(b.em.heart, .45); }  // being chased: a playful fright
       if (b.f.player) b.tx = null;  // the visitor steers their own character, even during tag
-      else if (b.mode === "tag" && b.other) { b.tx = b.other.x; b.tz = b.other.z; }
-      else if (b.mode === "flee" && b.other) {  // run away from the chaser, toward open floor (not into the others)
-        var away = b.x < b.other.x ? -1 : 1, rs = gapAhead(b, away) > 40 ? away : gapAhead(b, -away) > 120 ? -away : away;
-        b.tx = clamp(b.x + rs * 120, r, W - r); b.tz = D3 ? clamp(b.z + (b.z < b.other.z ? -1 : 1) * 90, r, DZ - r) : 0;
+      else if (b.mode === "tag" && b.other) {
+        if (t < (b.tagGo || 0)) b.tx = b.tz = null;  // counting down / just tagged: wait
+        else { b.tx = b.other.x + (b.other.vx || 0) * 10; b.tz = b.other.z + (b.other.vz || 0) * 10; }  // aim where they are going
+        if (!b.tagged && t - (b.round || t) > 8000 && !b.other.f.player) { var tr = b.other; tr.svy -= .3; tr.vy = -3; b.mode = "flee"; tr.mode = "tag"; b.other = tr; tr.other = b; tr.tagGo = t + 650; b.tagged = tr.tagged = true; b.tagAt = tr.tagAt = t; }  // the runner trips
       }
-      else if (b.mode === "follow" && player) { b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 16 + slot(b, "follow") * 46), r, W - r); b.tz = D3 ? clamp(player.z, r, DZ - r) : 0; }
-      else if (b.mode === "ball") { b.tx = ball.x; b.tz = ball.z; }
+      else if (b.mode === "flee" && b.other) {  // run away from the chaser; out of corners sideways, or leap over when cornered and close
+        var ox = b.x - b.other.x, oz = D3 ? b.z - b.other.z : 0, ol = Math.hypot(ox, oz) || 1, ax = ox / ol, az = oz / ol;
+        var gx = clamp(b.x + ax * 120, r, W - r), gz = D3 ? clamp(b.z + az * 120, r, DZ - r) : 0;
+        if (Math.hypot(gx - b.x, gz - b.z) < 60) {
+          if (ol < 80 && b.y >= fy - 1) { b.vx = -ax * 4; b.vz = -az * 4; b.vy = -10; }  // cornered: over the chaser's head
+          else { var px = -az, pz = ax, sideA = Math.hypot(clamp(b.x + px * 120, r, W - r) - b.x, (D3 ? clamp(b.z + pz * 120, r, DZ - r) : 0) - b.z), sideB = Math.hypot(clamp(b.x - px * 120, r, W - r) - b.x, (D3 ? clamp(b.z - pz * 120, r, DZ - r) : 0) - b.z), sg = sideA >= sideB ? 1 : -1;
+            gx = clamp(b.x + sg * px * 120, r, W - r); gz = D3 ? clamp(b.z + sg * pz * 120, r, DZ - r) : 0; }
+        }
+        b.tx = gx; b.tz = D3 ? gz : null;
+      }
+      else if (b.mode === "follow" && player) {  // in a loose line behind you, never in front of you
+        var hx = player.hx || 1, hz = player.hz || 0, i2 = b.fslot != null ? b.fslot : (b.fslot = slot(b, "follow")), back = player.f.r + r + 20 + Math.floor(i2 / 2) * 44, side = (i2 % 2 ? 1 : -1) * (r + 8);
+        b.tx = clamp(player.x - hx * back - hz * side, r, W - r); b.tz = D3 ? clamp(player.z - hz * back + hx * side, r, DZ - r) : null;
+      }
+      else if (b.mode === "ball") {  // get behind the ball and hop through it, toward you (fetch), else toward the friend farthest away
+        var goal = player || buddies.filter(function (x) { return x !== b; }).sort(function (p, q) { return Math.hypot(q.x - ball.x, q.z - ball.z) - Math.hypot(p.x - ball.x, p.z - ball.z); })[0] || { x: W / 2, z: DZ / 2 };
+        var gdx = goal.x - ball.x, gdz = D3 ? goal.z - ball.z : 0, gl = Math.hypot(gdx, gdz) || 1, ux2 = gdx / gl, uz2 = gdz / gl;
+        var bx = ball.x - ux2 * (r + ball.r + 18), bz = ball.z - uz2 * (r + ball.r + 18);
+        if (Math.hypot(b.x - bx, b.z - bz) < 24 && b.y >= fy - 1) { b.vx = ux2 * (3 + 2 * b.f.energy); b.vz = uz2 * (3 + 2 * b.f.energy); b.vy = -5; b.tx = b.tz = null; b.mode = "wander"; b.next = t + 1500; }
+        else { b.tx = clamp(bx, r, W - r); b.tz = D3 ? clamp(bz, r, DZ - r) : null; }
+      }
+      // a target that isn't getting closer for 3 s is given up (no more hopping into a corner for 15 s)
+      if (b.tx != null && !b.f.player) {
+        if (b.tgtKey !== Math.round(b.tx) + "|" + Math.round(b.tz || 0)) { b.tgtKey = Math.round(b.tx) + "|" + Math.round(b.tz || 0); b.tgtAt = t; b.tgtFrom = [b.x, b.z]; }
+        else if (t - b.tgtAt > 3000 && Math.hypot(b.x - b.tgtFrom[0], b.z - b.tgtFrom[1]) < 20 && !/^(tag|flee|hs|sleep)$/.test(b.mode)) { b.tx = b.tz = null; b.next = t; b.tgtKey = ""; }
+      }
       if (b.mode === "comfort" && Math.hypot(pos.x - b.x, pos.y - b.y, pos.z - b.z) < R + r + 24) {
         b.mode = "wander"; feel(b.em, "love", .45); bsay(b, line("comfort")); mood.annoy *= .4; mood.joy = Math.max(mood.joy, .3); befriend(.01);
         setTimeout(function () { say(line("thanks"), "thanks", 4000); }, 1500);
@@ -1061,10 +1098,10 @@
         if (dist > 14) {
           // each hop is sized to the room ahead and the distance left, so they walk up to someone and stop
           // beside them (or land on their spot) instead of hopping into them and bouncing around
-          var ux = dx / dist, uz = dz / dist, dir = Math.sign(dx) || 1, chase = b.mode === "tag" || b.mode === "flee", hvy = 3 + 1.5 * b.f.energy, airT = 2 * hvy / .75;
+          var ux = dx / dist, uz = dz / dist, chase = b.mode === "tag" || b.mode === "flee", hvy = 3 + 1.5 * b.f.energy, airT = 2 * hvy / .75;
           var room = gapAhead(b, ux, uz), step = Math.min(2.5 + 2.5 * b.f.energy, dist / airT, room / airT);
           if (room < 6 && chase) { b.vx = ux * (3 + 2.5 * b.f.energy); b.vz = uz * (3 + 2.5 * b.f.energy); b.vy = -9 - 2 * b.f.energy; }  // in a chase: leap over
-          else if (step < .6) { b.vx = b.vz = 0; if (!chase) { b.tx = b.mode === "wander" ? roomy(b, -dir) : null; b.tz = b.mode === "wander" ? randZ(r) : null; if (b.mode !== "wander") b.next = Math.min(b.next, t + 900); } }  // someone's right there: turn round (or wait beside them)
+          else if (step < .6) { b.vx = b.vz = 0; if (!chase) { if (b.mode === "wander") { var rs1 = roomySpot(b); b.tx = rs1[0]; b.tz = D3 ? rs1[1] : null; } else { b.tx = b.tz = null; b.next = Math.min(b.next, t + 900); } } }  // someone's right there: turn round (or wait beside them)
           else { b.vx = ux * step; b.vz = uz * step; b.vy = -hvy; }
         } else if (b.mode !== "tag" && b.mode !== "flee") { b.tx = null; b.tz = null; }
       }
@@ -1084,12 +1121,27 @@
       if (D3 && (b.z < r || b.z > DZ - r)) { b.z = clamp(b.z, r, DZ - r); b.vz = me2 ? 0 : -b.vz * .6; }
       if (b.y < r) { b.y = r; b.vy = -b.vy * .5; }
     }
+    if (player && !b.f.player && !b.asleep && !reduce) {
+      var pdist = Math.hypot(player.x - b.x, D3 ? player.z - b.z : 0);
+      if (pdist < 110 && t > (b.greetAt || 0) && b.y >= fy - 1 && b.tx == null) { b.greetAt = t + 20000; b.vy = -4; b.joy = 1; b.lookAt = player; b.lookUntil = t + 1500; }  // a hello hop
+      else if (pdist < 220 && t > (b.seenAt || 0)) { b.seenAt = t + 8000; if (Math.random() < .6) { b.lookAt = player; b.lookUntil = t + 900 + Math.random() * 600; } }  // a glance as you pass
+    }
     if (b.drag && b.drag.moved && b.y < surfaceY(b) - 120) { b.em.fear = Math.min(1, b.em.fear + .006 * dt); b.em.heart = Math.min(1, b.em.heart + .005 * dt); }
-    var air = Math.min(.18, Math.abs(b.vy) * .01);
-    b.svx = b.svx * Math.pow(.7, dt) + (1 - air * .6 + (b.crouch ? .14 : 0) - b.sx) * .18 * dt; b.sx += b.svx * dt;
-    b.svy = b.svy * Math.pow(.7, dt) + (1 + air - (b.crouch ? .22 : 0) - b.sy) * .18 * dt; b.sy += b.svy * dt;
-    b.tilt += (clamp(b.vx * 1.4, -25, 25) + (song ? Math.sin(t / 650 + r) * 7 : 0) - b.tilt) * .15 * dt;
-    var sb2 = sv(b), tg = ptr.has && !ptr.out && Math.hypot(ptr.x - sb2.x, ptr.y - sb2.y) < 200 * sb2.s ? ptr : sv(b.other || (mainAway ? (b === player ? b : player || b) : pos));
+    var air = Math.min(.18, Math.abs(b.vy) * .01), ph = b.ph || 0, breathe = reduce || b.f.player ? 0 : Math.sin(t / (800 + 160 * ph) + ph);
+    b.svx = b.svx * Math.pow(.7, dt) + (1 - air * .6 + (b.crouch ? .14 : 0) - .008 * breathe - b.sx) * .18 * dt; b.sx += b.svx * dt;
+    b.svy = b.svy * Math.pow(.7, dt) + (1 + air - (b.crouch ? .22 : 0) + .012 * breathe - b.sy) * .18 * dt; b.sy += b.svy * dt;
+    var sway = reduce || b.f.player ? 0 : 2.5 * Math.sin(t / 1300 + ph);
+    b.tilt += (clamp(b.vx * 1.4, -25, 25) + (song ? Math.sin(t / 650 + r) * 7 : 0) + sway - b.tilt) * .15 * dt;
+    if (!b.f.player && !reduce && b.tx == null && !b.asleep && !b.drag && b.y >= fy - 1 && /^(wander|follow)$/.test(b.mode)) {
+      if (t > (b.glanceAt || 0)) {  // look at something that moves: the nearest moving body, else the ball
+        b.glanceAt = t + 2000 + Math.random() * 3000;
+        var mv = buddies.concat(mainAway ? [] : [pos]).filter(function (o) { return o !== b && Math.hypot(o.vx || 0, o.vz || 0) > 1; })
+          .sort(function (p, q) { return Math.hypot(p.x - b.x, p.z - b.z) - Math.hypot(q.x - b.x, q.z - b.z); })[0];
+        b.glance = mv || ball; b.glanceUntil = t + 1500;
+      }
+      if (t > (b.shuffleAt || (b.shuffleAt = t + 6000 + Math.random() * 4000))) { b.shuffleAt = t + 6000 + Math.random() * 4000; b.vy = -2.5; b.vx += (Math.random() - .5) * 1.2; if (D3) b.vz += (Math.random() - .5) * 1.2; }
+    }
+    var sb2 = sv(b), tg = ptr.has && !ptr.out && Math.hypot(ptr.x - sb2.x, ptr.y - sb2.y) < 200 * sb2.s ? ptr : sv(b.other || (t < (b.glanceUntil || 0) && b.glance) || (t < (b.lookUntil || 0) && b.lookAt) || (mainAway ? (b === player ? b : player || b) : pos));
     var ldx = tg.x - sb2.x, ldy = tg.y - sb2.y, ld = Math.hypot(ldx, ldy) || 1, k = Math.min(1, ld / sb2.s / 200);
     b.lx += (ldx / ld * k - b.lx) * .15 * dt; b.ly += (ldy / ld * k - b.ly) * .15 * dt;
     if (t > b.nextBlink) { b.blink = t; b.nextBlink = t + 2000 + Math.random() * 4500; }
@@ -1114,8 +1166,10 @@
   function tagContact(A, B, t) {
     if (!A.b || !B.b) return;
     var x = A.b.mode === "tag" && A.b.other === B.b ? A.b : B.b.mode === "tag" && B.b.other === A.b ? B.b : null;
-    if (!x || t - (x.tagAt || 0) < 900) return;
-    var y = x.other; x.mode = "flee"; y.mode = "tag"; x.tagAt = y.tagAt = t; x.joy = 1; feel(y.em, "conf", .45); if (talking() < 2) bsay(x, line("tagGot"));
+    if (!x || t - (x.tagAt || 0) < 1500 || t < (x.tagGo || 0)) return;
+    var y = x.other; x.mode = "flee"; y.mode = "tag"; x.tagAt = y.tagAt = t; x.joy = 1; feel(y.em, "conf", .45); x.tagged = y.tagged = true;
+    y.tagGo = t + 650; y.spin += 360;  // the new chaser spins and waits a moment before giving chase
+    if (talking() < 2) bsay(x, line("tagGot"));
   }
   // everyone pushes everyone: circle-circle collisions, heavier = bigger, held ones don't budge
   function collideAll(t, dt) {
@@ -1138,15 +1192,31 @@
           var push = sg * (nx * pl.o.vx + nz * pl.o.vz), kf = 1 - Math.pow(.65, dt);
           if (push > 0) { ot.o.vx += (pl.o.vx - ot.o.vx) * kf; ot.o.vz += (pl.o.vz - ot.o.vz) * kf; }  // carried along, never faster than you
           if (ot.b && t - (ot.b.shovedAt || 0) > 300) { ot.b.shovedAt = t; ot.b.svy -= .1; }
+          if (ot.b && !ot.b.f.player && /^(wander|follow|ball|visit)$/.test(ot.b.mode)) {
+            if (!ot.b.shoveStart || t - ot.b.shoveSeen > 200) ot.b.shoveStart = t;
+            ot.b.shoveSeen = t;
+            if (t - ot.b.shoveStart > 150 && ot.o.y >= floorY(ot.b) - 1) {  // out of the way: a hop to the side with more room
+              var pvl = Math.hypot(pl.o.vx, pl.o.vz) || 1, qx = -pl.o.vz / pvl, qz = pl.o.vx / pvl, sd = (ot.o.x - pl.o.x) * qx + (ot.o.z - pl.o.z) * qz >= 0 ? 1 : -1;
+              ot.o.vx = qx * sd * 3.5; ot.o.vz = qz * sd * 3.5; ot.o.vy = -4.5; ot.b.shoveStart = 0; ot.b.tx = ot.b.tz = null; ot.b.next = t + 1200;
+            }
+          }
         }
         pl.o.x -= sg * nx * ov * (1 - share); pl.o.z -= sg * nz * ov * (1 - share);
         tagContact(A, B, t);
         continue;
       }
-      var kicker = A.ball ? B : B.ball ? A : null;  // whoever runs into the ball scoops it up a little (the impulse below does the kick)
-      if (kicker && Math.abs(ny) < .8 && ball.y >= ground + R - ball.r - 1) {
-        var into = ((kicker === A ? 1 : -1) * (nx * kicker.o.vx + nz * (kicker.o.vz || 0)));  // speed toward the ball
-        if (into > 1) ball.vy -= 1.5 + .25 * Math.min(8, into);
+      var kicker = A.ball ? B : B.ball ? A : null;
+      if (kicker) {
+        var bsg = kicker === A ? 1 : -1, kx = bsg * nx, ky = bsg * ny, kz = bsg * nz;  // from the kicker toward the ball
+        ball.x = kicker.o.x + kx * min; ball.y = Math.min(ball.y, kicker.o.y + ky * min); ball.z = kicker.o.z + kz * min;  // never inside anyone
+        if (t - (kicker.o.kickAt || 0) < 180) continue;
+        var hl = Math.hypot(kx, kz) || 1, hx2 = kx / hl, hz2 = kz / hl, kin = (kicker.o.vx || 0) * hx2 + (kicker.o.vz || 0) * hz2;
+        if (ky > .6) { ball.vy = -10; kicker.o.kickAt = t; }  // landed on it: it pops up
+        else if (kin > 1.5) {  // a real kick: faster than you, with a little lift
+          var ks = 1.6 * kin + 1.5; ball.vx = hx2 * ks; if (D3) ball.vz = hz2 * ks; if (ball.y >= ground + R - ball.r - 1) ball.vy = -Math.min(7, 2.5 + .45 * kin);
+          kicker.o.kickAt = t; sfx("pop"); tone(200 + 20 * kin, 140, .07, "sine", .06);
+        } else if (kin > 0) { ball.vx = hx2 * 1.1 * Math.max(kin, .6); if (D3) ball.vz = hz2 * 1.1 * Math.max(kin, .6); }  // a gentle touch: a dribble
+        continue;
       }
       if (!ms) continue;
       var over = min - d;
@@ -1304,7 +1374,8 @@
     var E = b.em, hp = renderFace(b.FK, k, { joy: b.joy, anger: E.anger, fear: E.fear, sad: E.sad, shy: E.shy, love: E.love, conf: E.conf, heart: E.heart, sleepy: b.asleep ? 1.7 : 0 },
       { ey: -3.84, rx: erx, ry: [ery, ery], mx: 0, mcy: 17.76, mrx: mrx, mry: Math.max(mry, mrx * 1.02), dd: b.bp.getAttribute("d"), busy: !!sp3 || !!sn }, t, bdt);
     if (hp && !f3) b.body.setAttribute("transform", b.body.getAttribute("transform") + " scale(" + (1 + .035 * hp).toFixed(3) + ")");
-    if (b.tag) b.tag.style.opacity = b.bub.hidden ? "" : "0";  // the name steps aside while its owner talks
+    if (b.tag) b.tag.style.opacity = b.bub.hidden && !b.hsHidden ? "" : "0";  // the name steps aside while its owner talks (or hides)
+    if (b.hsHidden && !b.bub.hidden) b.bub.hidden = true;
     if (b.tag) b.tag.style.transform = "translate(" + (sb.x * K - boxOf(b.tag, K)._mw / 2).toFixed(1) + "px," + ((sb.y - r * sb.s) * K - 20).toFixed(1) + "px)";
     var fy = surfaceY(b), sc = clamp(1 - (fy - b.y) / 300, .35, 1);
     if (!f3) b.sh.style.transform = "translate(" + (b.x - r * .8).toFixed(1) + "px," + (fy + r - 6).toFixed(1) + "px) scale(" + sc.toFixed(2) + ")"; b.sh.style.opacity = sc.toFixed(2);
@@ -1427,6 +1498,7 @@
     if (!ix && !iz || fp || ksig !== b.ksig) b.basis = null;
     b.ksig = ksig;
     if (D3) { var ax = fp ? D3.axes() : b.basis || (b.basis = D3.axes()); mx = ax.rx * ix + ax.fx * iz; mz = ax.rz * ix + ax.fz * iz; var ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; } }
+    if (Math.hypot(b.vx, b.vz) > .5) { var hl0 = Math.hypot(b.vx, b.vz); b.hx = b.vx / hl0; b.hz = b.vz / hl0; }
     if (!keys.down) b.poundLock = false;
     b.crouch = keys.down && onF;
     if (b.crouch) b.crouchT = b.crouchT || t; else if (onF && !keys.down) b.crouchT = 0;
@@ -1496,6 +1568,7 @@
       var k = 1 - d / 170; o.vy -= 9 * k; o.vx += dx / d * 5 * k; o.vz += dz / d * 5 * k; hit = true;
     });
     if (hit) say(line("pound"), "pound", 2500);
+    notice(b.x, b.z, 260, "slam");
   }
   function dust(x, y) {
     if (reduce) return;
@@ -2274,6 +2347,10 @@
       var bs = Math.hypot(ball.vx, ball.vz), bk = bs ? Math.max(0, bs - .045 * dt) / bs * Math.pow(.995, dt) : 0;
       ball.vx *= bk; ball.vz *= bk; if (bs < .05) ball.vx = ball.vz = 0;
     }
+    if (ball.y >= fl - .5) {
+      if (ball.x < 40) ball.vx += .06 * dt; else if (ball.x > W - 40) ball.vx -= .06 * dt;
+      if (D3) { if (ball.z < 40) ball.vz += .06 * dt; else if (ball.z > DZ - 40) ball.vz -= .06 * dt; }
+    }
     if (ball.x < ball.r || ball.x > W - ball.r) { ball.x = clamp(ball.x, ball.r, W - ball.r); ball.vx = -ball.vx * .75; }
     if (D3 && (ball.z < ball.r || ball.z > DZ - ball.r)) { ball.z = clamp(ball.z, ball.r, DZ - ball.r); ball.vz = -ball.vz * .75; }
     if (ball.y < ball.r) { ball.y = ball.r; ball.vy = -ball.vy * .6; }
@@ -2311,25 +2388,48 @@
   function startHideSeek(t) {
     var m = buddies.filter(function (b) { return b.f.id === "mawja"; })[0];
     if (!m || m.drag) return;
-    hs = { b: m, bush: pick(bushes), until: t + 25000, hidden: false };
+    hs = { b: m, bush: pick(bushes), until: t + 25000, hidden: false, spotAt: 0, rustleAt: t + 4000 };
+    if (tagNext < t + 30000) tagNext = t + 30000;  // no tag while she hides
     m.mode = "hs"; m.next = Infinity;
     say(line("hsStart"), "hs", 1000);
   }
   function endHideSeek(found) {
     var b = hs.b; hs = null; hsNext = performance.now() + 60000;
-    b.crouch = false; b.mode = "wander"; b.next = performance.now() + 1500; b.vy = -7;
+    b.crouch = false; b.hsHidden = false; b.mode = "wander"; b.next = performance.now() + 1500; b.vy = -7;
     if (found) { bsay(b, line("hsFound")); bfAdd(b, .1); setTimeout(function () { say(line("hsYou"), "hs2", 1000); }, 1300); }
     else bsay(b, line("hsLost"));
   }
   function hsStep(t) {
     if (!hs) return;
     var b = hs.b;
-    if (b.mode !== "hs") { hs = null; return; }
-    b.tx = hs.bush.cx; b.tz = hs.bush.cz;
-    if (!hs.hidden && Math.hypot(b.x - hs.bush.cx, b.z - hs.bush.cz) < 14) hs.hidden = true;
-    b.crouch = hs.hidden;
-    if (hs.hidden && player && Math.hypot(player.x - b.x, player.y - b.y, player.z - b.z) < player.f.r + b.f.r + 14) endHideSeek(true);
+    if (b.mode !== "hs") { endHideSeek(false); return; }
+    // the spot is behind the bush as seen from the seeker (you, or the camera), re-checked every 2.5 s
+    if (t > hs.spotAt) {
+      hs.spotAt = t + 2500;
+      var sx = player ? player.x : W / 2, sz = player ? player.z : (D3 ? DZ + 600 : 0), dx = hs.bush.cx - sx, dz = D3 ? hs.bush.cz - sz : 0, dl = Math.hypot(dx, dz) || 1;
+      hs.sx = clamp(hs.bush.cx + dx / dl * (34 + b.f.r * .6), b.f.r, W - b.f.r); hs.sz = D3 ? clamp(hs.bush.cz + dz / dl * (34 + b.f.r * .6), b.f.r, DZ - b.f.r) : 0;
+    }
+    b.tx = hs.sx; b.tz = D3 ? hs.sz : null;
+    if (Math.hypot(b.x - hs.sx, D3 ? b.z - hs.sz : 0) < 18) hs.hidden = true;
+    b.crouch = hs.hidden; b.hsHidden = hs.hidden;
+    if (hs.hidden && t > hs.rustleAt) { hs.rustleAt = t + 4000 + Math.random() * 2000; var be = hs.bush.el; be.classList.remove("rustle"); void be.offsetWidth; be.classList.add("rustle"); }  // a little hint
+    var seen = false;
+    if (hs.hidden && player) {
+      var px2 = b.x - player.x, pz2 = D3 ? b.z - player.z : 0, pd2 = Math.hypot(px2, pz2) || 1;
+      if (pd2 < player.f.r + b.f.r + 14) seen = true;
+      else if (D3 && pd2 < 170) {  // in plain sight: nothing in between, and you are facing her
+        var hvl = Math.hypot(player.hx || 0, player.hz || 0) || 1, facing = ((player.hx || 0) * px2 + (player.hz || 0) * pz2) / (hvl * pd2);
+        var blocked = bushes.some(function (bu) { return segHits(player.x, player.z, b.x, b.z, bu.cx, bu.cz, 30); });
+        seen = !blocked && facing > .5;
+      }
+    }
+    if (seen) endHideSeek(true);
     else if (t > hs.until) endHideSeek(false);
+  }
+  // does the segment (ax,az)→(bx,bz) pass within r of (cx,cz)?
+  function segHits(ax, az, bx, bz, cx, cz, r) {
+    var vx = bx - ax, vz = bz - az, l2 = vx * vx + vz * vz || 1, k = clamp(((cx - ax) * vx + (cz - az) * vz) / l2, 0, 1);
+    return Math.hypot(ax + vx * k - cx, az + vz * k - cz) < r;
   }
   bushes.forEach(function (bu) {
     bu.el.addEventListener("click", function () {
@@ -2345,10 +2445,24 @@
     g.el.addEventListener("click", function () { stir(); collectGem(g); });
     world.appendChild(g.el); gems.push(g);
   }
+  // a little event: friends within reach turn to it one after another (not all at once), then react
+  function notice(x, z, rad, kind) {
+    var tnow = performance.now();
+    others().forEach(function (b) {
+      if (b.asleep || b.drag || Math.hypot(b.x - x, D3 ? b.z - z : 0) > rad || tnow < (b.noticed || 0)) return;
+      b.noticed = tnow + 3000;
+      setTimeout(function () {
+        b.lookAt = { x: x, y: ground + R - 20, z: z }; b.lookUntil = performance.now() + 1200;
+        if (kind === "slam") { feel(b.em, b.f.shy ? "fear" : "conf", .45); b.vy = Math.min(b.vy, -4); }
+        else { b.joy = 1; b.vy = Math.min(b.vy, -3.5); }
+      }, 150 + Math.random() * 350);
+    });
+  }
   function collectGem(g) {
     if (gems.indexOf(g) < 0) return;
     gems.splice(gems.indexOf(g), 1); g.el.remove(); nextGem = performance.now() + 20000 + Math.random() * 25000;
     store.stars = (store.stars || 0) + 1; saveStore(); tickClock();
+    notice(g.x, g.z, 150, "star");
     tone(660, 660, .1, "sine", .08); tone(880, 880, .1, "sine", .08, .09); tone(1320, 1320, .18, "sine", .07, .18);
     if (NEED[5] === store.stars || NEED[6] === store.stars || NEED[7] === store.stars) { renderSwatches(); say(line("unlock"), "unlock", 500); }
     else say(line("gotStar", { s: num(store.stars) }), "star", 4000);
