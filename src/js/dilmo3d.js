@@ -339,7 +339,7 @@
       if (hx > .01) tMax = Math.min(tMax, (W + 470 - tgt[0]) / hx); if (hx < -.01) tMax = Math.min(tMax, (-470 - tgt[0]) / hx);
       if (hz < -.01) tMax = Math.min(tMax, (-470 - tgt[2]) / hz); if (hz > .01) tMax = Math.min(tMax, (DZ + 1900 - tgt[2]) / hz);
       if (!intro && d * Math.cos(pitch) > tMax) pitch = Math.acos(clamp(tMax / d, 0, 1));
-      if (trauma > 0) { var sh = trauma * trauma; yaw += (Math.random() - .5) * .03 * sh; pitch += (Math.random() - .5) * .03 * sh; tgt[1] += (Math.random() - .5) * 8 * sh; }
+      if (trauma > 0) { var sh = trauma * trauma, nz = function (k) { return Math.sin(viewT * .021 + k) * .6 + Math.sin(viewT * .037 + 2 * k) * .4; }; yaw += .026 * sh * nz(1); pitch += .017 * sh * nz(2); tgt[1] += 6 * sh * nz(3); }
       eye = [tgt[0] + d * Math.sin(yaw) * Math.cos(pitch), tgt[1] - d * Math.sin(pitch), tgt[2] + d * Math.cos(yaw) * Math.cos(pitch)];
       if (vm === "first") {  // through the character's eyes: a little above its middle, looking where the camera yaw points
         var p1 = cam.p1, dip = 0, since = viewT - (sj.landT || 0);
@@ -518,7 +518,8 @@
       var r = b.r, fc = faceTex(b, t);
       gl.bindTexture(gl.TEXTURE_2D, fc.tex);
       // faces the way it moves; standing still, it turns to the camera
-      var sp = Math.hypot(b.vx, b.vz), toCam = !(sp > .9 && !b.drag), want = toCam ? Math.atan2(eye[0] - b.x, eye[2] - b.z) : Math.atan2(b.vx, b.vz);
+      var sp = Math.hypot(b.vx, b.vz); if (sp > .9 && !b.drag) fc.movT = t;
+      var toCam = t - (fc.movT || -1e9) > 450, want = toCam ? Math.atan2(eye[0] - b.x, eye[2] - b.z) : Math.atan2(b.vx, b.vz);
       var da = Math.atan2(Math.sin(want - fc.yaw), Math.cos(want - fc.yaw)); fc.yaw += da * Math.min(1, .12 * dt);
       // looking at you, it also lifts its face toward the camera (you see it from above)
       var wantUp = toCam ? Math.atan2(b.y - eye[1], Math.hypot(eye[0] - b.x, eye[2] - b.z)) : 0; fc.up += (wantUp - fc.up) * Math.min(1, .12 * dt);
@@ -579,7 +580,7 @@
       if (sj) { var wsp = Math.hypot(sj.vx, sj.vz); view.bob = (view.bob || 0) + wsp * dt * .035; view.bobA = (view.bobA || 0) + (Math.min(1, wsp / 6) - (view.bobA || 0)) * Math.min(1, .15 * dt); }
       api.hideEl = want === "first" && sj ? sj.el : want === "second" ? s.main.el : null;
       follow(s, dt);
-      trauma = Math.max(0, trauma - .025 * dt);
+      trauma = Math.max(0, trauma - 1.6 / 60 * dt);
       viewDt = dt; viewT = t; viewReduce = !!s.reduce; viewUpdate();
       var sk = s.sky, cx = W / 2, cz = DZ / 2;
       var skyTop = col(sk["--sky-top"]), skyHor = col(sk["--sky-hor"]), grass = col(sk["--grass"]);

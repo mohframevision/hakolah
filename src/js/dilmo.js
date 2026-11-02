@@ -897,7 +897,7 @@
     var sc = r / R;  // everything a pull or poke does to him, scaled to this body's size
     updateTag(b);
     el.addEventListener("pointerdown", function (e) {
-      var p = toStage(e), l = blocal(b, p.x, p.y); stir(); e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId);
+      var p = toStage(e), l = blocal(b, p.x, p.y); stir(); e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId); b.sy = .85; b.sx = 1.1;
       var w0 = D3 ? D3.unscr(p.x, p.y, b) : p;
       b.drag = { ox: w0.x - b.x, oy: w0.y - b.y, oz: D3 ? w0.z - b.z : 0, sx: p.x, sy: p.y, moved: false, vx: 0, vy: 0, vz: 0, lx: l.x, ly: l.y };
       // grabbed near the edge: that's a cheek to pull, like Dilmo's
@@ -1127,6 +1127,7 @@
         else { b.vy = 0; if (!me2) { var gf = Math.pow(.8, dt); b.vx *= gf; b.vz *= gf; } }
         if (me2 && hit > 2.5) { b.landT = t; b.landHit = hit; }
         if (hit > 2.5) { b.svy -= Math.min(hit, 18) * .012; b.svx += Math.min(hit, 18) * .009; dent(0, r, Math.min(hit, 20) * .5 * r / R, b.pts); }
+        if (me2 && hit > 14 && D3) D3.shake(.2);
         if (me2 && hit > 4) { var sq = Math.min(1, hit / 18); b.sy = 1 - .35 * sq; b.sx = 1 + .28 * sq; }  // squash by how hard it landed, then spring back
         if (me2 && hit > 9) { var sd0 = sv(b); dust(sd0.x, sd0.y + r * sd0.s); }
       }
@@ -1233,7 +1234,7 @@
         if (ky > .75 && (kicker.o.vy || 0) > 1) { ball.vy = -10; kicker.o.kickAt = t; }  // came down on top of it: it pops up
         else if (krv > 4) {  // a real kick (a run into it, not a walk with it): faster than you, with a little lift
           var ks = 1.6 * kin + 1.5; ball.vx = hx2 * ks; if (D3) ball.vz = hz2 * ks; if (ball.y >= ground + R - ball.r - 1) ball.vy = -Math.min(7, 2.5 + .45 * kin);
-          kicker.o.kickAt = t; sfx("pop"); tone(200 + 20 * kin, 140, .07, "sine", .06);
+          kicker.o.kickAt = t; sfx("pop"); tone(200 + 20 * kin, 140, .07, "sine", .06); if (kin > 5.5 && kicker.b && kicker.b.f.player) hitStop(40);
         } else if (kin > 0) { var ds = Math.min(2.4, 1.1 * Math.max(kin, .6)); ball.vx = hx2 * ds; if (D3) ball.vz = hz2 * ds; }  // a gentle touch: a dribble
         continue;
       }
@@ -1275,7 +1276,24 @@
       }
       if (!moved) break;
     }
-    L.forEach(function (e) { e.style.transform = "translate(" + e._x.toFixed(1) + "px," + e._y.toFixed(1) + "px)"; });
+    L.forEach(function (e) {  // glide to the new spot instead of jumping there
+      if (e._gx == null || Math.abs(e._gx - e._x) > 120 || Math.abs(e._gy - e._y) > 120) { e._gx = e._x; e._gy = e._y; }
+      e._gx += (e._x - e._gx) * .35; e._gy += (e._y - e._gy) * .35;
+      e.style.transform = "translate(" + e._gx.toFixed(1) + "px," + e._gy.toFixed(1) + "px)";
+    });
+    // names: yours first, then the nearest; a name that would sit on a bubble, on another name, or behind a nearer body is hidden
+    var placed = L.map(function (e) { return [e._gx, e._gy, e._w, e._h]; });
+    var tags = buddies.map(function (b) { return b.tag; }).filter(function (g) { return g && g._w != null; });
+    tags.sort(function (a, b) { return (b._me - a._me) || (b._s - a._s); });
+    var bodies = D3 ? buddies.map(function (b) { var s = sv(b); return { b: b, x: s.x * K, y: s.y * K, r: b.f.r * s.s * K, s: s.s }; }).concat(mainAway ? [] : [(function () { var s = sv(pos); return { b: null, x: s.x * K, y: s.y * K, r: R * s.s * K, s: s.s }; })()]) : [];
+    tags.forEach(function (g) {
+      var show = g._want, ax = g._x + g._w / 2, ay = g._y + g._h;
+      if (show && placed.some(function (p) { return g._x < p[0] + p[2] + 3 && g._x + g._w + 3 > p[0] && g._y < p[1] + p[3] + 3 && g._y + g._h + 3 > p[1]; })) show = false;
+      if (show && D3) show = !bodies.some(function (o) { return o.b !== g._b && o.s > g._s * 1.08 && Math.hypot(o.x - ax, o.y - ay) < o.r; });
+      if (show) placed.push([g._x, g._y, g._w, g._h]);
+      g.style.visibility = show ? "" : "hidden";
+      g.style.transform = "translate(" + g._x.toFixed(1) + "px," + g._y.toFixed(1) + "px)";
+    });
   }
 
   // ---- faces: eyes with lids, a mouth that smiles or frowns, brows, blush, a tint, and little signs ----
@@ -1378,7 +1396,7 @@
     var jit = t < (b.tickleUntil || 0) && !reduce ? (Math.random() - .5) * 3 : 0;
     var sb = sv(b), hid = D3 && D3.hideEl === b.el;
     b.el.style.visibility = hid ? "hidden" : ""; if (b.tag) b.tag.style.visibility = hid ? "hidden" : "";
-    b.el.style.transform = "translate(" + (sb.x - S / 2 + jit).toFixed(1) + "px," + (sb.y - S / 2).toFixed(1) + "px)" + (D3 ? " scale(" + sb.s.toFixed(3) + ")" : "");
+    b.el.style.transform = "translate(" + (sb.x - S / 2 + jit).toFixed(1) + "px," + (sb.y - S / 2).toFixed(1) + "px)" + (D3 ? " scale(" + Math.max(sb.s, 22 / (r * K)).toFixed(3) + ")" : "");
     var mx = 0; for (i = 0; i < b.pts.length; i++) mx = Math.max(mx, Math.abs(b.pts[i].x), Math.abs(b.pts[i].y));
     var f3 = D3 && stage.classList.contains("in3d");
     if (!f3 && (mx > .05 || !b.flat)) { var dd = pathD(b.pts, r); b.bp.setAttribute("d", dd); b.bg.setAttribute("d", dd); b.flat = mx <= .05; }
@@ -1395,7 +1413,7 @@
     if (hp && !f3) b.body.setAttribute("transform", b.body.getAttribute("transform") + " scale(" + (1 + .035 * hp).toFixed(3) + ")");
     if (b.tag) b.tag.style.opacity = b.bub.hidden && !b.hsHidden ? "" : "0";  // the name steps aside while its owner talks (or hides)
     if (b.hsHidden && !b.bub.hidden) b.bub.hidden = true;
-    if (b.tag) b.tag.style.transform = "translate(" + (sb.x * K - boxOf(b.tag, K)._mw / 2).toFixed(1) + "px," + ((sb.y - r * sb.s) * K - 20).toFixed(1) + "px)";
+    if (b.tag) { var tbx = boxOf(b.tag, K); b.tag._x = sb.x * K - tbx._mw / 2; b.tag._y = (sb.y - r * sb.s) * K - 20; b.tag._w = tbx._mw; b.tag._h = tbx._mh || 18; b.tag._s = sb.s; b.tag._me = !!b.f.player; b.tag._b = b; b.tag._want = b.tag.style.opacity !== "0" && !hid; }
     var fy = surfaceY(b), sc = clamp(1 - (fy - b.y) / 300, .35, 1);
     if (!f3) b.sh.style.transform = "translate(" + (b.x - r * .8).toFixed(1) + "px," + (fy + r - 6).toFixed(1) + "px) scale(" + sc.toFixed(2) + ")"; b.sh.style.opacity = sc.toFixed(2);
     if (!b.bub.hidden) {
@@ -1507,6 +1525,12 @@
   document.getElementById("pp-leave").addEventListener("click", leaveGame);
   // platformer feel: acceleration, jump buffer + coyote time, variable jump height, one air jump,
   // S = crouch (hold, then Space = high jump) or ground-pound in the air
+  var bannerEl = document.createElement("div"); bannerEl.className = "d3-banner"; bannerEl.hidden = true; bannerEl.setAttribute("role", "status"); stage.appendChild(bannerEl);
+  var bannerTO = 0;
+  function banner(text) {
+    bannerEl.textContent = text; bannerEl.hidden = false; bannerEl.classList.remove("show"); void bannerEl.offsetWidth; bannerEl.classList.add("show");
+    clearTimeout(bannerTO); bannerTO = setTimeout(function () { bannerEl.hidden = true; }, 2000);
+  }
   function playerControl(b, fy, dt, t) {
     var onF = b.y >= fy - 1 || t - (b.supportT || 0) < 60;
     if (onF) { b.coyote = t; if (b.vy >= 0) b.jumps = 0; }
@@ -1543,7 +1567,7 @@
     if (t - keys.jumpAt < 120 && t < (b.poundJumpUntil || 0)) { b.vy = -PV * 1.12; b.jumps = 1; keys.jumpAt = 0; b.poundJumpUntil = 0; b.spin += 360; tone(260, 900, .16, "sine", .12); }  // jump right out of a slam: higher
     if (t - keys.jumpAt < 120) {
       if (t - (b.coyote || 0) < 100 && !b.jumps) {
-        b.vy = charged ? -PV * 1.3 : -PV; b.jumps = 1; b.cut = false; keys.jumpAt = 0; b.svy += .25; b.crouchT = 0;
+        b.vy = charged ? -PV * 1.3 : -PV; b.jumps = 1; b.cut = false; keys.jumpAt = 0; b.sy = .82; b.sx = 1.12; b.svy = 0; b.crouchT = 0;
         tone(charged ? 260 : 320, charged ? 820 : 620, .14, "sine", .12);
       } else if (b.jumps < 2 && !b.pound) {
         b.vy = -PV * .85; b.jumps = 2; b.cut = false; keys.jumpAt = 0; var sj = sv(b); dust(sj.x, sj.y + b.f.r * sj.s); tone(520, 940, .12, "sine", .1);
@@ -1562,6 +1586,8 @@
       TOUCH ? T("◀ ▶ للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية، واضغطه مع «قفز» لقفزة عالية", "◀ ▶ to move · Jump (again in the air) · ▼ in the air slams down; hold it, then Jump, for a high jump") :
       T("\u2066A / D\u2069 للحركة · المسافة للقفز (مرة ثانية في الهواء) · \u2066S\u2069 في الهواء ضربة أرضية، وعلى الأرض تجمّع لقفزة عالية", "A and D to move · Space to jump (again in the air) · S in the air slams down, on the ground it charges a high jump");
     if (hud.textContent !== h) hud.textContent = h;
+    var role = b.other && (b.mode === "tag" || b.mode === "flee") ? b.mode + b.other.f.id : "";
+    if (role !== b.role) { b.role = role; if (role) banner(b.mode === "tag" ? T("أنت المطارِد! المس " + b.other.f.name, "You're it! Tag " + b.other.f.name) : T("اهرب! " + b.other.f.name + " يطاردك", "Run! " + b.other.f.name + " is chasing you")); }
   }
   // e.code, not e.key: WASD stay in the same place on an Arabic keyboard layout
   function moveKey(e, down) {
@@ -1579,7 +1605,7 @@
   function slam(b) {
     var fy = floorY(b), hit = false;
     b.vy = -3; b.svy -= .3; b.svx += .25; b.poundLock = true; sfx("splat");
-    hitStopUntil = performance.now() + 70;  // a few frozen frames sell the impact
+    hitStop(70);  // a few frozen frames sell the impact
     if (D3) D3.shake(.55);
     var sl = sv({ x: b.x, y: fy, z: b.z }); dust(sl.x, sl.y + b.f.r * sl.s);
     (mainAway ? [] : [pos]).concat(others()).forEach(function (o) {
@@ -1589,6 +1615,8 @@
     if (hit) say(line("pound"), "pound", 2500);
     notice(b.x, b.z, 260, "slam");
   }
+  var lastStopAt = 0;
+  function hitStop(ms) { var n = performance.now(); if (n - lastStopAt < 300 || reduce) return; lastStopAt = n; hitStopUntil = n + ms; }
   function dust(x, y) {
     if (reduce) return;
     for (var i = 0; i < 6; i++) {
@@ -2491,11 +2519,21 @@
     gems.splice(gems.indexOf(g), 1); g.el.remove(); nextGem = performance.now() + 20000 + Math.random() * 25000;
     store.stars = (store.stars || 0) + 1; saveStore(); tickClock();
     notice(g.x, g.z, 150, "star");
-    tone(660, 660, .1, "sine", .08); tone(880, 880, .1, "sine", .08, .09); tone(1320, 1320, .18, "sine", .07, .18);
+    var tn = performance.now(); chimeN = tn - chimeAt < 2000 ? chimeN + 1 : 0; chimeAt = tn; var up = Math.pow(2, chimeN / 12);  // quick pickups climb a semitone each
+    tone(660 * up, 660 * up, .1, "sine", .08); tone(880 * up, 880 * up, .1, "sine", .08, .09); tone(1320 * up, 1320 * up, .18, "sine", .07, .18);
+    var sg0 = sv(g), plus = document.createElement("span"); plus.className = "plus1"; plus.textContent = "+1"; plus.setAttribute("aria-hidden", "true");
+    plus.style.setProperty("--x", (sg0.x * K - 8).toFixed(0) + "px"); plus.style.setProperty("--y", (sg0.y * K - 20).toFixed(0) + "px");
+    labels.appendChild(plus); plus.addEventListener("animationend", function () { plus.remove(); });
     if (NEED[5] === store.stars || NEED[6] === store.stars || NEED[7] === store.stars) { renderSwatches(); say(line("unlock"), "unlock", 500); }
     else say(line("gotStar", { s: num(store.stars) }), "star", 4000);
   }
+  var chimeAt = 0, chimeN = 0;
   function gemStep(t) {
+    if (player) gems.forEach(function (g) {  // a magnet: within 60 px, after a moment, it flies to you
+      var dx = player.x - g.x, dy = player.y - g.y, dz = D3 ? player.z - g.z : 0, d = Math.hypot(dx, dy, dz);
+      if (d < 60 + player.f.r) { g.near = g.near || t; if (t - g.near > 150) { g.vel = Math.min(14, (g.vel || 0) + .8); g.x += dx / d * g.vel * .5; g.y += dy / d * g.vel * .5; if (D3) g.z += dz / d * g.vel * .5; } }
+      else { g.near = 0; g.vel = 0; }
+    });
     if (!gems.length && t > nextGem) spawnGem();
     gems.slice().forEach(function (g) { if (player && Math.hypot(player.x - g.x, player.y - g.y, player.z - g.z) < player.f.r + 12) collectGem(g); });
   }

@@ -70,7 +70,7 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .dust { position: absolute; left: 0; top: 0; z-index: 1; width: 10px; height: 10px; border-radius: 50%; background: var(--border); pointer-events: none; animation: dilmoDust .5s ease-out forwards; }
 @keyframes dilmoDust { from { opacity: .9; transform: translate(var(--x), var(--y)) scale(.6); } to { opacity: 0; transform: translate(calc(var(--x) + var(--dx)), calc(var(--y) - 14px)) scale(1.4); } }
 /* names sit on a small pill so they read on any sky */
-.dilmo .name-tag { position: absolute; left: 0; top: 0; z-index: 3; font-size: .72rem; font-weight: 700; color: var(--fg); pointer-events: none; white-space: nowrap;
+.dilmo .name-tag { position: absolute; left: 0; top: 0; z-index: 3; transition: opacity .15s; font-size: .72rem; font-weight: 700; color: var(--fg); pointer-events: none; white-space: nowrap;
   padding: 0 8px; border-radius: var(--radius-pill); background: color-mix(in oklab, var(--bg) 70%, transparent); }
 
 /* world life: Bahrain time of day, bench, bushes, ball, stars */
@@ -169,6 +169,15 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .d3-lab { font-size: .8rem; font-weight: 700; color: var(--muted); }
 .dilmo .d3-set .seg button { min-height: 38px; padding: 2px 12px; font-size: .85rem; }
 .dilmo .d3-note { margin: 0; font-size: .8rem; color: var(--muted); }
+/* the chase banner (whose turn it is), the "+1" of a star */
+.dilmo .d3-banner { position: absolute; top: 52px; left: 50%; z-index: 8; transform: translateX(-50%); padding: 6px 18px; border-radius: var(--radius-pill); font-weight: 800; font-size: .95rem;
+  background: color-mix(in oklab, var(--bg) 88%, transparent); color: var(--fg); box-shadow: 0 6px 18px rgba(0, 0, 0, .18); pointer-events: none; white-space: nowrap; }
+.dilmo .d3-banner[hidden] { display: none; }
+.dilmo .d3-banner.show { animation: dilmoBanner .16s ease-out; }
+@keyframes dilmoBanner { from { transform: translateX(-50%) scale(.7); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+.dilmo .plus1 { position: absolute; left: 0; top: 0; z-index: 6; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, .4); pointer-events: none; animation: dilmoPlus .8s ease-out forwards; }
+@keyframes dilmoPlus { from { transform: translate(var(--x), var(--y)); opacity: 1; } to { transform: translate(var(--x), calc(var(--y) - 30px)); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .dilmo .d3-banner.show, .dilmo .plus1 { animation: none; } }
 .dilmo .portal { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; border-radius: 50%; opacity: 0; border: 3px solid #dffff2;
   box-shadow: 0 0 30px 10px color-mix(in oklab, var(--cmp) 70%, #fff), inset 0 0 44px 8px color-mix(in oklab, var(--cmp) 60%, transparent); }
 .dilmo .portal-ask { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--fg); padding: 16px 18px; max-width: min(380px, 92vw); font: inherit; }
