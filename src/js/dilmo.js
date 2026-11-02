@@ -926,8 +926,9 @@
       if (hs && hs.b === b) { endHideSeek(true); return; }
       b.awakeUntil = performance.now() + 20000;
       if (b.asleep) { b.asleep = false; b.vy = -6; bsay(b, line("buddyWoke")); return; }
+      if (b.pokeLock > performance.now()) return;  // still sulking after the lockout: no bounce, no new line
       b.pokes = (b.pokes || []).filter(function (x) { return performance.now() - x < 6000; }); b.pokes.push(performance.now());
-      if (b.pokes.length >= 4 && !f.player) { b.pokes = []; feel(b.em, "anger", .4); bsay(b, "…"); b.vx = (b.x < (player ? player.x : pos.x) ? -1 : 1) * 3; b.vy = -4; b.next = performance.now() + 5000; b.mode = "wander"; return; }  // enough: turns away
+      if (b.pokes.length >= 4 && !f.player) { b.pokes = []; b.pokeLock = performance.now() + 5000; feel(b.em, "anger", .4); bsay(b, "…"); b.vx = (b.x < (player ? player.x : pos.x) ? -1 : 1) * 3; b.vy = -4; b.next = performance.now() + 5000; b.mode = "wander"; return; }  // enough: turns away
       b.vy = -7 * f.energy; b.joy = 1; b.svy -= .2; sfx("pop"); dent(d.lx, d.ly, 10 * sc, b.pts);
       if (f.player) return;  // your own character just squishes, it doesn't talk back at you
       bsay(b, line(f.shy ? "buddyShyPoke" : "buddyPoke"));
@@ -985,8 +986,9 @@
     var r = b.f.r;
     if ((b.mode === "tag" || b.mode === "flee") && b.other) { b.vy = -6; }  // the round ends: a happy hop
     b.next = t + (1800 + Math.random() * 2600) / b.f.energy; b.mode = "wander"; b.other = null; b.tx = b.tz = null; b.crouch = false; b.fslot = null;
-    if (song) { b.mode = "sing"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 14), r, W - r); b.tz = nearZ(pos, r); b.next = t + 800; return; }
+    if (song) { b.mode = "sing"; if (t - (b.stuckAt || -1e9) > 8000) { b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 14), r, W - r); b.tz = nearZ(pos, r); } b.next = t + 800; return; }
     if (isNight && t > (b.awakeUntil || 0)) { b.mode = "sleep"; b.tx = b.home; b.tz = b.homeZ; b.next = t + 6000; return; }  // bedtime in Bahrain
+    if (player && b.f.energy > .4 && Math.hypot(ball.x - player.x, D3 ? ball.z - player.z : 0) > 200 && Math.hypot(ball.vx, ball.vz) < 1 && !buddies.some(function (x) { return x.mode === "ball"; })) { b.mode = "ball"; b.next = t + 5000; return; }  // fetch: a ball left far from you gets brought back
     if (player && bfOf(b) >= .5 && Math.random() < .5) { b.mode = "follow"; b.next = t + 5000; return; }  // close friends tag along
     if (mood.annoy > .5 || mood.joy < -.2) { b.mode = "comfort"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 12), r, W - r); b.tz = nearZ(pos, r); b.next = t + 2500; return; }
     var sh0 = sv(b);
@@ -1013,7 +1015,7 @@
     if (!mainAway) L.push([pos.x, pos.z]);
     var best = [b.x, b.z], bd = -1;
     for (var i = 0; i < 6; i++) {
-      var x = dir ? clamp(b.x + dir * (80 + Math.random() * 260), r, W - r) : r + Math.random() * (W - 2 * r), z = D3 ? r + Math.random() * Math.max(0, DZ - 2 * r) : 0;
+      var x = dir ? clamp(b.x + dir * (80 + Math.random() * 260), r + 60, W - r - 60) : r + 60 + Math.random() * Math.max(0, W - 2 * r - 120), z = D3 ? r + Math.random() * Math.max(0, DZ - 2 * r) : 0;
       if (D3 && (Math.abs(x - bench.x - bench.w / 2) < bench.w / 2 + 50 && Math.abs(z - bench.z) < 70)) continue;
       if (D3 && bushes.some(function (bu) { return Math.hypot(x - bu.cx, z - bu.cz) < 60; })) continue;
       var d = L.reduce(function (m, o) { return Math.min(m, Math.hypot(o[0] - x, o[1] - z)); }, 1e9);
@@ -1024,7 +1026,7 @@
   // free floor ahead of b in direction dir before it would touch Dilmo or a friend (the visitor walks through)
   function gapAhead(b, ux, uz) {  // (ux, uz): a unit direction on the floor; a plain -1/1 means along x
     uz = uz || 0;
-    var L = buddies.filter(function (x) { return x !== b && !x.f.player; }).map(function (x) { return { x: x.x, y: x.y, z: x.z, r: x.f.r }; });
+    var L = buddies.filter(function (x) { return x !== b && (!x.f.player || b.mode === "follow"); }).map(function (x) { return { x: x.x, y: x.y, z: x.z, r: x.f.r }; });  // followers don't walk into you
     if (!mainAway) L.push({ x: pos.x, y: pos.y, z: pos.z, r: R });
     return L.reduce(function (m, o) { var rx = o.x - b.x, rz = o.z - b.z, d = rx * ux + rz * uz, lat = Math.abs(rx * uz - rz * ux); return d > 0 && lat < b.f.r + o.r && Math.abs(o.y - b.y) < b.f.r + o.r ? Math.min(m, d - b.f.r - o.r - 6) : m; }, 1e9);
   }
@@ -1076,13 +1078,24 @@
         var goal = player || buddies.filter(function (x) { return x !== b; }).sort(function (p, q) { return Math.hypot(q.x - ball.x, q.z - ball.z) - Math.hypot(p.x - ball.x, p.z - ball.z); })[0] || { x: W / 2, z: DZ / 2 };
         var gdx = goal.x - ball.x, gdz = D3 ? goal.z - ball.z : 0, gl = Math.hypot(gdx, gdz) || 1, ux2 = gdx / gl, uz2 = gdz / gl;
         var bx = ball.x - ux2 * (r + ball.r + 18), bz = ball.z - uz2 * (r + ball.r + 18);
-        if (Math.hypot(b.x - bx, b.z - bz) < 24 && b.y >= fy - 1) { b.vx = ux2 * (3 + 2 * b.f.energy); b.vz = uz2 * (3 + 2 * b.f.energy); b.vy = -5; b.tx = b.tz = null; b.mode = "wander"; b.next = t + 1500; }
+        var sx = bx - b.x, sz = bz - b.z, sl = Math.hypot(sx, sz) || 1, al = ((ball.x - b.x) * sx + (ball.z - b.z) * sz) / sl, inWay = al > 0 && al < sl && Math.abs((ball.x - b.x) * sz - (ball.z - b.z) * sx) / sl < r + ball.r + 10;
+        if (!D3 && (bx < r || bx > W - r)) {  // flat: no room behind a ball at the end wall, so walk up and flick it out toward the middle
+          var cs = ball.x < W / 2 ? 1 : -1;
+          if (Math.abs(b.x - ball.x) < r + ball.r + 20 && b.y >= fy - 1) { ball.vx = cs * 4; ball.vy = -11; b.vy = -4; b.tx = null; b.mode = "wander"; b.next = t + 1500; }
+          else b.tx = clamp(ball.x + cs * (r + ball.r + 6), r, W - r);
+        }
+        else if (Math.hypot(b.x - bx, b.z - bz) < 24 && b.y >= fy - 1) { b.vx = ux2 * (4 + 2 * b.f.energy); b.vz = uz2 * (4 + 2 * b.f.energy); b.vy = -2; /* a low run through it: a high hop lands on top and only pops it */ b.tx = b.tz = null; b.mode = "wander"; b.next = t + 1500; }
+        else if (inWay && !D3) { if (al < r + ball.r + 30 && b.y >= fy - 1) { b.vx = Math.sign(sx) * 3.5; b.vy = -11; } b.tx = b.y >= fy - 1 && al >= r + ball.r + 30 ? clamp(bx, r, W - r) : null; }  // flat: hop over it
+        else if (inWay) { var sg2 = (b.x - ball.x) * -uz2 + (b.z - ball.z) * ux2 >= 0 ? 1 : -1, o2 = r + ball.r + 40; b.tx = clamp(ball.x - sg2 * uz2 * o2, r, W - r); b.tz = clamp(ball.z + sg2 * ux2 * o2, r, DZ - r); }  // walk round it
         else { b.tx = clamp(bx, r, W - r); b.tz = D3 ? clamp(bz, r, DZ - r) : null; }
       }
       // a target that isn't getting closer for 3 s is given up (no more hopping into a corner for 15 s)
       if (b.tx != null && !b.f.player) {
         if (b.tgtKey !== Math.round(b.tx) + "|" + Math.round(b.tz || 0)) { b.tgtKey = Math.round(b.tx) + "|" + Math.round(b.tz || 0); b.tgtAt = t; b.tgtFrom = [b.x, b.z]; }
-        else if (t - b.tgtAt > 3000 && Math.hypot(b.x - b.tgtFrom[0], b.z - b.tgtFrom[1]) < 20 && !/^(tag|flee|hs|sleep)$/.test(b.mode)) { b.tx = b.tz = null; b.next = t; b.tgtKey = ""; }
+        else if (t - b.tgtAt > 3000) {  // every 3 s: less than 20 px of progress in that window = give up (no more hopping in place at the bench)
+          if (Math.hypot(b.x - b.tgtFrom[0], b.z - b.tgtFrom[1]) < 20 && !/^(tag|flee|hs|sleep)$/.test(b.mode)) { b.tx = b.tz = null; b.next = t; b.tgtKey = ""; b.stuckAt = t; }
+          else { b.tgtAt = t; b.tgtFrom = [b.x, b.z]; }
+        }
       }
       if (b.mode === "comfort" && Math.hypot(pos.x - b.x, pos.y - b.y, pos.z - b.z) < R + r + 24) {
         b.mode = "wander"; feel(b.em, "love", .45); bsay(b, line("comfort")); mood.annoy *= .4; mood.joy = Math.max(mood.joy, .3); befriend(.01);
@@ -1098,10 +1111,10 @@
         if (dist > 14) {
           // each hop is sized to the room ahead and the distance left, so they walk up to someone and stop
           // beside them (or land on their spot) instead of hopping into them and bouncing around
-          var ux = dx / dist, uz = dz / dist, chase = b.mode === "tag" || b.mode === "flee", hvy = 3 + 1.5 * b.f.energy, airT = 2 * hvy / .75;
+          var ux = dx / dist, uz = dz / dist, chase = b.mode === "tag" || b.mode === "flee" || b.mode === "hs" || b.mode === "ball", hvy = 3 + 1.5 * b.f.energy, airT = 2 * hvy / .75;
           var room = gapAhead(b, ux, uz), step = Math.min(2.5 + 2.5 * b.f.energy, dist / airT, room / airT);
           if (room < 6 && chase) { b.vx = ux * (3 + 2.5 * b.f.energy); b.vz = uz * (3 + 2.5 * b.f.energy); b.vy = -9 - 2 * b.f.energy; }  // in a chase: leap over
-          else if (step < .6) { b.vx = b.vz = 0; if (!chase) { if (b.mode === "wander") { var rs1 = roomySpot(b); b.tx = rs1[0]; b.tz = D3 ? rs1[1] : null; } else { b.tx = b.tz = null; b.next = Math.min(b.next, t + 900); } } }  // someone's right there: turn round (or wait beside them)
+          else if (step < .6) { b.vx = b.vz = 0; if (!chase) { if (b.mode === "wander") { var rs1 = roomySpot(b); b.tx = rs1[0]; b.tz = D3 ? rs1[1] : null; } else if (b.mode !== "follow") { b.tx = b.tz = null; b.next = Math.min(b.next, t + 900); } } }  // someone's right there: turn round (or wait beside them)
           else { b.vx = ux * step; b.vz = uz * step; b.vy = -hvy; }
         } else if (b.mode !== "tag" && b.mode !== "flee") { b.tx = null; b.tz = null; }
       }
@@ -1188,16 +1201,17 @@
         var pl = A.b && A.b.f.player ? A : B, ot = pl === A ? B : A, sg = pl === A ? 1 : -1, ov = min - d, fpv = D3.viewNow() === "first";
         var share = fpv ? .3 : ot.main ? .45 : .9;  // first person: a body is solid (you never end up inside it); Dilmo is heavier
         if (!ot.fixed) {
-          ot.o.x += sg * nx * ov * share; ot.o.z += sg * nz * ov * share;
+          var sid = ot.b && t < (ot.b.sideUntil || 0), pvn = Math.hypot(pl.o.vx, pl.o.vz) || 1, pa = sid ? (nx * pl.o.vx + nz * pl.o.vz) / pvn : 0, mx2 = nx - pa * pl.o.vx / pvn, mz2 = nz - pa * pl.o.vz / pvn;  // mid side-step: pushed only sideways
+          ot.o.x += sg * mx2 * ov * share; ot.o.z += sg * mz2 * ov * share;
           var push = sg * (nx * pl.o.vx + nz * pl.o.vz), kf = 1 - Math.pow(.65, dt);
-          if (push > 0) { ot.o.vx += (pl.o.vx - ot.o.vx) * kf; ot.o.vz += (pl.o.vz - ot.o.vz) * kf; }  // carried along, never faster than you
+          if (push > 0 && !sid) { ot.o.vx += (pl.o.vx - ot.o.vx) * kf; ot.o.vz += (pl.o.vz - ot.o.vz) * kf; }  // carried along, never faster than you
           if (ot.b && t - (ot.b.shovedAt || 0) > 300) { ot.b.shovedAt = t; ot.b.svy -= .1; }
           if (ot.b && !ot.b.f.player && /^(wander|follow|ball|visit)$/.test(ot.b.mode)) {
             if (!ot.b.shoveStart || t - ot.b.shoveSeen > 200) ot.b.shoveStart = t;
             ot.b.shoveSeen = t;
             if (t - ot.b.shoveStart > 150 && ot.o.y >= floorY(ot.b) - 1) {  // out of the way: a hop to the side with more room
               var pvl = Math.hypot(pl.o.vx, pl.o.vz) || 1, qx = -pl.o.vz / pvl, qz = pl.o.vx / pvl, sd = (ot.o.x - pl.o.x) * qx + (ot.o.z - pl.o.z) * qz >= 0 ? 1 : -1;
-              ot.o.vx = qx * sd * 3.5; ot.o.vz = qz * sd * 3.5; ot.o.vy = -4.5; ot.b.shoveStart = 0; ot.b.tx = ot.b.tz = null; ot.b.next = t + 1200;
+              ot.o.vx = qx * sd * 3.5; ot.o.vz = qz * sd * 3.5; ot.o.vy = -4.5; ot.b.shoveStart = 0; ot.b.sideUntil = t + 400; ot.b.tx = ot.b.tz = null; ot.b.next = t + 1200;
             }
           }
         }
@@ -1208,14 +1222,19 @@
       var kicker = A.ball ? B : B.ball ? A : null;
       if (kicker) {
         var bsg = kicker === A ? 1 : -1, kx = bsg * nx, ky = bsg * ny, kz = bsg * nz;  // from the kicker toward the ball
-        ball.x = kicker.o.x + kx * min; ball.y = Math.min(ball.y, kicker.o.y + ky * min); ball.z = kicker.o.z + kz * min;  // never inside anyone
+        var bdy = ball.y - kicker.o.y, hd2 = min * min - bdy * bdy, hn = Math.hypot(kx, D3 ? kz : 0);
+        if (hd2 > 0 && hn > .05 && ky < .6) { var hdist = Math.sqrt(hd2); ball.x = clamp(kicker.o.x + kx / hn * hdist, ball.r, W - ball.r); if (D3) ball.z = clamp(kicker.o.z + kz / hn * hdist, ball.r, DZ - ball.r); }  // side by side: out sideways at its own height
+        else { ball.x = clamp(kicker.o.x + kx * min, ball.r, W - ball.r); ball.y = clamp(kicker.o.y + ky * min, ball.r, ground + R - ball.r); if (D3) ball.z = clamp(kicker.o.z + kz * min, ball.r, DZ - ball.r); }  // never inside anyone
+        if (ball.y >= ground + R - ball.r - .5 && ball.vy > 0) ball.vy = 0;  // resting against someone on the floor: no falling speed piling up
+        var ex = ball.x - kicker.o.x, ey = ball.y - kicker.o.y, ez = ball.z - kicker.o.z, el = Math.hypot(ex, ey, ez) || 1;
+        if (el < min && !kicker.fixed) { kicker.o.x -= ex / el * (min - el); kicker.o.y -= ey / el * (min - el); if (D3) kicker.o.z -= ez / el * (min - el); }  // the ball is pinned (floor, fence): the body gives way
         if (t - (kicker.o.kickAt || 0) < 180) continue;
-        var hl = Math.hypot(kx, kz) || 1, hx2 = kx / hl, hz2 = kz / hl, kin = (kicker.o.vx || 0) * hx2 + (kicker.o.vz || 0) * hz2;
-        if (ky > .6) { ball.vy = -10; kicker.o.kickAt = t; }  // landed on it: it pops up
-        else if (kin > 1.5) {  // a real kick: faster than you, with a little lift
+        var hl = Math.hypot(kx, kz) || 1, hx2 = kx / hl, hz2 = kz / hl, kin = (kicker.o.vx || 0) * hx2 + (kicker.o.vz || 0) * hz2, krv = kin - (ball.vx * hx2 + (D3 ? ball.vz * hz2 : 0));
+        if (ky > .75 && (kicker.o.vy || 0) > 1) { ball.vy = -10; kicker.o.kickAt = t; }  // came down on top of it: it pops up
+        else if (krv > 4) {  // a real kick (a run into it, not a walk with it): faster than you, with a little lift
           var ks = 1.6 * kin + 1.5; ball.vx = hx2 * ks; if (D3) ball.vz = hz2 * ks; if (ball.y >= ground + R - ball.r - 1) ball.vy = -Math.min(7, 2.5 + .45 * kin);
           kicker.o.kickAt = t; sfx("pop"); tone(200 + 20 * kin, 140, .07, "sine", .06);
-        } else if (kin > 0) { ball.vx = hx2 * 1.1 * Math.max(kin, .6); if (D3) ball.vz = hz2 * 1.1 * Math.max(kin, .6); }  // a gentle touch: a dribble
+        } else if (kin > 0) { var ds = Math.min(2.4, 1.1 * Math.max(kin, .6)); ball.vx = hx2 * ds; if (D3) ball.vz = hz2 * ds; }  // a gentle touch: a dribble
         continue;
       }
       if (!ms) continue;
@@ -2337,6 +2356,15 @@
       });
     });
   }
+  function fetchStep(t) {
+    if (!player || t < (fetchNext || 0) || Math.hypot(ball.vx, ball.vz) > 1 || Math.hypot(ball.x - player.x, D3 ? ball.z - player.z : 0) < 200) return;
+    fetchNext = t + 1000;
+    if (buddies.some(function (x) { return x.mode === "ball"; })) return;
+    var c = others().filter(function (b) { return b.f.energy > .4 && !b.asleep && !b.drag && /^(wander|follow)$/.test(b.mode); })
+      .sort(function (p, q) { return Math.hypot(p.x - ball.x, p.z - ball.z) - Math.hypot(q.x - ball.x, q.z - ball.z); })[0];
+    if (c) { c.mode = "ball"; c.next = t + 9000; c.tx = c.tz = null; c.fslot = null; }
+  }
+  var fetchNext = 0;
   function ballStep(dt) {
     var fl = ground + R - ball.r, py = ball.y;
     ball.vy += .7 * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt; ball.z += ball.vz * dt;
@@ -2348,8 +2376,8 @@
       ball.vx *= bk; ball.vz *= bk; if (bs < .05) ball.vx = ball.vz = 0;
     }
     if (ball.y >= fl - .5) {
-      if (ball.x < 40) ball.vx += .06 * dt; else if (ball.x > W - 40) ball.vx -= .06 * dt;
-      if (D3) { if (ball.z < 40) ball.vz += .06 * dt; else if (ball.z > DZ - 40) ball.vz -= .06 * dt; }
+      if (ball.x < 60) ball.vx += .12 * dt; else if (ball.x > W - 60) ball.vx -= .12 * dt;
+      if (D3) { if (ball.z < 60) ball.vz += .12 * dt; else if (ball.z > DZ - 60) ball.vz -= .12 * dt; }
     }
     if (ball.x < ball.r || ball.x > W - ball.r) { ball.x = clamp(ball.x, ball.r, W - ball.r); ball.vx = -ball.vx * .75; }
     if (D3 && (ball.z < ball.r || ball.z > DZ - ball.r)) { ball.z = clamp(ball.z, ball.r, DZ - ball.r); ball.vz = -ball.vz * .75; }
@@ -2387,7 +2415,7 @@
   var hs = null, hsNext = 0;
   function startHideSeek(t) {
     var m = buddies.filter(function (b) { return b.f.id === "mawja"; })[0];
-    if (!m || m.drag) return;
+    if (!m || m.drag || /^(tag|flee)$/.test(m.mode)) return;  // never pull her out of a game of tag
     hs = { b: m, bush: pick(bushes), until: t + 25000, hidden: false, spotAt: 0, rustleAt: t + 4000 };
     if (tagNext < t + 30000) tagNext = t + 30000;  // no tag while she hides
     m.mode = "hs"; m.next = Infinity;
@@ -2830,7 +2858,7 @@
 
     buddies.forEach(function (b) { buddyStep(b, t, dt); });
     collideAll(t, dt); solidProps(dt);
-    ballStep(dt); gemStep(t); hsStep(t);
+    ballStep(dt); gemStep(t); hsStep(t); fetchStep(t);
 
     var lx = 0, ly = 0;
     if (asleep) ly = .4;
