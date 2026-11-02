@@ -1401,15 +1401,16 @@
     var f3 = D3 && stage.classList.contains("in3d");
     if (!f3 && (mx > .05 || !b.flat)) { var dd = pathD(b.pts, r); b.bp.setAttribute("d", dd); b.bg.setAttribute("d", dd); b.flat = mx <= .05; }
     if (!f3) b.body.setAttribute("transform", "rotate(" + b.spinA.toFixed(1) + ") translate(0 " + r + ") rotate(" + b.tilt.toFixed(2) + ") scale(" + clamp(b.sx, .8, 1.25).toFixed(3) + " " + clamp(b.sy, .75, 1.22).toFixed(3) + ") translate(0 " + -r + ")");
-    b.face.setAttribute("transform", "translate(" + (b.lx * r * .15).toFixed(2) + " " + (b.ly * r * .1).toFixed(2) + ")");
+    var faceNow = !f3 || t - b.lastDraw >= 30;  // in 3D the face is only copied into its texture every 30 ms: drawing it on every 179 Hz frame was wasted work
+    if (faceNow) b.face.setAttribute("transform", "translate(" + (b.lx * r * .15).toFixed(2) + " " + (b.ly * r * .1).toFixed(2) + ")");
     var bl = t - b.blink < 240 ? Math.sin(Math.PI * (t - b.blink) / 240) : 0;
     var k = r / R, erx = 6.24, ery = Math.max(9.12 * (1 - .34 * bl) * (1 + .12 * b.joy) * (song ? .8 : 1), erx * (bl ? .95 : 1.08));
     var mrx = 4.32, mry = 5.76, sp3 = b.speech && b.speech.syl[Math.floor((t - b.speech.t0) / SYL)], sn = song && songNote(t);
     if (sp3) { var o3 = Math.pow(Math.sin(Math.PI * ((t - b.speech.t0) % SYL) / SYL), .6), F = MOUTH[sp3.v]; mry *= .7 + F[0] * o3; mrx *= 1 + F[1] * o3; }
     else if (sn) { var o4 = Math.sqrt(Math.min(1, Math.sin(Math.PI * clamp(sn.p, 0, 1)) * 1.6)); mry *= 1 + 1.2 * o4; }
-    var bdt = clamp((t - b.lastDraw) / 16.67, 0, 4); b.lastDraw = t; fadeFeel(b.em, bdt);
-    var E = b.em, hp = renderFace(b.FK, k, { joy: b.joy, anger: E.anger, fear: E.fear, sad: E.sad, shy: E.shy, love: E.love, conf: E.conf, heart: E.heart, sleepy: b.asleep ? 1.7 : 0 },
-      { ey: -3.84, rx: erx, ry: [ery, ery], mx: 0, mcy: 17.76, mrx: mrx, mry: Math.max(mry, mrx * 1.02), dd: b.bp.getAttribute("d"), busy: !!sp3 || !!sn }, t, bdt);
+    var E = b.em, hp = 0;
+    if (faceNow) { var bdt = clamp((t - b.lastDraw) / 16.67, 0, 4); b.lastDraw = t; fadeFeel(b.em, bdt); hp = renderFace(b.FK, k, { joy: b.joy, anger: E.anger, fear: E.fear, sad: E.sad, shy: E.shy, love: E.love, conf: E.conf, heart: E.heart, sleepy: b.asleep ? 1.7 : 0 },
+      { ey: -3.84, rx: erx, ry: [ery, ery], mx: 0, mcy: 17.76, mrx: mrx, mry: Math.max(mry, mrx * 1.02), dd: b.bp.getAttribute("d"), busy: !!sp3 || !!sn }, t, bdt); }
     if (hp && !f3) b.body.setAttribute("transform", b.body.getAttribute("transform") + " scale(" + (1 + .035 * hp).toFixed(3) + ")");
     if (b.tag) b.tag.style.opacity = b.bub.hidden && !b.hsHidden ? "" : "0";  // the name steps aside while its owner talks (or hides)
     if (b.hsHidden && !b.bub.hidden) b.bub.hidden = true;
@@ -2713,7 +2714,7 @@
   try { Object.assign(gfx, JSON.parse(localStorage.getItem(GFX_KEY) || "{}")); } catch { /* private window: defaults */ }
   function saveGfx() { try { localStorage.setItem(GFX_KEY, JSON.stringify(gfx)); } catch { /* private window */ } }
   function gfxOpts() {  // what the renderer needs; res -1 = auto (adapts), 0 = native
-    return { auto: gfx.preset === "auto", resH: gfx.res > 0 ? gfx.res : 0, aa: gfx.aa, far: gfx.far, detail: gfx.detail, vig: gfx.vig, shadows: gfx.shadows, fov: gfx.fov, sens: gfx.sens };
+    return { auto: gfx.preset === "auto", fps: gfx.fps, resH: gfx.res > 0 ? gfx.res : 0, aa: gfx.aa, far: gfx.far, detail: gfx.detail, vig: gfx.vig, shadows: gfx.shadows, fov: gfx.fov, sens: gfx.sens };
   }
   function gfxStatus() { var s = view3 ? view3.stats() : null; return s ? s.w + "×" + s.h + (s.auto ? (s.lite ? T(" · تلقائي خفيف", " · auto light") : T(" · تلقائي", " · auto")) : "") : ""; }
   var gear = document.createElement("button"); gear.type = "button"; gear.className = "d3-gear"; gear.hidden = true;
@@ -2988,17 +2989,20 @@
     orb.style.transform = "translate(" + (sM3.x - HALF + jx).toFixed(1) + "px," + (sM3.y - HALF).toFixed(1) + "px)" + (D3 ? " scale(" + sM3.s.toFixed(3) + ")" : "");
     if (!full3d) body.setAttribute("transform", "rotate(" + sp.spin.v.toFixed(1) + ") translate(0 " + R + ") rotate(" + sp.tilt.v.toFixed(2) +
       ") scale(" + clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25).toFixed(3) + " " + clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22).toFixed(3) + ") translate(0 " + -R + ")");
-    face.setAttribute("transform", "translate(" + (sp.lx.v * 7 + ox + cpx).toFixed(2) + " " + (sp.ly.v * 5 + oy + cpy).toFixed(2) + ")");
+    var faceNow = !full3d || t - lastDraw >= 30;  // same as the friends: in 3D his face is read into a texture every 30 ms
+    if (faceNow) face.setAttribute("transform", "translate(" + (sp.lx.v * 7 + ox + cpx).toFixed(2) + " " + (sp.ly.v * 5 + oy + cpy).toFixed(2) + ")");
     var rys = [0, 1].map(function (i) {
       var w = t - wink[i] < 380 ? Math.sin(Math.PI * (t - wink[i]) / 380) : 0;
       var near = cheek && (i ? cheek.gx > 0 : cheek.gx < 0) ? 1 - .25 * mood.pinch : 1;
       return ry * (1 - .5 * w) * near;
     });
+    if (faceNow) {
     var fdt = clamp((t - lastDraw) / 16.67, 0, 4); lastDraw = t;
     var asleepNow = mood.sleepy > .85;
     hbPulse = renderFace(FK, 1, { joy: mood.joy, anger: mood.annoy, fear: mood.fear, sad: mood.sad, shy: mood.shy, love: mood.love, conf: Math.max(mood.conf, mood.dizzy * .6), heart: mood.heart, sleepy: asleepNow ? 1.7 : mood.sleepy },
       { ey: ey, rx: rx, ry: rys, mx: sp.mx.v, mcy: 18 + sp.ey.v * .5, mrx: mrx, mry: mry, dd: dd, busy: t < eatUntil || !!song || (speech && t < talkUntil) }, t, fdt,
       function (h) { sfx("beat", h); });
+    }
     var sc = clamp(1 - (ground - pos.y) / 300, .35, 1);
     if (!full3d) shadowEl.style.transform = "translate(" + (pos.x - 40).toFixed(1) + "px," + (ground + R - 6) + "px) scale(" + sc.toFixed(2) + ")";
     shadowEl.style.opacity = sc.toFixed(2);

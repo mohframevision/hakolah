@@ -151,6 +151,7 @@ main.container:has(.dilmo) { max-width: none; }
    and the bodies' blur and grain filters are switched off: they were redrawn every frame for nothing */
 .dilmo .in3d .sky, .dilmo .in3d .sun, .dilmo .in3d .moon, .dilmo .in3d .clouds, .dilmo .in3d .far, .dilmo .in3d .palm-near, .dilmo .in3d .ground, .dilmo .in3d .bench, .dilmo .in3d .tint { visibility: hidden; }
 .dilmo .is3d .orb path { filter: none; }
+.dilmo .in3d .orb { will-change: auto; }  /* in the full 3D world the bodies are invisible touch targets: as 8 separate layers they were repainted every frame */
 .dilmo .d3-cross { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; z-index: 6; pointer-events: none;
   border: 2px solid rgba(255, 255, 255, .9); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); }
 .dilmo .d3-cross[hidden] { display: none; }

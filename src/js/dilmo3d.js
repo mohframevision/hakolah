@@ -424,7 +424,7 @@
     var town = [], palms = [], clouds = [], lamps = [], quality = lite ? .7 : 1, ft = { sum: 0, n: 0, good: 0, slow: 0 };
     function on(k) { return opt.auto ? !lite : !!opt[k]; }  // detail, the far ring and the vignette follow light mode in auto
     function applyScale() {
-      var dev = devicePixelRatio || 1, dpr = !opt.auto && opt.resH ? Math.min(opt.resH / H, dev * K) : !opt.auto ? Math.min(2, dev) * K : Math.min(lite ? 1 : 1.5, dev) * K * quality;
+      var dev = (devicePixelRatio || 1) * (parseFloat(document.documentElement.style.getPropertyValue("--page-zoom")) || 1), dpr = !opt.auto && opt.resH ? Math.min(opt.resH / H, dev * K) : !opt.auto ? Math.min(2, dev) * K : Math.min(lite ? 1 : 1.5, dev) * K * quality;  // wide screens zoom the page: draw for the pixels really shown, not a blurry upscale
       canvas.width = Math.max(2, Math.round(W * dpr)); canvas.height = Math.max(2, Math.round(H * dpr));
       gl.viewport(0, 0, canvas.width, canvas.height); gl.uniform2f(U.uRes, canvas.width, canvas.height);
     }
@@ -434,10 +434,11 @@
       ft.sum += ms; ft.n++;
       if (ft.n < 60) return;
       var avg = ft.sum / ft.n; ft.sum = ft.n = 0;
-      var floorQ = lite ? .42 : .55;
-      if (avg > 21 && quality > floorQ + .01) { quality = Math.max(floorQ, quality * .85); ft.good = 0; applyScale(); }
-      else if (avg > 24 && !lite && ++ft.slow >= 3) { lite = true; ft.slow = 0; applyScale(); }  // still slow at the lowest resolution: light mode
-      else if (avg < 18 && quality < 1) { ft.slow = 0; if (++ft.good >= 4) { quality = Math.min(1, quality / .88); ft.good = 0; applyScale(); } }
+      var floorQ = lite ? .42 : .55, now = performance.now(), held = now < (ft.hold || 0), bud = opt.fps ? 1000 / opt.fps : 16.7;  // the budget follows the chosen FPS cap
+      if (ft.tried) { var q0 = ft.tried; ft.tried = 0; if (avg > ft.before * .85) { quality = q0; ft.hold = now + 30000; applyScale(); return; } }  // fewer pixels did not help: the slowness is not the GPU, so keep the sharp picture
+      if (avg > bud * 1.26 && !held && quality > floorQ + .01) { ft.tried = quality; ft.before = avg; quality = Math.max(floorQ, quality * .85); ft.good = 0; applyScale(); }
+      else if (avg > bud * 1.44 && !held && !lite && ++ft.slow >= 3) { lite = true; ft.slow = 0; applyScale(); }  // still slow at the lowest resolution: light mode
+      else if (avg < bud * 1.08 && quality < 1) { ft.slow = 0; if (++ft.good >= 4) { quality = Math.min(1, quality / .88); ft.good = 0; applyScale(); } }
       else ft.good = 0;
     }
     function resize(w, h, k, dz) {
@@ -691,7 +692,7 @@
       intro: function (dur, back) { cam.yaw = Math.atan2(Math.sin(cam.yaw), Math.cos(cam.yaw)); intro = { t0: performance.now(), dur: dur, back: back, yaw: cam.yaw, pitch: cam.pitch, zoom: cam.zoom }; },
       snapshot: function () { if (last) frame(last); return canvas; },
       lite: function () { return lite; },
-      setOptions: function (o) { for (var k in o) opt[k] = o[k]; if (o.auto) { quality = lite ? .7 : 1; ft.sum = ft.n = ft.good = ft.slow = 0; } applyScale(); },
+      setOptions: function (o) { for (var k in o) opt[k] = o[k]; if (o.auto) { quality = lite ? .7 : 1; ft.sum = ft.n = ft.good = ft.slow = ft.tried = ft.hold = 0; } applyScale(); },
       stats: function () { return { w: canvas.width, h: canvas.height, lite: lite, soft: soft, auto: opt.auto, aa: !!(gl.getContextAttributes() || {}).antialias }; },
       destroy: function () { api.onLost = null; document.removeEventListener("mousemove", onMouseLook); if (locked()) document.exitPointerLock(); var ext = gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); canvas.remove(); } });
   }
