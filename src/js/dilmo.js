@@ -335,7 +335,7 @@
   };
   var mood = { joy: .2, startle: 0, dizzy: 0, annoy: 0, sleepy: 0, shy: 0, tickle: 0, curious: 0, fear: 0, sad: 0, love: 0, conf: 0, heart: 0 };
   var FK = null, hbPulse = 0, lastDraw = 0;  // Dilmo's face kit (made at start), his heartbeat pulse
-  var W = 0, ground = 0, pos = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 };
+  var W = 0, WH = 0, ground = 0, pos = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 };
   // the 3D world (dilmo3d.js): DZ = the arena's depth while it is open (0 when flat), D3 = the renderer. Positions stay in world px
   // with z for depth; sv(b) = where a body sits on the stage, in world px, with the on-screen size of one px there (identity when flat),
   // so pointer maths (pokes, drags, feeding) works in both worlds
@@ -621,7 +621,7 @@
   function measure() {
     // small stages scale the whole world down (K), so the characters keep room to move; physics stays in world px
     var w = stage.clientWidth, h = stage.clientHeight;
-    K = clamp(Math.min(w / 600, h / 440), .55, 1); world.style.setProperty("--k", K);
+    K = clamp(Math.min(w / 600, h / 440), .55, 1); world.style.setProperty("--k", K); WH = h / K;
     G = clamp(h * .13, 30, 96);  // the ground band at the bottom, in screen px
     W = w / K; ground = (h - G) / K - R;
     if (!pos.x) { pos.x = W / 2; pos.y = ground; }
@@ -1225,7 +1225,8 @@
       P.vein.setAttribute("d", "M" + v(-6, -2) + "Q" + v(-2, -2) + " " + v(-2, -6) + "M" + v(2, -6) + "Q" + v(2, -2) + " " + v(6, -2) + "M" + v(6, 2) + "Q" + v(2, 2) + " " + v(2, 6) + "M" + v(-2, 6) + "Q" + v(-2, 2) + " " + v(-6, 2));
       P.vein.style.strokeWidth = (2.2 * k).toFixed(2);
     }
-    if (vis(P.q, (E.conf - .35) * 2.5)) {
+    var qOn = vis(P.q, (E.conf - .35) * 2.5); if (P.q.style.display !== (qOn ? "" : "none")) P.q.style.display = qOn ? "" : "none";
+    if (qOn) {
       P.q.setAttribute("x", (27 * k).toFixed(2)); P.q.setAttribute("y", ((-44 + Math.sin(t / 300) * 2) * k).toFixed(2));
       P.q.style.fontSize = (20 * k).toFixed(1) + "px"; P.q.style.strokeWidth = (3 * k).toFixed(1) + "px";
     }
@@ -1257,8 +1258,9 @@
     b.el.style.visibility = hid ? "hidden" : ""; if (b.tag) b.tag.style.visibility = hid ? "hidden" : "";
     b.el.style.transform = "translate(" + (sb.x - S / 2 + jit).toFixed(1) + "px," + (sb.y - S / 2).toFixed(1) + "px)" + (D3 ? " scale(" + sb.s.toFixed(3) + ")" : "");
     var mx = 0; for (i = 0; i < b.pts.length; i++) mx = Math.max(mx, Math.abs(b.pts[i].x), Math.abs(b.pts[i].y));
-    if (mx > .05 || !b.flat) { var dd = pathD(b.pts, r); b.bp.setAttribute("d", dd); b.bg.setAttribute("d", dd); b.flat = mx <= .05; }
-    b.body.setAttribute("transform", "rotate(" + b.spinA.toFixed(1) + ") translate(0 " + r + ") rotate(" + b.tilt.toFixed(2) + ") scale(" + clamp(b.sx, .8, 1.25).toFixed(3) + " " + clamp(b.sy, .75, 1.22).toFixed(3) + ") translate(0 " + -r + ")");
+    var f3 = D3 && stage.classList.contains("in3d");
+    if (!f3 && (mx > .05 || !b.flat)) { var dd = pathD(b.pts, r); b.bp.setAttribute("d", dd); b.bg.setAttribute("d", dd); b.flat = mx <= .05; }
+    if (!f3) b.body.setAttribute("transform", "rotate(" + b.spinA.toFixed(1) + ") translate(0 " + r + ") rotate(" + b.tilt.toFixed(2) + ") scale(" + clamp(b.sx, .8, 1.25).toFixed(3) + " " + clamp(b.sy, .75, 1.22).toFixed(3) + ") translate(0 " + -r + ")");
     b.face.setAttribute("transform", "translate(" + (b.lx * r * .15).toFixed(2) + " " + (b.ly * r * .1).toFixed(2) + ")");
     var bl = t - b.blink < 240 ? Math.sin(Math.PI * (t - b.blink) / 240) : 0;
     var k = r / R, erx = 6.24, ery = Math.max(9.12 * (1 - .34 * bl) * (1 + .12 * b.joy) * (song ? .8 : 1), erx * (bl ? .95 : 1.08));
@@ -1268,17 +1270,17 @@
     var bdt = clamp((t - b.lastDraw) / 16.67, 0, 4); b.lastDraw = t; fadeFeel(b.em, bdt);
     var E = b.em, hp = renderFace(b.FK, k, { joy: b.joy, anger: E.anger, fear: E.fear, sad: E.sad, shy: E.shy, love: E.love, conf: E.conf, heart: E.heart, sleepy: b.asleep ? 1.7 : 0 },
       { ey: -3.84, rx: erx, ry: [ery, ery], mx: 0, mcy: 17.76, mrx: mrx, mry: Math.max(mry, mrx * 1.02), dd: b.bp.getAttribute("d"), busy: !!sp3 || !!sn }, t, bdt);
-    if (hp) b.body.setAttribute("transform", b.body.getAttribute("transform") + " scale(" + (1 + .035 * hp).toFixed(3) + ")");
+    if (hp && !f3) b.body.setAttribute("transform", b.body.getAttribute("transform") + " scale(" + (1 + .035 * hp).toFixed(3) + ")");
     if (b.tag) b.tag.style.opacity = b.bub.hidden ? "" : "0";  // the name steps aside while its owner talks
     if (b.tag) b.tag.style.transform = "translate(" + (sb.x * K - boxOf(b.tag, K)._mw / 2).toFixed(1) + "px," + ((sb.y - r * sb.s) * K - 20).toFixed(1) + "px)";
     var fy = surfaceY(b), sc = clamp(1 - (fy - b.y) / 300, .35, 1);
-    b.sh.style.transform = "translate(" + (b.x - r * .8).toFixed(1) + "px," + (fy + r - 6).toFixed(1) + "px) scale(" + sc.toFixed(2) + ")"; b.sh.style.opacity = sc.toFixed(2);
+    if (!f3) b.sh.style.transform = "translate(" + (b.x - r * .8).toFixed(1) + "px," + (fy + r - 6).toFixed(1) + "px) scale(" + sc.toFixed(2) + ")"; b.sh.style.opacity = sc.toFixed(2);
     if (!b.bub.hidden) {
       if (t > b.sayUntil) b.bub.hidden = true;
       else {
         var bw = boxOf(b.bub, W + "x" + K)._mw, bh = b.bub._mh, bx = clamp(sb.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (sb.y - r * sb.s) * K - 12 - bh;
         if (by < 8) by = (sb.y + r * sb.s) * K + 12;
-        if (hid) { bx = (W * K - bw) / 2; by = world.offsetHeight * K - bh - 16; }
+        if (hid) { bx = (W * K - bw) / 2; by = WH * K - bh - 16; }
         b.bub._x = bx; b.bub._y = by; b.bub._w = bw; b.bub._h = bh;
       }
     }
@@ -1385,17 +1387,18 @@
     var ix = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), iz = (keys.far ? 1 : 0) - (keys.near ? 1 : 0), charged = b.crouchT && t - b.crouchT > 300;
     // in the 3D world the keys are relative to the camera: right = screen right, far = away from you
     var mx = ix, mz = 0;
-    if (!ix && !iz) b.basis = null;
-    if (D3) { var ax = b.basis || (b.basis = D3.axes()); mx = ax.rx * ix + ax.fx * iz; mz = ax.rz * ix + ax.fz * iz; var ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; } }
+    var fp = D3 && D3.viewNow() === "first";
+    if (!ix && !iz || fp) b.basis = null;
+    if (D3) { var ax = fp ? D3.axes() : b.basis || (b.basis = D3.axes()); mx = ax.rx * ix + ax.fx * iz; mz = ax.rz * ix + ax.fz * iz; var ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; } }
     if (!keys.down) b.poundLock = false;
     b.crouch = keys.down && onF;
     if (b.crouch) b.crouchT = b.crouchT || t; else if (onF && !keys.down) b.crouchT = 0;
     // separate acceleration, turn speed and deceleration, weaker in the air (GMTK Platformer Toolkit)
     if ((mx || mz) && !b.crouch) {
-      var turning = b.vx * mx + b.vz * mz < 0, acc = (onF ? (turning ? .55 : .3) : (turning ? .25 : .15)) * dt;
+      var turning = b.vx * mx + b.vz * mz < 0, acc = (fp ? (onF ? .5 : .2) : onF ? (turning ? .55 : .3) : (turning ? .25 : .15)) * dt;
       b.vx += (mx * 6 - b.vx) * acc; b.vz += (mz * 6 - b.vz) * acc;
       if (onF && turning && Math.hypot(b.vx, b.vz) > 3 && t - (b.dustAt || 0) > 250) { b.dustAt = t; var sd1 = sv(b); dust(sd1.x, sd1.y + b.f.r * sd1.s); }
-    } else { var fr = Math.pow(onF ? .7 : .97, dt); b.vx *= fr; b.vz *= fr; }
+    } else { var fr = Math.pow(onF ? (fp ? .5 : .7) : .97, dt); b.vx *= fr; b.vz *= fr; }
     if (t - keys.jumpAt < 120) {
       if (t - (b.coyote || 0) < 100 && !b.jumps) {
         b.vy = charged ? -PV * 1.3 : -PV; b.jumps = 1; b.cut = false; keys.jumpAt = 0; b.svy += .25; b.crouchT = 0;
@@ -1407,6 +1410,8 @@
     if (b.pound) { if (onF) { b.pound = false; slam(b); } else b.vy = Math.max(b.vy, 17); }
     if (b.other && b.other.mode !== (b.mode === "tag" ? "flee" : "tag")) { b.mode = "wander"; b.other = null; }
     var h = b.mode === "tag" && b.other ? T("أنت المطارِد! المس " + b.other.f.name + ".", "You're it! Tag " + b.other.f.name + ".") : b.mode === "flee" && b.other ? T("اهرب! " + b.other.f.name + " يطاردك.", "Run! " + b.other.f.name + " is chasing you.") :
+      D3 && D3.viewNow() === "first" && !TOUCH ? (D3.locked() ? T("\u2066W A S D\u2069 للحركة · الفأرة للنظر · المسافة للقفز · انقر لتلمس ما في الوسط · \u2066Esc\u2069 لتحرير الفأرة", "W A S D to move · the mouse to look · Space to jump · click to touch what is in the middle · Esc to free the mouse")
+        : T("انقر على الساحة لتتحكّم بالنظر بالفأرة", "Click the arena to look around with the mouse")) :
       D3 ? (TOUCH ? T("◀ ▶ و«أبعد» و«أقرب» للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية", "◀ ▶, Away and Closer to move · Jump (again in the air) · ▼ in the air slams down")
         : T("\u2066W A S D\u2069 للحركة · المسافة للقفز (مرة ثانية في الهواء) · السهم للأسفل في الهواء ضربة أرضية · اسحب الأرض لتدوير الكاميرا · \u2066V\u2069 لتغيير المنظر", "A, D, W and S to move · Space to jump (again in the air) · Down arrow in the air slams down · drag the ground to turn the camera · V to change the view")) :
       TOUCH ? T("◀ ▶ للحركة · «قفز» للقفز (مرة ثانية في الهواء) · ▼ في الهواء ضربة أرضية، واضغطه مع «قفز» لقفزة عالية", "◀ ▶ to move · Jump (again in the air) · ▼ in the air slams down; hold it, then Jump, for a high jump") :
@@ -2386,7 +2391,7 @@
   }
   function scene3(t) {
     var one = function (b) { return { x: b.x, y: b.y, z: b.z, vx: b.vx, vz: b.vz, r: b.f.r, pts: b.pts, el: b.el, drag: !!(b.drag && b.drag.moved), sx: clamp(b.sx, .8, 1.25), sy: clamp(b.sy, .75, 1.22), tilt: b.tilt, spin: b.spinA, cols: [b.f.c1, b.f.c2, b.f.c3], crouch: !!b.crouch && !b.f.player, floor: surfaceY(b) + b.f.r }; };
-    return { t: t, W: W, H: world.offsetHeight, DZ: DZ, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce, idle: t - lastInput,
+    return { t: t, W: W, H: WH, DZ: DZ, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce, idle: t - lastInput,
       player: player ? { x: player.x, y: player.y, z: player.z, vx: player.vx, vz: player.vz, r: player.f.r, el: player.el } : null,
       main: mainAway ? null : { x: pos.x, y: pos.y, z: pos.z, vx: pos.vx, vz: pos.vz, r: R, pts: pts, el: orb, drag: !!(drag && drag.moved), sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
       buddies: buddies.map(one), ball: ball, bench: bench, bushes: bushes.map(function (b) { return { x: b.cx, z: b.cz }; }) };
@@ -2421,12 +2426,27 @@
     ptr.gx = ptr.gz = null;
     if (hs) { hs.hidden = false; hs.b.crouch = false; }
   }
+  // the crosshair in the middle of a first-person view: the nearest thing under it gets touched
+  var cross = document.getElementById("d3-cross");
+  function useCrosshair() {
+    var cx = W / 2, cy = WH / 2, best = null, bd = 1e9;
+    var me = player || pos, cands = [{ o: ball, r: ball.r, k: "ball" }].concat(mainAway || !player ? [] : [{ o: pos, r: R, k: "main" }], others().map(function (b) { return { o: b, r: b.f.r, k: "buddy", b: b }; }));
+    cands.forEach(function (c) {
+      var s = sv(c.o), d = Math.hypot(s.x - cx, s.y - cy), far = Math.hypot(c.o.x - me.x, c.o.z - me.z);
+      if (d < c.r * s.s + 12 && far < 420 && far < bd) { bd = far; best = c; }
+    });
+    if (!best) { tone(300, 260, .05, "sine", .03); return; }
+    var ax = D3.axes();
+    if (best.k === "ball") { ball.vx += ax.fx * 9; ball.vz += ax.fz * 9; ball.vy = -6; sfx("pop"); }
+    else if (best.k === "main") { poke(0, 6); pos.vx += ax.fx * 4; pos.vz += ax.fz * 4; }
+    else { var b = best.b; b.vy = -7 * b.f.energy; b.vx += ax.fx * 3; b.vz += ax.fz * 3; b.joy = 1; b.svy -= .2; sfx("pop"); bsay(b, line(b.f.shy ? "buddyShyPoke" : "buddyPoke")); }
+  }
   function portal(on) {
     d3Busy = true; depthPad.hidden = !on; viewBtn.hidden = !on;
     if (!on) setView("orbit"); else setView(player ? "third" : "orbit"); keys.left = keys.right = keys.down = keys.far = keys.near = false;
     var cx = mainAway ? W / 2 : pos.x, cy = mainAway ? ground : pos.y, H = world.offsetHeight;
     var Rm = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 20, dur = reduce ? 400 : 1500, t0 = performance.now();
-    stage.classList.toggle("is3d", on);
+    stage.classList.toggle("is3d", on); if (!on) stage.classList.remove("in3d");
     tone(on ? 160 : 720, on ? 820 : 150, dur / 1000, "sine", .05); hiss(dur / 1000, .05, 2400);
     view3.intro(dur, !on);  // the camera rises from the flat view into the arena, and settles back on the way out
     (function step(t) {
@@ -2436,7 +2456,7 @@
       portalEl.style.opacity = Math.sin(Math.PI * p).toFixed(2);
       if (p < 1) return requestAnimationFrame(step);
       portalEl.style.opacity = "0"; d3Busy = false;
-      if (on) view3.canvas.style.clipPath = "";
+      if (on) { view3.canvas.style.clipPath = ""; stage.classList.add("in3d"); }
       else { view3.destroy(); view3 = null; D3 = null; spread(false); [orb].concat(buddies.map(function (b) { return b.el; }), buddies.map(function (b) { return b.tag; })).forEach(function (e) { if (e) e.style.visibility = ""; }); }
       d3Btn.setAttribute("aria-pressed", String(on)); d3Btn.textContent = on ? T("عودة إلى العالم المسطّح", "Back to the flat world") : T("عالم ثلاثي الأبعاد", "3D world");
       say(line(on ? "portalIn" : "portalOut"), "portal", 1000);
@@ -2450,8 +2470,10 @@
       if (!view3) { spread(false); throw new Error("no WebGL"); }
       view3.canvas.style.clipPath = "circle(0px at 0 0)";
       D3 = view3; view3.onLost = function () { if (view3 && !d3Busy) portal(false); };
-      view3.onTap = function (e) {  // a tap on the lawn: Dilmo bounds over to that spot
-        var p = toStage(e), g = D3 && D3.ground(p.x, p.y); stir();
+      view3.onTap = function (e) {  // a tap on the lawn: Dilmo bounds over to that spot (first person: whatever is under the crosshair)
+        stir();
+        if (D3 && D3.viewNow() === "first" && (D3.locked() || e.pointerType !== "mouse")) { useCrosshair(); return; }
+        var p = toStage(e), g = D3 && D3.ground(p.x, p.y);
         if (!g || !g.inside || mainAway || drag || mood.sleepy > .85) return;
         var dx = g.x - pos.x, dz = g.z - pos.z, dd = Math.hypot(dx, dz) || 1, sp = Math.min(9, dd / 14);
         pos.vx = dx / dd * sp; pos.vz = dz / dd * sp; pos.vy = -7 - sp * .4; gaze = { x: dx / dd, y: 0, until: performance.now() + 900 };
@@ -2502,7 +2524,7 @@
       if (mood.hungry > .5) say(line("want"), "want", 5000);
     } else mood.hungry *= Math.pow(.9, dt);
     // chase the pointer along the floor in little hops, pounce when close
-    var inStage = D3 ? ptr.has && !ptr.out && ptr.gx != null && !D3.cam.orbiting : ptr.has && !ptr.out && ptr.x > 0 && ptr.x < W && ptr.y > 0 && ptr.y < ground + R;
+    var inStage = D3 ? ptr.has && !ptr.out && ptr.gx != null && !D3.cam.orbiting && !D3.locked() && D3.viewNow() !== "first" && D3.viewNow() !== "second" : ptr.has && !ptr.out && ptr.x > 0 && ptr.x < W && ptr.y > 0 && ptr.y < ground + R;
     var pdx = (D3 ? ptr.gx : ptr.x) - pos.x, pdz = D3 ? ptr.gz - pos.z : 0, pd = Math.hypot(pdx, pdz), onFloor = pos.y >= ground - 1;
     if (!song && !circ.last && !drag && !anyBuddyDrag() && !foodDrag && !asleep && !stick && inStage && t - ptr.moveT < 1200 && pd > 120) chaseT += 16.67 * dt;
     else if (!inStage || pd < 80) chaseT = 0;
@@ -2577,6 +2599,8 @@
   function draw(t) {
     if (view3) view3.frame(scene3(t));
     var hide = D3 && D3.hideEl;  // the body whose eyes you look through
+    var fpNow = !!(D3 && D3.viewNow() === "first"); if (cross.hidden === fpNow) { cross.hidden = !fpNow; stage.classList.toggle("fp", fpNow); }
+    var full3d = !!(D3 && stage.classList.contains("in3d"));  // the flat bodies keep updating while the portal opens and closes
     var b = t - blinkAt < 240 ? Math.sin(Math.PI * (t - blinkAt) / 240) : 0;
     var dz = mood.dizzy, ox = Math.cos(t / 90) * 2.5 * dz, oy = Math.sin(t / 90) * 2.5 * dz;
     var jx = reduce ? 0 : (Math.random() - .5) * 3 * mood.tickle;
@@ -2601,13 +2625,13 @@
       mry *= 1 + (v === "aa" ? 1.6 : v === "oo" ? 1 : .6) * op; mrx *= 1 + (v === "oo" ? -.3 : v === "aa" ? .3 : .4) * op;
     }
     mry = Math.max(mry, mrx * 1.02);
-    var ey = -4 + sp.ey.v, dd = pathD();
-    bodyPath.setAttribute("d", dd); grainPath.setAttribute("d", dd);
+    var ey = -4 + sp.ey.v, dd = full3d ? bodyPath.getAttribute("d") : pathD();
+    if (!full3d) { bodyPath.setAttribute("d", dd); grainPath.setAttribute("d", dd); }
     var cpx = cheek ? cheek.px * .2 : 0, cpy = cheek ? cheek.py * .2 : 0;
     var sM3 = sv(pos);
     orb.style.visibility = hide === orb ? "hidden" : "";
     orb.style.transform = "translate(" + (sM3.x - HALF + jx).toFixed(1) + "px," + (sM3.y - HALF).toFixed(1) + "px)" + (D3 ? " scale(" + sM3.s.toFixed(3) + ")" : "");
-    body.setAttribute("transform", "rotate(" + sp.spin.v.toFixed(1) + ") translate(0 " + R + ") rotate(" + sp.tilt.v.toFixed(2) +
+    if (!full3d) body.setAttribute("transform", "rotate(" + sp.spin.v.toFixed(1) + ") translate(0 " + R + ") rotate(" + sp.tilt.v.toFixed(2) +
       ") scale(" + clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25).toFixed(3) + " " + clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22).toFixed(3) + ") translate(0 " + -R + ")");
     face.setAttribute("transform", "translate(" + (sp.lx.v * 7 + ox + cpx).toFixed(2) + " " + (sp.ly.v * 5 + oy + cpy).toFixed(2) + ")");
     var rys = [0, 1].map(function (i) {
@@ -2621,7 +2645,7 @@
       { ey: ey, rx: rx, ry: rys, mx: sp.mx.v, mcy: 18 + sp.ey.v * .5, mrx: mrx, mry: mry, dd: dd, busy: t < eatUntil || !!song || (speech && t < talkUntil) }, t, fdt,
       function (h) { sfx("beat", h); });
     var sc = clamp(1 - (ground - pos.y) / 300, .35, 1);
-    shadowEl.style.transform = "translate(" + (pos.x - 40).toFixed(1) + "px," + (ground + R - 6) + "px) scale(" + sc.toFixed(2) + ")";
+    if (!full3d) shadowEl.style.transform = "translate(" + (pos.x - 40).toFixed(1) + "px," + (ground + R - 6) + "px) scale(" + sc.toFixed(2) + ")";
     shadowEl.style.opacity = sc.toFixed(2);
     if (!bub.hidden) {
       if (mood.sleepy <= .85 && t > +bub.dataset.until) bub.hidden = true;
@@ -2629,7 +2653,7 @@
         // keep the whole bubble inside the stage: clamp sideways, flip below him when there is no room above
         var bw = boxOf(bub, W + "x" + K)._mw, bh = bub._mh, bx = clamp(sM3.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (sM3.y - R * sM3.s) * K - 14 - bh;
         if (by < 8) by = Math.min((sM3.y + R * sM3.s) * K + 14, (ground + R) * K - bh - 4);
-        if (hide === orb) { bx = (W * K - bw) / 2; by = (world.offsetHeight * K) - bh - 16; }  // you are looking through his eyes: his words sit at the bottom, like subtitles
+        if (hide === orb) { bx = (W * K - bw) / 2; by = WH * K - bh - 16; }  // you are looking through his eyes: his words sit at the bottom, like subtitles
         bub._x = bx; bub._y = Math.max(8, by); bub._w = bw; bub._h = bh;  // placed by layoutBubbles()
       }
     }
@@ -2656,7 +2680,7 @@
     if (running && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
   }).observe(stage);
   // the stage height depends on the header height, which is only known after load: re-measure whenever it changes size
-  new ResizeObserver(function () { measure(); placeProps(); if (view3) view3.resize(W, world.offsetHeight, K); }).observe(stage);
+  new ResizeObserver(function () { measure(); placeProps(); if (view3) view3.resize(W, WH, K); }).observe(stage);
   var sideways = matchMedia("(orientation: landscape) and (max-height: 500px)");
   function fitSideways() { if (sideways.matches) stage.scrollIntoView({ block: "start" }); }
   sideways.addEventListener("change", fitSideways); fitSideways();

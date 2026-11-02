@@ -7,13 +7,17 @@
    تمتد بعيداً عن الضوء. ثم تظليل نهائي خفيف (vignette + dither) بلا تمريرة ثانية. */
 (function () {
   var VS = [
-    "attribute vec3 aPos; attribute vec3 aNrm; attribute vec2 aUv;",
+    "attribute vec3 aPos; attribute vec3 aNrm; attribute vec2 aUv; attribute vec3 aLoc, aCol, aSize; attribute vec2 aSeed;",
+    "uniform mediump float uBk; uniform float uTv;",
+    "varying vec3 vCol, vSize; varying vec2 vSeed;",
     "uniform mat4 uP, uM; uniform mat3 uN; uniform float uR, uPt; uniform vec4 uRim[24]; uniform mediump int uMode;",
     "varying vec3 vN, vW, vL; varying vec2 vUv;",
     // the 2D rim (48 points of x,y offsets, in px) packed two per vec4
     "vec2 rimAt(int i) { i = i - (i / 48) * 48; vec4 v = uRim[i / 2]; return (i - (i / 2) * 2) == 0 ? v.xy : v.zw; }",
     "void main() {",
-    "  vec3 p = aPos; vUv = aUv; vL = aPos;",
+    "  vec3 p = aPos; vUv = aUv; vL = uBk > 0.5 ? aLoc : aPos; vCol = aCol; vSize = aSize; vSeed = aSeed;",
+    // baked fronds sway in the vertex shader: the tip moves most (t = how far along the leaf)
+    "  if (uBk > 0.5 && uMode == 13) p += vec3(sin(uTv * 1.1 + aSeed.x), 0.0, cos(uTv * 0.9 + aSeed.x)) * aLoc.x * aLoc.x * 5.0;",
     "  if (uMode == 1) {",  // soft body: push the sphere out along the 2D rim, fully at the silhouette, not at all at the poles
     "    float a = atan(p.y, p.x); if (a < 0.0) a += 6.2831853;",
     "    float fi = a / 6.2831853 * 48.0; int i0 = int(floor(fi)); float f = fract(fi);",
@@ -26,9 +30,9 @@
   //        8 hedge · 9 building · 10 shadow (multiplied into the ground) · 11 palm trunk · 12 cloud puff · 13 frond
   var FS = [
     "#ifdef GL_FRAGMENT_PRECISION_HIGH", "precision highp float;", "#else", "precision mediump float;", "#endif",
-    "varying vec3 vN, vW, vL; varying vec2 vUv;",
+    "varying vec3 vN, vW, vL; varying vec2 vUv; varying vec3 vCol, vSize; varying vec2 vSeed; uniform mediump float uBk;",
     "uniform int uMode; uniform vec4 uC0, uC1, uC2; uniform vec3 uLight, uLc, uSky, uGnd, uTint, uCam, uFogC, uSunDir, uSunC, uB0, uB1, uB2, uRight, uUp, uFwd;",
-    "uniform vec2 uArena, uRes, uFxy; uniform float uA, uRot, uFl, uLights, uFlat, uT, uExpo; uniform sampler2D uFace;",
+    "uniform vec2 uArena, uRes, uFxy; uniform float uA, uRot, uFl, uLights, uFlat, uT, uExpo, uLite; uniform sampler2D uFace;",
     "float hash(vec2 p) { p = mod(p, 289.0); return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
     "float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);",
     "  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y); }",
@@ -39,7 +43,7 @@
     "  return alb * (mix(uGnd, uSky, 0.5 - 0.5 * n.y) * 0.62 + uLc * dif * 0.78);",
     "}",
     "void main() {",
-    "  vec3 c = uC0.rgb; float al = uC0.a; vec3 n = normalize(vN); vec3 V = normalize(uCam - vW); vec3 glow = vec3(0.0);",
+    "  vec3 c = uBk > 0.5 && uMode != 13 ? vCol * uExpo : uC0.rgb; float al = uC0.a; vec3 n = normalize(vN); vec3 V = normalize(uCam - vW); vec3 glow = vec3(0.0);",
     "  float fogOn = 1.0;",
     "#ifdef FLAT",
     "  if (uFlat > 0.5) n = normalize(cross(dFdx(vW), dFdy(vW)));",  // faceted low-poly look for bushes, crowns, coconuts
@@ -58,11 +62,14 @@
     "    vec2 xz = vW.xz;",
     "    float ring = max(max(-xz.x, xz.x - uArena.x), max(-xz.y, xz.y - uArena.y));",  // how far outside the hedge line (negative inside)
     "    vec3 lawn = uC0.rgb * mix(0.93, 1.07, smoothstep(-0.25, 0.25, sin(xz.x * 0.05)));",  // mown stripes
-    "    lawn *= 1.0 + (fbm(xz * 0.018) - 0.5) * 0.22 + (hash(floor(xz * 0.5)) - 0.5) * 0.07;",
-    "    lawn = mix(lawn, lawn * vec3(1.05, 1.0, 0.72), smoothstep(0.62, 0.8, vnoise(xz * 0.006)) * 0.7);",  // a few dry patches
+    "    if (uLite < 0.5) {",  // soft colour variation and a few dry patches (light mode keeps the plain stripes)
+    "      lawn *= 1.0 + (fbm(xz * 0.018) - 0.5) * 0.22;",
+    "      lawn = mix(lawn, lawn * vec3(1.05, 1.0, 0.72), smoothstep(0.62, 0.8, vnoise(xz * 0.006)) * 0.7);",
+    "    }",
     "    vec2 tg = xz / 26.0, tf = abs(fract(tg) - 0.5);",
     "    vec3 stone = vec3(0.86, 0.82, 0.74) * (0.94 + 0.12 * hash(floor(tg))) * (1.0 - 0.25 * smoothstep(0.44, 0.49, max(tf.x, tf.y))) * uExpo;",  // paving with grout lines
-    "    vec3 sand = mix(uC1.rgb, uC2.rgb, 0.45) * (1.0 + (fbm(xz * 0.01) - 0.5) * 0.3 + sin(xz.x * 0.06 + fbm(xz * 0.004) * 9.0) * 0.025);",
+    "    vec3 sand = mix(uC1.rgb, uC2.rgb, 0.45);",
+    "    if (uLite < 0.5) sand *= 1.0 + (fbm(xz * 0.01) - 0.5) * 0.3 + sin(xz.x * 0.06 + fbm(xz * 0.004) * 9.0) * 0.025;",
     "    c = ring < 0.0 ? lawn : mix(stone, sand, smoothstep(60.0, 72.0, ring));",
     "    c *= 1.0 - 0.32 * exp(-abs(ring) * 0.09);",  // a dark gutter along both sides of the hedge
     "    c = shade(c, vec3(0.0, -1.0, 0.0), 0.0);",
@@ -87,23 +94,23 @@
     "  else if (uMode == 10) { float d = length(vUv * 2.0 - 1.0); gl_FragColor = vec4(0.0, 0.0, 0.0, al * (1.0 - smoothstep(0.25, 1.0, d * d))); return; }",
     "  else if (uMode == 7) { fogOn = 0.4; }",
     "  else if (uMode == 8) {",  // hedge: clipped leaves, darker toward its foot, a lighter top
-    "    float leaf = fbm(vec2(vW.x + vW.z, vW.y) * 0.13);",
+    "    float leaf = uLite > 0.5 ? 0.5 + 0.25 * sin((vW.x + vW.z) * 0.3) : fbm(vec2(vW.x + vW.z, vW.y) * 0.13);",
     "    c = mix(uC0.rgb * 0.72, uC0.rgb * 1.18, smoothstep(0.3, 0.7, leaf));",
     "    c *= mix(0.68, 1.0, clamp((uFl - vW.y) / 26.0, 0.0, 1.0));",
     "    if (n.y < -0.9) c *= 1.1;",
     "    c = shade(c, n, 0.5);",
     "  }",
     "  else if (uMode == 9) {",  // a building: plaster walls, a grid of windows (some lit at night), a flat roof, dusky at its foot
-    "    vec2 fuv = abs(n.x) > 0.5 ? vec2(vL.z * uC2.z, vL.y * uC2.y) : vec2(vL.x * uC2.x, vL.y * uC2.y);",
+    "    vec2 fuv = abs(n.x) > 0.5 ? vec2(vL.z * vSize.z, vL.y * vSize.y) : vec2(vL.x * vSize.x, vL.y * vSize.y);",
     "    vec2 g = fuv / vec2(19.0, 24.0), cell = floor(g), f = fract(g);",
-    "    float side = step(abs(n.y), 0.5), above = step(14.0, uFl - vW.y) * step(8.0, (vL.y + 0.5) * uC2.y);",
-    "    float win = side * above * step(0.28, f.x) * step(f.x, 0.72) * step(0.22, f.y) * step(f.y, 0.7) * step(0.3, hash(cell + uC1.xy));",
+    "    float side = step(abs(n.y), 0.5), above = step(14.0, uFl - vW.y) * step(8.0, (vL.y + 0.5) * vSize.y);",
+    "    float win = side * above * step(0.28, f.x) * step(f.x, 0.72) * step(0.22, f.y) * step(f.y, 0.7) * step(0.3, hash(cell + floor(vSeed + 0.5)));",
     "    float far = 1.0 - smoothstep(1800.0, 3200.0, length(uCam - vW)); win *= far;",
-    "    c *= uExpo * mix(0.74, 1.0, clamp((uFl - vW.y) / 40.0, 0.0, 1.0));",
+    "    c *= mix(0.74, 1.0, clamp((uFl - vW.y) / 40.0, 0.0, 1.0));",
     "    if (n.y < -0.5) c *= 0.9;",
     "    c = mix(c, vec3(0.32, 0.38, 0.46), win * 0.85);",
     "    c = shade(c, n, 0.35);",
-    "    glow = vec3(1.0, 0.8, 0.46) * win * step(hash(cell * 1.7 + uC1.yx), 0.55) * uLights * 0.95;",
+    "    glow = vec3(1.0, 0.8, 0.46) * win * step(hash(cell * 1.7 + floor(vSeed.yx + 0.5)), 0.55) * uLights * 0.95;",
     "  }",
     "  else if (uMode == 11) { c *= 0.86 + 0.14 * step(0.5, fract(vL.y * 16.0)); c = shade(c, n, 0.4); }",  // palm trunk with rings
     "  else if (uMode == 13) { c *= 0.72 + 0.4 * vUv.x; c = shade(c, n, 0.6); }",  // frond, darker at its base
@@ -116,9 +123,7 @@
     "  c = mix(c, mix(vec3(dot(c, vec3(0.3, 0.59, 0.11))), c, 0.75), fog * 0.6);",
     "  c = mix(c, fc2, clamp(fog, 0.0, 0.92));",
     // finishing: a soft vignette and an ordered dither against banding in the sky and the haze
-    "  vec2 q = gl_FragCoord.xy / uRes; c *= mix(0.8, 1.0, smoothstep(1.15, 0.35, length(q - 0.5) * 1.4142));",
-    "  float bay = mod(floor(gl_FragCoord.x), 4.0) * 4.0 + mod(floor(gl_FragCoord.y), 4.0);",
-    "  c += (fract(bay * 0.6180339887) - 0.5) / 128.0;",
+    "  if (uLite < 0.5) { vec2 q = gl_FragCoord.xy / uRes; c *= mix(0.8, 1.0, smoothstep(1.15, 0.35, length(q - 0.5) * 1.4142)); }",  // a soft vignette, no grain
     "  gl_FragColor = vec4(c, al);",
     "}"].join("\n");
 
@@ -202,12 +207,16 @@
   // host: the .world element; W × DZ: the arena in world px; paintFace(ctx, el): dilmo.js draws a body's current face into a canvas
   function create(host, W, H, K, DZ, paintFace) {
     var canvas = document.createElement("canvas"); canvas.className = "d3";
-    var gl = canvas.getContext("webgl", { antialias: true, alpha: false, premultipliedAlpha: false, powerPreference: "low-power" });
+    // light mode for old computers and cheap phones: no anti-aliasing, fewer pixels, no noise textures, only the near ring of houses
+    var weak = (navigator.hardwareConcurrency || 4) <= 2 || (navigator.deviceMemory || 4) <= 2;
+    var gl = canvas.getContext("webgl", { antialias: !weak, alpha: false, premultipliedAlpha: false, powerPreference: "high-performance" });  // the visitor chose the heavier world: ask for the strong GPU (laptops with two)
     if (!gl) return null;
     host.insertBefore(canvas, host.firstChild);
     var api = null;  // the renderer dies with its context (a phone dropping the GPU): tell dilmo.js so it can step back to the flat world
     canvas.addEventListener("webglcontextlost", function (e) { e.preventDefault(); if (api && api.onLost) api.onLost(); });
 
+    var dbg = gl.getExtension("WEBGL_debug_renderer_info"), gpuName = dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : "";
+    var lite = weak || /SwiftShader|llvmpipe|Software|Basic Render|Mali-[4T]|Adreno \(TM\) [2-4]\d\d|PowerVR SGX|Intel.*(GMA|HD Graphics( [2-5]\d{3})?\b)/i.test(gpuName) || gl.getParameter(gl.MAX_TEXTURE_SIZE) < 4096;
     var flatExt = gl.getExtension("OES_standard_derivatives");
     function shader(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
     var prog = gl.createProgram();
@@ -218,15 +227,59 @@
     gl.useProgram(prog);
     var U = {};
     ["uP", "uM", "uN", "uR", "uPt", "uRim", "uMode", "uC0", "uC1", "uC2", "uLight", "uLc", "uSky", "uGnd", "uTint", "uCam", "uFogC", "uSunDir", "uSunC", "uB0", "uB1", "uB2",
-      "uRight", "uUp", "uFwd", "uArena", "uRes", "uFxy", "uA", "uRot", "uFl", "uLights", "uFlat", "uT", "uExpo", "uFace"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
-    var A = { pos: gl.getAttribLocation(prog, "aPos"), nrm: gl.getAttribLocation(prog, "aNrm"), uv: gl.getAttribLocation(prog, "aUv") };
+      "uRight", "uUp", "uFwd", "uArena", "uRes", "uFxy", "uA", "uRot", "uFl", "uLights", "uFlat", "uT", "uExpo", "uFace", "uBk", "uTv", "uLite"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+    var A = { pos: gl.getAttribLocation(prog, "aPos"), nrm: gl.getAttribLocation(prog, "aNrm"), uv: gl.getAttribLocation(prog, "aUv"),
+      loc: gl.getAttribLocation(prog, "aLoc"), col: gl.getAttribLocation(prog, "aCol"), size: gl.getAttribLocation(prog, "aSize"), seed: gl.getAttribLocation(prog, "aSeed") };
+    var EXTRA = [A.loc, A.col, A.size, A.seed].filter(function (a) { return a >= 0; });
     function mesh(m) {
       var vb = gl.createBuffer(), ib = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(m.v), gl.STATIC_DRAW);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(m.ix), gl.STATIC_DRAW);
       return { vb: vb, ib: ib, n: m.ix.length };
     }
-    var SPH = mesh(sphere(32, 20)), LOW = mesh(sphere(9, 6)), CUBE = mesh(cube()), QD = mesh(QUAD), CYL = mesh(cyl(7, .62)), FROND = mesh(frond(7)), starBuf = gl.createBuffer(), NSTAR = 140;
+    var G = { low: sphere(9, 6), cube: cube(), cyl: cyl(7, .62), frond: frond(7) };
+    var SPH = mesh(sphere(32, 20)), LOW = mesh(G.low), CUBE = mesh(G.cube), QD = mesh(QUAD), CYL = mesh(G.cyl), starBuf = gl.createBuffer(), NSTAR = 140;
+    // ---- baking: everything that never moves (the town, palm trunks, fronds, coconuts) is merged once into a few big buffers,
+    //      in world space, so a frame makes ~150 draw calls instead of ~1300 ----
+    var BK = 19;  // floats per baked vertex: pos 3, normal 3, uv 2, local pos 3, colour 3, size 3, seed 2
+    function bake(parts) {
+      var v = [], ix = [], base = 0;
+      parts.forEach(function (pt) {
+        var g = pt.g, M = pt.M, N = n3(M);
+        for (var i = 0; i < g.v.length; i += 8) {
+          var x = g.v[i], y = g.v[i + 1], z = g.v[i + 2], nx = g.v[i + 3], ny = g.v[i + 4], nz = g.v[i + 5];
+          var wx = M[0] * x + M[4] * y + M[8] * z + M[12], wy = M[1] * x + M[5] * y + M[9] * z + M[13], wz = M[2] * x + M[6] * y + M[10] * z + M[14];
+          var n = norm([N[0] * nx + N[3] * ny + N[6] * nz, N[1] * nx + N[4] * ny + N[7] * nz, N[2] * nx + N[5] * ny + N[8] * nz]);
+          v.push(wx, wy, wz, n[0], n[1], n[2], g.v[i + 6], g.v[i + 7], x, y, z, pt.col[0], pt.col[1], pt.col[2], pt.size[0], pt.size[1], pt.size[2], pt.seed[0], pt.seed[1]);
+        }
+        g.ix.forEach(function (k) { ix.push(k + base); });
+        base += g.v.length / 8;
+      });
+      var big = base > 65535, ext = big && gl.getExtension("OES_element_index_uint");
+      if (big && !ext) return null;
+      var vb = gl.createBuffer(), ib = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(v), gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, big ? new Uint32Array(ix) : new Uint16Array(ix), gl.STATIC_DRAW);
+      bound = null;
+      return { vb: vb, ib: ib, n: ix.length, type: big ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT };
+    }
+    function drawBaked(B, mode, c0) {
+      if (!B) return;
+      gl.bindBuffer(gl.ARRAY_BUFFER, B.vb); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, B.ib); bound = null;
+      var st = BK * 4;
+      gl.vertexAttribPointer(A.pos, 3, gl.FLOAT, false, st, 0); gl.vertexAttribPointer(A.nrm, 3, gl.FLOAT, false, st, 12); gl.vertexAttribPointer(A.uv, 2, gl.FLOAT, false, st, 24);
+      if (A.loc >= 0) gl.vertexAttribPointer(A.loc, 3, gl.FLOAT, false, st, 32);
+      if (A.col >= 0) gl.vertexAttribPointer(A.col, 3, gl.FLOAT, false, st, 44);
+      if (A.size >= 0) gl.vertexAttribPointer(A.size, 3, gl.FLOAT, false, st, 56);
+      if (A.seed >= 0) gl.vertexAttribPointer(A.seed, 2, gl.FLOAT, false, st, 68);
+      EXTRA.forEach(function (a) { gl.enableVertexAttribArray(a); });
+      gl.uniform1f(U.uBk, 1); gl.uniform1i(U.uMode, mode); gl.uniformMatrix4fv(U.uM, false, ID); gl.uniformMatrix3fv(U.uN, false, ID3);
+      if (c0) gl.uniform4f(U.uC0, c0[0], c0[1], c0[2], 1);
+      gl.drawElements(gl.TRIANGLES, B.n, B.type, 0);
+      EXTRA.forEach(function (a) { gl.disableVertexAttribArray(a); });
+      gl.uniform1f(U.uBk, 0);
+    }
+    var ID3 = new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]), baked = null, bakedFor = "";
     var bound = null;
     function bind(m) {
       if (bound === m) return; bound = m;
@@ -236,7 +289,7 @@
     gl.enableVertexAttribArray(A.pos); gl.enableVertexAttribArray(A.nrm); gl.enableVertexAttribArray(A.uv);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.enable(gl.DEPTH_TEST);
     var ZERO = new Float32Array(96), ID = I();
-    gl.uniform4fv(U.uRim, ZERO); gl.uniform1i(U.uFace, 0); gl.uniform1f(U.uFlat, 0);
+    gl.uniform4fv(U.uRim, ZERO); gl.uniform1i(U.uFace, 0); gl.uniform1f(U.uFlat, 0); gl.uniform1f(U.uBk, 0);
     // a blank face texture for things that have none (the ball, props)
     var blank = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, blank); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
 
@@ -279,7 +332,7 @@
       if (trauma > 0) { var sh = trauma * trauma; yaw += (Math.random() - .5) * .03 * sh; pitch += (Math.random() - .5) * .03 * sh; tgt[1] += (Math.random() - .5) * 8 * sh; }
       eye = [tgt[0] + d * Math.sin(yaw) * Math.cos(pitch), tgt[1] - d * Math.sin(pitch), tgt[2] + d * Math.cos(yaw) * Math.cos(pitch)];
       if (vm === "first") {  // through the character's eyes: a little above its middle, looking where the camera yaw points
-        var p1 = cam.p1; eye = [sj.x, sj.y - sj.r * .45, sj.z];
+        var p1 = cam.p1; eye = [sj.x, sj.y - sj.r * .45 + Math.sin(view.bob) * .8 * (view.bobA || 0), sj.z];
         tgt = [eye[0] - Math.sin(yaw) * Math.cos(p1) * 100, eye[1] + Math.sin(p1) * 100, eye[2] - Math.cos(yaw) * Math.cos(p1) * 100];
       } else if (vm === "second") {  // through Dilmo's eyes, at you
         var m = view.from; eye = [m.x, m.y - m.r * .45, m.z]; tgt = [sj.x, sj.y - sj.r * .3, sj.z];
@@ -317,7 +370,7 @@
     var ptrs = {}, pinch = 0;
     // a quick tap on the lawn is a tap (Dilmo comes over); a drag turns the camera; two fingers zoom
     canvas.addEventListener("pointerdown", function (e) {
-      ptrs[e.pointerId] = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false }; canvas.setPointerCapture(e.pointerId); e.preventDefault();
+      ptrs[e.pointerId] = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false }; if (document.pointerLockElement !== canvas) canvas.setPointerCapture(e.pointerId); e.preventDefault();
       var ks = Object.keys(ptrs); if (ks.length === 2) { pinch = Math.hypot(ptrs[ks[0]].x - ptrs[ks[1]].x, ptrs[ks[0]].y - ptrs[ks[1]].y); ks.forEach(function (k) { ptrs[k].moved = true; }); cam.orbiting = true; }
     });
     canvas.addEventListener("pointermove", function (e) {
@@ -328,27 +381,54 @@
       lastOrbit = performance.now();
       if (ks.length === 1) {
         var ddx = (e.clientX - p.x), ddy = (e.clientY - p.y), vm = view.mode;
-        if (vm === "first") { cam.yaw += ddx * .005; cam.p1 = clamp(cam.p1 + ddy * .004, -.5, .9); }
+        if (vm === "first") { cam.yaw -= ddx * .005; cam.p1 = clamp(cam.p1 + ddy * .004, -.6, 1.1); }
         else if (vm === "third") { cam.yaw += ddx * .006; cam.p3 = clamp(cam.p3 - ddy * .005, .1, 1.2); }
         else if (vm === "orbit") { cam.yaw += ddx * .006; cam.pitch = clamp(cam.pitch - ddy * .005, .14, 1.15); }
       }
       p.x = e.clientX; p.y = e.clientY;
       if (ks.length === 2) { var d = Math.hypot(ptrs[ks[0]].x - ptrs[ks[1]].x, ptrs[ks[0]].y - ptrs[ks[1]].y); if (pinch) cam.zoom = clamp(cam.zoom * pinch / d, .55, 1.8); pinch = d; }
     });
+    // first person on a computer: a click on the arena captures the mouse (Esc gives it back); moving it turns your head
+    function locked() { return document.pointerLockElement === canvas; }
+    function onMouseLook(e) {
+      if (!locked() || view.mode !== "first") return;
+      cam.yaw -= e.movementX * .0024; cam.p1 = clamp(cam.p1 + e.movementY * .0022, -.6, 1.1);
+    }
+    document.addEventListener("mousemove", onMouseLook);
     function pup(e) {
       var p = ptrs[e.pointerId]; delete ptrs[e.pointerId]; pinch = 0;
+      if (p && !p.moved && e.type === "pointerup" && e.pointerType === "mouse" && view.mode === "first" && !locked() && canvas.requestPointerLock) {
+        try { var pr = canvas.requestPointerLock(); if (pr && pr.catch) pr.catch(function () { /* the browser said no: drag still works */ }); } catch { /* not allowed here */ }
+        if (!Object.keys(ptrs).length) cam.orbiting = false;
+        return;
+      }
       if (p && !p.moved && e.type === "pointerup" && performance.now() - p.t < 350 && api && api.onTap) api.onTap(e);
       if (!Object.keys(ptrs).length) cam.orbiting = false;
     }
     canvas.addEventListener("pointerup", pup); canvas.addEventListener("pointercancel", pup);
     canvas.addEventListener("wheel", function (e) { cam.zoom = clamp(cam.zoom * (e.deltaY > 0 ? 1.08 : .93), .55, 1.8); e.preventDefault(); }, { passive: false });
 
-    var town = [], palms = [], clouds = [], lamps = [];
+    var town = [], palms = [], clouds = [], lamps = [], quality = lite ? .7 : 1, ft = { sum: 0, n: 0, good: 0, slow: 0 };
+    function applyScale() {
+      var dpr = Math.min(lite ? 1 : 1.5, devicePixelRatio || 1) * K * quality;
+      canvas.width = Math.max(2, Math.round(W * dpr)); canvas.height = Math.max(2, Math.round(H * dpr));
+      gl.viewport(0, 0, canvas.width, canvas.height); gl.uniform2f(U.uRes, canvas.width, canvas.height);
+    }
+    // every second: if frames take too long, draw fewer pixels (down to 55 %); when there is room again, go back up
+    function adapt(ms) {
+      if (!(ms > 0 && ms < 120)) return;  // a background tab or a hitch is not a trend
+      ft.sum += ms; ft.n++;
+      if (ft.n < 60) return;
+      var avg = ft.sum / ft.n; ft.sum = ft.n = 0;
+      var floorQ = lite ? .42 : .55;
+      if (avg > 21 && quality > floorQ + .01) { quality = Math.max(floorQ, quality * .85); ft.good = 0; applyScale(); }
+      else if (avg > 24 && !lite && ++ft.slow >= 3) { lite = true; ft.slow = 0; applyScale(); }  // still slow at the lowest resolution: light mode
+      else if (avg < 18 && quality < 1) { ft.slow = 0; if (++ft.good >= 4) { quality = Math.min(1, quality / .88); ft.good = 0; applyScale(); } }
+      else ft.good = 0;
+    }
     function resize(w, h, k, dz) {
       W = w; H = h; K = k || 1; if (dz) DZ = dz;
-      var dpr = Math.min(2, devicePixelRatio || 1) * K;
-      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); canvas.style.width = W + "px"; canvas.style.height = H + "px";
-      gl.viewport(0, 0, canvas.width, canvas.height);
+      canvas.style.width = W + "px"; canvas.style.height = H + "px"; applyScale();
       base = Math.max(W * 1.25 / (.75 * W / H), (DZ + 500) / .75, 700);
       // the town stands in two rings around the arena, palms in the sandy band between the walk and the town
       var rnd = seeded(7); town = []; palms = []; clouds = []; lamps = [];
@@ -360,7 +440,7 @@
           for (var p = 0; p < len;) {
             var w2 = 46 + rnd() * 80, dep = 36 + rnd() * 40, hh = ring[1] + rnd() * (ring[2] - ring[1]);
             hh = Math.round(hh / 24) * 24 + 6;  // whole storeys, so the window rows line up
-            town.push({ x: sd[0] + ux * (p + w2 / 2), z: sd[1] + uz * (p + w2 / 2), w: ux ? w2 : dep, d: ux ? dep : w2, h: hh, col: PLASTER[Math.floor(rnd() * PLASTER.length)], seed: [rnd() * 97, rnd() * 89],
+            town.push({ x: sd[0] + ux * (p + w2 / 2), z: sd[1] + uz * (p + w2 / 2), w: ux ? w2 : dep, d: ux ? dep : w2, h: hh, col: PLASTER[Math.floor(rnd() * PLASTER.length)], seed: [Math.floor(rnd() * 97), Math.floor(rnd() * 89)], ring: ring[0] > 600 ? 1 : 0,
               box: rnd() < .45 ? [(rnd() - .5) * .5, (rnd() - .5) * .5, 10 + rnd() * 8] : null });  // a water tank or a stair hut on some roofs
             p += w2 + 8 + rnd() * 50;
           }
@@ -375,7 +455,23 @@
       var st = [], sr = seeded(3);
       for (i = 0; i < NSTAR; i++) { var az = sr() * 6.2832, el = .08 + sr() * 1.3, cr = Math.cos(el); st.push(Math.cos(az) * cr * 4000, -Math.sin(el) * 4000, Math.sin(az) * cr * 4000, 0, 0, 0, 0, 0); }
       gl.bindBuffer(gl.ARRAY_BUFFER, starBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(st), gl.STATIC_DRAW); bound = null;
-      gl.uniform2f(U.uRes, canvas.width, canvas.height);
+    }
+    function rebake() {  // the floor line is only known once dilmo.js has measured the stage, so this runs from frame()
+      if (baked) for (var bk in baked) if (baked[bk]) { gl.deleteBuffer(baked[bk].vb); gl.deleteBuffer(baked[bk].ib); }  // free the old merge first
+      var tn = [], tf = [], tr = [], fr = [], co = [];
+      town.forEach(function (b) {
+        var tw = b.ring ? tf : tn;
+        tw.push({ g: G.cube, M: chain(T(b.x, fl - b.h / 2, b.z), S(b.w, b.h, b.d)), col: b.col, size: [b.w, b.h, b.d], seed: b.seed });
+        tw.push({ g: G.cube, M: chain(T(b.x, fl - b.h - 2.5, b.z), S(b.w + 3, 5, b.d + 3)), col: mix(b.col, [.5, .45, .4], .12), size: [0, 0, 0], seed: [0, 0] });
+        if (b.box) tw.push({ g: G.cube, M: chain(T(b.x + b.box[0] * b.w, fl - b.h - b.box[2] / 2, b.z + b.box[1] * b.d), S(b.box[2] * 1.2, b.box[2], b.box[2] * 1.2)), col: mix(b.col, [1, 1, 1], .3), size: [0, 0, 0], seed: [0, 0] });
+      });
+      palms.forEach(function (p) {
+        tr.push({ g: G.cyl, M: chain(T(p.x, fl, p.z), Rz(p.lean), S(6, p.h, 6)), col: [.55, .42, .3], size: [0, 0, 0], seed: [0, 0] });
+        var tx = p.x + Math.sin(p.lean * Math.PI / 180) * p.h, ty = fl - Math.cos(p.lean * Math.PI / 180) * p.h, len = p.h * .55;
+        for (var k = 0; k < 8; k++) fr.push({ g: G.frond, M: chain(T(tx, ty, p.z), Ry(p.turn + k * .785), Rz(-18 - (k % 2) * 10), S(len, len, len)), col: [0, 0, 0], size: [0, 0, 0], seed: [p.ph + k * .7, 0] });
+        [[4, 3], [-3, 4], [0, -4]].forEach(function (o) { co.push({ g: G.low, M: chain(T(tx + o[0], ty + 6, p.z + o[1]), S(4.5, 4.5, 4.5)), col: [.45, .32, .18], size: [0, 0, 0], seed: [0, 0] }); });
+      });
+      baked = { town: bake(tn), far: bake(tf), trunks: bake(tr), fronds: bake(fr), nuts: bake(co) };
     }
     resize(W, H, K, DZ);
 
@@ -448,7 +544,10 @@
     }
     var last = null, lastT = 0;
     function frame(s) {
-      last = s; fl = s.fl; var t = s.t, dt = Math.min(3, (t - lastT) / 16.67 || 1); lastT = t;
+      last = s; fl = s.fl; var t = s.t, dt = Math.min(3, (t - lastT) / 16.67 || 1); adapt(t - lastT); lastT = t;
+      gl.uniform1f(U.uLite, lite ? 1 : 0);
+      var key = fl.toFixed(1) + "|" + W + "|" + DZ; if (key !== bakedFor) { bakedFor = key; rebake(); }
+      gl.uniform1f(U.uTv, s.reduce ? 0 : t / 1000);
       if (intro) {
         var ip = clamp((t - intro.t0) / intro.dur, 0, 1), e = ip * ip * (3 - 2 * ip); if (intro.back) e = 1 - e;
         cam.yaw = intro.yaw * e; cam.pitch = .03 + (intro.pitch - .03) * e; cam.zoom = intro.zoom + (1.25 - intro.zoom) * (1 - e);
@@ -458,8 +557,10 @@
       var want = intro ? "orbit" : cam.mode, sj = s.player || s.main;
       if (want === "second" && !(s.player && s.main)) want = "first";
       if ((want === "first" || want === "third") && !sj) want = "orbit";
-      if (want !== view.mode) { view.eye0 = view.eye; view.tgt0 = view.tgt; view.t0 = performance.now(); if (want === "first" && sj && Math.hypot(sj.vx, sj.vz) > .5) cam.yaw = Math.atan2(-sj.vx, -sj.vz); }
+      if (want !== view.mode) { view.eye0 = view.eye; view.tgt0 = view.tgt; view.t0 = performance.now(); if (want === "first" && sj) cam.yaw = Math.hypot(sj.vx, sj.vz) > .5 ? Math.atan2(-sj.vx, -sj.vz) : Math.atan2(-(W / 2 - sj.x), -(DZ / 2 - sj.z)); }
       view.mode = want; view.subj = want === "second" ? s.player : sj; view.from = s.main;
+      if (want !== "first" && locked()) document.exitPointerLock();
+      if (sj) { var wsp = Math.hypot(sj.vx, sj.vz); view.bob = (view.bob || 0) + wsp * dt * .035; view.bobA = (view.bobA || 0) + (Math.min(1, wsp / 6) - (view.bobA || 0)) * Math.min(1, .15 * dt); }
       api.hideEl = want === "first" && sj ? sj.el : want === "second" ? s.main.el : null;
       follow(s, dt);
       trauma = Math.max(0, trauma - .025 * dt);
@@ -469,7 +570,7 @@
       var gBack = col(sk["--g-back"]), gFront = col(sk["--g-front"]), tint = col(sk["--tint"], [1, 1, 1]), cloud = col(sk["--cloud"], [1, 1, 1]);
       // things with their own colour (stone, plaster, wood, metal) dim with the hour; the palette colours already do
       var ex = 1 - .62 * (sk.stars || 0), X = function (c) { return [c[0] * ex, c[1] * ex, c[2] * ex]; };
-      var palm = mix(grass, [.16, .34, .2], .5), trunk = X([.55, .42, .3]), bush = mix(grass, [.13, .3, .18], .35), hedge = mix(grass, [.12, .28, .16], .45);
+      var palm = mix(grass, [.16, .34, .2], .5), bush = mix(grass, [.13, .3, .18], .35), hedge = mix(grass, [.12, .28, .16], .45);
       // sun and moon on a big arc around the arena (east on the left of the flat view); the light of the hour comes from them
       var span = fl * .86, sunP = null, moonP = null, lc;
       if (sk.sun) { var az = sk.sun.x / W * Math.PI, el = (fl - 10 - sk.sun.y) / (span * .85); sunP = [cx - Math.cos(az) * 2600, fl - 150 - el * 2000, cz - Math.sin(az) * 2600]; }
@@ -504,7 +605,6 @@
       gl.enable(gl.DEPTH_TEST);
       // the ground, then every shadow multiplied into it
       draw(QD, 4, chain(T(cx, fl, cz), Rx(-90), S(9000, 9000, 1)), grass, gBack, gFront);
-      town.forEach(function (b) { shadow(b.x, b.z, Math.max(b.w, b.d) * .7, .22, b.h * .35); });
       palms.forEach(function (p) { var tx = p.x + Math.sin(p.lean * Math.PI / 180) * p.h * .5; shadow(tx, p.z, p.h * .32, .17, p.h * .35); });
       s.bushes.forEach(function (bu) { shadow(bu.x, bu.z, 40, .3, 12); });
       shadow(s.bench.x + s.bench.w / 2, s.bench.z, s.bench.w * .55, .28, 20);
@@ -516,24 +616,10 @@
       // the hedge round the lawn
       [[cx, -9, W + 36, 18], [cx, DZ + 9, W + 36, 18], [-9, cz, 18, DZ + 36], [W + 9, cz, 18, DZ + 36]].forEach(function (h) { draw(CUBE, 8, chain(T(h[0], fl - 14, h[1]), S(h[2], 28, h[3])), hedge); });
       // the town: plaster blocks with windows, a parapet, sometimes something on the roof
-      town.forEach(function (b) {
-        draw(CUBE, 9, chain(T(b.x, fl - b.h / 2, b.z), S(b.w, b.h, b.d)), b.col, [b.seed[0], b.seed[1], 0], [b.w, b.h, b.d]);
-        var pc = X(mix(b.col, [.5, .45, .4], .12));
-        draw(CUBE, 0, chain(T(b.x, fl - b.h - 2.5, b.z), S(b.w + 3, 5, b.d + 3)), pc);
-        if (b.box) draw(CUBE, 0, chain(T(b.x + b.box[0] * b.w, fl - b.h - b.box[2] / 2, b.z + b.box[1] * b.d), S(b.box[2] * 1.2, b.box[2], b.box[2] * 1.2)), X(mix(b.col, [1, 1, 1], .3)));
-      });
+      drawBaked(baked.town, 9); if (!lite) drawBaked(baked.far, 9);
       // palms: a ringed, slightly leaning trunk, a crown of drooping fronds swaying one by one, coconuts
-      palms.forEach(function (p) {
-        draw(CYL, 11, chain(T(p.x, fl, p.z), Rz(p.lean), S(6, p.h, 6)), trunk);
-        var tx = p.x + Math.sin(p.lean * Math.PI / 180) * p.h, ty = fl - Math.cos(p.lean * Math.PI / 180) * p.h, len = p.h * .55;
-        for (var k = 0; k < 8; k++) {
-          var sway = s.reduce ? 0 : Math.sin(t / 900 + p.ph + k * .7) * 3;
-          draw(FROND, 13, chain(T(tx, ty, p.z), Ry(p.turn + k * .785), Rz(-18 - (k % 2) * 10 + sway), S(len, len, len)), palm);
-        }
-        flat(true);
-        [[4, 3], [-3, 4], [0, -4]].forEach(function (o) { draw(LOW, 0, chain(T(tx + o[0], ty + 6, p.z + o[1]), S(4.5, 4.5, 4.5)), X([.45, .32, .18])); });
-        flat(false);
-      });
+      drawBaked(baked.trunks, 11); drawBaked(baked.fronds, 13, palm);
+      flat(true); drawBaked(baked.nuts, 0); flat(false);
       // lamp posts at the corners of the walk; at night a warm head, a halo and a pool of light on the ground
       lamps.forEach(function (l) {
         draw(CYL, 0, chain(T(l.x, fl, l.z), S(2.6, 78, 2.6)), X([.24, .26, .28]));
@@ -577,11 +663,13 @@
     }
     return (api = { canvas: canvas, frame: frame, resize: resize, scr: scr, unscr: unscr, ground: ground, cam: cam,
       axes: function () { var l = Math.hypot(fwd[0], fwd[2]) || 1; return { rx: right[0], rz: right[2], fx: fwd[0] / l, fz: fwd[2] / l }; },
-      setView: function (m) { cam.mode = m; },
+      setView: function (m) { cam.mode = m; if (m !== "first" && locked()) document.exitPointerLock(); },
+      viewNow: function () { return view.mode; }, locked: locked,
       shake: function (a) { if (!(last && last.reduce)) trauma = Math.min(1, trauma + a); },
       intro: function (dur, back) { cam.yaw = Math.atan2(Math.sin(cam.yaw), Math.cos(cam.yaw)); intro = { t0: performance.now(), dur: dur, back: back, yaw: cam.yaw, pitch: cam.pitch, zoom: cam.zoom }; },
       snapshot: function () { if (last) frame(last); return canvas; },
-      destroy: function () { api.onLost = null; var ext = gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); canvas.remove(); } });
+      lite: function () { return lite; },
+      destroy: function () { api.onLost = null; document.removeEventListener("mousemove", onMouseLook); if (locked()) document.exitPointerLock(); var ext = gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); canvas.remove(); } });
   }
   window.Dilmo3D = { create: create };
 })();
