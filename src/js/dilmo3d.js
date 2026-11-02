@@ -366,7 +366,10 @@
       if (hz < -.01) tMax = Math.min(tMax, (-470 - tgt[2]) / hz); if (hz > .01) tMax = Math.min(tMax, (DZ + 1900 - tgt[2]) / hz);
       if (!intro && d * Math.cos(pitch) > tMax) pitch = Math.acos(clamp(tMax / d, 0, 1));
       if (trauma > 0) { var sh = trauma * trauma, nz = function (k) { return Math.sin(viewT * .021 + k) * .6 + Math.sin(viewT * .037 + 2 * k) * .4; }; yaw += .026 * sh * nz(1); pitch += .017 * sh * nz(2); tgt[1] += 6 * sh * nz(3); }
+      // third person looking up: the camera can't go under the ground, so it stays low behind you and tilts up instead (up to ~70°)
+      var lookUp = third && pitch < .05 ? .05 - pitch : 0; if (lookUp) pitch = .05;
       eye = [tgt[0] + d * Math.sin(yaw) * Math.cos(pitch), tgt[1] - d * Math.sin(pitch), tgt[2] + d * Math.cos(yaw) * Math.cos(pitch)];
+      if (lookUp) tgt[1] -= d * Math.cos(pitch) * Math.tan(lookUp);
       if (vm === "first") {  // through the character's eyes: a little above its middle, looking where the camera yaw points
         var p1 = cam.p1, dip = 0, since = viewT - (sj.landT || 0);
         if (since < 150 && !viewReduce) dip = Math.min((sj.landHit || 0) * .6, 10) * (1 - since / 150);  // knees give a little on landing
@@ -419,8 +422,8 @@
       lastOrbit = performance.now();
       if (ks.length === 1) {
         var ddx = (e.clientX - p.x), ddy = (e.clientY - p.y), vm = view.mode;
-        if (vm === "first") { cam.yaw -= ddx * .005 * opt.sens; cam.p1 = clamp(cam.p1 + ddy * .004 * opt.sens, -.6, 1.1); }
-        else if (vm === "third") { cam.yaw += ddx * .006; cam.p3 = clamp(cam.p3 - ddy * .005, .1, 1.2); }
+        if (vm === "first") { cam.yaw -= ddx * .005 * opt.sens; cam.p1 = clamp(cam.p1 + ddy * .004 * opt.sens, -1.45, 1.45); }
+        else if (vm === "third") { cam.yaw += ddx * .006; cam.p3 = clamp(cam.p3 - ddy * .005, -1.4, 1.2); }
         else if (vm === "orbit") { cam.yaw += ddx * .006; cam.pitch = clamp(cam.pitch - ddy * .005, .14, 1.15); }
       }
       p.x = e.clientX; p.y = e.clientY;
@@ -430,7 +433,7 @@
     function locked() { return document.pointerLockElement === canvas; }
     function onMouseLook(e) {
       if (!locked() || view.mode !== "first") return;
-      cam.yaw -= e.movementX * .0024 * opt.sens; cam.p1 = clamp(cam.p1 + e.movementY * .0022 * opt.sens, -.6, 1.1);
+      cam.yaw -= e.movementX * .0024 * opt.sens; cam.p1 = clamp(cam.p1 + e.movementY * .0022 * opt.sens, -1.45, 1.45);
     }
     document.addEventListener("mousemove", onMouseLook);
     function pup(e) {

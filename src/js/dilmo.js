@@ -368,7 +368,7 @@
   function unlock() {
     if (unlocked) return; unlocked = true;
     try {
-      ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = .3; master.connect(ac.destination);
+      ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = volGain(); master.connect(ac.destination);
       // soft echo for the melodic notes
       echo = ac.createDelay(1); echo.delayTime.value = .28;
       var fb = ac.createGain(), lp = ac.createBiquadFilter(), wet = ac.createGain();
@@ -553,6 +553,17 @@
     for (var k = 0; k < song.notes.length; k++) { var n = song.notes[k]; if (se >= n.start && se < n.start + n.dur) return { n: n, k: k, p: (se - n.start) / n.dur }; }
     return null;
   }
+  // the volume: a slider beside the sound button (in the game menu in full screen), remembered; squared so the low end is fine-grained like the ear
+  function volGain() { var v = store.vol == null ? 100 : store.vol; return .3 * (v / 100) * (v / 100); }
+  var volBox = el("label", "vol"), volIn = document.createElement("input");
+  volIn.type = "range"; volIn.min = 0; volIn.max = 100; volIn.step = 5; volIn.value = store.vol == null ? 100 : store.vol;
+  volBox.appendChild(document.createTextNode(T("مستوى الصوت", "Volume"))); volBox.appendChild(volIn);
+  document.getElementById("snd").after(volBox);
+  volIn.addEventListener("input", function () {
+    store.vol = +volIn.value; saveStore();
+    if (master) master.gain.setTargetAtTime(volGain(), ac.currentTime, .03);
+    sfx("pop");  // hear the new level
+  });
   document.getElementById("snd").addEventListener("click", function () {
     soundOn = !soundOn; this.setAttribute("aria-pressed", String(soundOn));
     this.textContent = soundOn ? T("الصوت: يعمل", "Sound: on") : T("الصوت: متوقّف", "Sound: off");
@@ -1911,7 +1922,7 @@
   // he says "the rest are below": when that list is out of view, a button in his world takes you to it
   var resHint = document.createElement("button"); resHint.type = "button"; resHint.className = "res-hint"; resHint.hidden = true;
   resHint.textContent = T("↓ النتائج", "↓ Results"); stage.appendChild(resHint);
-  resHint.addEventListener("click", function () { resultsEl.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" }); resHint.hidden = true; });
+  resHint.addEventListener("click", function () { if (root.classList.contains("fs")) fsMenuOpen(true); resultsEl.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" }); resHint.hidden = true; });
   if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { if (es[0].isIntersecting) resHint.hidden = true; }).observe(resultsEl);
   function showResults(list) {
     resultsEl.textContent = "";
@@ -2776,8 +2787,8 @@
   gear.addEventListener("click", function () { stir(); if (setPanel.hidden) openSettings(); else closeSettings(); });
   addEventListener("keydown", function (e) { if (e.key === "Escape" && !setPanel.hidden) closeSettings(); });
 
-  // ---- full screen, like a real game: the world fills the screen, the join form / chat bar sits under it,
-  // and every other control (characters, sound, talk, photo, 3D, view, tips) lives in a menu over the world ----
+  // ---- full screen, like a real game: the world fills the whole screen and every control lives in a menu over it
+  // (your character, gestures, colours, the cast, sound, talk, photo, 3D, view, tips); only the chat stays out, folded into a small button on the side ----
   var FS_IN = '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>', FS_OUT = '<path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/>';
   var fsBar = el("div", "fs-bar"), fsMenuBtn = el("button", "fs-b"), fsBtn = el("button", "fs-b"), fsMenu = el("div", "fs-menu"), fsHome = [];
   fsMenuBtn.type = fsBtn.type = "button"; fsMenuBtn.hidden = fsMenu.hidden = true;
@@ -2786,13 +2797,27 @@
   var fsHead = el("div", "d3-head"), fsClose = el("button", "snd", T("عودة إلى اللعب", "Back to the game"));
   fsClose.type = "button"; fsHead.appendChild(el("h2", "", T("القائمة", "Menu"))); fsHead.appendChild(fsClose); fsMenu.appendChild(fsHead);
   fsBar.appendChild(fsMenuBtn); fsBar.appendChild(fsBtn); stage.appendChild(fsBar); root.appendChild(fsMenu);
+  var chatForm = document.getElementById("pp-chat"), chatInp = document.getElementById("pp-msg"), fsChat = el("div", "fs-chat"), fsChatBtn = el("button", "fs-b");
+  fsChatBtn.type = "button"; fsChatBtn.setAttribute("aria-label", T("اكتب رسالة", "Write a message")); fsChatBtn.setAttribute("aria-expanded", "false");
+  fsChatBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H10l-4 4v-4H5z"/></svg>';
+  fsChat.appendChild(fsChatBtn); stage.appendChild(fsChat);
+  function chatOpen(on) {
+    fsChat.classList.toggle("open", on); fsChatBtn.setAttribute("aria-expanded", String(on));
+    if (on) { if (D3 && D3.locked() && document.exitPointerLock) document.exitPointerLock(); chatInp.focus({ preventScroll: true }); } else if (document.activeElement === chatInp) chatInp.blur();
+  }
+  fsChatBtn.addEventListener("click", function () { chatOpen(!fsChat.classList.contains("open")); });
+  chatForm.addEventListener("submit", function () { if (root.classList.contains("fs")) chatOpen(false); });  // said: fold back, the world is the view
+  chatInp.addEventListener("blur", function () { if (!chatInp.value.trim()) setTimeout(function () { if (document.activeElement !== chatInp) chatOpen(false); }, 150); });
   function fsLabel(on) { fsBtn.setAttribute("aria-label", on ? T("الخروج من ملء الشاشة", "Exit full screen") : T("ملء الشاشة", "Full screen")); if (!TOUCH) fsBtn.title = fsBtn.getAttribute("aria-label") + " (F)"; fsBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + (on ? FS_OUT : FS_IN) + "</svg>"; }
   function setFs(on) {
     if (on === root.classList.contains("fs")) return;
     root.classList.toggle("fs", on); document.documentElement.classList.toggle("dilmo-fs", on); fsMenuBtn.hidden = !on; fsLabel(on);
-    if (on) [document.querySelector(".dilmo-top"), trainEl, document.querySelector(".tips")].forEach(function (e) { if (e) { fsHome.push([e, e.parentNode, e.nextSibling]); fsMenu.appendChild(e); } });
+    if (on) {
+      fsHome.push([chatForm, chatForm.parentNode, chatForm.nextSibling]); fsChat.insertBefore(chatForm, fsChatBtn);
+      [panel, pui, document.querySelector(".dilmo-top"), trainEl, document.querySelector(".tips")].forEach(function (e) { if (e) { fsHome.push([e, e.parentNode, e.nextSibling]); fsMenu.appendChild(e); } });
+    }
     else {
-      fsHome.reverse().forEach(function (h) { h[1].insertBefore(h[0], h[2]); }); fsHome = []; fsMenu.hidden = true;
+      fsHome.reverse().forEach(function (h) { h[1].insertBefore(h[0], h[2]); }); fsHome = []; fsMenu.hidden = true; chatOpen(false);
       if (trainEl && trainEl.parentNode === fsMenu) document.querySelector(".tips").before(trainEl);  // made while the menu held the tips
       if (document.fullscreenElement) document.exitFullscreen().catch(function () { /* already out */ });
       else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
@@ -2822,9 +2847,9 @@
     if (e.code === "KeyF" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); toggleFs(); return; }
     if (!fs) return;
     if (e.key === "Escape") {  // in the page-filling layout (no true full screen) Esc steps back: chat → menu → out
-      if (typing) e.target.blur(); else if (!fsMenu.hidden) fsMenuOpen(false); else if (setPanel.hidden && !document.fullscreenElement) setFs(false);
+      if (e.target === chatInp) chatOpen(false); else if (typing) e.target.blur(); else if (!fsMenu.hidden) fsMenuOpen(false); else if (setPanel.hidden && !document.fullscreenElement) setFs(false);
     } else if (e.key === "Enter" && !typing && player && fsMenu.hidden && !/^(BUTTON|A)$/.test(e.target.tagName)) {  // Enter opens the chat, as in most games
-      e.preventDefault(); document.getElementById("pp-msg").focus({ preventScroll: true });
+      e.preventDefault(); chatOpen(true);
     }
   });
 
