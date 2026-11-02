@@ -32,7 +32,7 @@
     "#ifdef GL_FRAGMENT_PRECISION_HIGH", "precision highp float;", "#else", "precision mediump float;", "#endif",
     "varying vec3 vN, vW, vL; varying vec2 vUv; varying vec3 vCol, vSize; varying vec2 vSeed; uniform mediump float uBk;",
     "uniform int uMode; uniform vec4 uC0, uC1, uC2; uniform vec3 uLight, uLc, uSky, uGnd, uTint, uCam, uFogC, uSunDir, uSunC, uB0, uB1, uB2, uRight, uUp, uFwd;",
-    "uniform vec2 uArena, uRes, uFxy; uniform float uA, uRot, uFl, uLights, uFlat, uT, uExpo, uLite; uniform sampler2D uFace;",
+    "uniform vec2 uArena, uRes, uFxy; uniform float uA, uRot, uFl, uLights, uFlat, uT, uExpo, uLite, uVig; uniform sampler2D uFace;",
     "float hash(vec2 p) { p = mod(p, 289.0); return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
     "float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);",
     "  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y); }",
@@ -123,7 +123,7 @@
     "  c = mix(c, mix(vec3(dot(c, vec3(0.3, 0.59, 0.11))), c, 0.75), fog * 0.6);",
     "  c = mix(c, fc2, clamp(fog, 0.0, 0.92));",
     // finishing: a soft vignette and an ordered dither against banding in the sky and the haze
-    "  if (uLite < 0.5) { vec2 q = gl_FragCoord.xy / uRes; c *= mix(0.8, 1.0, smoothstep(1.15, 0.35, length(q - 0.5) * 1.4142)); }",  // a soft vignette, no grain
+    "  if (uVig > 0.5) { vec2 q = gl_FragCoord.xy / uRes; c *= mix(0.8, 1.0, smoothstep(1.15, 0.35, length(q - 0.5) * 1.4142)); }",  // a soft vignette, no grain
     "  gl_FragColor = vec4(c, al);",
     "}"].join("\n");
 
@@ -205,11 +205,14 @@
   var PLASTER = [[.93, .87, .76], [.88, .82, .7], [.95, .93, .88], [.84, .78, .68], [.9, .85, .79], [.86, .7, .58]];
 
   // host: the .world element; W × DZ: the arena in world px; paintFace(ctx, el): dilmo.js draws a body's current face into a canvas
-  function create(host, W, H, K, DZ, paintFace) {
+  function create(host, W, H, K, DZ, paintFace, gfx) {
+    // graphics options from the in-game settings. auto: read the device, then adapt while playing; otherwise exactly as chosen
+    var opt = { auto: true, resH: 0, aa: true, far: true, detail: true, vig: true, shadows: true, fov: 80, sens: 1 };
+    for (var ok in gfx || {}) opt[ok] = gfx[ok];
     var canvas = document.createElement("canvas"); canvas.className = "d3";
     // light mode for old computers and cheap phones: no anti-aliasing, fewer pixels, no noise textures, only the near ring of houses
     var weak = (navigator.hardwareConcurrency || 4) <= 2 || (navigator.deviceMemory || 4) <= 2;
-    var gl = canvas.getContext("webgl", { antialias: !weak, alpha: false, premultipliedAlpha: false, powerPreference: "high-performance" });  // the visitor chose the heavier world: ask for the strong GPU (laptops with two)
+    var gl = canvas.getContext("webgl", { antialias: opt.auto ? !weak : !!opt.aa, alpha: false, premultipliedAlpha: false, powerPreference: "high-performance" });  // the visitor chose the heavier world: ask for the strong GPU (laptops with two)
     if (!gl) return null;
     host.insertBefore(canvas, host.firstChild);
     var api = null;  // the renderer dies with its context (a phone dropping the GPU): tell dilmo.js so it can step back to the flat world
@@ -227,7 +230,7 @@
     gl.useProgram(prog);
     var U = {};
     ["uP", "uM", "uN", "uR", "uPt", "uRim", "uMode", "uC0", "uC1", "uC2", "uLight", "uLc", "uSky", "uGnd", "uTint", "uCam", "uFogC", "uSunDir", "uSunC", "uB0", "uB1", "uB2",
-      "uRight", "uUp", "uFwd", "uArena", "uRes", "uFxy", "uA", "uRot", "uFl", "uLights", "uFlat", "uT", "uExpo", "uFace", "uBk", "uTv", "uLite"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+      "uRight", "uUp", "uFwd", "uArena", "uRes", "uFxy", "uA", "uRot", "uFl", "uLights", "uFlat", "uT", "uExpo", "uFace", "uBk", "uTv", "uLite", "uVig"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
     var A = { pos: gl.getAttribLocation(prog, "aPos"), nrm: gl.getAttribLocation(prog, "aNrm"), uv: gl.getAttribLocation(prog, "aUv"),
       loc: gl.getAttribLocation(prog, "aLoc"), col: gl.getAttribLocation(prog, "aCol"), size: gl.getAttribLocation(prog, "aSize"), seed: gl.getAttribLocation(prog, "aSeed") };
     var EXTRA = [A.loc, A.col, A.size, A.seed].filter(function (a) { return a >= 0; });
@@ -344,7 +347,7 @@
       fwd = norm([tgt[0] - eye[0], tgt[1] - eye[1], tgt[2] - eye[2]]);
       right = norm(cross([0, -1, 0], fwd)); cup = cross(fwd, right);
       var V = new Float32Array([right[0], cup[0], -fwd[0], 0, right[1], cup[1], -fwd[1], 0, right[2], cup[2], -fwd[2], 0, -dot(right, eye), -dot(cup, eye), dot(fwd, eye), 1]);
-      var n = 20, f = 9000; fy = 1 / Math.tan(.36); fx = fy * H / W;
+      var n = 20, f = 9000; fy = 1 / Math.tan(vm === "first" ? clamp(opt.fov, 50, 110) * Math.PI / 360 : .36); fx = fy * H / W;
       var P = new Float32Array([fx, 0, 0, 0, 0, fy, 0, 0, 0, 0, -(f + n) / (f - n), -1, 0, 0, -2 * f * n / (f - n), 0]);
       PV = mul(P, V);
     }
@@ -381,7 +384,7 @@
       lastOrbit = performance.now();
       if (ks.length === 1) {
         var ddx = (e.clientX - p.x), ddy = (e.clientY - p.y), vm = view.mode;
-        if (vm === "first") { cam.yaw -= ddx * .005; cam.p1 = clamp(cam.p1 + ddy * .004, -.6, 1.1); }
+        if (vm === "first") { cam.yaw -= ddx * .005 * opt.sens; cam.p1 = clamp(cam.p1 + ddy * .004 * opt.sens, -.6, 1.1); }
         else if (vm === "third") { cam.yaw += ddx * .006; cam.p3 = clamp(cam.p3 - ddy * .005, .1, 1.2); }
         else if (vm === "orbit") { cam.yaw += ddx * .006; cam.pitch = clamp(cam.pitch - ddy * .005, .14, 1.15); }
       }
@@ -392,7 +395,7 @@
     function locked() { return document.pointerLockElement === canvas; }
     function onMouseLook(e) {
       if (!locked() || view.mode !== "first") return;
-      cam.yaw -= e.movementX * .0024; cam.p1 = clamp(cam.p1 + e.movementY * .0022, -.6, 1.1);
+      cam.yaw -= e.movementX * .0024 * opt.sens; cam.p1 = clamp(cam.p1 + e.movementY * .0022 * opt.sens, -.6, 1.1);
     }
     document.addEventListener("mousemove", onMouseLook);
     function pup(e) {
@@ -409,14 +412,15 @@
     canvas.addEventListener("wheel", function (e) { cam.zoom = clamp(cam.zoom * (e.deltaY > 0 ? 1.08 : .93), .55, 1.8); e.preventDefault(); }, { passive: false });
 
     var town = [], palms = [], clouds = [], lamps = [], quality = lite ? .7 : 1, ft = { sum: 0, n: 0, good: 0, slow: 0 };
+    function on(k) { return opt.auto ? !lite : !!opt[k]; }  // detail, the far ring and the vignette follow light mode in auto
     function applyScale() {
-      var dpr = Math.min(lite ? 1 : 1.5, devicePixelRatio || 1) * K * quality;
+      var dev = devicePixelRatio || 1, dpr = !opt.auto && opt.resH ? Math.min(opt.resH / H, dev * K) : !opt.auto ? Math.min(2, dev) * K : Math.min(lite ? 1 : 1.5, dev) * K * quality;
       canvas.width = Math.max(2, Math.round(W * dpr)); canvas.height = Math.max(2, Math.round(H * dpr));
       gl.viewport(0, 0, canvas.width, canvas.height); gl.uniform2f(U.uRes, canvas.width, canvas.height);
     }
     // every second: if frames take too long, draw fewer pixels (down to 55 %); when there is room again, go back up
     function adapt(ms) {
-      if (!(ms > 0 && ms < 120)) return;  // a background tab or a hitch is not a trend
+      if (!opt.auto || !(ms > 0 && ms < 120)) return;  // a background tab or a hitch is not a trend
       ft.sum += ms; ft.n++;
       if (ft.n < 60) return;
       var avg = ft.sum / ft.n; ft.sum = ft.n = 0;
@@ -524,6 +528,7 @@
       if (hgt != null && hgt < w * 2) shadows.push([x, z, w * .55, w * .55, 0, a * .55]);  // a tight dark core right under it: weight
     }
     function flushShadows() {
+      if (!opt.shadows) { shadows = []; return; }
       gl.depthMask(false); gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
       shadows.forEach(function (s) { draw(QD, 10, chain(T(s[0], fl - .6, s[1]), Ry(-s[4]), Rx(90), S(s[2], s[3], 1)), [0, 0, 0, s[5]]); });
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(true); shadows = [];
@@ -545,7 +550,7 @@
     var last = null, lastT = 0;
     function frame(s) {
       last = s; fl = s.fl; var t = s.t, dt = Math.min(3, (t - lastT) / 16.67 || 1); adapt(t - lastT); lastT = t;
-      gl.uniform1f(U.uLite, lite ? 1 : 0);
+      gl.uniform1f(U.uLite, on("detail") ? 0 : 1); gl.uniform1f(U.uVig, on("vig") ? 1 : 0);
       var key = fl.toFixed(1) + "|" + W + "|" + DZ; if (key !== bakedFor) { bakedFor = key; rebake(); }
       gl.uniform1f(U.uTv, s.reduce ? 0 : t / 1000);
       if (intro) {
@@ -616,7 +621,7 @@
       // the hedge round the lawn
       [[cx, -9, W + 36, 18], [cx, DZ + 9, W + 36, 18], [-9, cz, 18, DZ + 36], [W + 9, cz, 18, DZ + 36]].forEach(function (h) { draw(CUBE, 8, chain(T(h[0], fl - 14, h[1]), S(h[2], 28, h[3])), hedge); });
       // the town: plaster blocks with windows, a parapet, sometimes something on the roof
-      drawBaked(baked.town, 9); if (!lite) drawBaked(baked.far, 9);
+      drawBaked(baked.town, 9); if (on("far")) drawBaked(baked.far, 9);
       // palms: a ringed, slightly leaning trunk, a crown of drooping fronds swaying one by one, coconuts
       drawBaked(baked.trunks, 11); drawBaked(baked.fronds, 13, palm);
       flat(true); drawBaked(baked.nuts, 0); flat(false);
@@ -669,6 +674,8 @@
       intro: function (dur, back) { cam.yaw = Math.atan2(Math.sin(cam.yaw), Math.cos(cam.yaw)); intro = { t0: performance.now(), dur: dur, back: back, yaw: cam.yaw, pitch: cam.pitch, zoom: cam.zoom }; },
       snapshot: function () { if (last) frame(last); return canvas; },
       lite: function () { return lite; },
+      setOptions: function (o) { for (var k in o) opt[k] = o[k]; if (o.auto) { quality = lite ? .7 : 1; ft.sum = ft.n = ft.good = ft.slow = 0; } applyScale(); },
+      stats: function () { return { w: canvas.width, h: canvas.height, lite: lite, auto: opt.auto, aa: !!(gl.getContextAttributes() || {}).antialias }; },
       destroy: function () { api.onLost = null; document.removeEventListener("mousemove", onMouseLook); if (locked()) document.exitPointerLock(); var ext = gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); canvas.remove(); } });
   }
   window.Dilmo3D = { create: create };

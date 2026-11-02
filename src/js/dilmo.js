@@ -1420,7 +1420,7 @@
   }
   // e.code, not e.key: WASD stay in the same place on an Arabic keyboard layout
   function moveKey(e, down) {
-    if (!player || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (!player || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || (setPanel && !setPanel.hidden)) return;  // the settings panel is open: keys are for it
     var c = e.code;
     if (c === "KeyA" || c === "ArrowLeft") keys.left = down;
     else if (c === "KeyD" || c === "ArrowRight") keys.right = down;
@@ -2426,6 +2426,77 @@
     ptr.gx = ptr.gz = null;
     if (hs) { hs.hidden = false; hs.b.crouch = false; }
   }
+  // ---- graphics settings, inside the game (a gear in the corner of the 3D world): auto by default ----
+  var GFX_KEY = "hk-dilmo-gfx", PRESETS = {
+    light: { res: 540, aa: false, far: false, detail: false, vig: false, shadows: true },
+    medium: { res: 720, aa: true, far: true, detail: false, vig: true, shadows: true },
+    high: { res: 0, aa: true, far: true, detail: true, vig: true, shadows: true }
+  };
+  var gfx = { preset: "auto", res: -1, fps: 0, aa: true, far: true, detail: true, vig: true, shadows: true, counter: false, fov: 80, sens: 1 };
+  try { Object.assign(gfx, JSON.parse(localStorage.getItem(GFX_KEY) || "{}")); } catch { /* private window: defaults */ }
+  function saveGfx() { try { localStorage.setItem(GFX_KEY, JSON.stringify(gfx)); } catch { /* private window */ } }
+  function gfxOpts() {  // what the renderer needs; res -1 = auto (adapts), 0 = native
+    return { auto: gfx.preset === "auto", resH: gfx.res > 0 ? gfx.res : 0, aa: gfx.aa, far: gfx.far, detail: gfx.detail, vig: gfx.vig, shadows: gfx.shadows, fov: gfx.fov, sens: gfx.sens };
+  }
+  function gfxStatus() { var s = view3 ? view3.stats() : null; return s ? s.w + "×" + s.h + (s.auto ? (s.lite ? T(" · تلقائي خفيف", " · auto light") : T(" · تلقائي", " · auto")) : "") : ""; }
+  var gear = document.createElement("button"); gear.type = "button"; gear.className = "d3-gear"; gear.hidden = true;
+  gear.setAttribute("aria-label", T("إعدادات الرسوميات", "Graphics settings")); gear.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.7 7.7 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.7 7.7 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.7 7.7 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.7 7.7 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>';
+  var fpsBox = document.createElement("span"); fpsBox.className = "d3-fps"; fpsBox.hidden = true; fpsBox.setAttribute("aria-hidden", "true");
+  var setPanel = document.createElement("div"); setPanel.className = "d3-set"; setPanel.hidden = true; setPanel.setAttribute("role", "dialog"); setPanel.setAttribute("aria-label", T("إعدادات الرسوميات", "Graphics settings"));
+  stage.appendChild(gear); stage.appendChild(fpsBox); stage.appendChild(setPanel);
+  function seg(label, key, items) {  // a row of choices; picking one by hand leaves the preset for "custom"
+    var row = el("div", "d3-row"), lab = el("span", "d3-lab", label), box = el("div", "seg");
+    row.appendChild(lab); row.appendChild(box);
+    items.forEach(function (it) {
+      var b = el("button", "", it[1]); b.type = "button"; b.setAttribute("aria-pressed", String(gfx[key] === it[0]));
+      b.addEventListener("click", function () { setGfx(key, it[0]); });
+      box.appendChild(b);
+    });
+    return row;
+  }
+  function renderSettings() {
+    setPanel.textContent = "";
+    var head = el("div", "d3-head"), h = el("h2", "", T("الرسوميات", "Graphics")), x = el("button", "snd", T("إغلاق", "Close"));
+    x.type = "button"; x.addEventListener("click", closeSettings); head.appendChild(h); head.appendChild(x); setPanel.appendChild(head);
+    setPanel.appendChild(seg(T("الجودة", "Quality"), "preset", [["auto", T("تلقائي", "Auto")], ["light", T("خفيف", "Light")], ["medium", T("متوسط", "Medium")], ["high", T("عالٍ", "High")], ["custom", T("مخصّص", "Custom")]].filter(function (it) { return it[0] !== "custom" || gfx.preset === "custom"; })));
+    setPanel.appendChild(seg(T("الدقة", "Resolution"), "res", [[-1, T("تلقائي", "Auto")], [0, T("الأصلية", "Native")], [1440, "1440p"], [1080, "1080p"], [720, "720p"], [540, "540p"], [360, "360p"]]));
+    setPanel.appendChild(seg(T("أقصى إطارات", "Max FPS"), "fps", [[30, "30"], [60, "60"], [120, "120"], [0, T("بلا حد", "Unlimited")]]));
+    var on = [["shadows", T("الظلال", "Shadows")], ["aa", T("تنعيم الحواف", "Anti-aliasing")], ["far", T("المدينة البعيدة", "Far city")], ["detail", T("تفاصيل الأرض", "Ground detail")], ["vig", T("تعتيم الأطراف", "Vignette")], ["counter", T("عدّاد الإطارات", "FPS counter")]];
+    var tg = el("div", "d3-row"), tl = el("span", "d3-lab", T("خيارات", "Options")), tb = el("div", "seg");
+    on.forEach(function (o) {
+      var b = el("button", "", o[1]); b.type = "button"; b.setAttribute("aria-pressed", String(!!gfx[o[0]]));
+      b.addEventListener("click", function () { setGfx(o[0], !gfx[o[0]]); });
+      tb.appendChild(b);
+    });
+    tg.appendChild(tl); tg.appendChild(tb); setPanel.appendChild(tg);
+    setPanel.appendChild(seg(T("مجال الرؤية (الشخص الأول)", "Field of view (first person)"), "fov", [[65, "65°"], [80, "80°"], [95, "95°"], [110, "110°"]]));
+    setPanel.appendChild(seg(T("حساسية الفأرة", "Mouse sensitivity"), "sens", [[.5, "0.5"], [.75, "0.75"], [1, "1"], [1.5, "1.5"], [2, "2"]]));
+    var note = el("p", "d3-note", gfx.preset === "auto" ? T("التلقائي يقرأ جهازك ويخفّف الرسوميات وحده إذا تباطأت، ويرفعها حين يتسع المجال.", "Auto reads your device, lowers the graphics by itself when frames slow down, and raises them again when there is room.") : "");
+    if (note.textContent) setPanel.appendChild(note);
+    var st = el("p", "d3-note", T("الآن: ", "Now: ") + gfxStatus()); setPanel.appendChild(st);
+  }
+  function setGfx(key, val) {
+    var aaWas = view3 ? view3.stats().aa : gfx.aa;
+    if (key === "preset") { gfx.preset = val; if (PRESETS[val]) Object.assign(gfx, PRESETS[val]); if (val === "auto") gfx.res = -1; }
+    else { gfx[key] = val; if (["res", "aa", "far", "detail", "vig", "shadows"].indexOf(key) >= 0) gfx.preset = key === "res" && val === -1 ? "auto" : "custom"; }
+    saveGfx(); tone(900, 1200, .05, "sine", .03);
+    if (view3) {
+      var o = gfxOpts(), wantAA = o.auto ? view3.stats().aa : o.aa;
+      if (wantAA !== aaWas && !o.auto) restart3d(); else view3.setOptions(o);
+    }
+    fpsBox.hidden = !(D3 && gfx.counter); renderSettings();
+  }
+  function restart3d() {  // anti-aliasing is fixed when the WebGL context is made: build a new renderer in place, same view
+    var keep = viewMode; view3.destroy();
+    view3 = D3 = window.Dilmo3D.create(world, W, world.offsetHeight, K, DZ, paintFace, gfxOpts());
+    if (!view3) { portal(false); return; }
+    wire3d(); setView(keep);
+  }
+  function openSettings() { if (!view3) return; if (D3.locked() && document.exitPointerLock) document.exitPointerLock(); renderSettings(); setPanel.hidden = false; setPanel.querySelector("button").focus({ preventScroll: true }); stage.scrollLeft = stage.scrollTop = 0; }
+  function closeSettings() { setPanel.hidden = true; gear.focus({ preventScroll: true }); stage.scrollLeft = stage.scrollTop = 0; }
+  gear.addEventListener("click", function () { stir(); if (setPanel.hidden) openSettings(); else closeSettings(); });
+  addEventListener("keydown", function (e) { if (e.key === "Escape" && !setPanel.hidden) closeSettings(); });
+
   // the crosshair in the middle of a first-person view: the nearest thing under it gets touched
   var cross = document.getElementById("d3-cross");
   function useCrosshair() {
@@ -2442,7 +2513,7 @@
     else { var b = best.b; b.vy = -7 * b.f.energy; b.vx += ax.fx * 3; b.vz += ax.fz * 3; b.joy = 1; b.svy -= .2; sfx("pop"); bsay(b, line(b.f.shy ? "buddyShyPoke" : "buddyPoke")); }
   }
   function portal(on) {
-    d3Busy = true; depthPad.hidden = !on; viewBtn.hidden = !on;
+    d3Busy = true; depthPad.hidden = !on; viewBtn.hidden = !on; gear.hidden = !on; fpsBox.hidden = !(on && gfx.counter); if (!on) setPanel.hidden = true;
     if (!on) setView("orbit"); else setView(player ? "third" : "orbit"); keys.left = keys.right = keys.down = keys.far = keys.near = false;
     var cx = mainAway ? W / 2 : pos.x, cy = mainAway ? ground : pos.y, H = world.offsetHeight;
     var Rm = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 20, dur = reduce ? 400 : 1500, t0 = performance.now();
@@ -2462,23 +2533,26 @@
       say(line(on ? "portalIn" : "portalOut"), "portal", 1000);
     })(t0);
   }
+  function wire3d() {
+    view3.onLost = function () { if (view3 && !d3Busy) portal(false); };
+    view3.onTap = function (e) {  // a tap on the lawn: Dilmo bounds over to that spot (first person: whatever is under the crosshair)
+      stir();
+      if (D3 && D3.viewNow() === "first" && (D3.locked() || e.pointerType !== "mouse")) { useCrosshair(); return; }
+      var p = toStage(e), g = D3 && D3.ground(p.x, p.y);
+      if (!g || !g.inside || mainAway || drag || mood.sleepy > .85) return;
+      var dx = g.x - pos.x, dz = g.z - pos.z, dd = Math.hypot(dx, dz) || 1, sp = Math.min(9, dd / 14);
+      pos.vx = dx / dd * sp; pos.vz = dz / dd * sp; pos.vy = -7 - sp * .4; gaze = { x: dx / dd, y: 0, until: performance.now() + 900 };
+      if (dd > 160) say(line("catch"), "catch", 6000);
+    };
+  }
   function enter3d() {
     d3Btn.disabled = true;
     load3d().then(function () {
       spread(true);
-      view3 = window.Dilmo3D.create(world, W, world.offsetHeight, K, DZ, paintFace);
+      view3 = window.Dilmo3D.create(world, W, world.offsetHeight, K, DZ, paintFace, gfxOpts());
       if (!view3) { spread(false); throw new Error("no WebGL"); }
       view3.canvas.style.clipPath = "circle(0px at 0 0)";
-      D3 = view3; view3.onLost = function () { if (view3 && !d3Busy) portal(false); };
-      view3.onTap = function (e) {  // a tap on the lawn: Dilmo bounds over to that spot (first person: whatever is under the crosshair)
-        stir();
-        if (D3 && D3.viewNow() === "first" && (D3.locked() || e.pointerType !== "mouse")) { useCrosshair(); return; }
-        var p = toStage(e), g = D3 && D3.ground(p.x, p.y);
-        if (!g || !g.inside || mainAway || drag || mood.sleepy > .85) return;
-        var dx = g.x - pos.x, dz = g.z - pos.z, dd = Math.hypot(dx, dz) || 1, sp = Math.min(9, dd / 14);
-        pos.vx = dx / dd * sp; pos.vz = dz / dd * sp; pos.vy = -7 - sp * .4; gaze = { x: dx / dd, y: 0, until: performance.now() + 900 };
-        if (dd > 160) say(line("catch"), "catch", 6000);
-      };
+      D3 = view3; wire3d();
       view3.frame(scene3(performance.now()));  // one frame now, so the camera is placed before anything is positioned by it
       portal(true);
     }).catch(function (e) { if (!view3 || !D3) { if (view3) { view3.destroy(); view3 = null; } D3 = null; spread(false); stage.classList.remove("is3d"); } console.warn("dilmo3d", e); d3Btn.hidden = true; say(T("جهازك لا يفتح العالم ثلاثي الأبعاد.", "Your device can't open the 3D world."), "portal", 1000); })
@@ -2668,9 +2742,14 @@
     });
   }
 
+  var shownAt = 0, fpsN = 0, fpsAt = 0;
   function frame(t) {
     if (!running) { raf = 0; return; }
     raf = requestAnimationFrame(frame);
+    var capIv = D3 && gfx.fps ? 1000 / gfx.fps : 0;
+    if (capIv && t - shownAt < capIv - 1) return;  // the frame-rate cap: skip this screen refresh
+    shownAt = capIv && t - shownAt < capIv * 2 ? shownAt + capIv : t;  // keep the beat, so 30 on a 60/144 Hz screen really is 30
+    if (D3 && gfx.counter) { fpsN++; if (t - fpsAt > 500) { fpsBox.textContent = Math.round(fpsN * 1000 / (t - fpsAt)) + " FPS · " + gfxStatus(); fpsN = 0; fpsAt = t; } }
     var dt = Math.min(2, (t - last) / 16.67); last = t;
     if (t > hitStopUntil) update(t, dt);
     draw(t);

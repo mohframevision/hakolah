@@ -154,6 +154,21 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .d3-cross { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; z-index: 6; pointer-events: none;
   border: 2px solid rgba(255, 255, 255, .9); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); }
 .dilmo .d3-cross[hidden] { display: none; }
+/* graphics settings inside the game: a gear in the corner, a panel over the world (not over the page) */
+.dilmo .d3-gear { position: absolute; bottom: 12px; inset-inline-end: 12px; z-index: 8; width: 44px; height: 44px; padding: 10px; border-radius: 50%; border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--bg) 82%, transparent); color: var(--fg); cursor: pointer; }
+.dilmo .d3-gear svg { width: 100%; height: 100%; fill: currentColor; }
+.dilmo .d3-gear[hidden], .dilmo .d3-set[hidden], .dilmo .d3-fps[hidden] { display: none; }
+.dilmo .d3-fps { position: absolute; bottom: 18px; inset-inline-start: 12px; z-index: 8; font: 700 .72rem/1.4 ui-monospace, monospace; color: #fff; padding: 2px 8px; border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, .45); pointer-events: none; direction: ltr; }
+.dilmo .d3-set { position: absolute; inset: 12px; z-index: 9; overflow: auto; overscroll-behavior: contain; padding: 14px 16px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 94%, transparent); display: grid; gap: 12px; align-content: start; max-width: 620px; margin-inline: auto; }
+.dilmo .d3-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dilmo .d3-head h2 { margin: 0; font-size: 1.05rem; }
+.dilmo .d3-row { display: grid; gap: 6px; }
+.dilmo .d3-lab { font-size: .8rem; font-weight: 700; color: var(--muted); }
+.dilmo .d3-set .seg button { min-height: 38px; padding: 2px 12px; font-size: .85rem; }
+.dilmo .d3-note { margin: 0; font-size: .8rem; color: var(--muted); }
 .dilmo .portal { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; border-radius: 50%; opacity: 0; border: 3px solid #dffff2;
   box-shadow: 0 0 30px 10px color-mix(in oklab, var(--cmp) 70%, #fff), inset 0 0 44px 8px color-mix(in oklab, var(--cmp) 60%, transparent); }
 .dilmo .portal-ask { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--fg); padding: 16px 18px; max-width: min(380px, 92vw); font: inherit; }
@@ -188,6 +203,8 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .tips { font-size: .9rem; color: var(--muted); margin: 0; }
 .dilmo .pp-pad { display: flex; flex-wrap: wrap; gap: 10px; }
 .dilmo .play { scroll-margin-top: calc(var(--header-h, 64px) + 8px); }
+/* the world inside is wider than the stage: never let focus or a key scroll it sideways (clip, not hidden, can't be scrolled at all) */
+.dilmo .play { overflow: clip; }
 /* the site's daily-pick toast would sit on top of the playground */
 body:has(.dilmo) .daily-pick-reminder { display: none !important; }
 
