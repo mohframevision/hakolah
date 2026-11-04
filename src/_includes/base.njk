@@ -12,13 +12,10 @@
     كل التوجيهات مبنية على الأصول الفعلية اللي يتصل بها الموقع فقط:
     - self: كل شيء عندنا (CSS/JS/صور/بيانات مبنية).
     - الخط مستضاف عندنا (assets/fonts) فما عاد يحتاج أي نطاق خارجي.
-    - AdSense/googlesyndication + googletagmanager + المجالات المرتبطة فيها:
-      لعرض الإعلانات (لسا قيد المراجعة من قوقل وقت كتابة هذا) وGoogle Analytics.
-      إعلانات AdSense تُعرض فعلياً داخل iframes معزولة بمجال قوقل، لذلك frame-src
-      يسمح بها بدل ما تحتاج script-src صلاحيات واسعة.
-    - Web3Forms: نموذج التواصل.
-    - Worker الخاص بنا (hakolah-push.workers.dev): تتبع الزيارات، الإعجاب،
-      اشتراكات الإشعارات.
+    - لا خدمات خارجية ولا خادم: كل الطلبات لنفس الموقع فقط (قرار 2026-11-04).
+      الاستثناء الوحيد youtube-nocookie.com بـframe-src (تحت).
+    - style-src-attr 'unsafe-inline': سمات style المضمّنة بقوالبنا وأكوادنا (متغيرات CSS،
+      أبعاد محسوبة). مقصور على سمات style فقط؛ لا يسمح بعناصر <style> ولا ملفات CSS خارجية.
     - object-src none: يمنع أي Flash/plugin قديم (ناقل هجمات كلاسيكي).
     - base-uri self: يمنع حقن <base> لتغيير مسار كل الروابط النسبية بالصفحة.
     ما فيه أي unsafe-inline بـ script-src إطلاقاً — وهذا هو الأهم أمنياً
@@ -26,12 +23,6 @@
     إعدادات اللغة، gtag، استدعاءات كل صفحة) نُقلت لملفات JS خارجية أو لعنصر
     بيانات <script type="application/json"> (غير قابل للتنفيذ أصلاً).
 
-    الاستثناء الوحيد: style-src-attr 'unsafe-inline' — سكربت إعلانات Google
-    (show_ads_impl.js) يضبط سمات style مضمّنة على حاويات الإعلان، وبدون هذا
-    الاستثناء تنكسر الإعلانات. مقصور عمداً على سمات style فقط (style-src-attr)،
-    فيبقى style-src نفسه صارماً: ما يُسمح بحقن عناصر <style> أو ملفات CSS
-    خارجية إلا من نطاقنا. تنسيقات الموقع كلها بملف CSS خارجي،
-    فهذا الاستثناء ما يفتح أي ثغرة بكودنا نحن — فقط يسمح لسكربت قوقل يشتغل.
 
     frame-src يضم أيضاً youtube-nocookie.com — لفيديوهات مقالات الأماكن
     (حقل video بلوحة التحكم)، النسخة الخاصة بالخصوصية من يوتيوب فما تُحمَّل
@@ -42,11 +33,8 @@
     default-src ويحجب تشغيل الملف المولَّد محلياً. لا يفتح أي مصدر خارجي:
     روابط blob: ينشئها كودنا نفسه بنفس الأصل.
   #}
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://*.adtrafficquality.google; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://www.googletagmanager.com https://*.adtrafficquality.google; connect-src 'self' https://api.web3forms.com https://hakolah-push.hakolah.workers.dev https://*.google-analytics.com https://*.analytics.google.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google https://lookerstudio.google.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.web3forms.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  {# preconnect لأصول خارجية تُستخدم فعلياً بالصفحة (تسريع DNS/TLS قبل أول fetch/سكربت) #}
-  <link rel="preconnect" href="https://hakolah-push.hakolah.workers.dev" />
-  {% if adsense.publisherId and not noThirdParty %}<link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />{% endif %}
   {# ملف خارجي (وليس سكربت مضمّن) عمداً — يسمح بسياسة CSP صارمة script-src
      بدون unsafe-inline. يُحمَّل بدون defer/async فيشتغل قبل أول رسم للصفحة
      (يمنع "وميض" المظهر الفاتح قبل تطبيق المظهر الداكن المحفوظ) #}
@@ -111,10 +99,6 @@
   <link rel="stylesheet" href="{{ '/theme.css' | url }}?v={{ buildVersion }}" />
   {# ملف تنسيق خاص بصفحة (مثل menu.css لقوالب المنيو وخطوطها) — بس بالصفحات اللي تطلبه #}
   {% if pageCss %}<link rel="stylesheet" href="{{ ('/css/' + pageCss + '.css') | url }}?v={{ buildVersion }}" />{% endif %}
-  {% if adsense.publisherId and not noThirdParty %}
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense.publisherId }}" crossorigin="anonymous"></script>
-  {% endif %}
-  {# gtag.js ما يُحمَّل هنا: bootstrap.js يحمّله بعد موافقة الزائر على الكوكيز #}
 
   <script type="application/ld+json">
   {
@@ -213,7 +197,6 @@
         <a href="{{ ('/en/business.html' if lang == 'en' else '/business.html') | url }}">{{ 'List your business' if lang == 'en' else 'اعرض محلك' }}</a>
         <a href="{{ ('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url }}">{{ t.footer_privacy }}</a>
         <a href="{{ ('/en/terms.html' if lang == 'en' else '/terms.html') | url }}">{{ t.footer_terms }}</a>
-        <button type="button" class="footer-link-btn" id="cookie-settings">{{ t.footer_cookies }}</button>
         {% if social.youtubeUrl %}<a href="{{ social.youtubeUrl }}" target="_blank" rel="noopener noreferrer">{{ t.footer_youtube }}</a>{% endif %}
         {% if social.whatsappUrl %}<a href="{{ social.whatsappUrl }}" target="_blank" rel="noopener noreferrer">{{ t.footer_whatsapp }}</a>{% endif %}
       </div>
@@ -239,12 +222,6 @@
       <span class="bottom-nav-icon">{{ icon("music", 22) }}</span><span>{{ t.nav_sounds_short }}</span>
     </a>
   </nav>
-
-  <div class="cookie-banner" id="cookie-banner" role="region" aria-label="{{ t.footer_cookies }}">
-    <p>{{ t.cookie_text_html | replace("{privacyUrl}", (('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url)) | safe }}</p>
-    <button type="button" class="btn secondary cookie-decline" id="cookie-decline">{{ t.cookie_decline }}</button>
-    <button type="button" class="btn cookie-accept" id="cookie-accept">{{ t.cookie_accept }}</button>
-  </div>
 
   <div class="daily-pick-reminder" id="dailyPickReminder" role="region" aria-label="{{ t.daily_pick_label }}">
     <button type="button" class="daily-pick-reminder-close" id="dailyPickReminderClose" aria-label="{{ t.daily_pick_close }}">✕</button>
@@ -306,8 +283,6 @@
     {
       "lang": {{ lang | json | safe }},
       "menusUrl": {{ (('/js/menus.js' | url) + '?v=' + buildVersion) | json | safe }},
-      "gaId": {{ (null if noThirdParty else analytics.measurementId) | json | safe }},
-      "push": { "workerUrl": {{ push.workerUrl | json | safe }}, "vapidPublicKey": {{ push.vapidPublicKey | json | safe }} },
       "page": {
         "section": {{ (section or "") | json | safe }},
         "typeFilter": {{ (typeFilter or "") | json | safe }},

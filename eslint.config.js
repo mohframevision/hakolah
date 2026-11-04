@@ -4,7 +4,6 @@ const globals = require("globals");
 module.exports = [
   js.configs.recommended,
   {
-    // cf-worker مشروع Cloudflare Worker مستقل تماماً بأدوات وتشغيل خاصة فيه (wrangler)
     // poster-editor/vendor مكتبة خارجية منسوخة كما هي — لا تُعدَّل ولا تُفحص
     // places-picker/data.js ملف بيانات مولّد آلياً (نحو 400 كيلوبايت)
     // .claude/skills أدوات وكيل (agent tooling) — سكربتات Node.js عادية تشغّل خارج
@@ -18,7 +17,6 @@ module.exports = [
       // ويطيح بخطأ داخلي بـESLint (scopeManager.addGlobals) — اكتُشف 2026-10-09.
       "ملفات-العمل/**",
       "node_modules/**",
-      "cf-worker/**",
       "poster-editor/vendor/**",
       // مكتبة ترميز MP3 خارجية (lamejs) تُشحن كما هي بلا تعديل
       "src/js/vendor/**",

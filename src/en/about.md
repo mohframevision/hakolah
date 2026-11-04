@@ -77,7 +77,7 @@ If a place has a lot of negative attention online, we will most likely give no o
 
 <h2 id="ads">Ads and paid links</h2>
 
-We show ads (after you accept cookies), and some links are referral links that earn us a small commission if you buy through them, which we state clearly. Any place that pays to be featured is labelled "Ad", and doesn't rise in search or in "Pick for me" because of it.
+We don't show ads. Some links are referral links that earn us a small commission if you buy through them, which we state clearly. Any place that pays to be featured is labelled "Ad", and doesn't rise in search or in "Pick for me" because of it.
 
 <h2 id="privacy">Your privacy</h2>
 

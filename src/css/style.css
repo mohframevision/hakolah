@@ -780,16 +780,6 @@ img {
   margin: 0;
 }
 
-.notify-toggle {
-  margin-top: 16px;
-}
-
-.notify-toggle.active {
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
 /* ===== صندوق البحث ===== */
 /* يلتصق تحت الهيدر عند التمرير — بصفحة فيها ٤٠ بطاقة، الوصول للبحث بدونه
    يتطلب رجوع لأعلى الصفحة. الارتفاع --header-h يضبطه main.js من الهيدر الفعلي
@@ -1691,34 +1681,6 @@ a.photo-credit.card {
   gap: 2px;
 }
 
-.like-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: none;
-  border: none;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  line-height: 1;
-  padding: 4px 6px;
-  font-family: inherit;
-  transition: transform 0.15s ease;
-}
-
-.like-btn .like-icon {
-  font-size: 1.05rem;
-}
-
-.like-btn:hover {
-  transform: scale(1.08);
-}
-
-.like-btn.active {
-  color: #ec4899;
-}
-
 .share-btn {
   background: none;
   border: none;
@@ -1887,20 +1849,11 @@ a.photo-credit.card {
   flex-wrap: wrap;
 }
 
-.footer-links a:hover,
-.footer-link-btn:hover {
+.footer-links a:hover {
   color: var(--color-primary);
 }
 
 /* زر الفوتر «إعدادات الكوكيز» بشكل رابط عادي (هو زر لأنه يفتح شريطاً لا صفحة) */
-.footer-link-btn {
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-}
 
 /* ===== رسالة تأكيد عابرة (Toast) ===== */
 .toast {
@@ -1936,51 +1889,6 @@ a.photo-credit.card {
 }
 
 /* ===== إشعار الكوكيز ===== */
-.cookie-banner {
-  display: none;
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
-  /* أعلى من daily-pick-reminder (60) عمداً — بانر موافقة الكوكيز إلزامي
-     التفاعل، وممكن الاثنين يظهرون مع بعض بأول زيارة ويتراكبون بزاوية
-     الشاشة؛ لازم زر "موافق" يبقى قابل للضغط دايماً */
-  z-index: 65;
-  gap: 14px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: 16px 20px;
-  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
-  border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
-  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
-}
-
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .cookie-banner {
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-  }
-}
-
-.cookie-banner.open {
-  display: flex;
-}
-
-.cookie-banner p {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--color-text-muted);
-  max-width: 640px;
-}
-
-.cookie-banner a {
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-.cookie-accept {
-  flex-shrink: 0;
-}
 
 /* ===== تذكير "اختيار اليوم" — بطاقة صغيرة بزاوية الشاشة، مو حاجز كامل
    العرض، وواضح إنها تُغلق بسهولة (زر ✕) ===== */
@@ -2043,9 +1951,6 @@ a.photo-credit.card {
    قاعدة بنفس التخصيصية بمدية استعلام أسبق بالملف تُهزَم لو التعريف الأصلي
    بلا استعلام جاء بعدها بالملف */
 @media (max-width: 1300px) {
-  .cookie-banner {
-    bottom: 60px;
-  }
 
   .daily-pick-reminder {
     bottom: 76px;
@@ -2149,75 +2054,6 @@ a.photo-credit.card {
 }
 
 /* ===== نموذج التواصل ===== */
-.contact-form {
-  max-width: 560px;
-  margin: 0 auto 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  /* --color-border-strong بدل --color-border العادي: هذا الحد هو الوسيلة
-     الوحيدة لتمييز حدود الحقل بالحالة العادية (بلا تركيز) — WCAG 1.4.11 */
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-family: inherit;
-  font-size: 0.95rem;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: 2px solid var(--color-primary);
-}
-
-.form-group textarea {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.contact-form .btn {
-  align-self: flex-start;
-  padding: 12px 28px;
-}
-
-.form-message {
-  max-width: 560px;
-  margin: 0 auto 20px;
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-.form-message.success {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid #10b981;
-  color: #047857;
-}
-
-.form-message.error {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid var(--color-danger);
-  color: #dc2626;
-}
 
 .contact-direct {
   max-width: 560px;
@@ -2936,13 +2772,11 @@ a.photo-credit.card {
 @media (pointer: coarse) {
   .fav-btn,
   .share-btn,
-  .like-btn,
   .desc-toggle,
   .item-actions .btn,
   .filter-chip,
   .near-me-btn,
-  .daily-pick-reminder-close,
-  .cookie-banner .btn {
+  .daily-pick-reminder-close {
     min-width: 44px;
     min-height: 44px;
     display: inline-flex;
@@ -5055,7 +4889,6 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
 .in-app .bottom-nav,
 .in-app .breadcrumb,
 .in-app .page-header,
-.in-app .cookie-banner,
 .in-app .daily-pick-reminder {
   display: none !important;
 }
@@ -5128,7 +4961,6 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   html.touch .site-footer,
   html.touch .breadcrumb,
   html.touch .page-header,
-  html.touch .cookie-banner,
   html.touch .daily-pick-reminder {
     display: none !important;
   }
@@ -5321,10 +5153,6 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
 }
 
 /* ===== طبقات التسجيل ===== */
-
-
-
-
 
 /* ===== الآلات مجمّعة بفئات ===== */
 #instrumentPicker {
@@ -5894,11 +5722,6 @@ html[lang="en"] .instrument-btn.is-new::after {
 
 /* الصف صار عمودياً: رأس (الاسم + كتم/حذف) ثم مسار الكتلة */
 
-
-
-
-
-
 .beep-clip {
   position: absolute;
   top: 3px;
@@ -5930,7 +5753,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   outline: 2px solid #fff;
   outline-offset: 1px;
 }
-
 
 .beep-playhead {
   position: absolute;
@@ -7526,7 +7348,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   display: inline;
 }
 
-
 /* ===== «تدرّب»: مجموعات الأوكتاف بألوان للطالب (تحت أزرق، الوسط أخضر، فوق أصفر، والأبعد بنفسجي/وردي)
    على المفاتيح البيضاء ومربعات المعاينة، واسم المجموعة على Do أولها ===== */
 #songKeysSlot .pk-white:is([data-oct="4"]) { --oct: #d9f3e6; }
@@ -8073,7 +7894,6 @@ li {
 }
 
 /* أرقام تتغير (إعجابات، تقدّم الاستكشاف) بعرض ثابت فما يتحرك اللي جنبها */
-.like-btn,
 .explore-progress-text {
   font-variant-numeric: tabular-nums;
 }
@@ -8081,7 +7901,6 @@ li {
 /* أزرار البطاقة على الماوس: منطقة ضغط ٤٠ بكسل (كانت ٢٣–٣٥). اللمس عنده قاعدته الأقوى (٤٤) فوق
    (@media (pointer: coarse))، فما نلمسه هنا عشان ما نصغّره */
 @media (pointer: fine) {
-  .like-btn,
   .share-btn,
   .fav-btn {
     min-width: 40px;
@@ -8104,10 +7923,6 @@ li {
     margin-top: 0;
   }
 
-  .footer-link-btn {
-    min-height: 40px;
-  }
-
   .about-chip {
     min-height: 40px;
   }
@@ -8120,14 +7935,12 @@ li {
 }
 
 @media (pointer: coarse) {
-  .footer-link-btn,
   .about-chip {
     min-height: 44px;
   }
 }
 
 /* حركة التمرير على أزرار البطاقة: لون بس بلا تكبير (يتكرر مع كل مرور للماوس) */
-.like-btn:hover,
 .share-btn:hover,
 .fav-btn:hover {
   transform: none;

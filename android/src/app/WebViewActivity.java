@@ -181,10 +181,7 @@ public class WebViewActivity extends Activity implements View.OnClickListener {
     static boolean isAllowedHost(String host) {
         if (host == null) return false;
         return isSiteHost(host)
-                || "mohframevision.github.io".equals(host)
-                || "www.googletagmanager.com".equals(host)
-                || host.endsWith(".google-analytics.com")
-                || host.endsWith(".analytics.google.com");
+                || "mohframevision.github.io".equals(host);
     }
 
     // "صوتك" بالصوتيات: تسجيل من الميكروفون (getUserMedia) واختيار ملف صوت

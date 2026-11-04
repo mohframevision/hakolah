@@ -136,10 +136,6 @@ clean (verified this session: `npm run lint` → no output/errors,
   `npm run build` crashed with `ENOENT ... _site\js\bootstrap.js` because
   the running dev server had just rewritten the directory mid-build. Kill
   the port first (see Run section), then build.
-- **A CORS console error is expected, not a bug**, when driving against
-  localhost: `Access to fetch at 'https://hakolah-push.hakolah.workers.dev/...'
-  ... blocked by CORS policy`. The Worker only allows the production GitHub
-  Pages origin; the like-count widget fails silently on localhost by design.
 - **`.claude/skills/**` is excluded from `eslint.config.js`'s `ignores`.**
   The driver is plain Node.js (uses `console`/`process`/`setTimeout` with no
   browser globals) and would otherwise fail CI's `npm run lint` step with

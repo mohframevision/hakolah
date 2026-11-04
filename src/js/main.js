@@ -227,96 +227,6 @@ function initSearchSuggestions(searchInput, items, onSelect) {
   });
 }
 
-/* ===== نموذج تواصل معنا (Web3Forms) ===== */
-function initContactForm() {
-  const form = document.getElementById("contactForm");
-  if (!form) return;
-
-  // تعبئة تلقائية لو الزائر جا من زر "🚩 إبلاغ عن خطأ" بأي بطاقة عنصر
-  // (رابط بصيغة contact.html?report=اسم-العنصر&section=قسم)
-  const params = new URLSearchParams(location.search);
-  const reportItem = params.get("report");
-  if (reportItem) {
-    const typeSelect = form.querySelector('[name="request_type"]');
-    const messageField = form.querySelector('[name="message"]');
-    if (typeSelect) typeSelect.value = t("contact_report_option");
-    if (messageField) {
-      const section = params.get("section") || "";
-      const sectionSuffix = section ? ` (${t("contact_report_section_label")}: ${section})` : "";
-      messageField.value = `${t("contact_report_regarding")}: ${reportItem}${sectionSuffix}\n\n${t("contact_report_wrong_info_label")}: `;
-      messageField.focus();
-    }
-  }
-
-  const formMessage = document.getElementById("formMessage");
-  const submitBtn = document.getElementById("submitBtn");
-  const btnText = document.getElementById("btnText");
-  const btnLoading = document.getElementById("btnLoading");
-
-  function showMessage(type, text) {
-    if (!formMessage) return;
-    formMessage.textContent = text;
-    formMessage.className = `form-message ${type}`;
-    formMessage.style.display = "block";
-    formMessage.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  function validate() {
-    const name = form.querySelector('[name="name"]');
-    const email = form.querySelector('[name="email"]');
-    const message = form.querySelector('[name="message"]');
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (name && name.value.trim().length < 2) {
-      showMessage("error", t("contact_err_name"));
-      name.focus();
-      return false;
-    }
-    if (email && !emailRegex.test(email.value.trim())) {
-      showMessage("error", t("contact_err_email"));
-      email.focus();
-      return false;
-    }
-    if (message && message.value.trim().length < 5) {
-      showMessage("error", t("contact_err_message"));
-      message.focus();
-      return false;
-    }
-    return true;
-  }
-
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!validate()) return;
-
-    if (submitBtn) submitBtn.disabled = true;
-    if (btnText) btnText.style.display = "none";
-    if (btnLoading) btnLoading.style.display = "inline";
-    if (formMessage) formMessage.style.display = "none";
-
-    try {
-      const res = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        body: new FormData(form),
-      });
-      const result = await res.json();
-
-      if (result.success) {
-        showMessage("success", t("contact_success"));
-        form.reset();
-      } else {
-        showMessage("error", t("contact_err_submit"));
-      }
-    } catch {
-      showMessage("error", t("contact_err_network"));
-    } finally {
-      if (submitBtn) submitBtn.disabled = false;
-      if (btnText) btnText.style.display = "inline";
-      if (btnLoading) btnLoading.style.display = "none";
-    }
-  });
-}
-
 /* ===== مؤثرات صوتية (اختيارية، معطّلة افتراضياً) =====
    مجموعة أصوات مولَّدة بالكود بالكامل (Web Audio، بلا ملفات)، مبنية على
    تحليل أصوات pacomepertant.com: نغمات منخفضة (~440Hz لا 650-900)، بداية
@@ -606,38 +516,6 @@ function initThemeToggle() {
   });
 }
 
-/* ===== إشعار الكوكيز ===== */
-function initCookieConsent() {
-  const KEY = "cookie_consent";
-  const banner = document.getElementById("cookie-banner");
-  const acceptBtn = document.getElementById("cookie-accept");
-  if (!banner || !acceptBtn) return;
-
-  if (!lsGet(KEY)) {
-    banner.classList.add("open");
-  }
-
-  acceptBtn.addEventListener("click", () => {
-    lsSet(KEY, "accepted");
-    banner.classList.remove("open");
-    window.enableAnalytics?.(); // GA ما يشتغل إلا من هنا (أو من bootstrap.js لمن وافق سابقاً)
-  });
-
-  document.getElementById("cookie-decline")?.addEventListener("click", () => {
-    lsSet(KEY, "declined");
-    banner.classList.remove("open");
-    // لو كان وافق سابقاً وتراجع: نوقف الإرسال فوراً، ولا يتحمّل بالزيارات القادمة
-    const gaId = window.GA_ID;
-    if (gaId) window["ga-disable-" + gaId] = true;
-    window.gtag = function () {};
-  });
-
-  // رابط الفوتر يفتح الشريط من جديد ليغيّر الزائر قراره بأي وقت
-  document
-    .getElementById("cookie-settings")
-    ?.addEventListener("click", () => banner.classList.add("open"));
-}
-
 /* ===== تذكير "اختيار اليوم" (بديل خفيف عن الإشعارات لا يعتمد على أي خدمة
    خارجية) — لو الزائر ما زار الصفحة الرئيسية اليوم بعد وهو يتصفح صفحة ثانية
    بالموقع، يظهر له تذكير صغير وغير مزعج. مو إشعار حقيقي (ما يوصله وهو خارج
@@ -843,91 +721,6 @@ function isFavorite(section, id) {
   return Boolean(favs[section] && favs[section][id]);
 }
 
-/* ===== إعجاب عام من الزوار (منفصل عن "أعجبني" الخاصة بصاحب الموقع) —
-   عدّاد عام مشترك بين كل الزوار عبر Cloudflare Worker، والحماية من تكرار
-   الإعجاب من نفس المتصفح تصير محلياً بـ localStorage ===== */
-const LIKES_KEY = "site_liked_items_v1";
-let LIKE_COUNTS = {};
-
-function getLikedItems() {
-  try {
-    return JSON.parse(lsGet(LIKES_KEY)) || {};
-  } catch {
-    return {};
-  }
-}
-
-function saveLikedItems(liked) {
-  lsSet(LIKES_KEY, JSON.stringify(liked));
-}
-
-function isLikedByMe(section, id) {
-  return Boolean(getLikedItems()[`${section}:${id}`]);
-}
-
-async function fetchLikeCounts() {
-  const config = window.PUSH_CONFIG;
-  if (!config || !config.workerUrl) return;
-  try {
-    const res = await fetch(`${config.workerUrl}/likes`);
-    if (!res.ok) return;
-    LIKE_COUNTS = {};
-    for (const [k, v] of Object.entries(await res.json())) if (Number.isFinite(v)) LIKE_COUNTS[k] = v;
-  } catch {
-    return;
-  }
-  document.querySelectorAll(".like-btn").forEach((btn) => {
-    const key = `${btn.dataset.section}:${btn.dataset.id}`;
-    const countEl = btn.querySelector(".like-count");
-    if (countEl && LIKE_COUNTS[key] != null) countEl.textContent = LIKE_COUNTS[key];
-  });
-}
-
-async function toggleLike(section, id, btn) {
-  const liked = getLikedItems();
-  const key = `${section}:${id}`;
-  const alreadyLiked = Boolean(liked[key]);
-  const countEl = btn.querySelector(".like-count");
-  const iconEl = btn.querySelector(".like-icon");
-  const currentCount = Number(countEl.textContent) || 0;
-  const optimisticCount = alreadyLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
-
-  countEl.textContent = optimisticCount;
-  iconEl.textContent = alreadyLiked ? "♡" : "♥";
-  btn.classList.toggle("active", !alreadyLiked);
-  btn.setAttribute("aria-pressed", String(!alreadyLiked));
-  if (alreadyLiked) delete liked[key];
-  else liked[key] = true;
-  saveLikedItems(liked);
-  playSound(alreadyLiked ? "off" : "on");
-
-  const config = window.PUSH_CONFIG;
-  if (!config || !config.workerUrl) return;
-  try {
-    const res = await fetch(`${config.workerUrl}${alreadyLiked ? "/unlike" : "/like"}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ section, id }),
-    });
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    if (typeof data.count === "number") {
-      LIKE_COUNTS[key] = data.count;
-      countEl.textContent = data.count;
-    }
-  } catch {
-    // فشل الخادم (شبكة، 429، 403) → نرجّع كل شي لحاله. بدونه يظل المتصفح
-    // يظن أنه أعجب، فالضغطة التالية ترسل /unlike وتنقص إعجاب شخص آخر فعلاً.
-    countEl.textContent = currentCount;
-    iconEl.textContent = alreadyLiked ? "♥" : "♡";
-    btn.classList.toggle("active", alreadyLiked);
-    btn.setAttribute("aria-pressed", String(alreadyLiked));
-    if (alreadyLiked) liked[key] = true;
-    else delete liked[key];
-    saveLikedItems(liked);
-  }
-}
-
 function toggleFavorite(section, id) {
   const favs = getFavorites();
   if (!favs[section]) favs[section] = {};
@@ -996,39 +789,6 @@ function nearestBranch(item, userCoords) {
 /* ===== مشاركة عبر واتساب ===== */
 const SITE_ORIGIN = "https://hakolah.com/";
 const SITE_ROOT_PATH = "/";
-
-/*
-  قياس "الروابط" لا "الزيارات": كم زائراً شارك أو خرج لمحل فعلي.
-  عدد الزيارات وحده يقول إن الموقع رفّ كتب؛ هذا يقول إن كان شبكة.
-  لا يرسل شيئاً بنفسه — يمرّ عبر gtag الموجود أصلاً، فلا طلب ولا كلفة إضافية.
-*/
-function trackEdge(name, params) {
-  if (typeof window.gtag === "function") window.gtag("event", name, params);
-}
-
-/*
-  مستمع واحد على المستند بدل مستمع لكل رابط: البطاقات تُطبع من السيرفر أحياناً
-  وتُبنى بالمتصفح أحياناً، والتفويض يغطي الاثنين ولا يكبر مع عدد العناصر.
-*/
-function initOutboundTracking() {
-  document.addEventListener("click", (e) => {
-    const a = e.target.closest('a[target="_blank"][href^="http"]');
-    if (!a) return;
-    let host;
-    try {
-      host = new URL(a.href).hostname.replace(/^www\./, "");
-    } catch {
-      return;
-    }
-    if (host === location.hostname) return;
-    // الاسم أول عقدة نصية بالعنوان — الشارات (✅ زُرته، 👍 أعجبني) عناصر بعده
-    const heading = a.closest(".item-card, .card")?.querySelector("h3, h2");
-    trackEdge("outbound_click", {
-      destination: host,
-      item_name: heading?.firstChild?.textContent.trim() || heading?.textContent.trim() || "",
-    });
-  });
-}
 
 function initArticleShare() {
   const btn = document.querySelector(".article-share-btn");
@@ -1321,11 +1081,9 @@ async function shareText(text, trackParams, card) {
     const payload = file ? { text, files: [file] } : { text };
     navigator
       .share(payload)
-      .then(() => trackEdge("share", { method: file ? "system_image" : "system", ...trackParams }))
       .catch(() => {}); // المستخدم ألغى المشاركة — سلوك طبيعي، لا خطأ يُسجَّل
   } else {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
-    trackEdge("share", { method: "whatsapp", ...trackParams });
   }
 }
 
@@ -1488,8 +1246,6 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
   cardRevealObserver?.observe(card);
 
   const fav = isFavorite(section, item.id);
-  const liked = isLikedByMe(section, item.id);
-  const likeCount = Number(LIKE_COUNTS[`${section}:${item.id}`]) || 0;  // من الـWorker: رقم فقط
   const title = itemTitle(item);
   const desc = itemDesc(item);
   const isLongDesc = desc.length > 100;
@@ -1502,9 +1258,6 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       <div class="item-top">
         ${item.illus ? `<img class="item-illus" src="/assets/illus/${escapeHtml(item.illus)}.webp" alt="" width="56" height="56" loading="lazy" decoding="async" />` : `<span class="item-icon" aria-hidden="true">${escapeHtml(item.icon || "⭐")}</span>`}
         <div class="item-top-actions">
-          <button class="like-btn ${liked ? "active" : ""}" data-section="${escapeHtml(section)}" data-id="${escapeHtml(item.id)}" title="${t("like_action")}" aria-label="${t("like_action")}" aria-pressed="${liked}">
-            <span class="like-icon">${liked ? "♥" : "♡"}</span> <span class="like-count">${likeCount}</span>
-          </button>
           <button class="share-btn" title="${t("share_whatsapp")}" aria-label="${t("share_whatsapp")}">${ICON_SVG.share}</button>
           <button class="fav-btn ${fav ? "active" : ""}" title="${fav ? t("fav_remove") : t("fav_add")}" aria-label="${fav ? t("fav_remove") : t("fav_add")}" aria-pressed="${fav}">
             ${fav ? "♥" : "♡"}
@@ -1524,14 +1277,9 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       <div class="item-actions">
         ${buildActionsHtml(item)}
       </div>
-      <a class="report-link" href="${SITE_ROOT_PATH}${window.SITE_LANG === "en" ? "en/" : ""}contact.html?report=${encodeURIComponent(title)}&section=${encodeURIComponent(section)}">🚩 ${t("report_wrong_info")}</a>
+      <a class="report-link" href="mailto:mohframevision@outlook.com?subject=${encodeURIComponent(`${t("report_wrong_info")}: ${title}`)}">🚩 ${t("report_wrong_info")}</a>
     </div>
   `;
-
-  const likeBtn = card.querySelector(".like-btn");
-  likeBtn.addEventListener("click", () => {
-    toggleLike(section, item.id, likeBtn);
-  });
 
   const favBtn = card.querySelector(".fav-btn");
   favBtn.addEventListener("click", () => {
@@ -1978,50 +1726,9 @@ function renderFeaturedPick() {
   container.prepend(wrapper);
 }
 
-/* ===== الأكثر إعجاباً هذا الأسبوع (دليل اجتماعي حقيقي — مبني على بيانات
-   الإعجاب الفعلية من الزوار، ما تضيف شي لو ما فيه إعجابات هالأسبوع بعد) ===== */
-async function renderTrendingSection() {
+function renderNewestSection() {
   const container = document.getElementById("homeCarousel");
-  if (!container) return;
-
-  const config = window.PUSH_CONFIG;
-  let ranked = [];
-  if (config && config.workerUrl) {
-    try {
-      const res = await fetch(`${config.workerUrl}/likes/week`);
-      const weekCounts = await res.json();
-      ranked = Object.entries(weekCounts)
-        // الأماكن الحقيقية فقط قبل أخذ أول ٦: معرّفات مخترعة كانت تفرّغ «الأكثر إعجاباً»
-        .filter(([key, count]) => {
-          const i = key.indexOf(":");
-          return Number.isFinite(count) && count > 0 && (SITE_DATA[key.slice(0, i)]?.items || []).some((it) => it.id === key.slice(i + 1));
-        })
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6);
-    } catch {
-      ranked = [];
-    }
-  }
-
-  let added = 0;
-  ranked.forEach(([key], index) => {
-    const sepIndex = key.indexOf(":");
-    const itemSection = key.slice(0, sepIndex);
-    const itemId = key.slice(sepIndex + 1);
-    const item = (SITE_DATA[itemSection]?.items || []).find((i) => i.id === itemId);
-    if (!item) return;
-    const wrapper = document.createElement("div");
-    wrapper.className = "carousel-item";
-    wrapper.innerHTML = `<span class="carousel-label">🔥 ${t("trending_label")}</span>`;
-    wrapper.appendChild(buildItemCard(itemSection, item, index));
-    container.appendChild(wrapper);
-    added++;
-  });
-
-  /* ما فيه إعجابات هالأسبوع (أو تعذّر جلبها) — فيبقى بالشريط كرت واحد
-     "اختيار اليوم" ويبان الصف ناقصاً بالشاشات العريضة. نملأه بأحدث ما
-     أُضيف للموقع: محتوى حقيقي يفيد الزائر بدل فراغ */
-  if (added === 0) renderNewestItems(container);
+  if (container) renderNewestItems(container);
 }
 
 function renderNewestItems(container) {
@@ -2112,83 +1819,6 @@ function renderExploreProgress() {
    يكتب مرتين لكل زيارة على Cloudflare KV، وحصة الخطة المجانية 1000 كتابة
    باليوم فقط — أي 500 زيارة صفحة يومياً تستهلك الحصة كلها وتوقف معها
    الإعجابات واشتراكات الإشعارات (يتشاركون نفس الحصة). */
-
-/* ===== إشعار "اختيار اليوم" اليومي (اختياري، معطّل حتى المستخدم يفعّله بنفسه) =====
-   الاشتراك يُخزَّن على Cloudflare Worker خاص بنا فقط — بدون أي طرف ثالث. */
-function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = atob(base64);
-  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
-}
-
-async function initPushNotifications() {
-  const btn = document.getElementById("notifyToggle");
-  const config = window.PUSH_CONFIG;
-  if (!btn || !config || !config.workerUrl) return;
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-
-  btn.classList.remove("hidden");
-
-  const registration = await navigator.serviceWorker.register("/sw.js");
-  let subscription = await registration.pushManager.getSubscription();
-
-  function apply(subscribed) {
-    btn.classList.toggle("active", subscribed);
-    btn.textContent = subscribed ? t("push_enabled_label") : t("push_enable_cta");
-  }
-  apply(Boolean(subscription));
-
-  btn.addEventListener("click", async () => {
-    try {
-      if (subscription) {
-        await fetch(`${config.workerUrl}/unsubscribe`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: subscription.endpoint }),
-        });
-        await subscription.unsubscribe();
-        subscription = null;
-        apply(false);
-        showToast(t("push_disabled"));
-        playSound("off");
-        return;
-      }
-
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        showToast(t("push_permission_needed"));
-        return;
-      }
-
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(config.vapidPublicKey),
-      });
-
-      const res = await fetch(`${config.workerUrl}/subscribe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subscription),
-      });
-      // الخادم رفض الحفظ (429/403/400): الزائر كان يشوف "تم التفعيل" وما يوصله شي أبداً
-      if (!res.ok) {
-        await subscription.unsubscribe().catch(() => {});
-        subscription = null;
-        throw new Error(`subscribe ${res.status}`);
-      }
-
-      apply(true);
-      showToast(t("push_enabled"));
-      playSound("on");
-    } catch (err) {
-      // بدون هذا الـ catch، أي فشل هنا (زي رفض الاشتراك من المتصفح نفسه)
-      // كان يوقف التنفيذ بصمت والزر يضل بحالته القديمة بدون أي تفسير للزائر
-      console.error("push subscription failed:", err);
-      showToast(t("push_enable_failed"));
-    }
-  });
-}
 
 /* ===== اختار لي: اختيار عشوائي من أي قسم بأنيميشن سلوت مشين ===== */
 /* ===== كشف "اختار لي" بشاشة كاملة — انظر تعليق CSS .picker-reveal-overlay
@@ -2403,22 +2033,17 @@ function initWelcomePicker() {
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
   initSoundToggle();
-  initCookieConsent();
   initDailyPickReminder();
   initNavToggle();
   initHeaderScroll();
   initInstallPrompt();
   initSectionFilter();
   initAutoUpdateCheck();
-  initContactForm();
-  fetchLikeCounts();
-  initOutboundTracking();
   initArticleShare();
   initArticleListen();
 
   // تسجيل الـ service worker بكل صفحة (لا بس الرئيسية) — شرط أساسي لصلاحية
-  // "إضافة للشاشة الرئيسية" (PWA) بمعظم المتصفحات. التسجيل بدوال initPushNotifications
-  // يبقى منفصل وآمن (register() على نفس الرابط يرجّع نفس التسجيل، ما يكرره)
+  // "إضافة للشاشة الرئيسية" (PWA) بمعظم المتصفحات
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
 
   // ما يخص كل صفحة على حدة — كانت سكربتات مضمّنة بـ base.njk، صارت تُقرأ من
@@ -2431,8 +2056,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page.welcome) initWelcomePicker();
   if (page.home) {
     renderFeaturedPick();
-    initPushNotifications();
-    renderTrendingSection();
+    renderNewestSection();
     renderExploreProgress();
     renderSiteStats();
   }

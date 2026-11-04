@@ -107,22 +107,5 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(staleWhileRevalidate(request));
 });
 
-self.addEventListener("push", (event) => {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || "هكوله";
-  const options = {
-    body: data.body || "",
-    icon: BASE + "assets/android-chrome-192x192.png",
-    badge: BASE + "assets/favicon-32x32.png",
-    data: { url: data.url || BASE },
-  };
-  event.waitUntil(self.registration.showNotification(title, options));
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const url = event.notification.data && event.notification.data.url;
-  event.waitUntil(self.clients.openWindow(url || BASE));
-});
 `;
 };
