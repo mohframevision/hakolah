@@ -13,7 +13,11 @@ langSwitchUrl: "/privacy-policy.html"
 
 ## Data we collect
 
-None. The site has no sign-in, runs no server of its own, uses no tracking or visitor analytics, and shows no ads. Every page comes from the site itself, and nothing about you is sent anywhere.
+None. The site has no sign-in, runs no server of its own, uses no tracking or visitor analytics, and shows no ads. Every page comes from the site itself, and nothing about you is sent anywhere, except what you write yourself in the contact form.
+
+## Contact form
+
+When you send a message from the [contact page]({{ '/en/contact.html' | url }}), your name, email and message pass through the Web3Forms service to reach our inbox. We use them only to reply to you and never share them.
 
 ## What is stored in your browser
 

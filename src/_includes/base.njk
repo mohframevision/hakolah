@@ -12,8 +12,8 @@
     كل التوجيهات مبنية على الأصول الفعلية اللي يتصل بها الموقع فقط:
     - self: كل شيء عندنا (CSS/JS/صور/بيانات مبنية).
     - الخط مستضاف عندنا (assets/fonts) فما عاد يحتاج أي نطاق خارجي.
-    - لا خدمات خارجية ولا خادم: كل الطلبات لنفس الموقع فقط (قرار 2026-11-04).
-      الاستثناء الوحيد youtube-nocookie.com بـframe-src (تحت).
+    - لا خادم ولا تتبّع ولا إعلانات (قرار 2026-11-04): كل الطلبات لنفس الموقع، عدا استثناءين:
+      api.web3forms.com لنموذج التواصل، وyoutube-nocookie.com بـframe-src (تحت).
     - style-src-attr 'unsafe-inline': سمات style المضمّنة بقوالبنا وأكوادنا (متغيرات CSS،
       أبعاد محسوبة). مقصور على سمات style فقط؛ لا يسمح بعناصر <style> ولا ملفات CSS خارجية.
     - object-src none: يمنع أي Flash/plugin قديم (ناقل هجمات كلاسيكي).
@@ -33,7 +33,7 @@
     default-src ويحجب تشغيل الملف المولَّد محلياً. لا يفتح أي مصدر خارجي:
     روابط blob: ينشئها كودنا نفسه بنفس الأصل.
   #}
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://api.web3forms.com; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.web3forms.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   {# ملف خارجي (وليس سكربت مضمّن) عمداً — يسمح بسياسة CSP صارمة script-src
      بدون unsafe-inline. يُحمَّل بدون defer/async فيشتغل قبل أول رسم للصفحة

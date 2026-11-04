@@ -227,6 +227,96 @@ function initSearchSuggestions(searchInput, items, onSelect) {
   });
 }
 
+/* ===== نموذج تواصل معنا (Web3Forms) ===== */
+function initContactForm() {
+  const form = document.getElementById("contactForm");
+  if (!form) return;
+
+  // تعبئة تلقائية لو الزائر جا من زر "🚩 إبلاغ عن خطأ" بأي بطاقة عنصر
+  // (رابط بصيغة contact.html?report=اسم-العنصر&section=قسم)
+  const params = new URLSearchParams(location.search);
+  const reportItem = params.get("report");
+  if (reportItem) {
+    const typeSelect = form.querySelector('[name="request_type"]');
+    const messageField = form.querySelector('[name="message"]');
+    if (typeSelect) typeSelect.value = t("contact_report_option");
+    if (messageField) {
+      const section = params.get("section") || "";
+      const sectionSuffix = section ? ` (${t("contact_report_section_label")}: ${section})` : "";
+      messageField.value = `${t("contact_report_regarding")}: ${reportItem}${sectionSuffix}\n\n${t("contact_report_wrong_info_label")}: `;
+      messageField.focus();
+    }
+  }
+
+  const formMessage = document.getElementById("formMessage");
+  const submitBtn = document.getElementById("submitBtn");
+  const btnText = document.getElementById("btnText");
+  const btnLoading = document.getElementById("btnLoading");
+
+  function showMessage(type, text) {
+    if (!formMessage) return;
+    formMessage.textContent = text;
+    formMessage.className = `form-message ${type}`;
+    formMessage.style.display = "block";
+    formMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function validate() {
+    const name = form.querySelector('[name="name"]');
+    const email = form.querySelector('[name="email"]');
+    const message = form.querySelector('[name="message"]');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (name && name.value.trim().length < 2) {
+      showMessage("error", t("contact_err_name"));
+      name.focus();
+      return false;
+    }
+    if (email && !emailRegex.test(email.value.trim())) {
+      showMessage("error", t("contact_err_email"));
+      email.focus();
+      return false;
+    }
+    if (message && message.value.trim().length < 5) {
+      showMessage("error", t("contact_err_message"));
+      message.focus();
+      return false;
+    }
+    return true;
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!validate()) return;
+
+    if (submitBtn) submitBtn.disabled = true;
+    if (btnText) btnText.style.display = "none";
+    if (btnLoading) btnLoading.style.display = "inline";
+    if (formMessage) formMessage.style.display = "none";
+
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: new FormData(form),
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        showMessage("success", t("contact_success"));
+        form.reset();
+      } else {
+        showMessage("error", t("contact_err_submit"));
+      }
+    } catch {
+      showMessage("error", t("contact_err_network"));
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      if (btnText) btnText.style.display = "inline";
+      if (btnLoading) btnLoading.style.display = "none";
+    }
+  });
+}
+
 /* ===== مؤثرات صوتية (اختيارية، معطّلة افتراضياً) =====
    مجموعة أصوات مولَّدة بالكود بالكامل (Web Audio، بلا ملفات)، مبنية على
    تحليل أصوات pacomepertant.com: نغمات منخفضة (~440Hz لا 650-900)، بداية
@@ -1277,7 +1367,7 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       <div class="item-actions">
         ${buildActionsHtml(item)}
       </div>
-      <a class="report-link" href="mailto:mohframevision@outlook.com?subject=${encodeURIComponent(`${t("report_wrong_info")}: ${title}`)}">🚩 ${t("report_wrong_info")}</a>
+      <a class="report-link" href="${SITE_ROOT_PATH}${window.SITE_LANG === "en" ? "en/" : ""}contact.html?report=${encodeURIComponent(title)}&section=${encodeURIComponent(section)}">🚩 ${t("report_wrong_info")}</a>
     </div>
   `;
 
@@ -2039,6 +2129,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initInstallPrompt();
   initSectionFilter();
   initAutoUpdateCheck();
+  initContactForm();
   initArticleShare();
   initArticleListen();
 
