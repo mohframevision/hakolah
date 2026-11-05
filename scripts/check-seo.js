@@ -34,13 +34,13 @@ for (const f of files) {
   const noindex = /<meta name="robots" content="noindex/.test(html);
 
   if (!title) issues.push(`${rel}: بلا <title>`);
-  else {
-    if (title.length > 60) issues.push(`${rel}: عنوان طويل (${title.length} حرف): "${title}"`);
-    if (!titles.has(title)) titles.set(title, []);
-    titles.get(title).push(rel);
-  }
 
   if (!noindex) {
+    if (title) {
+      if (title.length > 60) issues.push(`${rel}: عنوان طويل (${title.length} حرف): "${title}"`);
+      if (!titles.has(title)) titles.set(title, []);
+      titles.get(title).push(rel);
+    }
     if (!desc) issues.push(`${rel}: بلا meta description`);
     else {
       if (desc.length > 160) issues.push(`${rel}: وصف طويل (${desc.length} حرف)`);
