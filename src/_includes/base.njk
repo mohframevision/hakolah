@@ -2,6 +2,10 @@
 {% from "icon.njk" import icon %}
 {% set lang = lang or "ar" %}
 {% set t = i18n[lang] %}
+{# دليل الأماكن انتقل إلى توريلو (torilu.js): صفحاته هنا صفحة تحويل فقط #}
+{% set toriluTo = page.url | toriluUrl %}
+{% set toriluHome = "https://torilu.com/" + ("en/index.html" if lang == "en" else "") %}
+{% if toriluTo %}{% include "torilu-stub.njk" %}{% else %}
 <html lang="{{ lang }}" dir="{{ 'ltr' if lang == 'en' else 'rtl' }}">
 <head>
   <meta charset="UTF-8" />
@@ -149,25 +153,15 @@
       <nav class="main-nav" id="main-nav">
         {% set homeUrl = '/en/index.html' if lang == 'en' else '/index.html' %}
         <a href="{{ homeUrl | url }}" class="nav-home{% if navActive == "home" %} active{% endif %}"{% if navActive == "home" %} aria-current="page"{% endif %}>{{ t.nav_home }}</a>
-        {% for entry in sections %}{% if not entry.creators %}
+        {% for entry in sections %}{% if not entry.creators and not (('/' + entry.slug + '.html') | toriluUrl) %}
         <a href="{{ (('/en/' if lang == 'en' else '/') + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active" aria-current="page"{% endif %}>{{ entry.navLabel_en if lang == 'en' else entry.navLabel }}</a>
         {% endif %}{% endfor %}
+        <a href="{{ toriluHome }}">{{ 'Places guide' if lang == 'en' else 'دليل الأماكن' }}</a>
         {% set onCreators = navActive in ["creators", "links-tools", "ai-experiments"] %}
         <a href="{{ (('/en/creators.html' if lang == 'en' else '/creators.html')) | url }}"{% if onCreators %} class="active" aria-current="page"{% endif %}>{{ 'For Creators' if lang == 'en' else 'للمبدعين' }}</a>
-        {# على الجوال تختفي أيقونة المفضلة من الهيدر (ضيق) وتظهر هنا داخل
-           القائمة المنسدلة بدل ما تزدحم مع الشعار. "اختار لي" ما تحتاج نسخة
-           هنا لأنها تبقى ظاهرة بالهيدر حتى على أضيق الشاشات (انظر icon-btn-picker) #}
-        <a class="nav-only-mobile{% if navActive == "favorites" %} active{% endif %}"{% if navActive == "favorites" %} aria-current="page"{% endif %} href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}">{{ icon("heart-fill", 16) }} {{ t.nav_favorites }}</a>
         <a class="nav-only-mobile{% if navActive == "dilmo" %} active{% endif %}"{% if navActive == "dilmo" %} aria-current="page"{% endif %} href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}">{{ icon("dilmo", 16) }} {{ "Dilmo" if lang == "en" else "دلمو" }}</a>
       </nav>
       <div class="header-actions">
-        {# البحث ظاهر كحقل لا أيقونة فقط (Baymard وNielsen Norman: الحقل المكشوف يُستخدم أكثر بكثير)؛
-           على الشاشات الضيقة يصير أيقونة لأن تبويب «بحث» موجود بالشريط السفلي #}
-        <a class="header-search{% if navActive == "search" %} active{% endif %}" href="{{ (('/en/search.html' if lang == 'en' else '/search.html')) | url }}" aria-label="{{ t.search_aria }}">{{ icon("search", 18) }}<span class="header-search-text">{{ t.search_placeholder }}</span><kbd class="header-search-kbd" aria-hidden="true">/</kbd></a>
-        {# المفضلة و"اختار لي" أدوات مو أقسام محتوى — نقلناها من القائمة لهنا
-           كأيقونات، عشان القائمة تضل بسطر واحد حتى لما تُضاف أقسام جديدة #}
-        <a class="icon-btn{% if navActive == "favorites" %} active{% endif %}"{% if navActive == "favorites" %} aria-current="page"{% endif %} href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}" title="{{ t.nav_favorites }}" aria-label="{{ t.nav_favorites }}">{{ icon("heart-fill") }}</a>
-        <a class="icon-btn icon-btn-picker{% if navActive == "picker" %} active{% endif %}"{% if navActive == "picker" %} aria-current="page"{% endif %} href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}" title="{{ t.nav_picker }}" aria-label="{{ t.nav_picker }}">{{ icon("dice") }}</a>
         <a class="icon-btn{% if navActive == "sounds" %} active{% endif %}"{% if navActive == "sounds" %} aria-current="page"{% endif %} href="{{ (('/en/sounds.html' if lang == 'en' else '/sounds.html')) | url }}" title="{{ t.nav_sounds }}" aria-label="{{ t.nav_sounds }}">{{ icon("music") }}</a>
         {% set dilmoLabel = "Dilmo" if lang == "en" else "دلمو" %}<a class="icon-btn{% if navActive == "dilmo" %} active{% endif %}"{% if navActive == "dilmo" %} aria-current="page"{% endif %} href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}" title="{{ dilmoLabel }}" aria-label="{{ dilmoLabel }}">{{ icon("dilmo") }}</a>
         <span class="header-divider" aria-hidden="true"></span>
@@ -194,7 +188,6 @@
       <div class="footer-links">
         <a href="{{ ('/en/about.html' if lang == 'en' else '/about.html') | url }}">{{ t.footer_about }}</a>
         <a href="{{ ('/en/contact.html' if lang == 'en' else '/contact.html') | url }}">{{ t.footer_contact }}</a>
-        <a href="{{ ('/en/business.html' if lang == 'en' else '/business.html') | url }}">{{ 'List your business' if lang == 'en' else 'اعرض محلك' }}</a>
         <a href="{{ ('/en/privacy-policy.html' if lang == 'en' else '/privacy-policy.html') | url }}">{{ t.footer_privacy }}</a>
         <a href="{{ ('/en/terms.html' if lang == 'en' else '/terms.html') | url }}">{{ t.footer_terms }}</a>
         {% if social.youtubeUrl %}<a href="{{ social.youtubeUrl }}" target="_blank" rel="noopener noreferrer">{{ t.footer_youtube }}</a>{% endif %}
@@ -209,24 +202,17 @@
     <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}"{% if navActive == "home" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("home", 22) }}</span><span>{{ t.nav_home }}</span>
     </a>
-    <a href="{{ (('/en/search.html' if lang == 'en' else '/search.html')) | url }}"{% if navActive == "search" %} class="active" aria-current="page"{% endif %}>
-      <span class="bottom-nav-icon">{{ icon("search", 22) }}</span><span>{{ t.nav_search }}</span>
-    </a>
-    <a href="{{ (('/en/picker.html' if lang == 'en' else '/picker.html')) | url }}"{% if navActive == "picker" %} class="active" aria-current="page"{% endif %}>
-      <span class="bottom-nav-icon">{{ icon("dice", 22) }}</span><span>{{ t.nav_picker | replace("🎲 ", "") }}</span>
-    </a>
-    <a href="{{ (('/en/favorites.html' if lang == 'en' else '/favorites.html')) | url }}"{% if navActive == "favorites" %} class="active" aria-current="page"{% endif %}>
-      <span class="bottom-nav-icon">{{ icon("heart-fill", 22) }}</span><span>{{ t.nav_favorites }}</span>
-    </a>
     <a href="{{ (('/en/sounds.html' if lang == 'en' else '/sounds.html')) | url }}"{% if navActive == "sounds" %} class="active" aria-current="page"{% endif %}>
       <span class="bottom-nav-icon">{{ icon("music", 22) }}</span><span>{{ t.nav_sounds_short }}</span>
     </a>
+    <a href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}"{% if navActive == "dilmo" %} class="active" aria-current="page"{% endif %}>
+      <span class="bottom-nav-icon">{{ icon("dilmo", 22) }}</span><span>{{ "Dilmo" if lang == "en" else "دلمو" }}</span>
+    </a>
+    <a href="{{ toriluHome }}">
+      <span class="bottom-nav-icon">{{ icon("location-pin", 22) }}</span><span>{{ "Places" if lang == "en" else "الأماكن" }}</span>
+    </a>
   </nav>
 
-  <div class="daily-pick-reminder" id="dailyPickReminder" role="region" aria-label="{{ t.daily_pick_label }}">
-    <button type="button" class="daily-pick-reminder-close" id="dailyPickReminderClose" aria-label="{{ t.daily_pick_close }}">✕</button>
-    <p>{{ t.daily_pick_text_html | replace("{homeUrl}", (('/en/index.html' if lang == 'en' else '/index.html') | url)) | safe }}</p>
-  </div>
 
   {# إعدادات الصفحة كبيانات JSON (نوع application/json لا يُنفَّذ إطلاقاً، فما
      يحتاج أي استثناء بسياسة CSP). bootstrap.js يقرأها، وmain.js يشغّل دوال
@@ -302,3 +288,4 @@
   {% if pageScript %}<script src="{{ ('/js/' + pageScript + '.js') | url }}?v={{ buildVersion }}"></script>{% endif %}
 </body>
 </html>
+{% endif %}

@@ -1,51 +1,27 @@
 ---
 layout: base.njk
 permalink: "index.html"
-title: "هكوله | دليل البحرين — مطاعم وكافيهات ومتاجر وأماكن"
-description: "دليل البحرين في موقع واحد: مطاعم وكافيهات ومخابز ومتاجر وأماكن مختارة ومجرَّبة، مع روابط وأدوات مفيدة ومقالات عملية."
+title: "هكوله | صوتيات ودلمو وأدوات ومقالات"
+description: "هكوله: صوتيات تعزف بها في المتصفح، ودلمو، وأدوات مجانية للملفات، وروابط مفيدة، ومقالات عملية. دليل أماكن البحرين انتقل إلى توريلو."
 navActive: "home"
-pageScript: "home"
 langSwitchUrl: "/en/index.html"
 ---
 {% from "icon.njk" import icon %}
-{# الرئيسية: البحث أولاً (بدل وصف يملأ الشاشة)، ثم أزرار سريعة تتغيّر مع وقت اليوم، و«اختار لي»،
-   وصف حسب الوقت، و«جديد في هكوله» (يتغيّر كل ما أُضيف شيء)، والأقسام بحجم صغير.
-   الصفوف يملؤها home.js من بيانات data.js؛ بلا جافاسكربت يبقى البحث والأقسام شغّالة #}
-<h1 class="home-title">دليلك إلى أماكن البحرين</h1>
+{# الرئيسية بعد انتقال دليل الأماكن إلى توريلو (2026-11-05): سطر واحد للأماكن، ثم ما بقي في هكوله #}
+<h1 class="home-title">صوتيات ودلمو وأدوات ومقالات</h1>
 
-<form class="search-box home-search" role="search" action="{{ '/search.html' | url }}">
-  <span class="search-box-icon">{{ icon("search", 20) }}</span>
-  <input type="search" name="q" placeholder="{{ i18n.ar.search_placeholder }}" aria-label="{{ i18n.ar.search_aria }}" autocomplete="off" enterkeyhint="search" />
-  <button type="submit" class="search-go">{{ i18n.ar.search_submit }}</button>
-</form>
-<p class="home-hint">{{ i18n.ar.search_hint }}</p>
-<div class="chip-row home-chips" id="homeChips"></div>
-
-<a class="home-pick" href="{{ '/picker.html' | url }}">
-  <span class="home-pick-icon" aria-hidden="true">🎲</span>
-  <span class="home-pick-text"><b>{{ i18n.ar.home_pick_title }}</b><small>{{ i18n.ar.home_pick_desc }}</small></span>
-  <span class="home-pick-go">{{ i18n.ar.home_pick_btn }}</span>
+<a class="home-pick" href="https://torilu.com/">
+  <span class="home-pick-icon" aria-hidden="true">📍</span>
+  <span class="home-pick-text"><b>دليل الأماكن انتقل إلى توريلو</b><small>المطاعم والكافيهات والمخابز والأماكن، مع البحث والمفضلة و«اختار لي».</small></span>
+  <span class="home-pick-go">افتح توريلو</span>
 </a>
 
-<section class="home-row" id="homeTime" hidden>
-  <div class="home-row-head"><h2 id="homeTimeTitle"></h2><a id="homeTimeAll" href="{{ '/search.html' | url }}">{{ i18n.ar.home_see_all }} ‹</a></div>
-  <div class="home-cards" id="homeTimeRow"></div>
-</section>
-
-<section class="home-row" id="homeNew" hidden>
-  <div class="home-row-head"><h2>{{ i18n.ar.home_new }}</h2></div>
-  <div class="home-cards" id="homeNewRow"></div>
-</section>
-
 <section class="home-row">
-  <div class="home-row-head"><h2>{{ i18n.ar.home_sections }}</h2></div>
   <div class="mini-sections">
-    {% for entry in sections %}{% if not entry.creators %}
-    <a class="mini-section" href="{{ ('/' + entry.slug + '.html') | url }}"><span aria-hidden="true">{{ entry.icon }}</span>{{ entry.navLabel }}</a>
-    {% endif %}{% endfor %}
-    <a class="mini-section" href="{{ '/creators.html' | url }}"><span aria-hidden="true">🎨</span>للمبدعين</a>
     <a class="mini-section" href="{{ '/sounds.html' | url }}"><span aria-hidden="true">🎹</span>{{ i18n.ar.nav_sounds_short }}</a>
+    <a class="mini-section" href="{{ '/dilmo.html' | url }}"><span aria-hidden="true" style="line-height:0">{{ icon("dilmo", 28) }}</span>دلمو</a>
+    <a class="mini-section" href="{{ '/ai-experiments.html' | url }}"><span aria-hidden="true">🛠️</span>أدوات</a>
+    <a class="mini-section" href="{{ '/links-tools.html' | url }}"><span aria-hidden="true">🔗</span>روابط وأدوات</a>
+    <a class="mini-section" href="{{ '/guides.html' | url }}"><span aria-hidden="true">🧭</span>مقالات وأدلة</a>
   </div>
 </section>
-
-{# إعلان كازاسوق (ألعاب) انشال من الدليل المحلي: ما يناسب نيّة زائر المطاعم والمحلات #}

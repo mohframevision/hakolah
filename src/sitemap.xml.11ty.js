@@ -79,7 +79,9 @@ exports.render = function (data) {
       .replace(/'/g, "&apos;");
   const safeUrl = (path) => xmlEscape(encodeURI(`${SITE_URL}/${path}`));
 
-  const bilingualItems = bilingualPairs.map(([ar, en]) => {
+  // صفحات الأماكن انتقلت إلى توريلو (torilu.js) — صفحات تحويل هنا، خارج الخريطة
+  const { toriluUrl } = require("../torilu.js");
+  const bilingualItems = bilingualPairs.filter(([ar]) => !toriluUrl(`/${ar}`)).map(([ar, en]) => {
     const arUrl = safeUrl(ar);
     const enUrl = safeUrl(en);
     return (

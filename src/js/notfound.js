@@ -2,6 +2,11 @@
    /en/) — ما فيه دعم لصفحة 404 مختلفة لكل مجلد فرعي، فنكتشف اللغة من المسار.
    ملف خارجي عمداً — عشان تشتغل سياسة CSP بدون unsafe-inline. */
 (function () {
+  // مكان أُضيف بعد الانتقال إلى توريلو (لا صفحة تحويل له هنا): يذهب لنفس المسار هناك — نفس أقسام torilu.js
+  if (/^\/(en\/)?(restaurants|cafes|bakeries|stores|places|car-shops|menu)\//.test(location.pathname)) {
+    location.replace("https://torilu.com" + location.pathname + location.search + location.hash);
+    return;
+  }
   if (location.pathname.indexOf("/en/") === -1) return;
 
   document.documentElement.lang = "en";

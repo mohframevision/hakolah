@@ -85,7 +85,7 @@ There are no accounts or passwords on Hakolah, and we don't collect your persona
 
 <h2 id="business">For business owners</h2>
 
-Have a restaurant or cafe? You can [list your business](/en/business.html) on Hakolah with a QR digital menu and a WhatsApp order button.
+Have a restaurant or cafe? You can [list your business](https://torilu.com/en/business.html) on Torilu with a QR digital menu and a WhatsApp order button.
 
 <h2 id="credits">Music and sound credits</h2>
 

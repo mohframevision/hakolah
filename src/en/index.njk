@@ -2,48 +2,26 @@
 layout: base.njk
 lang: "en"
 permalink: "en/index.html"
-title: "Hakolah | Bahrain Guide — Restaurants, Cafes, Stores & Places"
-description: "A guide to Bahrain: restaurants, cafes, bakeries, stores and places we picked ourselves, plus useful links, tools and practical articles."
+title: "Hakolah | Sounds, Dilmo, Tools & Guides"
+description: "Hakolah: an in-browser music instrument, Dilmo, free file tools, useful links and practical guides. The Bahrain places guide moved to Torilu."
 navActive: "home"
-pageScript: "home"
 langSwitchUrl: "/index.html"
 ---
 {% from "icon.njk" import icon %}
-<h1 class="home-title">Your guide to places in Bahrain</h1>
+<h1 class="home-title">Sounds, Dilmo, tools and guides</h1>
 
-<form class="search-box home-search" role="search" action="{{ '/en/search.html' | url }}">
-  <span class="search-box-icon">{{ icon("search", 20) }}</span>
-  <input type="search" name="q" placeholder="{{ i18n.en.search_placeholder }}" aria-label="{{ i18n.en.search_aria }}" autocomplete="off" enterkeyhint="search" />
-  <button type="submit" class="search-go">{{ i18n.en.search_submit }}</button>
-</form>
-<p class="home-hint">{{ i18n.en.search_hint }}</p>
-<div class="chip-row home-chips" id="homeChips"></div>
-
-<a class="home-pick" href="{{ '/en/picker.html' | url }}">
-  <span class="home-pick-icon">🎲</span>
-  <span class="home-pick-text"><b>{{ i18n.en.home_pick_title }}</b><small>{{ i18n.en.home_pick_desc }}</small></span>
-  <span class="home-pick-go">{{ i18n.en.home_pick_btn }}</span>
+<a class="home-pick" href="https://torilu.com/en/index.html">
+  <span class="home-pick-icon" aria-hidden="true">📍</span>
+  <span class="home-pick-text"><b>The places guide moved to Torilu</b><small>Restaurants, cafes, bakeries and places, with search, favorites and the picker.</small></span>
+  <span class="home-pick-go">Open Torilu</span>
 </a>
 
-<section class="home-row" id="homeTime" hidden>
-  <div class="home-row-head"><h2 id="homeTimeTitle"></h2><a id="homeTimeAll" href="{{ '/en/search.html' | url }}">{{ i18n.en.home_see_all }} ›</a></div>
-  <div class="home-cards" id="homeTimeRow"></div>
-</section>
-
-<section class="home-row" id="homeNew" hidden>
-  <div class="home-row-head"><h2>{{ i18n.en.home_new }}</h2></div>
-  <div class="home-cards" id="homeNewRow"></div>
-</section>
-
 <section class="home-row">
-  <div class="home-row-head"><h2>{{ i18n.en.home_sections }}</h2></div>
   <div class="mini-sections">
-    {% for entry in sections %}{% if not entry.creators %}
-    <a class="mini-section" href="{{ ('/en/' + entry.slug + '.html') | url }}"><span>{{ entry.icon }}</span>{{ entry.navLabel_en }}</a>
-    {% endif %}{% endfor %}
-    <a class="mini-section" href="{{ '/en/creators.html' | url }}"><span>🎨</span>For Creators</a>
-    <a class="mini-section" href="{{ '/en/sounds.html' | url }}"><span>🎹</span>{{ i18n.en.nav_sounds_short }}</a>
+    <a class="mini-section" href="{{ '/en/sounds.html' | url }}"><span aria-hidden="true">🎹</span>{{ i18n.en.nav_sounds_short }}</a>
+    <a class="mini-section" href="{{ '/en/dilmo.html' | url }}"><span aria-hidden="true" style="line-height:0">{{ icon("dilmo", 28) }}</span>Dilmo</a>
+    <a class="mini-section" href="{{ '/en/ai-experiments.html' | url }}"><span aria-hidden="true">🛠️</span>Tools</a>
+    <a class="mini-section" href="{{ '/en/links-tools.html' | url }}"><span aria-hidden="true">🔗</span>Links & Tools</a>
+    <a class="mini-section" href="{{ '/en/guides.html' | url }}"><span aria-hidden="true">🧭</span>Guides</a>
   </div>
 </section>
-
-{# إعلان كازاسوق (ألعاب) انشال من الدليل المحلي: ما يناسب نيّة زائر المطاعم والمحلات #}

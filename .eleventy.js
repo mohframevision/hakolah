@@ -98,6 +98,8 @@ module.exports = function (eleventyConfig) {
     const date = value instanceof Date ? value : new Date(value);
     return Number.isNaN(date.getTime()) ? String(value) : date.toISOString().slice(0, 10);
   });
+  // رابط الصفحة نفسها على توريلو إن كانت من صفحات الأماكن المنتقلة، وإلا "" (torilu.js)
+  eleventyConfig.addFilter("toriluUrl", require("./torilu.js").toriluUrl);
   eleventyConfig.addFilter("replace", (str, search, replacement) =>
     typeof str === "string" ? str.split(search).join(replacement) : str
   );

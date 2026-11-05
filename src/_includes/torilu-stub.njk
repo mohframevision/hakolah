@@ -1,0 +1,16 @@
+<html lang="{{ lang }}" dir="{{ 'ltr' if lang == 'en' else 'rtl' }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title }}</title>
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href="{{ toriluTo }}" />
+  {# السكربت قبل meta refresh: يحفظ ?الاستعلام و#الجزء (وينقل المفضلة بصفحتها) #}
+  <script src="{{ ('/js/torilu-favorites.js' if navActive == 'favorites' else '/js/redirect.js') | url }}" data-to="{{ toriluTo }}"></script>
+  <meta http-equiv="refresh" content="0; url={{ toriluTo }}" />
+</head>
+<body>
+  <p><a href="{{ toriluTo }}">{{ "This page moved to Torilu" if lang == "en" else "انتقلت هذه الصفحة إلى توريلو" }}</a></p>
+</body>
+</html>

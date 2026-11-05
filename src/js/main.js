@@ -2306,15 +2306,15 @@ document.addEventListener("DOMContentLoaded", initAboutBadge);
   });
 })();
 
-/* ===== «/» يفتح البحث من أي صفحة (عُرف Google وGitHub)؛ بصفحة البحث نفسها يركّز على الحقل ===== */
+/* ===== «/» يركّز حقل البحث إن وُجد بالصفحة (عُرف Google وGitHub) — صفحة البحث انتقلت إلى توريلو ===== */
 document.addEventListener("keydown", (e) => {
   if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.target.closest("input, textarea, select, [contenteditable]")) return;
   if (document.getElementById("piano") || document.querySelector(".sounds-tool")) return; // صفحة الصوتيات: المفاتيح للعزف
-  e.preventDefault();
   const field = document.getElementById("searchInput");
-  if (field) return field.focus();
-  location.href = (window.SITE_LANG === "en" ? "/en/" : "/") + "search.html";
+  if (!field) return;
+  e.preventDefault();
+  field.focus();
 });
 
 /* ===== صور صفحة المكان: الضغط يكبّر الصورة لملء الشاشة داخل الموقع، و✕ يرجعها لمكانها =====
