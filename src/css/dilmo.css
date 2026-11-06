@@ -33,7 +33,9 @@ main.container:has(.dilmo) { max-width: none; }
   --bush: color-mix(in oklab, var(--grass, var(--cmp)) 80%, #1d3b2c); --bush-hi: color-mix(in oklab, var(--bush), #fff 22%); --bush-lo: color-mix(in oklab, var(--bush), #000 18%); }
 @media (max-width: 1300px) { .dilmo .play { height: clamp(340px, calc(100dvh - var(--header-h, 64px) - 180px), 820px); } }
 /* real ground under everyone: a strip of grass on top of soil */
-.dilmo .world { position: absolute; left: 0; top: 0; width: calc(100% / var(--k, 1)); height: calc(100% / var(--k, 1)); transform: scale(var(--k, 1)); transform-origin: 0 0; }
+.dilmo .world { position: absolute; left: 0; top: 0; width: calc(100% / var(--k, 1)); height: calc(100% / var(--k, 1)); transform: scale(var(--k, 1)); transform-origin: 0 0; will-change: transform; }
+/* the world is wider than the stage (dilmo.js sets its width and moves it under the camera); the sky and far layers ride along at their own speeds */
+.dilmo .sky, .dilmo .clouds, .dilmo .far { will-change: transform; }
 .dilmo .labels { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
 .dilmo .orb { position: absolute; left: 0; top: 0; width: 140px; height: 140px; overflow: visible; touch-action: none; cursor: grab; will-change: transform; z-index: 2; }
 .dilmo .orb:active { cursor: grabbing; }
@@ -121,6 +123,24 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .bench::before { content: ""; position: absolute; left: 2px; right: 2px; top: -16px; height: 7px; border-radius: 3px; background: #9a6a42;
   box-shadow: 0 9px 0 -1px #8a5d39, 0 16px 0 0 #b07c4f, 0 16px 0 1px rgba(0, 0, 0, .06); }
 .dilmo .bench::after { content: ""; position: absolute; left: 10px; right: 10px; top: 7px; bottom: 0; border-left: 5px solid #6e4a2c; border-right: 5px solid #6e4a2c; }
+/* a trampoline seen from the side: splayed legs, the padded frame in front, the dark bed dipping below it (dilmo.js draws the dip) */
+.dilmo .tramp { position: absolute; left: 0; top: 0; width: 160px; height: 56px; overflow: visible; pointer-events: none; }
+.dilmo .tramp .tl { fill: none; stroke: #646b73; stroke-width: 4; stroke-linecap: round; }
+.dilmo .tramp .tb { fill: #2b2f36; stroke: #1d2025; stroke-width: 1.5; stroke-linejoin: round; }
+.dilmo .tramp .tp { fill: #4f8597; }
+.dilmo .tramp .th { fill: #fff; opacity: .28; }
+/* a swing seen from the side: the A-frame, and the rope and seat that dilmo.js turns about the top every frame */
+.dilmo .swing { position: absolute; left: 0; top: 0; width: 160px; height: 162px; overflow: visible; pointer-events: none; }
+.dilmo .swing .sf { fill: none; stroke: #646b73; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.dilmo .swing .sc { stroke: #8a7a62; stroke-width: 2; }
+.dilmo .swing .ss { fill: #9a6a42; }
+.dilmo .swing .sp { fill: #4b5157; }
+/* a seesaw seen from the side: the stand, a tyre under each end, and the plank that dilmo.js tips about the pivot */
+.dilmo .seesaw { position: absolute; left: 0; top: 0; width: 220px; height: 66px; overflow: visible; pointer-events: none; }
+.dilmo .seesaw .ef { fill: none; stroke: #646b73; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.dilmo .seesaw .et { fill: #2b2f36; }
+.dilmo .seesaw .ep { fill: #9a6a42; }
+.dilmo .seesaw .ex { fill: #4b5157; }
 /* a leafy clump rooted on a soil mound; a click rustles it from the base */
 .dilmo .bush { position: absolute; left: 0; top: 0; width: 70px; height: 44px; z-index: 3; cursor: pointer; transform-origin: 50% 100%;
   background: radial-gradient(circle at 18% 70%, var(--bush) 0 11px, transparent 12px), radial-gradient(circle at 33% 52%, var(--bush) 0 13px, transparent 14px),
@@ -149,7 +169,7 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .pp-depth[hidden] { display: none; }
 /* once the 3D world fills the stage, the flat scene under it stops painting (its clouds, palms and stars kept animating unseen),
    and the bodies' blur and grain filters are switched off: they were redrawn every frame for nothing */
-.dilmo .in3d .sky, .dilmo .in3d .sun, .dilmo .in3d .moon, .dilmo .in3d .clouds, .dilmo .in3d .far, .dilmo .in3d .palm-near, .dilmo .in3d .ground, .dilmo .in3d .bench, .dilmo .in3d .tint { visibility: hidden; }
+.dilmo .in3d .sky, .dilmo .in3d .sun, .dilmo .in3d .moon, .dilmo .in3d .clouds, .dilmo .in3d .far, .dilmo .in3d .palm-near, .dilmo .in3d .ground, .dilmo .in3d .bench, .dilmo .in3d .tramp, .dilmo .in3d .swing, .dilmo .in3d .seesaw, .dilmo .in3d .tint { visibility: hidden; }
 .dilmo .is3d .orb path { filter: none; }
 .dilmo .in3d .orb { will-change: auto; }  /* in the full 3D world the bodies are invisible touch targets: as 8 separate layers they were repainted every frame */
 .dilmo .d3-cross { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; z-index: 6; pointer-events: none;

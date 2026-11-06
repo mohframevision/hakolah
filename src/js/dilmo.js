@@ -335,7 +335,7 @@
   };
   var mood = { joy: .2, startle: 0, dizzy: 0, annoy: 0, sleepy: 0, shy: 0, tickle: 0, curious: 0, fear: 0, sad: 0, love: 0, conf: 0, heart: 0 };
   var FK = null, hbPulse = 0, lastDraw = 0;  // Boson's face kit (made at start), his heartbeat pulse
-  var W = 0, WH = 0, ground = 0, pos = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 };
+  var W = 0, VW = 0, camX = 0, WH = 0, ground = 0, pos = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 };  // world width, visible width, camera (see measure)
   // the 3D world (dilmo3d.js): DZ = the arena's depth while it is open (0 when flat), D3 = the renderer. Positions stay in world px
   // with z for depth; sv(b) = where a body sits on the stage, in world px, with the on-screen size of one px there (identity when flat),
   // so pointer maths (pokes, drags, feeding) works in both worlds
@@ -430,6 +430,9 @@
     lastSfx[name] = now; V = 1 + (Math.random() - .5) * .08; v = v || 0;
     if (name === "pop") { bubble(380, 1100, .09, .12); bubble(620, 1500, .06, .04, .035); }  // a touch
     else if (name === "boing") { kbar({ f: 196, dur: .45, vol: Math.min(.17, .04 + v * .012) }); kn({ ft: "lowpass", f: 260, dur: .05, vol: Math.min(.09, .02 + v * .006) }); }  // a bounce
+    else if (name === "tramp") { var tv = Math.min(v, 26); kt({ f: 98 + tv * 2, f1: 150 + tv * 7, glide: .22, dur: .42, vol: Math.min(.11, .015 + tv * .004), a: .02, vib: [5, 3], rev: .2 }); }  // the bed: a soft low glide up, louder and higher the harder you land
+    else if (name === "seesaw") { var ev = Math.min(v, 20); kt({ f: 150 - ev * 2, f1: 112, glide: .12, dur: .26, vol: Math.min(.07, .012 + ev * .003), a: .01, rev: .2 }); }  // the plank meets its tyre: a soft low knock
+    else if (name === "swing") { var wv = Math.min(v, 16); kt({ f: 165 - wv * 2, f1: 128, glide: .25, dur: .38, vol: Math.min(.08, .018 + wv * .004), a: .02, rev: .25 }); }  // sitting down on the seat: a soft low settle
     else if (name === "squeak") bubble(480 + v * 420, 900 + v * 700, .05, .04);  // stretching: one small bubble per tug
     else if (name === "snap") { tone(300, 760, .1, "sine", .3); tone(760, 520, .12, "sine", .15, .08); }  // a catch (kept)
     else if (name === "whoosh") kt({ f: 500, f1: 1400, dur: .32, vol: .06, vib: [6, 14] });  // a throw: a slide whistle
@@ -803,14 +806,59 @@
     return s + "Z";
   }
 
+  // ---- the world and its camera ----
+  // W  = the world's width in world px: max(2.2 stages, 2000), so ~3.3 screens on a phone, and a wide desktop (where 2000
+  //      would be barely more than one screen) still gets more than twice its view. y and z are as before: the floor line is
+  //      ground + R, z runs 0..DZ in 3D.
+  // VW = the visible width (stage / K); camX = the world x at the stage's left edge (0..W - VW).
+  // #world is W wide and is shifted by -camX (one transform, applyCam); everything inside it is placed in world px.
+  // Screen-fixed things subtract camX themselves: the bubbles and names in #labels, and the sky/sun/moon/clouds/far town
+  // (counter-shifted in applyCam for the parallax). camStep() moves the camera: it follows the dragged body at the screen
+  // edge, else your character, else Boson, with a dead zone and easing. In 3D the flat camera holds still and the 3D canvas
+  // sits at camX (scene3().ox), so sv() and toStage() keep giving world px there too.
+  // A new prop: a world x (a fraction of W, set in placeProps so it follows resizes), its footprint on the floor line, a z
+  // in 3D; collisions in solidProps()/surfaceY()/ballStep(); in 3D, pass it in scene3() and draw it in dilmo3d.js frame().
   function measure() {
     // small stages scale the whole world down (K), so the characters keep room to move; physics stays in world px
-    var w = stage.clientWidth, h = stage.clientHeight;
+    var w = stage.clientWidth, h = stage.clientHeight, oW = W;
     K = clamp(Math.min(w / 600, h / 440), .55, 1); world.style.setProperty("--k", K); WH = h / K;
     G = clamp(h * .13, 30, 96);  // the ground band at the bottom, in screen px
-    W = w / K; ground = (h - G) / K - R;
-    if (!pos.x) { pos.x = W / 2; pos.y = ground; }
-    pos.x = clamp(pos.x, R, W - R); pos.y = Math.min(pos.y, ground);
+    VW = w / K; W = Math.round(Math.max(VW * 2.2, 2000)); ground = (h - G) / K - R;
+    world.style.width = W + "px"; camDrawn = null;
+    if (!pos.x) { pos.x = W / 2; pos.y = ground; camX = (W - VW) / 2; }
+    else if (oW !== W) {  // the world grew or shrank with the stage (a phone turned): everyone keeps their place in it
+      var f = W / oW; pos.x *= f; camX *= f; ball.x *= f;
+      buddies.forEach(function (b) { b.x *= f; b.home *= f; if (b.tx != null) b.tx *= f; });
+      gems.forEach(function (g) { g.x *= f; });
+    }
+    pos.x = clamp(pos.x, R, W - R); pos.y = Math.min(pos.y, ground); camX = clamp(camX, 0, W - VW);
+  }
+  // the middle of what you are looking at, in world x (in 3D: the one the camera follows)
+  function viewMid() { var o = player || (!mainAway && pos); return D3 && o ? o.x : camX + VW / 2; }
+  function camStep(dt) {
+    if (D3 || !VW) return;  // the 3D camera does its own following
+    var held = drag && drag.moved ? pos : null;
+    buddies.forEach(function (b) { if (b.drag && b.drag.moved) held = b; });
+    if (held) {  // carrying someone to the edge of the screen pans the world under your finger
+      var sx = ptr.x - camX, e = 70, pan = sx < e ? sx - e : sx > VW - e ? sx - VW + e : 0;
+      if (!pan || !ptr.has) return;
+      var c0 = camX; camX = clamp(camX + clamp(pan, -e, e) * .12 * dt, 0, W - VW);
+      var d = camX - c0, r = held === pos ? R : held.f.r; ptr.x += d; held.x = clamp(held.x + d, r, W - r);
+      return;
+    }
+    var o = player || (mainAway ? null : pos); if (!o) return;
+    // a dead zone in the middle third (small hops and steps don't move it), then an eased glide, so it never jitters
+    var lo = camX + VW * .34, hi = camX + VW * .66, goal = o.x < lo ? o.x - VW * .34 : o.x > hi ? o.x - VW * .66 : camX;
+    camX += (clamp(goal, 0, W - VW) - camX) * (1 - Math.pow(.9, dt));
+  }
+  var camDrawn = null;
+  function applyCam() {  // once a frame, only when it moved: the world, and the far layers at their own speeds
+    var c = Math.round(camX * 10) / 10; if (c === camDrawn) return; camDrawn = c;
+    var px = function (v) { return "translate3d(" + v.toFixed(1) + "px,0,0)"; }, p = reduce ? 0 : 1;  // reduced motion: no parallax
+    world.style.transform = "scale(" + K + ") " + px(-c);
+    sky.style.transform = px(c);  // the sky, sun, moon and stars stay put
+    clouds.style.transform = px(c * (reduce ? 1 : .92)); far1.style.transform = px(c * .7 * p); far2.style.transform = px(c * .45 * p);
+    cross.style.left = (c + VW / 2) + "px";
   }
   // client px → world px: divides out both the world scale (K) and the page zoom on wide screens (--page-zoom)
   function toStage(e) { var r = world.getBoundingClientRect(), z = r.width / world.offsetWidth || 1; return { x: (e.clientX - r.left) / z, y: (e.clientY - r.top) / z }; }
@@ -1015,6 +1063,7 @@
   });
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) { hiddenAt = performance.now(); return; }
+    last = performance.now();  // (no catch-up step for the time away)
     if (hiddenAt && performance.now() - hiddenAt > 2500) { lastInput = performance.now(); mood.sleepy = 0; mood.joy = 1; pos.vy = -12; say(line("back"), "back", 1000); }
   });
   document.documentElement.addEventListener("mouseleave", function () {
@@ -1138,7 +1187,7 @@
     var cast = store.cast || {}, xs = [.2, .82, .65, .36, .93, .08, .55];
     WIDE = stage.clientWidth >= 700;
     if (store.friend >= .5) thirdArrived = true;
-    FRIENDS.forEach(function (f, i) { if (friendHere(f, i) && cast[f.id] !== false) makeBuddy(f, W * xs[i], false); });
+    FRIENDS.forEach(function (f, i) { if (friendHere(f, i) && cast[f.id] !== false) makeBuddy(f, camX + VW * xs[i], false); });
     if (cast.main === false) setMain(false);
     renderCast();
     if (store.player && store.player.name) joinAs(store.player, true);
@@ -1147,7 +1196,7 @@
   function unlockFriend() {
     if (thirdArrived || !W) return;
     thirdArrived = true;
-    var b = makeBuddy(FRIENDS[2], W - 40, true); renderCast();
+    var b = makeBuddy(FRIENDS[2], camX + VW - 40, true); renderCast();
     setTimeout(function () { bsay(b, line("arrive")); }, 600);
     setTimeout(function () { say(line("welcome"), "welcome", 1000); }, 2200);
   }
@@ -1172,7 +1221,9 @@
     if ((b.mode === "tag" || b.mode === "flee") && b.other) { b.vy = -6; }  // the round ends: a happy hop
     b.next = t + (1800 + Math.random() * 2600) / b.f.energy; b.mode = "wander"; b.other = null; b.tx = b.tz = null; b.crouch = false; b.fslot = null;
     if (song) { b.mode = "sing"; if (t - (b.stuckAt || -1e9) > 8000) { b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 14), r, W - r); b.tz = nearZ(pos, r); } b.next = t + 800; return; }
-    if (isNight && t > (b.awakeUntil || 0)) { b.mode = "sleep"; b.tx = b.home; b.tz = b.homeZ; b.next = t + 6000; return; }  // bedtime in Bahrain
+    if (isNight && t > (b.awakeUntil || 0)) {
+      if (Math.abs(b.home - viewMid()) > VW * .6) b.home = clamp(viewMid() + (Math.random() - .5) * VW * .8, r, W - r);  // beds down where you are, not three screens away
+      b.mode = "sleep"; b.tx = b.home; b.tz = b.homeZ; b.next = t + 6000; return; }  // bedtime in Bahrain
     if (player && b.f.energy > .4 && Math.hypot(ball.x - player.x, D3 ? ball.z - player.z : 0) > 200 && Math.hypot(ball.vx, ball.vz) < 1 && !buddies.some(function (x) { return x.mode === "ball"; })) { b.mode = "ball"; b.next = t + 5000; return; }  // fetch: a ball left far from you gets brought back
     if (player && bfOf(b) >= .5 && Math.random() < .5) { b.mode = "follow"; b.next = t + 5000; return; }  // close friends tag along
     if (mood.annoy > .5 || mood.joy < -.2) { b.mode = "comfort"; b.tx = clamp(pos.x + (b.x < pos.x ? -1 : 1) * (R + r + 12), r, W - r); b.tz = nearZ(pos, r); b.next = t + 2500; return; }
@@ -1184,6 +1235,16 @@
       b.mode = "visit"; b.tx = clamp(player.x + (b.x < player.x ? -1 : 1) * (player.f.r + r + 20), r, W - r); b.tz = nearZ(player, r); feel(b.em, "shy", b.f.shy ? .7 : .35);
       setTimeout(function () { if (player) bsay(b, line("toPlayer", { n: player.f.name })); }, 900);
       return;
+    }
+    if (!reduce && Math.random() < .12 && Math.abs(tramp.cx - b.x) < VW * .8 && buddies.filter(function (x) { return x.mode === "tramp"; }).length < 2) {  // goes for a bounce on the trampoline
+      b.mode = "tramp"; b.tx = tramp.cx; b.tz = D3 ? tramp.z : null; b.next = t + 8000 + Math.random() * 6000; return;
+    }
+    if (!reduce && Math.random() < .1 && Math.abs(swing.cx - b.x) < VW * .8 && !swing.rider && !buddies.some(function (x) { return x.mode === "swing"; })) {  // or for a go on the swing
+      b.mode = "swing"; b.tx = swing.cx; b.tz = D3 ? swing.z : null; b.next = t + 9000 + Math.random() * 7000; return;
+    }
+    if (!reduce && Math.random() < .1 && Math.abs(ss.cx - b.x) < VW * .8 && !buddies.some(function (x) { return x.mode === "seesaw"; })) {  // or the seesaw, with a friend
+      var mate = others().filter(function (x) { return x !== b && !x.drag && !x.asleep && /^(wander|follow)$/.test(x.mode); }).sort(function (p, q) { return Math.abs(p.x - b.x) - Math.abs(q.x - b.x); })[0];
+      if (mate) { var sd = b.x < ss.cx ? -1 : 1, till = t + 12000 + Math.random() * 6000; [b, mate].forEach(function (x, i) { x.mode = "seesaw"; x.ssSide = i ? -sd : sd; x.ssMate = i ? b : mate; x.next = till; x.tx = x.tz = null; x.fslot = null; }); return; }
     }
     var k = Math.random();
     if (k < .3) { var rs0 = roomySpot(b); b.tx = rs0[0]; b.tz = D3 ? rs0[1] : null; }
@@ -1200,9 +1261,10 @@
     if (!mainAway) L.push([pos.x, pos.z]);
     var best = [b.x, b.z], bd = -1;
     for (var i = 0; i < 6; i++) {
-      var x = dir ? clamp(b.x + dir * (80 + Math.random() * 260), r + 60, W - r - 60) : r + 60 + Math.random() * Math.max(0, W - 2 * r - 120), z = D3 ? r + Math.random() * Math.max(0, DZ - 2 * r) : 0;
+      var x = dir ? clamp(b.x + dir * (80 + Math.random() * 260), r + 60, W - r - 60) : clamp(viewMid() + (Math.random() - .5) * VW * .8, r + 60, W - r - 60), z = D3 ? r + Math.random() * Math.max(0, DZ - 2 * r) : 0;
       if (D3 && (Math.abs(x - bench.x - bench.w / 2) < bench.w / 2 + 50 && Math.abs(z - bench.z) < 70)) continue;
       if (D3 && bushes.some(function (bu) { return Math.hypot(x - bu.cx, z - bu.cz) < 60; })) continue;
+      if (inBox(x, z, 40) || (Math.abs(x - swing.cx) < 120 && (!D3 || Math.abs(z - swing.z) < 80)) || (Math.abs(x - ss.cx) < ss.L + 40 && (!D3 || Math.abs(z - ss.z) < 60))) continue;  // nor on the trampoline: going there is a choice of its own
       var d = L.reduce(function (m, o) { return Math.min(m, Math.hypot(o[0] - x, o[1] - z)); }, 1e9);
       if (d > bd) { bd = d; best = [x, z]; }
     }
@@ -1274,11 +1336,17 @@
         else if (inWay) { var sg2 = (b.x - ball.x) * -uz2 + (b.z - ball.z) * ux2 >= 0 ? 1 : -1, o2 = r + ball.r + 40; b.tx = clamp(ball.x - sg2 * uz2 * o2, r, W - r); b.tz = clamp(ball.z + sg2 * ux2 * o2, r, DZ - r); }  // walk round it
         else { b.tx = clamp(bx, r, W - r); b.tz = D3 ? clamp(bz, r, DZ - r) : null; }
       }
+      else if (b.mode === "seesaw") {  // its own end of the plank; when that end is down on its tyre it pushes off, and the other end comes down
+        var seat = ss.cx + b.ssSide * (ss.L - 22) * Math.cos(ss.ph);
+        if (!b.ssMate || b.ssMate.mode !== "seesaw") b.next = Math.min(b.next, t);  // the other one left: so does this one
+        if (onSeesaw(b) && Math.abs(b.x - seat) < 24) { b.tx = b.tz = null; if (b.ssSide * ss.ph > SSMAX - .02 && Math.abs(ss.w) < .02 && t > (b.pushAt || 0)) { b.pushAt = t + 600; b.vy = -(5.5 + 2.5 * b.f.energy); } }
+        else if (b.y >= fy - 1) { b.tx = seat; b.tz = D3 ? ss.z : null; }
+      }
       // a target that isn't getting closer for 3 s is given up (no more hopping into a corner for 15 s)
       if (b.tx != null && !b.f.player) {
         if (b.tgtKey !== Math.round(b.tx) + "|" + Math.round(b.tz || 0)) { b.tgtKey = Math.round(b.tx) + "|" + Math.round(b.tz || 0); b.tgtAt = t; b.tgtFrom = [b.x, b.z]; }
         else if (t - b.tgtAt > 3000) {  // every 3 s: less than 20 px of progress in that window = give up (no more hopping in place at the bench)
-          if (Math.hypot(b.x - b.tgtFrom[0], b.z - b.tgtFrom[1]) < 20 && !/^(tag|flee|hs|sleep)$/.test(b.mode)) { b.tx = b.tz = null; b.next = t; b.tgtKey = ""; b.stuckAt = t; }
+          if (Math.hypot(b.x - b.tgtFrom[0], b.z - b.tgtFrom[1]) < 20 && !/^(tag|flee|hs|sleep|seesaw)$/.test(b.mode)) { b.tx = b.tz = null; b.next = t; b.tgtKey = ""; b.stuckAt = t; }
           else { b.tgtAt = t; b.tgtFrom = [b.x, b.z]; }
         }
       }
@@ -1286,19 +1354,21 @@
         b.mode = "wander"; feel(b.em, "love", .45); bsay(b, line("comfort")); mood.annoy *= .4; mood.joy = Math.max(mood.joy, .3); befriend(.01);
         setTimeout(function () { say(line("thanks"), "thanks", 4000); }, 1500);
       }
-      if (b.tx == null && b.y >= fy - 1 && !b.f.player && /^(wander|follow|ball)$/.test(b.mode) && t > (b.roomAt || 0)) {  // too crowded here: step aside
+      if (b.tx == null && b.y >= fy - 1 && !b.f.player && /^(wander|follow|ball)$/.test(b.mode) && t > (b.roomAt || 0) && !onSwing(b)) {  // too crowded here: step aside
         b.roomAt = t + 900;
         var near = crowd(b);
         if (near) { b.tx = clamp(b.x + (b.x < near.x ? -1 : 1) * (60 + Math.random() * 60), r, W - r); b.tz = D3 ? clamp(b.z + (Math.random() - .5) * 120, r, DZ - r) : 0; }
       }
-      if (b.tx != null && b.y >= fy - 1) {  // walks in little hops (in the 3D world the target has a depth too)
+      if (b.tx != null && b.y >= fy - 1 && !onSwing(b)) {  // walks in little hops (in the 3D world the target has a depth too)
         var dx = b.tx - b.x, dz = b.tz != null ? b.tz - b.z : 0, dist = Math.hypot(dx, dz);
         if (dist > 14) {
           // each hop is sized to the room ahead and the distance left, so they walk up to someone and stop
           // beside them (or land on their spot) instead of hopping into them and bouncing around
-          var ux = dx / dist, uz = dz / dist, chase = b.mode === "tag" || b.mode === "flee" || b.mode === "hs" || b.mode === "ball", hvy = 3 + 1.5 * b.f.energy, airT = 2 * hvy / .75;
+          var sl0, ux = dx / dist, uz = dz / dist, chase = b.mode === "tag" || b.mode === "flee" || b.mode === "hs" || b.mode === "ball", hvy = 3 + 1.5 * b.f.energy, airT = 2 * hvy / .75;
           var room = gapAhead(b, ux, uz), step = Math.min(2.5 + 2.5 * b.f.energy, dist / airT, room / airT);
-          if (room < 6 && chase) { b.vx = ux * (3 + 2.5 * b.f.energy); b.vz = uz * (3 + 2.5 * b.f.energy); b.vy = -9 - 2 * b.f.energy; }  // in a chase: leap over
+          if (!onTramp(b) && b.y + r > tramp.top + 2 && inBox(b.x + ux * (r + 30), b.z + uz * (r + 30), 0)) leapOnto(b, tramp.cx, tramp.z, tramp.top, 36, 11);  // the trampoline's frame ahead: up and onto the bed
+          else if (!onSeesaw(b) && (sl0 = ssLeap(b, ux, uz))) { if (sl0[2]) { b.vx = -ux * 3; b.vz = -uz * 3; b.vy = -3; } else leapOnto(b, sl0[0], ss.z, sl0[1], 14, 6); }  // the seesaw's high end ahead: up onto it (from a step back)
+          else if (room < 6 && chase) { b.vx = ux * (3 + 2.5 * b.f.energy); b.vz = uz * (3 + 2.5 * b.f.energy); b.vy = -9 - 2 * b.f.energy; }  // in a chase: leap over
           else if (step < .6) { b.vx = b.vz = 0; if (!chase) { if (b.mode === "wander") { var rs1 = roomySpot(b); b.tx = rs1[0]; b.tz = D3 ? rs1[1] : null; } else if (b.mode !== "follow") { b.tx = b.tz = null; b.next = Math.min(b.next, t + 900); } } }  // someone's right there: turn round (or wait beside them)
           else { b.vx = ux * step; b.vz = uz * step; b.vy = -hvy; }
         } else if (b.mode !== "tag" && b.mode !== "flee") { b.tx = null; b.tz = null; }
@@ -1306,7 +1376,8 @@
       var me2 = b.f.player;
       b.vy += (me2 ? playerGravity(b, t) : .75) * dt; if (me2 && !b.pound) b.vy = Math.min(b.vy, 18);  // terminal velocity
       b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; if (!me2) { b.vx *= Math.pow(.99, dt); b.vz *= Math.pow(.99, dt); }
-      if (b.y > fy) {  // the visitor's character lands dead, no bounce; friends stay bouncy
+      var onBed = swingStep(b, r, dt, t) || seesawStep(b, r, dt) || trampStep(b, r, dt, t, TRIM);
+      if (b.y > fy && !onBed) {  // the visitor's character lands dead, no bounce; friends stay bouncy
         var hit = b.vy; b.y = fy;
         if (hit > 2.5 && !me2) { b.vy = -hit * .45; b.vx *= .8; b.vz *= .8; }
         else { b.vy = 0; if (!me2) { var gf = Math.pow(.8, dt); b.vx *= gf; b.vz *= gf; } }
@@ -1322,7 +1393,7 @@
     }
     if (player && !b.f.player && !b.asleep && !reduce) {
       var pdist = Math.hypot(player.x - b.x, D3 ? player.z - b.z : 0);
-      if (pdist < 110 && t > (b.greetAt || 0) && b.y >= fy - 1 && b.tx == null) { b.greetAt = t + 20000; b.vy = -4; b.joy = 1; b.lookAt = player; b.lookUntil = t + 1500; }  // a hello hop
+      if (pdist < 110 && t > (b.greetAt || 0) && b.y >= fy - 1 && b.tx == null && !onSwing(b)) { b.greetAt = t + 20000; b.vy = -4; b.joy = 1; b.lookAt = player; b.lookUntil = t + 1500; }  // a hello hop
       else if (pdist < 220 && t > (b.seenAt || 0)) { b.seenAt = t + 8000; if (Math.random() < .6) { b.lookAt = player; b.lookUntil = t + 900 + Math.random() * 600; } }  // a glance as you pass
     }
     if (b.drag && b.drag.moved && b.y < surfaceY(b) - 120) { b.em.fear = Math.min(1, b.em.fear + .006 * dt); b.em.heart = Math.min(1, b.em.heart + .005 * dt); }
@@ -1372,8 +1443,8 @@
   }
   // everyone pushes everyone: circle-circle collisions, heavier = bigger, held ones don't budge
   function collideAll(t, dt) {
-    var L = mainAway ? [] : [{ o: pos, r: R, fixed: !!(drag && drag.moved), main: true }];
-    buddies.forEach(function (b) { L.push({ o: b, r: b.f.r, fixed: !!(b.drag && b.drag.moved), b: b }); });
+    var L = mainAway ? [] : [{ o: pos, r: R, fixed: !!(drag && drag.moved) || onSwing(pos), main: true }];  // a rider is held by the seat
+    buddies.forEach(function (b) { L.push({ o: b, r: b.f.r, fixed: !!(b.drag && b.drag.moved) || onSwing(b), b: b }); });
     L.push({ o: ball, r: ball.r, ball: true });
     for (var i = 0; i < L.length; i++) for (var j = i + 1; j < L.length; j++) {
       var A = L[i], B = L[j], dx = B.o.x - A.o.x, dy = B.o.y - A.o.y, dz = B.o.z - A.o.z, d = Math.hypot(dx, dy, dz), min = A.r + B.r;
@@ -1414,18 +1485,20 @@
         if (ball.y >= ground + R - ball.r - .5 && ball.vy > 0) ball.vy = 0;  // resting against someone on the floor: no falling speed piling up
         var ex = ball.x - kicker.o.x, ey = ball.y - kicker.o.y, ez = ball.z - kicker.o.z, el = Math.hypot(ex, ey, ez) || 1;
         if (el < min && !kicker.fixed) { kicker.o.x -= ex / el * (min - el); kicker.o.y -= ey / el * (min - el); if (D3) kicker.o.z -= ez / el * (min - el); }  // the ball is pinned (floor, fence): the body gives way
+        var bvn = ((ball.vx - (kicker.o.vx || 0)) * ex + (ball.vy - (kicker.o.vy || 0)) * ey + (D3 ? (ball.vz - (kicker.o.vz || 0)) * ez : 0)) / el;
+        if (bvn < 0) { bvn *= (bvn < -1.5 ? 1.5 : 1) / el; ball.vx -= bvn * ex; ball.vy -= bvn * ey; if (D3) ball.vz -= bvn * ez; }  // its speed into the body goes too (a fast one bounces back a little), so leaning on someone doesn't pile speed up
         if (t - (kicker.o.kickAt || 0) < 180) continue;
         var hl = Math.hypot(kx, kz) || 1, hx2 = kx / hl, hz2 = kz / hl, kin = (kicker.o.vx || 0) * hx2 + (kicker.o.vz || 0) * hz2, krv = kin - (ball.vx * hx2 + (D3 ? ball.vz * hz2 : 0));
         if (ky > .75 && (kicker.o.vy || 0) > 1) { ball.vy = -10; kicker.o.kickAt = t; }  // came down on top of it: it pops up
         else if (krv > 4) {  // a real kick (a run into it, not a walk with it): faster than you, with a little lift
           var ks = 1.6 * kin + 1.5; ball.vx = hx2 * ks; if (D3) ball.vz = hz2 * ks; if (ball.y >= ground + R - ball.r - 1) ball.vy = -Math.min(7, 2.5 + .45 * kin);
           kicker.o.kickAt = t; sfx("kick", kin); if (kin > 5.5 && kicker.b && kicker.b.f.player) hitStop(40);
-        } else if (kin > 0) { var ds = Math.min(2.4, 1.1 * Math.max(kin, .6)); ball.vx = hx2 * ds; if (D3) ball.vz = hz2 * ds; }  // a gentle touch: a dribble
+        } else if (kin > .3) { var ds = Math.min(2.4, 1.1 * Math.max(kin, .6)); ball.vx = hx2 * ds; if (D3) ball.vz = hz2 * ds; }  // a gentle touch: a dribble
         continue;
       }
       if (!ms) continue;
       var over = min - d;
-      var top = A.b && A.b.f.player && ny > .6 ? A : B.b && B.b.f.player && ny < -.6 ? B : null;
+      var top = A.b && A.b.f.player && ny > .6 && !A.fixed ? A : B.b && B.b.f.player && ny < -.6 && !B.fixed ? B : null;  // (on the swing, the seat holds you, not their head)
       if (top) {  // your character on someone's head: it stands there and rides along (no buzzing), they squash a little
         var und = top === A ? B : A;
         top.o.y = und.o.y - Math.sqrt(Math.max(0, min * min - Math.pow(top.o.x - und.o.x, 2) - Math.pow(top.o.z - und.o.z, 2)));  // lift straight up: a round top never slides you off
@@ -1470,7 +1543,7 @@
     var placed = L.map(function (e) { return [e._gx, e._gy, e._w, e._h]; });
     var tags = buddies.map(function (b) { return b.tag; }).filter(function (g) { return g && g._w != null; });
     tags.sort(function (a, b) { return (b._me - a._me) || (b._s - a._s); });
-    var bodies = D3 ? buddies.map(function (b) { var s = sv(b); return { b: b, x: s.x * K, y: s.y * K, r: b.f.r * s.s * K, s: s.s }; }).concat(mainAway ? [] : [(function () { var s = sv(pos); return { b: null, x: s.x * K, y: s.y * K, r: R * s.s * K, s: s.s }; })()]) : [];
+    var bodies = D3 ? buddies.map(function (b) { var s = sv(b); return { b: b, x: (s.x - camX) * K, y: s.y * K, r: b.f.r * s.s * K, s: s.s }; }).concat(mainAway ? [] : [(function () { var s = sv(pos); return { b: null, x: (s.x - camX) * K, y: s.y * K, r: R * s.s * K, s: s.s }; })()]) : [];
     tags.forEach(function (g) {
       var show = g._want, ax = g._x + g._w / 2, ay = g._y + g._h;
       if (show && placed.some(function (p) { return g._x < p[0] + p[2] + 3 && g._x + g._w + 3 > p[0] && g._y < p[1] + p[3] + 3 && g._y + g._h + 3 > p[1]; })) show = false;
@@ -1599,15 +1672,15 @@
     if (hp && !f3) b.body.setAttribute("transform", b.body.getAttribute("transform") + " scale(" + (1 + .035 * hp).toFixed(3) + ")");
     if (b.tag) b.tag.style.opacity = b.bub.hidden && !b.hsHidden ? "" : "0";  // the name steps aside while its owner talks (or hides)
     if (b.hsHidden && !b.bub.hidden) b.bub.hidden = true;
-    if (b.tag) { var tbx = boxOf(b.tag, K); b.tag._x = sb.x * K - tbx._mw / 2; b.tag._y = (sb.y - r * sb.s) * K - 20; b.tag._w = tbx._mw; b.tag._h = tbx._mh || 18; b.tag._s = sb.s; b.tag._me = !!b.f.player; b.tag._b = b; b.tag._want = b.tag.style.opacity !== "0" && !hid; }
+    if (b.tag) { var tbx = boxOf(b.tag, K); b.tag._x = (sb.x - camX) * K - tbx._mw / 2; b.tag._y = (sb.y - r * sb.s) * K - 20; b.tag._w = tbx._mw; b.tag._h = tbx._mh || 18; b.tag._s = sb.s; b.tag._me = !!b.f.player; b.tag._b = b; b.tag._want = b.tag.style.opacity !== "0" && !hid; }
     var fy = surfaceY(b), sc = clamp(1 - (fy - b.y) / 300, .35, 1);
     if (!f3) b.sh.style.transform = "translate(" + (b.x - r * .8).toFixed(1) + "px," + (fy + r - 6).toFixed(1) + "px) scale(" + sc.toFixed(2) + ")"; b.sh.style.opacity = sc.toFixed(2);
     if (!b.bub.hidden) {
-      if (t > b.sayUntil) b.bub.hidden = true;
+      if (t > b.sayUntil || (!hid && Math.abs(sb.x - camX - VW / 2) > VW / 2 + r)) b.bub.hidden = true;  // (off screen: no bubble pinned to the edge with nobody under it)
       else {
-        var bw = boxOf(b.bub, W + "x" + K)._mw, bh = b.bub._mh, bx = clamp(sb.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (sb.y - r * sb.s) * K - 12 - bh;
+        var bw = boxOf(b.bub, W + "x" + K)._mw, bh = b.bub._mh, bx = clamp((sb.x - camX) * K - bw / 2, 8, Math.max(8, VW * K - bw - 8)), by = (sb.y - r * sb.s) * K - 12 - bh;
         if (by < 8) by = (sb.y + r * sb.s) * K + 12;
-        if (hid) { bx = (W * K - bw) / 2; by = WH * K - bh - 16; }
+        if (hid) { bx = (VW * K - bw) / 2; by = WH * K - bh - 16; }
         b.bub._x = bx; b.bub._y = by; b.bub._w = bw; b.bub._h = bh;
       }
     }
@@ -1620,6 +1693,7 @@
   function playerGravity(b, t) {
     if (b.pound && t - b.poundT < 180) { b.vy = 0; return 0; }  // the ground pound hangs a moment in the air first (Mario's stall)
     if (b.pound) return PG * 2;
+    if (onTramp(b) || b.tBounce || onSeesaw(b)) return PG;  // (on the seesaw too: your weight on it is honest)  // on the bed and in the air after a bounce: plain gravity both ways, so a bounce gives back only what the bed keeps
     if (keys.jumpHeld && Math.abs(b.vy) < 2) return PG * .5;  // holding the button floats a little at the top
     if (b.vy < 0 && !keys.jumpHeld) return PG * 3.5;  // let go early: a much lower hop, smoothly (no sudden halving)
     return b.vy > 0 ? PG * 1.7 : PG;  // heavier on the way down: no floaty fall (Celeste, GDC 2016 jump talk)
@@ -1681,7 +1755,7 @@
   function saveStore() { try { localStorage.setItem("hk-dilmo", JSON.stringify(store)); } catch { /* private window */ } }
   function joinAs(cfg, returning) {
     if (player || !W) return;
-    player = makePlayer(cfg, (PSIZES[cfg.s] || 30) + 6, true);
+    player = makePlayer(cfg, camX + (PSIZES[cfg.s] || 30) + 6, true);
     player.vx = 5;
     store.player = cfg; saveStore();
     panel.hidden = true; pui.hidden = false; hud.textContent = ""; renderSwatches();
@@ -1719,7 +1793,7 @@
   }
   function playerControl(b, fy, dt, t) {
     var onF = b.y >= fy - 1 || t - (b.supportT || 0) < 60;
-    if (onF) { b.coyote = t; if (b.vy >= 0) b.jumps = 0; }
+    if (onF) { b.coyote = t; b.fling = false; if (b.vy >= 0) { b.jumps = 0; if (!onTramp(b)) b.tBounce = false; } }
     var ix = keys.thumb ? keys.sx : (keys.right ? 1 : 0) - (keys.left ? 1 : 0), iz = keys.thumb ? keys.sz : (keys.far ? 1 : 0) - (keys.near ? 1 : 0), charged = b.crouchT && t - b.crouchT > 300;
     // in the 3D world the keys are relative to the camera: right = screen right, far = away from you
     var mx = ix, mz = 0;
@@ -1738,25 +1812,28 @@
       if ((b.z <= b.f.r + .5 && mz < 0) || (b.z >= DZ - b.f.r - .5 && mz > 0)) mz = 0;
       var nl = Math.hypot(mx, mz); if (nl && nl < wl) { mx *= .9 * wl / nl; mz *= .9 * wl / nl; }
     }
-    if (fp) {  // first person, like shooters: quick to full speed, quick to stop
+    b.ssWalk = !!(mx || mz) && !b.crouch;  // walking on the seesaw: its friction doesn't hold you back
+    if (onSwing(b)) b.inX = mx;  // on the swing, left/right pumps it (swingStep)
+    else if (fp) {  // first person, like shooters: quick to full speed, quick to stop
       if ((mx || mz) && !b.crouch) { var acc = (onF ? .5 : .2) * dt; b.vx += (mx * 6 - b.vx) * acc; b.vz += (mz * 6 - b.vz) * acc; }
       else { var fr = Math.pow(onF ? .5 : .97, dt); b.vx *= fr; b.vz *= fr; }
     } else {
       // linear speed changes: full speed in ~8 frames, a stop in ~6, a reversal skids (with dust), weaker in the air (Game Feel; Mario Odyssey)
       var tvx = (mx || mz) && !b.crouch ? mx * 6 : 0, tvz = (mx || mz) && !b.crouch ? mz * 6 : 0;
-      var rev = b.vx * tvx + b.vz * tvz < 0, maxDv = (!onF ? .35 : (tvx || tvz) ? (rev ? 1.6 : .75) : 1) * dt;
+      var rev = b.vx * tvx + b.vz * tvz < 0, maxDv = (!onF ? (b.fling && !tvx && !tvz ? 0 : .35) : (tvx || tvz) ? (rev ? 1.6 : .75) : 1) * dt;
       var ddx = tvx - b.vx, ddz = tvz - b.vz, dl = Math.hypot(ddx, ddz);
       if (dl > maxDv) { b.vx += ddx / dl * maxDv; b.vz += ddz / dl * maxDv; } else { b.vx = tvx; b.vz = tvz; }
       if (onF && !tvx && !tvz && Math.hypot(b.vx, b.vz) < .8) b.vx = b.vz = 0;
       if (onF && rev && Math.hypot(b.vx, b.vz) > 3 && t - (b.dustAt || 0) > 250) { b.dustAt = t; b.sx = 1.12; var sd1 = sv(b); dust(sd1.x, sd1.y + b.f.r * sd1.s); }
     }
-    if (t - keys.jumpAt < 120 && t < (b.poundJumpUntil || 0)) { b.vy = -PV * 1.12; b.jumps = 1; keys.jumpAt = 0; b.poundJumpUntil = 0; b.spin += 360; sfx("jumpHi"); }  // jump right out of a slam: higher
-    if (t - keys.jumpAt < 120) {
+    var bedSoon = onTramp(b) || (b.vy > 0 && inBox(b.x, b.z, -TRIM) && tramp.top - b.y - b.f.r > -1 && tramp.top - b.y - b.f.r < b.vy * 7.2);  // on the bed or about to land on it: the bed takes the jump
+    if (!bedSoon && t - keys.jumpAt < 120 && t < (b.poundJumpUntil || 0)) { b.vy = -PV * 1.12; b.jumps = 1; keys.jumpAt = 0; b.poundJumpUntil = 0; b.spin += 360; sfx("jumpHi"); }  // jump right out of a slam: higher
+    if (!bedSoon && t - keys.jumpAt < 120) {
       if (t - (b.coyote || 0) < 100 && !b.jumps) {
         b.vy = charged ? -PV * 1.3 : -PV; b.jumps = 1; b.cut = false; keys.jumpAt = 0; b.sy = .82; b.sx = 1.12; b.svy = 0; b.crouchT = 0;
         sfx(charged ? "jumpHi" : "jump");
       } else if (b.jumps < 2 && !b.pound) {
-        b.vy = -PV * .85; b.jumps = 2; b.cut = false; keys.jumpAt = 0; var sj = sv(b); dust(sj.x, sj.y + b.f.r * sj.s); sfx("jump2");
+        b.vy = Math.min(b.tBounce ? b.vy : 0, -PV * .85); b.jumps = 2; b.cut = false; keys.jumpAt = 0; var sj = sv(b); dust(sj.x, sj.y + b.f.r * sj.s); sfx("jump2");
         if (mx || mz) { var asp = Math.max(Math.hypot(b.vx, b.vz), 3.5); b.vx = mx * asp; b.vz = mz * asp; }  // the air jump turns you where you point
         b.spin += 360;
       }
@@ -1851,7 +1928,7 @@
   function setMain(on) {
     if (mainAway === !on) return;
     mainAway = !on; orb.style.display = shadowEl.style.display = on ? "" : "none"; bub.hidden = true;
-    if (on) { pos.x = W / 2; pos.y = R; pos.vx = pos.vy = 0; mood.sleepy = 0; setTimeout(function () { say(line("backIn"), "backIn", 1000); }, 700); }
+    if (on) { pos.x = camX + VW / 2; pos.y = R; pos.vx = pos.vy = 0; mood.sleepy = 0; setTimeout(function () { say(line("backIn"), "backIn", 1000); }, 700); }
   }
   function removeFriend(id) {
     var b = others().filter(function (x) { return x.f.id === id; })[0]; if (!b) return;
@@ -1863,7 +1940,7 @@
   }
   function addFriend(id) {
     if (others().some(function (x) { return x.f.id === id; })) return;
-    var b = makeBuddy(FRIENDS.filter(function (f) { return f.id === id; })[0], W - 40, true);
+    var b = makeBuddy(FRIENDS.filter(function (f) { return f.id === id; })[0], camX + VW - 40, true);
     setTimeout(function () { bsay(b, line("arrive2")); }, 700);
   }
   function castItems() {
@@ -2491,27 +2568,297 @@
     clock.textContent = PHASE_NAME[phase] + " · " + num(n.h % 12 || 12) + ":" + num(("0" + n.m).slice(-2)) + (n.h < 12 ? T(" ص", " AM") : T(" م", " PM"));
     clock.appendChild(tz); clock.appendChild(document.createTextNode(" · ★ " + num(store.stars || 0)));
   }
-  // props: a bench you can stand on, two bushes to hide behind, a ball everyone can kick
+  // props: a bench you can stand on, three bushes to hide behind (spread along the wide world), a ball everyone can kick
   var benchEl = document.getElementById("bench"), bench = { x: 0, w: 96, top: 0, z: 0 };
-  var bushes = [0, 1].map(function (i) { return { el: document.getElementById("bush" + i), cx: 0, cz: 0 }; });
+  var bushes = [0, 1, 2].map(function (i) { return { el: document.getElementById("bush" + i), cx: 0, cz: 0 }; });
   var ballEl = document.getElementById("ball"), ball = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, r: 11, rot: 0 };
+  // the trampoline: a padded frame 44 px up on legs (too high to step onto: you jump on), and a bed that is a damped spring
+  // under each body on it. A body is "on the bed" while its feet are below the bed line inside the bed (o.tN = the step it last
+  // touched, tN counts update() steps), entered only from above (a swept test, so no speed passes through it). The bed holds
+  // you in (you jump off, you don't walk off); the 10 px pad round it is a plain surface; a held body is never stepped, so it
+  // lets go of the bed by itself. tramp.s/v is the drawn bed: it follows the deepest body, then springs back and wobbles.
+  var trampEl = document.getElementById("tramp"), trampBed = trampEl.querySelector(".tb");
+  var tramp = { cx: 0, hw: 75, hd: 55, top: 0, z: 0, s: 0, v: 0, px: 0, pz: 0, cur: 0, d: "" }, tN = 0, TK = .45, TC = .094, TMAX = 38, TRIM = 10;
+  function inBox(x, z, m) { return Math.abs(x - tramp.cx) < tramp.hw + m && (!D3 || Math.abs(z - tramp.z) < tramp.hd + m); }
+  function onTramp(o) { return o.tN >= tN - 1; }
+  function trampStep(o, r, dt, t, edge) {  // after o has moved this step; edge: how far in from the frame the bed starts (the ball bounces off the pads too)
+    var a = tramp.hw - edge, c = tramp.hd - edge, was = onTramp(o) && Math.abs(o.x - tramp.cx) < a + 14 && (!D3 || Math.abs(o.z - tramp.z) < c + 14);  // (a body set down elsewhere is not on it)
+    if (was) {  // the bed holds you: sliding into its edge stops you there
+      var x0 = clamp(o.x, tramp.cx - a, tramp.cx + a), z0 = D3 ? clamp(o.z, tramp.z - c, tramp.z + c) : o.z;
+      if (x0 !== o.x) { o.x = x0; o.vx *= -.3; } if (z0 !== o.z) { o.z = z0; o.vz *= -.3; }
+    }
+    var s = o.y + r - tramp.top;
+    if (s <= 0 || Math.abs(o.x - tramp.cx) > a || (D3 && Math.abs(o.z - tramp.z) > c) || (!was && s - o.vy * dt > .5)) {  // not on it (in from the side, below the bed line: the frame stops that)
+      if (was && o.vy < 0) { o.vy = Math.max(o.vy, o.f && o.f.player ? -PV * 1.75 : -26); o.tBounce = true; if (o.f && o.f.player) o.jumps = 1;  // launched: capped, one air jump left
+        if (o.mode === "tramp") { o.vy = Math.min(o.vy, -Math.sqrt(1.5 * (50 + 70 * o.f.energy))); o.vx = (tramp.cx - o.x) * .02; o.vz = D3 ? (tramp.z - o.z) * .02 : 0; } }  // a friend bouncing for fun pushes off each time, back toward the middle
+      return false;
+    }
+    if (!was) {  // landed on the bed
+      var v = o.vy; o.tPeak = 0; if (o.pound) { o.pound = false; o.poundLock = true; }
+      if (v > 2) {
+        sfx("tramp", v);
+        var sq = Math.min(v, 18);
+        if (o === pos) { sp.sy.vel -= sq * .012; sp.sx.vel += sq * .009; } else if (o.f) { o.svy -= sq * .012; o.svx += sq * .009; }
+      }
+      if (v > 3 && !store.trampSaid && o !== ball) {  // the first time anyone bounces: one friend says so
+        store.trampSaid = 1; saveStore();
+        var fr = others().filter(function (x) { return x !== o; }).sort(function (p, q) { return Math.abs(p.x - tramp.cx) - Math.abs(q.x - tramp.cx); })[0], ln = T("منصّة القفز! من يقفز أعلى؟", "A trampoline! Who can bounce the highest?");
+        if (fr) bsay(fr, ln); else say(ln);
+      }
+    }
+    if (s > TMAX) { o.y = tramp.top + TMAX - r; s = TMAX; if (o.vy > 0) o.vy = 0; }  // bottomed out on its stops
+    o.tPeak = Math.max(o.tPeak || 0, s);
+    if (o.f && o.f.player && t - keys.jumpAt < 120 && o.vy <= .5) {  // the visitor's jump, held until the bottom: deeper = higher, late = weaker
+      o.vy = Math.min(o.vy, 0) - (o.tPeak < 6 ? PV : PV * .9 * clamp(s / o.tPeak, .25, 1)); keys.jumpAt = 0; sfx("jump");
+    }
+    o.vy -= (TK * s + (Math.abs(o.vy) < 1 && s < 6 ? .5 : TC) * o.vy) * dt;  // the spring; its last little wobble dies fast, so nobody jitters at rest
+    if (!(o.f && o.f.player)) { var fk = Math.pow(.92, dt); o.vx *= fk; o.vz *= fk; }  // the bed takes the sideways speed
+    o.tN = tN; if (s > tramp.cur) { tramp.cur = s; tramp.px = o.x; tramp.pz = o.z; }
+    return true;
+  }
+  function bedStep(dt) {  // once a step: the drawn bed rides the deepest body, else springs back (it can't go far above its frame)
+    if (tramp.cur > 0) { tramp.v = clamp((tramp.cur - tramp.s) / dt, -4, 4); tramp.s = tramp.cur; }
+    else if (reduce) tramp.s = tramp.v = 0;
+    else { tramp.v = tramp.v * Math.pow(.88, dt) - tramp.s * .3 * dt; tramp.s = Math.max(-5, tramp.s + tramp.v * dt); }
+    tramp.cur = 0;
+  }
+  // a friend's hop that comes down in the middle of the bed: up high enough to clear the frame, the time until its feet are
+  // back at bed height, and the sideways speed to get there in that time (a little more, for the air's drag)
+  function leapOnto(b, x, z, top, up, min) {  // (x, z, top): where to come down; up: how far over it to rise
+    var h = b.y + b.f.r - top, vy = -Math.max(min, Math.sqrt(1.5 * (h + up))), tt = (-vy + Math.sqrt(vy * vy - 1.5 * h)) / .75;
+    b.vy = vy; b.vx = (x - b.x) / tt * 1.12; b.vz = D3 ? (z - b.z) / tt * 1.12 : 0;
+    if (b.mode === "tramp") b.tx = b.tz = null;
+  }
+  // the swing: an A-frame with its pivot 150 px up, and a seat on 130 px ropes that is a real pendulum (th: the angle from straight
+  // down, + toward +x; w: its rate per frame), stepped in quarter frames with light damping and a little pivot friction, so a pushed
+  // swing settles and then stands still (no creeping). One rider at a time is carried by the seat as part of the pendulum (o.swN = the
+  // step it was last carried, like the trampoline's tN: a held body is not stepped, so it lets go by itself, with no kick). A body
+  // landing on the seat, or stepping into it at walking height while it is slow, sits: a catch that keeps the angular momentum
+  // (the rope takes the rest). Anything else bumps it: an impulse at the contact, so a fast seat knocks you and the ball is batted.
+  // All tests are swept along the step, so no speed passes through it. The rider leaves by jumping (the seat's own velocity plus the
+  // jump; the push off kicks the seat back), and the visitor pumps it with left/right: in time adds, against it brakes, up to ~75°.
+  var swingEl = document.getElementById("swing"), swingRope = swingEl.querySelector(".sr");
+  var swing = { cx: 0, top: 0, z: 0, L: 130, hs: 20, hd: 52, th: 0, w: 0, M: 500, rider: null, d: null }, SWG = .75, SWCAP = 80 * Math.PI / 180, SWPUMP = 75 * Math.PI / 180;
+  function onSwing(o) { return swing.rider === o && o.swN >= tN - 1; }
+  function swI() { var r = swing.rider; return swing.M * swing.L * swing.L + (r ? r.swM * r.swP * r.swP : 0); }  // its moment of inertia about the pivot
+  function swLe() { var r = swing.rider; return swI() / (swing.M * swing.L + (r ? r.swM * r.swP : 0)); }  // the length of the simple pendulum that swings the same
+  function swAmp() { return Math.acos(clamp(Math.cos(swing.th) - swing.w * swing.w * swLe() / (2 * SWG), -1, 1)); }  // how far out this swing will go
+  function swingPhys(dt) {  // once a step, before anyone moves
+    var s = swing; if (s.rider && !onSwing(s.rider)) s.rider = null;
+    var le = swLe(), n = Math.ceil(dt / .25), h = dt / n, fr = 1.2e-5;
+    for (var i = 0; i < n; i++) {
+      var a = -SWG / le * Math.sin(s.th);
+      if (!s.w && Math.abs(a) <= fr) break;  // standing still: the pivot's friction holds it
+      var w1 = (s.w + a * h) * Math.pow(.9993, h), w2 = w1 - (w1 > 0 ? fr : -fr) * h;
+      s.w = w1 * w2 <= 0 ? 0 : w2; s.th += s.w * h;
+    }
+    if (Math.abs(s.th) > SWCAP) { s.th = clamp(s.th, -SWCAP, SWCAP); if (s.w * s.th > 0) s.w = 0; }  // never past ~80° (the ropes would go slack)
+    else if (swAmp() > SWCAP) s.w = (s.w > 0 ? 1 : -1) * Math.sqrt(2 * SWG * (Math.cos(s.th) - Math.cos(SWCAP)) / le);
+  }
+  function swPin(o) {  // the rider sits on the seat and moves with it
+    var s = swing, sn = Math.sin(s.th), cs = Math.cos(s.th), p = o.swP, a = o.swA;
+    o.x = s.cx + p * sn + a * cs; o.y = s.top + p * cs - a * sn; if (D3) o.z = s.z + o.swZ;
+    o.vx = s.w * (p * cs - a * sn); o.vy = -s.w * (p * sn + a * cs); o.vz = 0; o.swVx = o.vx; o.swVy = o.vy; o.swN = tN;
+  }
+  function swingStep(o, r, dt, t) {  // after o has moved this step; true while it rides the seat
+    var s = swing, sn = Math.sin(s.th), cs = Math.cos(s.th), m = r * r;
+    if (onSwing(o)) {
+      var jump = o.vy < o.swVy - 3, leave = o.f && !o.f.player && o.mode !== "swing";
+      if (!jump && !leave) {
+        var d = o.f && o.f.player ? clamp(o.inX || 0, -1, 1) : o.mode === "swing" && swAmp() < .45 + .35 * o.f.energy ? (s.w >= 0 ? 1 : -1) * Math.min(1, o.f.energy) : 0;
+        if (d && (d * s.w <= 0 || swAmp() < SWPUMP)) s.w += .05 * d / s.L * dt;  // a push along the seat's path: with the swing adds, against it brakes
+        swPin(o); return true;
+      }
+      // off it: the seat's own velocity plus the push off (a friend just hops); the push's part along the seat's path kicks the seat
+      // back by the same momentum (the part along the rope goes into the frame)
+      var rx = leave ? 0 : o.vx - o.swVx, ry = leave ? -5 : o.vy - o.swVy, rt = rx * cs - ry * sn;
+      s.rider = null;
+      o.vx = s.w * (o.swP * cs - o.swA * sn) + rx; o.vy = -s.w * (o.swP * sn + o.swA * cs) + ry;
+      s.w -= m * rt * o.swP / swI(); o.swN = -9; o.swOff = tN; if (o.f && o.f.player) o.fling = true;
+      return false;
+    }
+    if ((D3 && Math.abs(o.z - s.z) > s.hd + r * .5) || tN - (o.swOff || -1e9) < 30) return false;  // (just jumped off: clear of the seat for a moment)
+    // swept: from where it was at the start of the step to where it is, in steps shorter than half its size
+    var x0 = o.x - o.vx * dt, y0 = o.y - o.vy * dt, k = Math.max(1, Math.ceil(Math.hypot(o.x - x0, o.y - y0) / Math.max(3, r * .5))), hit = null, hp = null;
+    for (var i = 0; i <= k && !hit; i++) {
+      var qx = x0 + (o.x - x0) * i / k - s.cx, qy = y0 + (o.y - y0) * i / k - s.top, al = qx * cs - qy * sn, rh = qx * sn + qy * cs, ca = clamp(al, -s.hs, s.hs), gl = Math.hypot(al - ca, rh - s.L);
+      if (gl < r + 3) hit = { x: qx + s.cx, y: qy + s.top, a: al, ca: ca, h: rh - s.L, g: gl }; else hp = rh - s.L;
+    }
+    if (!hit) return false;
+    var vsx = s.w * (s.L * cs - hit.ca * sn), vsy = -s.w * (s.L * sn + hit.ca * cs), rvx = o.vx - vsx, rvy = o.vy - vsy;
+    var above = hp != null && hp < -r - 2 && Math.abs(hit.a) < s.hs + r * .5;  // came down onto its top
+    if (o !== ball && !s.rider && !(o.f && !o.f.player && tN - (o.swOff || -1e9) < 240) && (above || (!(o.f && o.f.player) && hit.h < -1 && Math.hypot(rvx, rvy) < 6))) {  // sits (a friend who just got off doesn't sit straight back down; you sit only by landing on it, so you can walk past)
+      o.swP = s.L - 3 - r; o.swA = clamp(hit.a, -s.hs * .6, s.hs * .6); o.swZ = D3 ? clamp(o.z - s.z, -12, 12) : 0; o.swM = m;
+      var vt = o.vx * cs - o.vy * sn, I0 = swI(), hard = Math.max(0, rvx * sn + rvy * cs);
+      s.w = (I0 * s.w + m * o.swP * vt) / (I0 + m * o.swP * o.swP); s.rider = o;  // the catch: angular momentum kept
+      swPin(o);
+      if (hard > 2) { sfx("swing", hard); var sq = Math.min(hard, 14); if (o === pos) { sp.sy.vel -= sq * .01; sp.sx.vel += sq * .008; } else if (o.f) { o.svy -= sq * .01; o.svx += sq * .008; } }
+      if (o.f && !o.f.player && /^(wander|swing)$/.test(o.mode)) { if (o.mode !== "swing") o.next = t + 5000 + Math.random() * 5000; o.mode = "swing"; o.tx = o.tz = null; }
+      if (!store.swingSaid) {  // the first time anyone sits on it: one friend says so
+        store.swingSaid = 1; saveStore();
+        var fr = others().filter(function (x) { return x !== o; }).sort(function (p, q) { return Math.abs(p.x - s.cx) - Math.abs(q.x - s.cx); })[0], ln = T("أرجوحة! من يصل إلى الغيوم؟", "A swing! Who can reach the clouds?");
+        if (fr) bsay(fr, ln); else say(ln);
+      }
+      return true;
+    }
+    // a bump: out to the seat's surface, then an impulse along the contact normal (the seat only moves along its path)
+    var lx = hit.a - hit.ca, lh = hit.h, gl2 = hit.g || 1; if (hit.g < .01) { lx = 0; lh = -1; gl2 = 1; }
+    var nx = (lx * cs + lh * sn) / gl2, ny = (-lx * sn + lh * cs) / gl2, cx0 = s.cx + s.L * sn + hit.ca * cs, cy0 = s.top + s.L * cs - hit.ca * sn;
+    o.x = cx0 + nx * (r + 3.01); o.y = cy0 + ny * (r + 3.01);
+    var vn = rvx * nx + rvy * ny;
+    if (vn < 0) {
+      var arm = nx * (s.L * cs - hit.ca * sn) - ny * (s.L * sn + hit.ca * cs), I2 = swI(), e = vn > -1.5 ? 0 : o === ball ? .5 : .3, j = -(1 + e) * vn / (1 / m + arm * arm / I2);
+      o.vx += j / m * nx; o.vy += j / m * ny; s.w -= j * arm / I2;
+      if (-vn > 4 && o !== ball) sfx("boing", -vn);
+    }
+    return false;
+  }
+  function swingLegs(o, r) {  // in 3D the A-frame's four legs are solid (at the ends of the beam, 66 px either side: clear of the seat and its rider)
+    var s = swing; if (onSwing(o) || o.y < s.top || o.y > s.top + 150) return;
+    var off = 75 * (o.y - s.top) / 150;
+    [-1, 1].forEach(function (j) { [-1, 1].forEach(function (k) {
+      var dx = o.x - (s.cx + j * off), dz = o.z - (s.z + k * 66), d = Math.hypot(dx, dz), m = r * .7 + 2;
+      if (d >= m || d < .01) return;
+      o.x += dx / d * (m - d); o.z += dz / d * (m - d);
+      var vn = (o.vx * dx + o.vz * dz) / d; if (vn < 0) { o.vx -= dx / d * vn; o.vz -= dz / d * vn; }
+    }); });
+  }
+  // the seesaw: a 200 px plank on a pivot 34 px up, tipping between two tyres (±13.3°). The plank is one rigid body (ph: the angle,
+  // + = its +x end down; w: its rate per frame) and whoever is on it is a free body touching it: a contact is a swept capsule
+  // test in the plank's own frame (so neither a fast body nor a fast plank passes through), then impulses: along the normal
+  // (with the same bounce as the floor; none once resting) and friction that holds you on the slope, each turning the plank
+  // about the pivot. So weight is torque (the heavier end goes down), a body dropped on the high end throws the low end up,
+  // and whoever sat there flies on when the plank hits its tyre. o.ssN = the step it last stood on it (a held body is not
+  // stepped, so it lets go by itself). Under the plank is solid: you are pushed out at the nearer end.
+  var ssEl = document.getElementById("seesaw"), ssPlank = ssEl.querySelector(".ep");
+  var SSMAX = Math.asin(.23), ss = { cx: 0, top: 0, z: 0, L: 100, hd: 16, ph: -SSMAX, p0: -SSMAX, w: 0, I: 2e6, d: null };
+  function onSeesaw(o) { return o.ssN >= tN - 1; }
+  function seesawPhys(dt) {  // once a step, before anyone moves
+    var s = ss; s.p0 = s.ph; s.w = clamp(s.w, -.25, .25); s.ph += s.w * dt;
+    if (Math.abs(s.ph) >= SSMAX) {  // on a tyre: a soft knock and a small rebound, or it rests there
+      var hit = Math.abs(s.w) * s.L; s.ph = clamp(s.ph, -SSMAX, SSMAX);
+      if (s.ph * s.w > 0) { s.w = hit > 1 ? -s.w * .2 : 0; if (hit > 2) sfx("seesaw", hit); }
+    }
+    else s.w = (s.w > 0 ? 1 : -1) * Math.max(0, Math.abs(s.w) - 2e-6 * dt);  // the pivot's friction: a balanced plank comes to rest
+  }
+  function ssLoc(x, y, ph) { var c = Math.cos(ph), n = Math.sin(ph), qx = x - ss.cx, qy = y - ss.top; return [qx * c + qy * n, qx * n - qy * c]; }  // [along, height above]
+  function seesawStep(o, r, dt) {  // after o has moved this step; true while it stands on the plank
+    var s = ss, L = s.L, m = r * r, R3 = r + 3, me = o.f && o.f.player;
+    if (D3 && Math.abs(o.z - s.z) > s.hd + r * .7) return false;
+    var cs = Math.cos(s.ph), sn = Math.sin(s.ph), was = onSeesaw(o), X0 = o.x - o.vx * dt, Y0 = o.y - o.vy * dt, top = false;
+    if (D3 && !was && Math.abs(o.z - o.vz * dt - s.z) > s.hd + r * .7 - .5) {  // in from its long side, lower than its top: the plank's side stops you
+      var sl = ssLoc(o.x, o.y, s.ph);
+      if (Math.abs(sl[0]) < L + r * .5 && sl[1] < R3 - 4) { o.z = s.z + (o.z < s.z ? -1 : 1) * (s.hd + r * .7 + .01); o.vz = 0; return false; }
+    }
+    if (was && o.vy < o.ssVy - 3) {  // pushed off it (a jump, a hop): the push presses the plank down where it stood
+      var ja = clamp(o.ssA, -L, L); ssTurn(m * Math.min(o.ssVy - o.vy, 20) * ja * cs * ssInv(o, -ja));
+    }
+    // swept, in the plank's frame: from where it was (against the plank as it was) to where it is, in steps under half its size
+    var A0 = ssLoc(X0, Y0, s.p0), A1 = ssLoc(o.x, o.y, s.ph), k = Math.max(1, Math.ceil(Math.hypot(A1[0] - A0[0], A1[1] - A0[1]) / Math.max(3, r * .5))), hit = null, side = A0[1] >= 0 ? 1 : -1;
+    for (var i = 0; i <= k && !hit; i++) {
+      var a = A0[0] + (A1[0] - A0[0]) * i / k, h = A0[1] + (A1[1] - A0[1]) * i / k;
+      if (Math.hypot(a - clamp(a, -L, L), h) < R3) hit = [a, h]; else side = h >= 0 ? 1 : -1;
+    }
+    var a1 = A1[0], h1 = A1[1], na = 0, nh = 1;
+    if (hit) {
+      var inT = Math.abs(a1) <= L, hitT = Math.abs(hit[0]) <= L;
+      if (hitT && side > 0 && (inT || h1 < 0)) { if (!inT) a1 = hit[0]; h1 = R3; top = true; }  // onto its top (even if this step would have carried it through)
+      else if (inT && !hitT && h1 > 0) { h1 = R3; top = true; }  // up over its end
+      else if (!inT || !hitT) {  // its rounded end: out from it (from where it touched, if this step went right through)
+        if (inT) { a1 = hit[0]; h1 = hit[1]; }
+        var ce = clamp(a1, -L, L), de = Math.hypot(a1 - ce, h1);
+        if (de >= R3) hit = null; else { de = de || 1; na = (a1 - ce) / de; nh = h1 / de; a1 = ce + na * R3; h1 = nh * R3; }
+      }
+      else hit = null;  // at it from underneath: the solid underside has it
+    }
+    if (!hit) {  // under the plank is solid: out at the nearer end (in 3D, or out the side if that is nearer)
+      if (A1[1] < 0 && Math.abs(A1[0]) < L) {
+        var ex = (A1[0] < 0 ? -1 : 1), tx = s.cx + ex * (L * cs + r * .8), ez = D3 ? (o.z < s.z ? -1 : 1) : 0, tz = s.z + ez * (s.hd + r * .7);
+        if (D3 && Math.abs(tz - o.z) < Math.abs(tx - o.x)) { o.z = tz; if (o.vz * ez < 0) o.vz = 0; } else { o.x = tx; if (o.vx * ex < 0) o.vx = 0; }
+      }
+      return false;
+    }
+    // back to the world: on (or out from) the plank's surface, then the impulses
+    // the body is carried by the plank as if fixed to it at its centre (a body standing on it doesn't roll): so the plank's
+    // velocity there, and the levers of both impulses, are taken at its centre (q)
+    var nx = na * cs + nh * sn, ny = na * sn - nh * cs, qa = clamp(a1, -L, L), qx = a1 * cs + h1 * sn, qy = a1 * sn - h1 * cs;
+    o.x = s.cx + qx; o.y = s.top + qy;
+    var pv = [-s.w * qy, s.w * qx], rvx = o.vx - pv[0], rvy = o.vy - pv[1], vn = rvx * nx + rvy * ny, arm = qx * ny - qy * nx;
+    if (vn < 0) {
+      var e = was ? 0 : o === ball ? (vn < -1.5 ? .55 : 0) : me || vn > -2.5 ? 0 : .45, iI = ssInv(o, arm), jn = -(1 + e) * vn / (1 / m + arm * arm * iI);
+      o.vx += jn / m * nx; o.vy += jn / m * ny; ssTurn(-jn * arm * iI);
+      // friction along the surface: holds you on the slope and carries you with the plank (the visitor walking on it slides freely)
+      var tx2 = -ny, ty2 = nx, vt = (o.vx - pv[0]) * tx2 + (o.vy - pv[1]) * ty2, armt = qx * ty2 - qy * tx2, mu = o === ball ? .1 : me && o.ssWalk ? 0 : .8;
+      var iT = ssInv(o, vt > 0 ? -armt : armt), jt = clamp(-vt / (1 / m + armt * armt * iT), -mu * jn, mu * jn);
+      o.vx += jt / m * tx2; o.vy += jt / m * ty2; ssTurn(-jt * armt * iT);
+      if (!was && -vn > 2 && o !== ball && ny <= -.5) {
+        var sq = Math.min(-vn, 18); if (o === pos) { sp.sy.vel -= sq * .012; sp.sx.vel += sq * .009; } else if (o.f) { o.svy -= sq * .012; o.svx += sq * .009; }
+        if (!store.seesawSaid) {  // the first time anyone gets on it: one friend says so
+          store.seesawSaid = 1; saveStore();
+          var fr = others().filter(function (x) { return x !== o; }).sort(function (p, q) { return Math.abs(p.x - s.cx) - Math.abs(q.x - s.cx); })[0], ln = T("أرجوحة التوازن! اجلس في طرف، وأنا في الآخر.", "A seesaw! You take one end, I'll take the other.");
+          if (fr) bsay(fr, ln); else say(ln);
+        }
+      }
+    }
+    if (top) {  // where its new velocity takes it from where it was (so standing still on the slope doesn't creep), then out of the plank
+      o.x = X0 + o.vx * dt; o.y = Y0 + o.vy * dt; var lt = ssLoc(o.x, o.y, s.ph);
+      if (Math.abs(lt[0]) <= L && lt[1] < R3) { o.x += (R3 - lt[1]) * sn; o.y -= (R3 - lt[1]) * cs; }
+    }
+    if (ny > -.5) return false;  // touched its side: the floor still has it
+    if (D3) o.vz *= Math.pow(.9, dt);
+    o.ssN = tN; o.ssA = qa; o.ssVy = o.vy;
+    return true;
+  }
+  // an impulse on the plank turns it and, with it, whoever it presses up against (they are carried, as if fixed to it, so a
+  // landing on one end throws the other end's rider in the same step, at any step size); its tyre takes what presses it down
+  // onto it. ssInv(o, arm): 1 / that inertia for a turn of sign -arm, and who would be carried; ssTurn(dw): the turn.
+  var ssCarry = [];
+  function ssInv(o, arm) {
+    var s = ss, d = -arm, I = s.I; ssCarry = [];
+    if (Math.abs(s.ph) >= SSMAX - 1e-9 && d * s.ph > 0) return 0;
+    (mainAway ? [] : [[pos, R]]).concat(buddies.map(function (b) { return [b, b.f.r]; }), [[ball, ball.r]]).forEach(function (it) {
+      var q = it[0]; if (q === o || !onSeesaw(q) || (q.drag && q.drag.moved) || (q === pos && drag && drag.moved) || d * q.ssA >= 0) return;
+      var x = q.x - s.cx, y = q.y - s.top; I += it[1] * it[1] * (x * x + y * y); ssCarry.push([q, x, y]);
+    });
+    return 1 / I;
+  }
+  function ssTurn(dw) { ss.w += dw; ssCarry.forEach(function (c) { c[0].vx -= dw * c[2]; c[0].vy += dw * c[1]; c[0].ssVy += dw * c[1]; }); }  // (carried is not a jump)
+  function ssProject(o, r) {  // after the bodies have pushed each other: whoever stands on it is on its surface, not in it
+    if (!onSeesaw(o)) return; var l = ssLoc(o.x, o.y, ss.ph);
+    if (Math.abs(l[0]) <= ss.L && l[1] < r + 3) { var c = Math.cos(ss.ph), n = Math.sin(ss.ph); o.x += (r + 3 - l[1]) * n; o.y -= (r + 3 - l[1]) * c; }
+  }
+  // walking into the plank where it is above your feet: where to land on it [x, its top there, too close to its end to jump
+  // over it (step back first)]; a friend going to its end of the seesaw aims at its seat
+  function ssLeap(b, ux, uz) {
+    var r = b.f.r, x = b.x + ux * (r + 50), c = Math.cos(ss.ph), lim = ss.L * c - 14, sy = function (u) { return ss.top + (u - ss.cx) * Math.tan(ss.ph) - 3 / c; };
+    if (Math.abs(x - ss.cx) > lim || (D3 && Math.abs(b.z + uz * (r + 50) - ss.z) > ss.hd + r * .7) || b.y + r - sy(x) <= 8) return null;
+    var lx = clamp(b.mode === "seesaw" ? b.tx : x, ss.cx - lim, ss.cx + lim);
+    return [lx, sy(lx), Math.abs(b.x - ss.cx) - ss.L * c - r < 8];
+  }
   function placeProps() {
     var fl = ground + R;
-    bench.x = W * .3 - bench.w / 2; bench.top = fl - 28; bench.z = DZ * .3;
+    bench.x = W * .42 - bench.w / 2; bench.top = fl - 28; bench.z = DZ * .3;
     benchEl.style.transform = "translate(" + bench.x.toFixed(1) + "px," + bench.top.toFixed(1) + "px)";
+    tramp.cx = tramp.px = W * .76; tramp.top = fl - 44; tramp.z = tramp.pz = DZ * .62;
+    trampEl.style.transform = "translate(" + (tramp.cx - 80).toFixed(1) + "px," + (tramp.top - 10).toFixed(1) + "px)";
+    swing.cx = W * .2; swing.top = fl - 150; swing.z = DZ * .4;  // between the far-left bush (.1) and the next one (.3); its arc stays clear of both
+    swingEl.style.transform = "translate(" + (swing.cx - 80).toFixed(1) + "px," + (swing.top - 6).toFixed(1) + "px)";
+    ss.cx = W * .9; ss.top = fl - 34; ss.z = DZ * .5;  // past the trampoline (.76), clear of it and of the end wall
+    ssEl.style.transform = "translate(" + (ss.cx - 110).toFixed(1) + "px," + (ss.top - 30).toFixed(1) + "px)";
     bushes.forEach(function (b, i) {
-      b.cx = i ? W * .68 : W * .1; b.cz = DZ * (i ? .22 : .78);
+      b.cx = W * [.1, .64, .3][i]; b.cz = DZ * [.78, .22, .5][i];
       var at = "translate(" + (b.cx - 35).toFixed(1) + "px," + (fl - 44).toFixed(1) + "px)";  // bottom edge exactly on the floor line
       b.el.style.setProperty("--at", at); b.el.style.transform = at;
     });
-    if (!ball.x) { ball.x = W * .42; ball.y = fl - ball.r; }
-    // background layers stand on the floor line; the near palm sits beside the right-hand bush
+    if (!ball.x) { ball.x = W * .56; ball.y = fl - ball.r; }
+    // background layers stand on the floor line; the near palm stands right of the bushes
     var below = world.offsetHeight - fl;
     groundEl.style.height = below + "px";
     far1.style.bottom = (below - 2) + "px"; far2.style.bottom = (below - 1) + "px";
     [far1, far2].forEach(function (f) { f.setAttribute("viewBox", "0 0 " + Math.round(100 * W / (f.clientHeight || 80)) + " 100"); });  // same scale on any width: the tile repeats
     palmEl.style.transform = "translate(" + (W * .86 - 60).toFixed(1) + "px," + (fl - 150).toFixed(1) + "px)";
-    clouds.style.setProperty("--drift", (W + 420) + "px");
+    clouds.style.setProperty("--drift", (VW + 420) + "px");
+    sky.style.right = "auto"; sky.style.width = clouds.style.width = VW + "px";  // screen-fixed: one view wide
     paintSky();
   }
   // colour script: the sky, the far town, the ground and the light follow the real time in Bahrain,
@@ -2554,28 +2901,39 @@
     sunEl.style.display = up ? "" : "none"; skyNow.sun = null; skyNow.moon = null;
     if (up) {
       var el = Math.sin(Math.PI * clamp(ts, 0, 1));
-      skyNow.sun = { x: W * (.08 + .84 * ts), y: fl - 10 - span * .85 * el, warm: Math.max(0, 1 - el * 2.2) };
+      skyNow.sun = { x: VW * (.08 + .84 * ts), y: fl - 10 - span * .85 * el, warm: Math.max(0, 1 - el * 2.2) };
       sunEl.style.transform = "translate(" + skyNow.sun.x.toFixed(1) + "px," + skyNow.sun.y.toFixed(1) + "px)";
       stage.style.setProperty("--sun", "color-mix(in oklch, #ff9a4d " + (skyNow.sun.warm * 100).toFixed(0) + "%, #ffe7a8)");
     }
     var nightLen = 24 - ss + sr, tn = ((h - ss + 24) % 24) / nightLen, mup = tn > .07 && tn < .95;
     moonEl.style.display = mup ? "" : "none";
-    if (mup) { skyNow.moon = { x: W * (.1 + .8 * tn), y: fl - 30 - span * .8 * Math.sin(Math.PI * tn) }; moonEl.style.transform = "translate(" + skyNow.moon.x.toFixed(1) + "px," + skyNow.moon.y.toFixed(1) + "px)"; }
+    if (mup) { skyNow.moon = { x: VW * (.1 + .8 * tn), y: fl - 30 - span * .8 * Math.sin(Math.PI * tn) }; moonEl.style.transform = "translate(" + skyNow.moon.x.toFixed(1) + "px," + skyNow.moon.y.toFixed(1) + "px)"; }
   }
   // the bench footprint is a little forgiving (half a radius past the edge still lands on it)
   function onBench(x, z, r) { var m = (r || 0) * .5; return x > bench.x + 4 - m && x < bench.x + bench.w - 4 + m && (!D3 || Math.abs(z - bench.z) < 20 + m); }
-  function surfaceY(b) { var fy = floorY(b); return onBench(b.x, b.z, b.f.r) && b.y <= bench.top - b.f.r + 3 ? bench.top - b.f.r : fy; }
+  function surfaceY(b) {
+    if (onTramp(b) || onSwing(b) || onSeesaw(b)) return b.y;  // riding the bed, the swing or the seesaw: wherever it has it
+    if (inBox(b.x, b.z, b.f.r * .7) && b.y <= tramp.top - b.f.r + 3) return tramp.top - b.f.r;  // its pads (over the bed, the bed takes it first)
+    var fy = floorY(b); return onBench(b.x, b.z, b.f.r) && b.y <= bench.top - b.f.r + 3 ? bench.top - b.f.r : fy;
+  }
   // after everyone has moved: low steps are walked up (the bench is 28 px), anything else stops you at its side
   function solidProps() {
     var list = (mainAway ? [] : [{ o: pos, r: R, held: drag && drag.moved }]).concat(buddies.map(function (b) { return { o: b, r: b.f.r, held: b.drag && b.drag.moved, me: b.f.player, b: b }; }));
+    var boxes = [[bench.x, bench.x + bench.w, bench.z, 20, bench.top], [tramp.cx - tramp.hw, tramp.cx + tramp.hw, tramp.z, tramp.hd, tramp.top]];
     list.forEach(function (it) {
       var o = it.o, r = it.r; if (it.held) return;
-      var x0 = bench.x, x1 = bench.x + bench.w, z0 = D3 ? bench.z - 20 : -1e9, z1 = D3 ? bench.z + 20 : 1e9;
+      if (D3) swingLegs(o, r);
+      ssProject(o, r);
+      boxes.forEach(function (bx, k) {
+      if (k && onTramp(o)) return;  // on the trampoline's bed: the bed has it
+      var x0 = bx[0], x1 = bx[1], z0 = D3 ? bx[2] - bx[3] : -1e9, z1 = D3 ? bx[2] + bx[3] : 1e9, top = bx[4];
       var cx = clamp(o.x, x0, x1), cz = clamp(o.z || 0, z0, z1), hx = o.x - cx, hz = (o.z || 0) - cz, hd = Math.hypot(hx, hz);
-      if (hd < r * .7 && o.y + r > bench.top + 2) {
-        if (o.y + r - bench.top < 32 && o.vy >= -1) { o.y = bench.top - r; o.vy = Math.min(o.vy, 0); }  // step up onto it
+      if (hd < r * .7 && o.y + r > top + 2) {
+        if (o.y + r - top < 32 && o.vy >= -1) { o.y = top - r; o.vy = Math.min(o.vy, 0); }  // step up onto it
         else if (hd > .01) { var push = r * .7 - hd; o.x += hx / hd * push; if (D3) o.z += hz / hd * push; var vn = (o.vx * hx + (o.vz || 0) * hz) / hd; if (vn < 0) { o.vx -= hx / hd * vn; if (D3) o.vz -= hz / hd * vn; } }
+        else if (k) { o.x = o.x < (x0 + x1) / 2 ? x0 - r * .7 : x1 + r * .7; o.vx = 0; }  // let go inside the frame, under the bed: out the nearer side
       }
+      });
     });
     if (!D3) return;
     bushes.forEach(function (bu) {  // a bush is a soft wall for you and the ball (the friend hiding behind it walks in)
@@ -2600,6 +2958,12 @@
   function ballStep(dt) {
     var fl = ground + R - ball.r, py = ball.y;
     ball.vy += .7 * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt; ball.z += ball.vz * dt;
+    var bt = tramp.top, inT = trampStep(ball, ball.r, dt, 0, 0);
+    swingStep(ball, ball.r, dt, 0); seesawStep(ball, ball.r, dt); if (D3) swingLegs(ball, ball.r);
+    if (!inT && ball.y + ball.r > bt + 1 && inBox(ball.x, ball.z, ball.r)) {  // the frame's side (it never rolls under, where nobody could reach it)
+      if (!inBox(ball.x - ball.vx * dt, ball.z - ball.vz * dt, ball.r)) { ball.x -= ball.vx * dt; ball.z -= ball.vz * dt; ball.vx *= -.55; ball.vz *= -.55; }
+      else if (inBox(ball.x, ball.z, 0)) { ball.x = ball.x < tramp.cx ? tramp.cx - tramp.hw - ball.r : tramp.cx + tramp.hw + ball.r; ball.vx = 0; }
+    }
     if (ball.vy > 0 && onBench(ball.x, ball.z) && py + ball.r <= bench.top + 2 && ball.y + ball.r > bench.top) { ball.y = bench.top - ball.r; ball.vy = -ball.vy * .55; }
     else if (ball.y + ball.r > bench.top + 2 && onBench(ball.x, ball.z, ball.r * 2) && !onBench(ball.x - ball.vx * dt, ball.z - ball.vz * dt, ball.r * 2)) { ball.x -= ball.vx * dt; ball.z -= ball.vz * dt; ball.vx *= -.55; ball.vz *= -.55; }  // off the bench's side
     if (ball.y > fl) { var h = ball.vy; ball.y = fl; ball.vy = h > 1.5 ? -h * .62 : 0; if (h > 4) tone(220, 160, .06, "sine", .05); }
@@ -2648,7 +3012,8 @@
   function startHideSeek(t) {
     var m = buddies.filter(function (b) { return b.f.id === "mawja"; })[0];
     if (!m || m.drag || /^(tag|flee)$/.test(m.mode)) return;  // never pull her out of a game of tag
-    hs = { b: m, bush: pick(bushes), until: t + 25000, hidden: false, spotAt: 0, rustleAt: t + 4000 };
+    var near = bushes.filter(function (bu) { return Math.abs(bu.cx - viewMid()) < VW * .45; });
+    hs = { b: m, bush: pick(near.length ? near : bushes), until: t + 25000, hidden: false, spotAt: 0, rustleAt: t + 4000 };
     if (tagNext < t + 30000) tagNext = t + 30000;  // no tag while she hides
     m.mode = "hs"; m.next = Infinity;
     say(line("hsStart"), "hs", 1000);
@@ -2666,7 +3031,7 @@
     // the spot is behind the bush as seen from the seeker (you, or the camera), re-checked every 2.5 s
     if (t > hs.spotAt) {
       hs.spotAt = t + 2500;
-      var sx = player ? player.x : W / 2, sz = player ? player.z : (D3 ? DZ + 600 : 0), dx = hs.bush.cx - sx, dz = D3 ? hs.bush.cz - sz : 0, dl = Math.hypot(dx, dz) || 1;
+      var sx = player ? player.x : viewMid(), sz = player ? player.z : (D3 ? DZ + 600 : 0), dx = hs.bush.cx - sx, dz = D3 ? hs.bush.cz - sz : 0, dl = Math.hypot(dx, dz) || 1;
       hs.sx = clamp(hs.bush.cx + dx / dl * (34 + b.f.r * .6), b.f.r, W - b.f.r); hs.sz = D3 ? clamp(hs.bush.cz + dz / dl * (34 + b.f.r * .6), b.f.r, DZ - b.f.r) : 0;
     }
     b.tx = hs.sx; b.tz = D3 ? hs.sz : null;
@@ -2700,7 +3065,7 @@
   // stars to collect: walk your character into one, or click it; they unlock colours
   var gems = [], nextGem = performance.now() + 15000;
   function spawnGem() {
-    var g = { x: 40 + Math.random() * (W - 120), y: ground + R - 40 - Math.random() * 120, z: randZ(17), el: document.createElement("button") };
+    var g = { x: clamp(viewMid() + (Math.random() - .5) * (VW - 120), 40, W - 40), y: ground + R - 40 - Math.random() * 120, z: randZ(17), el: document.createElement("button") };
     g.el.type = "button"; g.el.className = "gem"; g.el.setAttribute("aria-label", T("نجمة، اجمعها", "A star, collect it"));
     g.el.addEventListener("click", function () { stir(); collectGem(g); });
     world.appendChild(g.el); gems.push(g);
@@ -2726,7 +3091,7 @@
     var tn = performance.now(); chimeN = tn - chimeAt < 2000 ? chimeN + 1 : 0; chimeAt = tn; var up = Math.pow(2, chimeN / 12);  // quick pickups climb a semitone each
     V = up; [1047, 1319, 1568, 2093].forEach(function (f, i) { kb({ f: f, dur: 1, vol: .04, t: i * .05, rev: .5 }); });  // glass bells
     var sg0 = sv(g), plus = document.createElement("span"); plus.className = "plus1"; plus.textContent = "+1"; plus.setAttribute("aria-hidden", "true");
-    plus.style.setProperty("--x", (sg0.x * K - 8).toFixed(0) + "px"); plus.style.setProperty("--y", (sg0.y * K - 20).toFixed(0) + "px");
+    plus.style.setProperty("--x", ((sg0.x - camX) * K - 8).toFixed(0) + "px"); plus.style.setProperty("--y", (sg0.y * K - 20).toFixed(0) + "px");
     labels.appendChild(plus); plus.addEventListener("animationend", function () { plus.remove(); });
     if (NEED[5] === store.stars || NEED[6] === store.stars || NEED[7] === store.stars) { renderSwatches(); say(line("unlock"), "unlock", 500); }
     else say(line("gotStar", { s: num(store.stars) }), "star", 4000);
@@ -2789,11 +3154,11 @@
   function paintScene(img, bg) {  // bg: the 3D canvas, which already holds the world and the bodies
     var s = 2, H = world.offsetHeight, c = document.createElement("canvas"), x = c.getContext("2d"), cs = getComputedStyle(stage);
     var tok = function (n) { return cs.getPropertyValue(n).trim(); };
-    c.width = W * s; c.height = H * s; x.scale(s, s);
+    c.width = VW * s; c.height = H * s; x.scale(s, s);  // what is on screen: the sky in screen px, the world shifted by camX
     var col = function (v) { return skyNow[v] || "#808080"; }, fl = ground + R;
-    if (bg) x.drawImage(bg, 0, 0, W, H);
+    if (bg) x.drawImage(bg, 0, 0, VW, H);
     else {
-    var gr = x.createLinearGradient(0, 0, 0, fl); gr.addColorStop(0, col("--sky-top")); gr.addColorStop(1, col("--sky-hor")); x.fillStyle = gr; x.fillRect(0, 0, W, H);
+    var gr = x.createLinearGradient(0, 0, 0, fl); gr.addColorStop(0, col("--sky-top")); gr.addColorStop(1, col("--sky-hor")); x.fillStyle = gr; x.fillRect(0, 0, VW, H);
     x.globalAlpha = +tok("--stars") || 0; x.fillStyle = "#fff"; sky.querySelectorAll(".star").forEach(function (e) { x.fillRect(e.offsetLeft, e.offsetTop, 2, 2); }); x.globalAlpha = 1;
     [[sunEl, "#ffe7a8", 20], [moonEl, "#f3efe0", 13]].forEach(function (o) {  // sun or moon where it is now
       if (o[0].style.display === "none") return;
@@ -2803,15 +3168,22 @@
     var wr = world.getBoundingClientRect(), z = wr.width / world.offsetWidth || 1;
     x.fillStyle = col("--cloud"); x.globalAlpha = .85;
     clouds.querySelectorAll("i").forEach(function (ci) {  // each cloud: the same four soft lobes as its CSS
-      var r = ci.getBoundingClientRect(), cx = (r.left - wr.left) / z, cy = (r.top - wr.top) / z, w = r.width / z, h = r.height / z;
+      var r = ci.getBoundingClientRect(), cx = (r.left - wr.left) / z - camX, cy = (r.top - wr.top) / z, w = r.width / z, h = r.height / z;
       [[.30, .70, 40, 22], [.55, .50, 46, 30], [.78, .72, 36, 20], [.54, .86, 70, 12]].forEach(function (e) { x.beginPath(); x.ellipse(cx + e[0] * w, cy + e[1] * h, e[2] / 170 * w, e[3] / 52 * h, 0, 0, Math.PI * 2); x.fill(); });
     });
     x.globalAlpha = 1;
-    [[far1, img[0]], [far2, img[1]]].forEach(function (p) { if (p[1]) x.drawImage(p[1], 0, H - parseFloat(p[0].style.bottom) - p[0].clientHeight, W, p[0].clientHeight); });
+    [[far1, img[0], .3], [far2, img[1], .55]].forEach(function (p) { if (p[1]) x.drawImage(p[1], -camX * (reduce ? 1 : p[2]), H - parseFloat(p[0].style.bottom) - p[0].clientHeight, W, p[0].clientHeight); });  // at their parallax
+    x.save(); x.translate(-camX, 0);
     x.fillStyle = col("--g-back"); x.fillRect(0, fl, W, H - fl); x.fillStyle = col("--grass"); x.fillRect(0, fl, W, 4);
     var pm = /translate\(([-\d.]+)px,\s*([-\d.]+)px/.exec(palmEl.style.transform);
     if (img[2] && pm) x.drawImage(img[2], +pm[1], +pm[2], 120, 150);
     x.fillStyle = "#9a6a42"; x.fillRect(bench.x, bench.top, bench.w, 8); x.fillRect(bench.x + 10, bench.top + 8, 5, 20); x.fillRect(bench.x + bench.w - 15, bench.top + 8, 5, 20);
+    x.save(); x.translate(tramp.cx, tramp.top); x.strokeStyle = "#646b73"; x.lineWidth = 4; x.lineCap = "round"; x.stroke(new Path2D(trampEl.querySelector(".tl").getAttribute("d")));
+    x.fillStyle = "#2b2f36"; x.fill(new Path2D(trampBed.getAttribute("d"))); x.fillStyle = "#4f8597"; x.fillRect(-77, -3, 154, 9); x.restore();
+    x.save(); x.translate(swing.cx, swing.top); x.strokeStyle = "#646b73"; x.lineWidth = 4; x.lineCap = x.lineJoin = "round"; x.stroke(new Path2D(swingEl.querySelector(".sf").getAttribute("d")));
+    x.rotate(-swing.th); x.strokeStyle = "#8a7a62"; x.lineWidth = 2; x.beginPath(); x.moveTo(0, 0); x.lineTo(0, 127); x.stroke(); x.fillStyle = "#9a6a42"; x.fillRect(-20, 127, 40, 6); x.restore();
+    x.save(); x.translate(ss.cx, ss.top); x.strokeStyle = "#646b73"; x.lineWidth = 4; x.lineCap = x.lineJoin = "round"; x.stroke(new Path2D(ssEl.querySelector(".ef").getAttribute("d")));
+    x.fillStyle = "#2b2f36"; x.fillRect(-105, 26, 18, 8); x.fillRect(87, 26, 18, 8); x.rotate(ss.ph); x.fillStyle = "#9a6a42"; x.fillRect(-100, -3, 200, 6); x.restore();
     x.fillStyle = tok("--surface"); x.beginPath(); x.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); x.fill(); x.strokeStyle = tok("--border"); x.stroke();
     }
     if (!bg) {  // the 3D picture already holds the bodies with their faces
@@ -2821,10 +3193,11 @@
     var bc = getComputedStyle(document.querySelector(".play")).getPropertyValue("--bush").trim() || tok("--cmp");
     x.fillStyle = bc; bushes.forEach(function (b) { var fl = ground + R; [[-17, -16, 17], [3, -24, 22], [21, -15, 16]].forEach(function (k) { x.beginPath(); x.arc(b.cx + k[0], fl + k[1] + 4, k[2], 0, Math.PI * 2); x.fill(); }); });
     x.globalCompositeOperation = "multiply"; x.fillStyle = col("--tint"); x.fillRect(0, 0, W, H); x.globalCompositeOperation = "source-over";  // the light of the hour
+    x.restore();
     }
     x.font = "700 12px Cairo, sans-serif"; x.textAlign = "center"; x.fillStyle = tok("--muted");
-    buddies.forEach(function (b) { var sb = sv(b); x.fillText(b.tag.textContent, sb.x, sb.y - b.f.r * sb.s - 10); });
-    var ex = EN ? 16 : W - 16; x.direction = EN ? "ltr" : "rtl"; x.textAlign = EN ? "left" : "right"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 4; x.fillStyle = "#fff"; x.font = "800 16px Cairo, sans-serif"; x.fillText(T("هكوله · بوزون", "Hakolah · Boson"), ex, 30);
+    buddies.forEach(function (b) { var sb = sv(b); x.fillText(b.tag.textContent, sb.x - camX, sb.y - b.f.r * sb.s - 10); });
+    var ex = EN ? 16 : VW - 16; x.direction = EN ? "ltr" : "rtl"; x.textAlign = EN ? "left" : "right"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 4; x.fillStyle = "#fff"; x.font = "800 16px Cairo, sans-serif"; x.fillText(T("هكوله · بوزون", "Hakolah · Boson"), ex, 30);
     x.font = "600 11px Cairo, sans-serif"; x.fillText(clock.textContent, ex, 48); x.shadowBlur = 0;
     return c;
   }
@@ -2853,11 +3226,11 @@
     return mainCols;
   }
   function scene3(t) {
-    var one = function (b) { return { x: b.x, y: b.y, z: b.z, vx: b.vx, vz: b.vz, r: b.f.r, pts: b.pts, el: b.el, drag: !!(b.drag && b.drag.moved), sx: clamp(b.sx, .8, 1.25), sy: clamp(b.sy, .75, 1.22), tilt: b.tilt, spin: b.spinA, cols: [b.f.c1, b.f.c2, b.f.c3], crouch: !!b.crouch && !b.f.player, floor: surfaceY(b) + b.f.r }; };
-    return { t: t, W: W, H: WH, DZ: DZ, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce, idle: t - lastInput,
-      player: player ? { x: player.x, y: player.y, z: player.z, vx: player.vx, vz: player.vz, r: player.f.r, el: player.el, floor: surfaceY(player) + player.f.r, grounded: player.y >= surfaceY(player) - 1 || t - (player.supportT || 0) < 80, landT: player.landT || 0, landHit: player.landHit || 0, moving: !!(keys.left || keys.right || keys.far || keys.near || keys.sx || keys.sz) } : null,
-      main: mainAway ? null : { x: pos.x, y: pos.y, z: pos.z, vx: pos.vx, vz: pos.vz, r: R, floor: ground + R, grounded: pos.y >= ground - 1, pts: pts, el: orb, drag: !!(drag && drag.moved), sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
-      buddies: buddies.map(one), ball: ball, bench: bench, bushes: bushes.map(function (b) { return { x: b.cx, z: b.cz }; }) };
+    var one = function (b) { return { x: b.x, y: b.y, z: b.z, vx: b.vx, vz: b.vz, r: b.f.r, pts: b.pts, el: b.el, drag: !!(b.drag && b.drag.moved), sx: clamp(b.sx, .8, 1.25), sy: clamp(b.sy, .75, 1.22), tilt: b.tilt, spin: b.spinA, cols: [b.f.c1, b.f.c2, b.f.c3], crouch: !!b.crouch && !b.f.player, floor: (onSwing(b) ? floorY(b) : surfaceY(b)) + b.f.r }; };
+    return { t: t, W: W, H: WH, DZ: DZ, ox: camX, fl: ground + R, sky: skyNow, ptr: ptr.has && !ptr.out ? ptr : null, reduce: reduce, idle: t - lastInput,
+      player: player ? { x: player.x, y: player.y, z: player.z, vx: player.vx, vz: player.vz, r: player.f.r, el: player.el, floor: (onSwing(player) ? floorY(player) : surfaceY(player)) + player.f.r, grounded: player.y >= surfaceY(player) - 1 || t - (player.supportT || 0) < 80, landT: player.landT || 0, landHit: player.landHit || 0, moving: !!(keys.left || keys.right || keys.far || keys.near || keys.sx || keys.sz) } : null,
+      main: mainAway ? null : { x: pos.x, y: pos.y, z: pos.z, vx: pos.vx, vz: pos.vz, r: R, floor: onTramp(pos) || onSeesaw(pos) ? pos.y + R : ground + R, grounded: pos.y >= ground - 1 || onTramp(pos) || onSeesaw(pos), pts: pts, el: orb, drag: !!(drag && drag.moved), sx: clamp(sp.sx.v * (1 + .035 * hbPulse), .8, 1.25), sy: clamp(sp.sy.v * (1 + .035 * hbPulse), .75, 1.22), tilt: sp.tilt.v, spin: sp.spin.v, cols: mainColours() },
+      buddies: buddies.map(one), ball: ball, bench: bench, tramp: tramp, swing: swing, seesaw: ss, bushes: bushes.map(function (b) { return { x: b.cx, z: b.cz }; }) };
   }
   function load3d() {
     return window.Dilmo3D ? Promise.resolve() : new Promise(function (res, rej) { var s = document.createElement("script"); s.src = d3Btn.dataset.src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
@@ -2880,7 +3253,7 @@
   viewBtn.addEventListener("click", function () { stir(); if (view3 && !d3Busy) nextView(); });
   addEventListener("keydown", function (e) { if (e.code === "KeyV" && view3 && !d3Busy && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) { e.preventDefault(); nextView(); } });
   function spread(on) {  // everyone takes a depth when the arena opens, and gives it back when it closes
-    DZ = on ? clamp(Math.round(W * .55), 240, 560) : 0;
+    DZ = on ? clamp(Math.round(VW * .55), 240, 560) : 0;
     placeProps();
     pos.z = on ? DZ * .55 : 0; pos.vz = 0;
     buddies.forEach(function (b) { b.z = randZ(b.f.r); b.homeZ = b.z; b.vz = 0; b.tz = null; });
@@ -2952,7 +3325,7 @@
   }
   function restart3d() {  // anti-aliasing is fixed when the WebGL context is made: build a new renderer in place, same view
     var keep = viewMode; view3.destroy();
-    view3 = D3 = window.Dilmo3D.create(world, W, world.offsetHeight, K, DZ, paintFace, gfxOpts());
+    view3 = D3 = window.Dilmo3D.create(world, W, world.offsetHeight, K, DZ, paintFace, gfxOpts(), VW);
     if (!view3) { portal(false); return; }
     wire3d(); setView(keep);
   }
@@ -3030,7 +3403,7 @@
   // the crosshair in the middle of a first-person view: the nearest thing under it gets touched
   var cross = document.getElementById("d3-cross");
   function useCrosshair() {
-    var cx = W / 2, cy = WH / 2, best = null, bd = 1e9;
+    var cx = camX + VW / 2, cy = WH / 2, best = null, bd = 1e9;
     var me = player || pos, cands = [{ o: ball, r: ball.r, k: "ball" }].concat(mainAway || !player ? [] : [{ o: pos, r: R, k: "main" }], others().map(function (b) { return { o: b, r: b.f.r, k: "buddy", b: b }; }));
     cands.forEach(function (c) {
       var s = sv(c.o), d = Math.hypot(s.x - cx, s.y - cy), far = Math.hypot(c.o.x - me.x, c.o.z - me.z);
@@ -3045,8 +3418,8 @@
   function portal(on) {
     d3Busy = true; depthPad.hidden = !on; viewBtn.hidden = !on; gear.hidden = !on; fpsBox.hidden = !(on && gfx.counter); if (!on) setPanel.hidden = true;
     if (!on) setView("orbit"); else setView(player ? "third" : "orbit"); keys.left = keys.right = keys.down = keys.far = keys.near = false;
-    var cx = mainAway ? W / 2 : pos.x, cy = mainAway ? ground : pos.y, H = world.offsetHeight;
-    var Rm = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 20, dur = reduce ? 400 : 1500, t0 = performance.now();
+    var cx = mainAway ? camX + VW / 2 : pos.x, cy = mainAway ? ground : pos.y, H = world.offsetHeight, lx = cx - camX;  // lx: on the canvas, which sits at camX
+    var Rm = Math.hypot(Math.max(lx, VW - lx), Math.max(cy, H - cy)) + 20, dur = reduce ? 400 : 1500, t0 = performance.now();
     stage.classList.toggle("is3d", on); if (!on) stage.classList.remove("in3d");
     // a cascade of wooden bars, rising on the way in and falling on the way out
     V = 1; var pent = [392, 440, 523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760]; if (!on) pent.reverse();
@@ -3054,7 +3427,7 @@
     view3.intro(dur, !on);  // the camera rises from the flat view into the arena, and settles back on the way out
     (function step(t) {
       var p = clamp((t - t0) / dur, 0, 1), r = Rm * (on ? p * p * p : Math.pow(1 - p, 3));  // slow, then it rushes to swallow the stage
-      view3.canvas.style.clipPath = "circle(" + r.toFixed(0) + "px at " + cx.toFixed(0) + "px " + cy.toFixed(0) + "px)";
+      view3.canvas.style.clipPath = "circle(" + r.toFixed(0) + "px at " + lx.toFixed(0) + "px " + cy.toFixed(0) + "px)";
       portalEl.style.left = (cx - r).toFixed(0) + "px"; portalEl.style.top = (cy - r).toFixed(0) + "px"; portalEl.style.width = portalEl.style.height = (2 * r).toFixed(0) + "px";
       portalEl.style.opacity = Math.sin(Math.PI * p).toFixed(2);
       if (p < 1) return requestAnimationFrame(step);
@@ -3082,7 +3455,7 @@
     d3Btn.disabled = true;
     load3d().then(function () {
       spread(true);
-      view3 = window.Dilmo3D.create(world, W, world.offsetHeight, K, DZ, paintFace, gfxOpts());
+      view3 = window.Dilmo3D.create(world, W, world.offsetHeight, K, DZ, paintFace, gfxOpts(), VW);
       if (!view3) { spread(false); throw new Error("no WebGL"); }
       view3.canvas.style.clipPath = "circle(0px at 0 0)";
       D3 = view3; wire3d();
@@ -3102,8 +3475,9 @@
   document.getElementById("d3-no").addEventListener("click", function () { d3Ask.close(); });
 
   function update(t, dt) {
+    tN++; swingPhys(dt); seesawPhys(dt);
     if (mainAway) {  // only friends (and the visitor) are around
-      buddies.forEach(function (b) { buddyStep(b, t, dt); }); collideAll(t, dt); solidProps(dt); ballStep(dt); gemStep(t); hsStep(t); return;
+      buddies.forEach(function (b) { buddyStep(b, t, dt); }); collideAll(t, dt); solidProps(dt); ballStep(dt); bedStep(dt); gemStep(t); hsStep(t); return;
     }
     var idle = t - lastInput;
     if (drag && !cheek && !drag.moved && !drag.shy && !drag.slipped && t - drag.t > 650) { drag.shy = true; mood.shy = 1; say(line("shy"), "shy", 3000); }
@@ -3132,7 +3506,7 @@
       if (mood.hungry > .5) say(line("want"), "want", 5000);
     } else mood.hungry *= Math.pow(.9, dt);
     // chase the pointer along the floor in little hops, pounce when close
-    var inStage = D3 ? ptr.has && !ptr.out && ptr.gx != null && !D3.cam.orbiting && !D3.locked() && D3.viewNow() !== "first" && D3.viewNow() !== "second" : ptr.has && !ptr.out && ptr.x > 0 && ptr.x < W && ptr.y > 0 && ptr.y < ground + R;
+    var inStage = D3 ? ptr.has && !ptr.out && ptr.gx != null && !D3.cam.orbiting && !D3.locked() && D3.viewNow() !== "first" && D3.viewNow() !== "second" : ptr.has && !ptr.out && ptr.x > camX && ptr.x < camX + VW && ptr.y > 0 && ptr.y < ground + R;
     var pdx = (D3 ? ptr.gx : ptr.x) - pos.x, pdz = D3 ? ptr.gz - pos.z : 0, pd = Math.hypot(pdx, pdz), onFloor = pos.y >= ground - 1;
     if (!song && !circ.last && !drag && !anyBuddyDrag() && !foodDrag && !asleep && !stick && inStage && t - ptr.moveT < 1200 && pd > 120) chaseT += 16.67 * dt;
     else if (!inStage || pd < 80) chaseT = 0;
@@ -3152,6 +3526,7 @@
     if (stick && t > stick.until) stick = null;
     if (!drag || !drag.moved) {
       pos.vy += (stick ? .02 : .75) * dt; pos.x += pos.vx * dt; pos.y += pos.vy * dt; pos.z += pos.vz * dt; pos.vx *= Math.pow(.99, dt); pos.vz *= Math.pow(.99, dt);
+      if (!swingStep(pos, R, dt, t) && !seesawStep(pos, R, dt)) trampStep(pos, R, dt, t, TRIM);
       if (pos.y > ground) {
         var hit = pos.vy; pos.y = ground;
         if (hit > 2.5) { pos.vy = -hit * .45; pos.vx *= .82; pos.vz *= .82; } else { pos.vy = 0; var gf2 = Math.pow(.82, dt); pos.vx *= gf2; pos.vz *= gf2; }
@@ -3171,7 +3546,7 @@
 
     buddies.forEach(function (b) { buddyStep(b, t, dt); });
     collideAll(t, dt); solidProps(dt);
-    ballStep(dt); gemStep(t); hsStep(t); fetchStep(t);
+    ballStep(dt); bedStep(dt); gemStep(t); hsStep(t); fetchStep(t); camStep(dt);
 
     var lx = 0, ly = 0;
     if (asleep) ly = .4;
@@ -3206,6 +3581,7 @@
   }
 
   function draw(t) {
+    applyCam();
     if (view3) view3.frame(scene3(t));
     var hide = D3 && D3.hideEl;  // the body whose eyes you look through
     var fpNow = !!(D3 && D3.viewNow() === "first"); if (cross.hidden === fpNow) { cross.hidden = !fpNow; stage.classList.toggle("fp", fpNow); }
@@ -3260,12 +3636,12 @@
     if (!full3d) shadowEl.style.transform = "translate(" + (pos.x - 40).toFixed(1) + "px," + (ground + R - 6) + "px) scale(" + sc.toFixed(2) + ")";
     shadowEl.style.opacity = sc.toFixed(2);
     if (!bub.hidden) {
-      if (mood.sleepy <= .85 && t > +bub.dataset.until) bub.hidden = true;
+      if ((mood.sleepy <= .85 && t > +bub.dataset.until) || (hide !== orb && Math.abs(sM3.x - camX - VW / 2) > VW / 2 + R)) bub.hidden = true;
       else {
         // keep the whole bubble inside the stage: clamp sideways, flip below him when there is no room above
-        var bw = boxOf(bub, W + "x" + K)._mw, bh = bub._mh, bx = clamp(sM3.x * K - bw / 2, 8, Math.max(8, W * K - bw - 8)), by = (sM3.y - R * sM3.s) * K - 14 - bh;
+        var bw = boxOf(bub, W + "x" + K)._mw, bh = bub._mh, bx = clamp((sM3.x - camX) * K - bw / 2, 8, Math.max(8, VW * K - bw - 8)), by = (sM3.y - R * sM3.s) * K - 14 - bh;
         if (by < 8) by = Math.min((sM3.y + R * sM3.s) * K + 14, (ground + R) * K - bh - 4);
-        if (hide === orb) { bx = (W * K - bw) / 2; by = WH * K - bh - 16; }  // you are looking through his eyes: his words sit at the bottom, like subtitles
+        if (hide === orb) { bx = (VW * K - bw) / 2; by = WH * K - bh - 16; }  // you are looking through his eyes: his words sit at the bottom, like subtitles
         bub._x = bx; bub._y = Math.max(8, by); bub._w = bw; bub._h = bh;  // placed by layoutBubbles()
       }
     }
@@ -3273,6 +3649,14 @@
     layoutBubbles();
     var sB = sv(ball);
     ballEl.style.transform = "translate(" + (sB.x - 11).toFixed(1) + "px," + (sB.y - 11).toFixed(1) + "px) rotate(" + ball.rot.toFixed(1) + "deg)" + (D3 ? " scale(" + Math.max(sB.s, 2).toFixed(3) + ")" : "");  // in 3D the tap target never shrinks below a finger
+    var bs = Math.round(tramp.s * 4) / 4, bpx = clamp(Math.round(tramp.px - tramp.cx), -64, 64), bk = bs + "|" + bpx;
+    if (bk !== tramp.d && !full3d) {  // the bed dips to the deepest body's feet: two curves from the frame, flat at the bottom right under it
+      tramp.d = bk; trampBed.setAttribute("d", "M-65 0Q" + (bpx - 65) / 2 + " " + bs + " " + bpx + " " + bs + "Q" + (bpx + 65) / 2 + " " + bs + " 65 0Z");
+    }
+    var sa = Math.round(swing.th * 1800 / Math.PI) / 10;
+    if (sa !== swing.d && !full3d) { swing.d = sa; swingRope.setAttribute("transform", "rotate(" + -sa + ")"); }  // the rope and seat turn about the pivot: never stretched
+    var ea = Math.round(ss.ph * 1800 / Math.PI) / 10;
+    if (ea !== ss.d && !full3d) { ss.d = ea; ssPlank.setAttribute("transform", "rotate(" + ea + ")"); }  // the seesaw's plank tips about its pivot
     gems.forEach(function (g) { var sg = sv(g); g.el.style.transform = "translate(" + (sg.x - 17).toFixed(1) + "px," + (sg.y - 17 + Math.sin(t / 400) * 4).toFixed(1) + "px)" + (D3 ? " scale(" + Math.max(sg.s, .8).toFixed(3) + ")" : ""); });
     if (D3) bushes.forEach(function (bu) {  // the bushes are drawn in 3D; their click targets follow them
       var sb3 = sv({ x: bu.cx, y: ground + R, z: bu.cz }), at = "translate(" + (sb3.x - 35).toFixed(1) + "px," + (sb3.y - 44).toFixed(1) + "px) scale(" + sb3.s.toFixed(3) + ")";
@@ -3280,7 +3664,7 @@
     });
   }
 
-  var shownAt = 0, fpsN = 0, fpsAt = 0;
+  var shownAt = 0, fpsN = 0, fpsAt = 0, testHold = false, testT = 0;
   var touchOn = false;
   function frame(t) {
     if (!running) { raf = 0; return; }
@@ -3292,8 +3676,9 @@
     if (D3 && gfx.counter) { fpsN++; if (t - fpsAt > 500) { fpsBox.textContent = Math.round(fpsN * 1000 / (t - fpsAt)) + " FPS · " + gfxStatus(); fpsN = 0; fpsAt = t; } }
     // the world moves in small equal steps (at most half a 60 Hz frame each), so a jump, a throw or a slide comes out the same
     // on a 30, 60 or 179 Hz screen, and a slow device no longer plays in slow motion (Gaffer, "Fix your timestep")
-    var raw = Math.min(250, t - last) / 16.67, n = Math.min(6, Math.max(1, Math.ceil(raw / .5))), sdt = raw / n; last = t;
-    if (t > hitStopUntil) for (var si = 0; si < n; si++) update(t - (n - 1 - si) * sdt * 16.67, sdt);
+    // (a hitch or a frame slower than 10 fps plays a little slow instead of taking bigger steps: the springs are tuned for <= half a frame)
+    var raw = Math.min(100, t - last) / 16.67, n = Math.max(1, Math.ceil(raw / .5)), sdt = raw / n; last = t;
+    if (t > hitStopUntil && !testHold) for (var si = 0; si < n; si++) update(t - (n - 1 - si) * sdt * 16.67, sdt);
     draw(t);
   }
   new IntersectionObserver(function (en) {
@@ -3301,10 +3686,17 @@
     if (running && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
   }).observe(stage);
   // the stage height depends on the header height, which is only known after load: re-measure whenever it changes size
-  new ResizeObserver(function () { measure(); placeProps(); if (view3) view3.resize(W, WH, K); }).observe(stage);
+  new ResizeObserver(function () { measure(); placeProps(); if (view3) view3.resize(W, WH, K, 0, VW); }).observe(stage);
   var sideways = matchMedia("(orientation: landscape) and (max-height: 500px)");
   function fitSideways() { if (sideways.matches) stage.scrollIntoView({ block: "start" }); }
   sideways.addEventListener("change", fitSideways); fitSideways();
   FK = faceKit(face, body); applyQuiet();
   measure(); placeProps(); renderSwatches(); spawnFriends(); tickClock(); setInterval(tickClock, 20000); draw(performance.now());
+  if (/[?&]test\b/.test(location.search)) window.__boson = {  // a read-only peek for automated tests (dilmo.html?test)
+    s: function () { return { W: W, VW: VW, camX: camX, K: K, WH: WH, fl: ground + R, D3: !!D3, ptr: ptr, pos: pos, ball: ball, bench: bench, bushes: bushes.map(function (b) { return b.cx; }), buddies: buddies.map(function (b) { return { id: b.f.id, x: b.x, y: b.y, mode: b.mode, me: !!b.f.player }; }) }; },
+    // scenario tests: hold() stops the clock, step(n, dt) runs n physics steps of dt frames on a test clock (the visitor counts as active)
+    t: { tramp: tramp, pos: pos, ball: ball, keys: keys, PV: PV, buddies: function () { return buddies; }, player: function () { return player; }, onTramp: onTramp, swing: swing, onSwing: onSwing, swAmp: swAmp, ss: ss, onSeesaw: onSeesaw, SSMAX: SSMAX,
+      join: function () { joinAs({ name: "T", c: 0, s: 1 }); }, hold: function (on) { testHold = on; testT = performance.now(); },
+      step: function (n, sdt) { for (var i = 0; i < n; i++) { testT += sdt * 16.67; lastInput = testT; update(testT, sdt); } if (!D3) draw(performance.now()); return testT; }, now: function () { return testT; } }
+  };
 })();
