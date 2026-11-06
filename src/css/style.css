@@ -7073,7 +7073,8 @@ html[lang="en"] .instrument-btn.is-new::after {
   .about-hero {
     --card-w: 188px;
     --strap: 96px;
-    min-height: 590px;
+    /* البطاقة المعلّقة لا تغطي سطري التعريف تحتها (حتى 320px) */
+    min-height: 640px;
     border-radius: var(--radius);
   }
 

@@ -15,7 +15,7 @@ By using Hakolah, you agree to the following terms:
 
 ## Nature of the service
 
-Hakolah is a directory that gathers links, tools, restaurants, stores, and places in one place to make them easier to find. Information (like addresses, links, and business hours) may change at its original source without our knowledge, so we can't guarantee it is always accurate. Verify any important detail (like an address or contact number) from the source itself before relying on it.
+Hakolah is a site for creators with tools that run in your browser, links to software and tools, and articles. Details about linked tools (like prices and features) may change at their source without our knowledge, so check them at the source before relying on them. The places guide moved to [Torilu](https://torilu.com/en/index.html), which has its own terms.
 
 ## External links
 
@@ -27,7 +27,7 @@ The site's content (text and design) is licensed under [CC BY-NC-SA 4.0](https:/
 
 ## Suggesting additions
 
-Any restaurant, store, or tool you suggest adding via the [contact page]({{ '/en/contact.html' | url }}) is reviewed before publishing, and we reserve the right to accept, reject, or edit it without giving reasons.
+Any tool or link you suggest adding via the [contact page]({{ '/en/contact.html' | url }}) is reviewed before publishing, and we reserve the right to accept, reject, or edit it without giving reasons.
 
 ## Changes to these terms
 
