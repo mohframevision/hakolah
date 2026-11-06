@@ -3,7 +3,7 @@ title: About | Hakolah
 layout: base.njk
 lang: "en"
 permalink: en/about.html
-description: "Learn about Hakolah: a Bahraini site for creators with Hakolah Sounds, Dilmo, free tools and articles, in Arabic and English."
+description: "Learn about Hakolah: a Bahraini site for creators with Hakolah Sounds, Boson, free tools and articles, in Arabic and English."
 langSwitchUrl: "/about.html"
 ---
 
@@ -20,7 +20,7 @@ langSwitchUrl: "/about.html"
         <p class="about-badge-other" lang="en">Bahrain</p>
         <dl class="about-badge-facts">
           <dt>Gathers</dt>
-          <dd>Sounds · Dilmo · Tools · Articles</dd>
+          <dd>Sounds · Boson · Tools · Articles</dd>
           <dt>Our promise</dt>
           <dd class="about-badge-chips">
             <a class="about-chip about-chip-visited" href="#privacy">No accounts</a>
@@ -43,7 +43,7 @@ Hakolah is a Bahraini site for creators, in Arabic and English. It has free tool
 ## What will you find on Hakolah?
 
 - **[Hakolah Sounds](/en/sounds.html):** play, compose and learn music in your browser, with real recorded instruments.
-- **[Dilmo](/en/dilmo.html):** a small companion you play with and talk to.
+- **[Boson](/en/dilmo.html):** a small companion you play with and talk to.
 - **[Experiments and tools](/en/ai-experiments.html):** like the file converter, all running on your device.
 - **[Free software and tools](/en/links-tools.html):** hand-picked links for editing, design, audio and coding.
 - **[Articles and guides](/en/guides.html):** carefully written guides, such as protecting your accounts.

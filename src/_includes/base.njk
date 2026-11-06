@@ -159,11 +159,11 @@
         <a href="{{ toriluHome }}">{{ 'Places guide' if lang == 'en' else 'دليل الأماكن' }}</a>
         {% set onCreators = navActive in ["creators", "links-tools", "ai-experiments"] %}
         <a href="{{ (('/en/creators.html' if lang == 'en' else '/creators.html')) | url }}"{% if onCreators %} class="active" aria-current="page"{% endif %}>{{ 'For Creators' if lang == 'en' else 'للمبدعين' }}</a>
-        <a class="nav-only-mobile{% if navActive == "dilmo" %} active{% endif %}"{% if navActive == "dilmo" %} aria-current="page"{% endif %} href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}">{{ icon("dilmo", 16) }} {{ "Dilmo" if lang == "en" else "دلمو" }}</a>
+        <a class="nav-only-mobile{% if navActive == "dilmo" %} active{% endif %}"{% if navActive == "dilmo" %} aria-current="page"{% endif %} href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}">{{ icon("dilmo", 16) }} {{ "Boson" if lang == "en" else "بوزون" }}</a>
       </nav>
       <div class="header-actions">
         <a class="icon-btn{% if navActive == "sounds" %} active{% endif %}"{% if navActive == "sounds" %} aria-current="page"{% endif %} href="{{ (('/en/sounds.html' if lang == 'en' else '/sounds.html')) | url }}" title="{{ t.nav_sounds }}" aria-label="{{ t.nav_sounds }}">{{ icon("music") }}</a>
-        {% set dilmoLabel = "Dilmo" if lang == "en" else "دلمو" %}<a class="icon-btn{% if navActive == "dilmo" %} active{% endif %}"{% if navActive == "dilmo" %} aria-current="page"{% endif %} href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}" title="{{ dilmoLabel }}" aria-label="{{ dilmoLabel }}">{{ icon("dilmo") }}</a>
+        {% set dilmoLabel = "Boson" if lang == "en" else "بوزون" %}<a class="icon-btn{% if navActive == "dilmo" %} active{% endif %}"{% if navActive == "dilmo" %} aria-current="page"{% endif %} href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}" title="{{ dilmoLabel }}" aria-label="{{ dilmoLabel }}">{{ icon("dilmo") }}</a>
         <span class="header-divider" aria-hidden="true"></span>
         {# على الشاشات الضيقة نعرض الاختصار بدل الاسم الكامل عشان يضل الهيدر بصف واحد #}
         <a class="lang-switch" href="{{ (langSwitchUrl or ('/index.html' if lang == 'en' else '/en/index.html')) | url }}" title="{{ t.lang_switch }}" aria-label="{{ t.lang_switch }}"><span class="lang-full">{{ t.lang_switch }}</span><span class="lang-short" aria-hidden="true">{{ t.lang_switch_short }}</span></a>
@@ -206,7 +206,7 @@
       <span class="bottom-nav-icon">{{ icon("music", 22) }}</span><span>{{ t.nav_sounds_short }}</span>
     </a>
     <a href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}"{% if navActive == "dilmo" %} class="active" aria-current="page"{% endif %}>
-      <span class="bottom-nav-icon">{{ icon("dilmo", 22) }}</span><span>{{ "Dilmo" if lang == "en" else "دلمو" }}</span>
+      <span class="bottom-nav-icon">{{ icon("dilmo", 22) }}</span><span>{{ "Boson" if lang == "en" else "بوزون" }}</span>
     </a>
     <a href="{{ toriluHome }}">
       <span class="bottom-nav-icon">{{ icon("location-pin", 22) }}</span><span>{{ "Places" if lang == "en" else "الأماكن" }}</span>

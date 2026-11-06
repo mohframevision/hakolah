@@ -1,4 +1,4 @@
-/* دلمو: ساحة لعب بملء الشاشة تحت شريط الموقع. كل شيء داخل .dilmo فلا يتسرّب لبقية الصفحات */
+/* بوزون: ساحة لعب بملء الشاشة تحت شريط الموقع. كل شيء داخل .dilmo فلا يتسرّب لبقية الصفحات */
 main.container:has(.dilmo) { max-width: none; }
 .dilmo {
   --bg: var(--color-bg); --surface: var(--color-surface); --fg: var(--color-text); --muted: var(--color-text-muted);
@@ -256,7 +256,7 @@ body:has(.dilmo) .daily-pick-reminder { display: none !important; }
   .dilmo .pp-pad button { min-width: 64px; min-height: 52px; font-size: 1.1rem; }
 }
 
-/* places Dilmo found for you: real links to their pages */
+/* places Boson found for you: real links to their pages */
 .dilmo .res-hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 16px; border: 0; border-radius: var(--radius-pill); background: var(--accent); color: #fff; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
 .dilmo .res-hint[hidden] { display: none; }
 .dilmo .pp-results { display: flex; flex-wrap: wrap; gap: 8px; }

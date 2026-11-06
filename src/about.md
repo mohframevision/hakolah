@@ -2,7 +2,7 @@
 title: عن الموقع | هكوله
 layout: base.njk
 permalink: about.html
-description: "تعرّف على هكوله: موقع بحريني للمبدعين فيه صوتيات هكوله ودلمو وأدوات مجانية ومقالات، بالعربي والإنجليزي."
+description: "تعرّف على هكوله: موقع بحريني للمبدعين فيه صوتيات هكوله وبوزون وأدوات مجانية ومقالات، بالعربي والإنجليزي."
 langSwitchUrl: "/en/about.html"
 ---
 
@@ -19,7 +19,7 @@ langSwitchUrl: "/en/about.html"
         <p class="about-badge-other" lang="en" dir="ltr">Hakolah</p>
         <dl class="about-badge-facts">
           <dt>يجمع</dt>
-          <dd>صوتيات · دلمو · أدوات · مقالات</dd>
+          <dd>صوتيات · بوزون · أدوات · مقالات</dd>
           <dt>وعدنا</dt>
           <dd class="about-badge-chips">
             <a class="about-chip about-chip-visited" href="#privacy">بلا حسابات</a>
@@ -42,7 +42,7 @@ langSwitchUrl: "/en/about.html"
 ## ماذا ستجد في هكوله؟
 
 - **[صوتيات هكوله](/sounds.html):** أداة لعزف الموسيقى وتأليفها وتعلّمها في المتصفح، بآلات مسجّلة حقيقية.
-- **[دلمو](/dilmo.html):** رفيق صغير تلعب معه وتحدّثه.
+- **[بوزون](/dilmo.html):** رفيق صغير تلعب معه وتحدّثه.
 - **[تجارب وأدوات](/ai-experiments.html):** مثل محوّل الملفات، وكلها تعمل على جهازك.
 - **[برامج وأدوات مجانية](/links-tools.html):** روابط مختارة للمونتاج والتصميم والصوت والبرمجة.
 - **[المقالات والأدلة](/guides.html):** أدلة مكتوبة بعناية، مثل حماية الحسابات.

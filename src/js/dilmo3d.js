@@ -1,4 +1,4 @@
-/* دلمو ثلاثي الأبعاد: رسم فقط، بـWebGL بلا أي مكتبة، ويتحمّل عند الضغط على زر البوابة فقط.
+/* بوزون ثلاثي الأبعاد: رسم فقط، بـWebGL بلا أي مكتبة، ويتحمّل عند الضغط على زر البوابة فقط.
    المنطق كله (الفيزياء، المزاج، الكلام، اللمس) يبقى في dilmo.js، وهذا الملف يستلم لقطة الحالة كل إطار ويرسمها،
    ويعيد لـdilmo.js ثلاث دوال: scr (نقطة في العالم → مكانها على الشاشة) وunscr (العكس، للسحب) وground (مؤشر → نقطة على الأرض).
    الإحداثيات نفس إحداثيات dilmo.js: بكسل، x يميناً، y للأسفل، z العمق (0 الخلف، DZ الأمام). الساحة محاطة بسياج.
@@ -323,7 +323,7 @@
     var blank = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, blank); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
 
     // ---- the camera: orbits the middle of the arena; drag on empty ground turns it, wheel or pinch zooms ----
-    // views: "orbit" (the whole arena), "third" (behind a character), "first" (through its eyes), "second" (through Dilmo's eyes, looking at you)
+    // views: "orbit" (the whole arena), "third" (behind a character), "first" (through its eyes), "second" (through Boson's eyes, looking at you)
     var moveStart = 0, fY = null;
     var cam = { yaw: .55, pitch: .5, p3: .38, p1: .12, zoom: 1, orbiting: false, mode: "orbit" }, view = { mode: "orbit", subj: null, from: null, t0: -1e9 }, focus = null, lead = [0, 0], lastOrbit = -1e9, trauma = 0, base = 1000, fl = H * .85, eye = [0, 0, 0], fwd = [0, 0, -1], right = [1, 0, 0], cup = [0, -1, 0], PV = I(), fy = 1, fx = 1;
     var intro = null, viewDt = 1, viewT = 0, viewReduce = false;  // the portal brings the camera from the flat view to its place
@@ -375,7 +375,7 @@
         if (since < 150 && !viewReduce) dip = Math.min((sj.landHit || 0) * .6, 10) * (1 - since / 150);  // knees give a little on landing
         eye = [sj.x, sj.y - sj.r * .45 + (viewReduce ? 0 : Math.sin(view.bob) * 1.6 * (view.bobA || 0)) + dip, sj.z];
         tgt = [eye[0] - Math.sin(yaw) * Math.cos(p1) * 100, eye[1] + Math.sin(p1) * 100, eye[2] - Math.cos(yaw) * Math.cos(p1) * 100];
-      } else if (vm === "second") {  // through Dilmo's eyes, at you
+      } else if (vm === "second") {  // through Boson's eyes, at you
         var m = view.from; eye = [m.x, m.y - m.r * .45, m.z]; tgt = [sj.x, sj.y - sj.r * .3, sj.z];
       }
       // a short glide when the view changes, so you see where you went
@@ -409,7 +409,7 @@
       return { x: eye[0] + d[0] * t, y: eye[1] + d[1] * t, z: eye[2] + d[2] * t };
     }
     var ptrs = {}, pinch = 0;
-    // a quick tap on the lawn is a tap (Dilmo comes over); a drag turns the camera; two fingers zoom
+    // a quick tap on the lawn is a tap (Boson comes over); a drag turns the camera; two fingers zoom
     canvas.addEventListener("pointerdown", function (e) {
       ptrs[e.pointerId] = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false }; if (document.pointerLockElement !== canvas) canvas.setPointerCapture(e.pointerId); e.preventDefault();
       var ks = Object.keys(ptrs); if (ks.length === 2) { pinch = Math.hypot(ptrs[ks[0]].x - ptrs[ks[1]].x, ptrs[ks[0]].y - ptrs[ks[1]].y); ks.forEach(function (k) { ptrs[k].moved = true; }); cam.orbiting = true; }
@@ -600,7 +600,7 @@
         cam.yaw = intro.yaw * e; cam.pitch = .03 + (intro.pitch - .03) * e; cam.zoom = intro.zoom + (1.25 - intro.zoom) * (1 - e);
         if (ip >= 1) intro = null;
       }
-      // which view can run now: first and third need someone to be (you, or Dilmo); second needs both you and Dilmo
+      // which view can run now: first and third need someone to be (you, or Boson); second needs both you and Boson
       var want = intro ? "orbit" : cam.mode, sj = s.player || s.main;
       if (want === "second" && !(s.player && s.main)) want = "first";
       if ((want === "first" || want === "third") && !sj) want = "orbit";
@@ -711,7 +711,7 @@
       if (++ballN % 120 === 0) ballR = ortho(ballR);
       gl.uniform3f(U.uB0, .94, .42, .36); gl.uniform3f(U.uB1, 1, 1, 1); gl.uniform3f(U.uB2, .25, .71, .78); gl.uniform1f(U.uRot, 0);
       draw(SPH, 2, chain(T(bl.x, bl.y, bl.z), ballR, S(bl.r, bl.r, bl.r)), [1, 1, 1]);
-      // the characters: Dilmo and everyone else; a crouching friend sinks into the bush
+      // the characters: Boson and everyone else; a crouching friend sinks into the bush
       all.forEach(function (b) { if (b.el !== api.hideEl) body(b, t, dt, b.crouch ? b.r * .45 : 0); });
       faces.forEach(function (fc, el) { if (t - fc.touched > 5000) { gl.deleteTexture(fc.tex); faces.delete(el); } });
     }

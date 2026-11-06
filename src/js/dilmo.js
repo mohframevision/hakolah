@@ -26,7 +26,7 @@
     plain: { pre: [""], post: [""] }
   };
   var LINES_AR = {
-    greet1: ["joy", ["مرحباً! هذه أول مرة نلتقي.", "أهلاً بك! أنا دلمو، رفيقك في هكوله.", "سعيد بلقائك لأول مرة!", "أهلاً وسهلاً! تشرّفتُ بمعرفتك.", "مرحباً يا صديقي الجديد!", "أخيراً جاء زائر جديد!"]],
+    greet1: ["joy", ["مرحباً! هذه أول مرة نلتقي.", "أهلاً بك! أنا بوزون، رفيقك في هكوله.", "سعيد بلقائك لأول مرة!", "أهلاً وسهلاً! تشرّفتُ بمعرفتك.", "مرحباً يا صديقي الجديد!", "أخيراً جاء زائر جديد!"]],
     greetN: ["joy", ["أهلاً بعودتك! هذه زيارتك رقم {n}.", "عدتَ من جديد! الزيارة رقم {n}.", "مرحباً مرة أخرى! نلتقي للمرة {n}.", "اشتقتُ إليك! هذه المرة رقم {n}.", "يسعدني رجوعك، زيارتك رقم {n}."]],
     poke: ["joy", ["مرحباً!", "نعم؟", "أنا هنا!", "هل ناديتني؟", "تفضّل!", "ها أنا ذا!", "كيف أساعدك؟", "أهلاً بك!", "لمستني!", "ماذا هناك؟", "حاضر!", "أسمعك!"]],
     annoy: ["annoy", ["كفاني ضغطاً!", "توقّف عن نقري!", "يكفي هذا!", "تعبتُ من النقر!", "سأبتعد عنك قليلاً!", "أصابعك لا تهدأ!", "دعني أرتاح!", "هذا كثير عليّ!", "سأعدّ إلى ثلاثة!", "لستُ زرّاً يا صديقي!"]],
@@ -68,8 +68,8 @@
     tagStart: ["joy", ["لنلعب المطاردة! ثلاثة… اثنان… واحد!", "سأمسك بك! ثلاثة… اثنان… واحد!", "استعد! ثلاثة… اثنان… واحد!"]],
     tagGot: ["joy", ["أمسكتك! دورك!", "وصلتُ إليك!", "الآن أنت تطاردني!"]],
     buddyWant: ["neutral", ["وأنا؟", "هل بقي شيء لي؟", "رائحته شهيّة!", "أريد قطعة صغيرة."]],
-    arrive: ["joy", ["سمعتُ أن هنا أصدقاء طيبين!", "مرحباً! هل يمكنني اللعب معكم؟", "وصلتُ! أنا جمرة."]],
-    welcome: ["joy", ["أهلاً بك يا جمرة!", "صديق جديد!", "مرحباً بك بيننا!"]],
+    arrive: ["joy", ["سمعتُ أن هنا أصدقاء طيبين!", "مرحباً! هل يمكنني اللعب معكم؟", "وصلتُ! أنا بروتون."]],
+    welcome: ["joy", ["أهلاً بك يا بروتون!", "صديق جديد!", "مرحباً بك بيننا!"]],
     ph_morning: ["joy", ["صباح الخير! يوم جميل للفطور.", "صباح النور! هل شربتَ قهوتك؟", "الصباح هادئ، أحبّه."]],
     ph_noon: ["neutral", ["وقت الغداء تقريباً!", "الشمس قوية الآن، ابحث عن مكان مكيّف.", "الظهيرة حارّة اليوم."]],
     ph_evening: ["calm", ["مساء الخير! وقت الكرك.", "المساء جميل للنزهة.", "الجو بدأ يبرد قليلاً."]],
@@ -78,9 +78,9 @@
     favYes: ["joy", ["{f}! هذه أكلتي المفضّلة!", "كيف عرفتَ أني أحبّ {f}؟", "أفضل {f} في العالم!"]],
     favHint: ["neutral", ["شكراً! لكني أحبّ {f} أكثر.", "لذيذ، ولو كان {f} لكان أجمل.", "أتعرف ما أحبّ؟ {f}!"]],
     thanksFood: ["joy", ["شكراً على {f}!", "لذيذ!", "ما ألطفك!"]],
-    hsStart: ["joy", ["موجة اختبأت! هل تجدها؟", "لنلعب الغميضة! أين موجة؟", "موجة مختبئة في مكان ما…"]],
+    hsStart: ["joy", ["نيوترينو اختبأ! هل تجده؟", "لنلعب الغميضة! أين نيوترينو؟", "نيوترينو مختبئ في مكان ما…"]],
     hsFound: ["joy", ["وجدتني!", "كيف عرفتَ مكاني؟", "أنت بارع في البحث!"]],
-    hsYou: ["joy", ["أحسنت! وجدتَها.", "عينك حادّة!", "موجة لا تستطيع الاختباء منك!"]],
+    hsYou: ["joy", ["أحسنت! وجدتَه.", "عينك حادّة!", "نيوترينو لا يستطيع الاختباء منك!"]],
     hsLost: ["joy", ["لم تجدني!", "كنتُ هنا طوال الوقت!", "فزتُ هذه المرة!"]],
     gotStar: ["joy", ["نجمة! عندك {s} الآن.", "جمعتَ {s} نجوم!", "نجمة جديدة، المجموع {s}."]],
     unlock: ["joy", ["فتحتَ لوناً جديداً لشخصيتك!", "لون جديد بانتظارك!", "مبروك! لون جديد انفتح."]],
@@ -103,7 +103,7 @@
     cHowGood: ["plain", ["أنا بخير، شكراً لسؤالك! وأنت؟", "بأفضل حال ما دمتَ هنا. وأنت؟", "سعيد جداً اليوم! وأنت؟"]],
     cHowTired: ["plain", ["نعسان قليلاً… وأنت؟", "متعب بعض الشيء، لكني بخير. وأنت؟"]],
     cHowGrumpy: ["plain", ["كنتُ منزعجاً قليلاً، لكن سؤالك أسعدني.", "أفضل الآن بعد أن سألت."]],
-    cName: ["plain", ["اسمي دلمو!", "أنا دلمو، رفيقك في هكوله.", "دلمو، وهؤلاء أصدقائي."]],
+    cName: ["plain", ["اسمي بوزون!", "أنا بوزون، رفيقك في هكوله.", "بوزون، وهؤلاء أصدقائي."]],
     cAge: ["plain", ["عمري {v}، وُلدتُ في ٢٨ أكتوبر ٢٠٢٦.", "عمري {v} فقط، صغير لكني أعرف أماكن كثيرة."]],
     cHome: ["plain", ["أعيش هنا في هكوله، في البحرين.", "بيتي هذه الساحة، وأحياناً خلف الشجيرة."]],
     cPraise: ["plain", ["شكراً! أحرجتني.", "وأنت ألطف يا {n}!", "كلامك جعل يومي أجمل."]],
@@ -120,16 +120,16 @@
     cYes: ["plain", ["جميل!", "اتفقنا!", "رائع!"]],
     cNo: ["plain", ["حسناً.", "كما تريد.", "لا بأس."]],
     cFood: ["plain", ["{f}؟ لذيذ!", "أحبّ {f} كثيراً!", "ذكّرتني بـ{f}، جعتُ الآن!"]],
-    cFoodFav: ["plain", ["{f}؟ هذه أكلة {w} المفضّلة!", "{w} تحبّ {f} أكثر من أي شيء!"]],
+    cFoodFav: ["plain", ["{f}؟ هذه أكلة {w} المفضّلة!", "{w} يحبّ {f} أكثر من أي شيء!"]],
     cFriendCalled: ["plain", ["نعم يا {n}؟", "ناديتني؟ أنا هنا!", "أهلاً يا {n}!"]],
     cHuh: ["plain", ["لم أفهم تماماً… هل تريد أن أقترح لك مكاناً تأكل فيه؟", "لم أفهم قصدك. هل تبحث عن مكان تأكل فيه؟"]],
     cHuh2: ["plain", ["لم أفهم، لكن كلامك لطيف! هل نلعب؟", "لم أفهم جيداً… هل نلعب المطاردة؟"]],
-    pName: ["plain", ["أنا {w}! صديقة دلمو، {a}.", "اسمي {w}، و{a}!"]],
+    pName: ["plain", ["أنا {w}! صديق بوزون، {a}.", "اسمي {w}، و{a}!"]],
     pHow: ["plain", ["أنا {w} وبخير، شكراً يا {n}!", "بأفضل حال! وأنت؟"]],
-    pAge: ["plain", ["عمري؟ هذا سرّ بيني وبين دلمو!", "أصغر من دلمو بقليل، أظن!"]],
-    pHome: ["plain", ["أعيش هنا في ساحة دلمو، في هكوله.", "بيتي هذه الساحة مع أصدقائي."]],
+    pAge: ["plain", ["عمري؟ هذا سرّ بيني وبين بوزون!", "أصغر من بوزون بقليل، أظن!"]],
+    pHome: ["plain", ["أعيش هنا في ساحة بوزون، في هكوله.", "بيتي هذه الساحة مع أصدقائي."]],
     pLikes: ["plain", ["أحبّ {f}، ولوني {c}!", "أكلتي المفضّلة {f}، هل تطعمني؟"]],
-    pFriends: ["plain", ["صديقي المقرّب دلمو، وأحبّ اللعب مع الجميع.", "كلنا أصدقاء هنا، وأنت منهم الآن!"]],
+    pFriends: ["plain", ["صديقي المقرّب بوزون، وأحبّ اللعب مع الجميع.", "كلنا أصدقاء هنا، وأنت منهم الآن!"]],
     dNew: ["plain", ["آخر ما أُضيف إلى هكوله: «{p}»، والبقية تحت.", "جديد هكوله: «{p}»، وتحت أماكن أخرى جديدة."]],
     dWhich: ["plain", ["عن أي مكان تسأل؟ اكتب اسمه.", "اكتب لي اسم المكان وسأخبرك."]],
     dHours: ["plain", ["«{p}»: {h}", "ساعات «{p}»: {h}"]],
@@ -176,7 +176,7 @@
     plain: { pre: [""], post: [""] }
   };
   var LINES_EN = {
-    greet1: ["joy", ["Hello! This is our first time meeting.", "Welcome! I'm Dilmo, your Hakolah companion.", "Nice to meet you!", "Hi there, new friend!", "Finally, a new visitor!"]],
+    greet1: ["joy", ["Hello! This is our first time meeting.", "Welcome! I'm Boson, your Hakolah companion.", "Nice to meet you!", "Hi there, new friend!", "Finally, a new visitor!"]],
     greetN: ["joy", ["Welcome back! This is visit number {n}.", "You're back! Visit number {n}.", "Hello again! We've met {n} times now.", "I missed you! That's {n} visits."]],
     poke: ["joy", ["Hi!", "Yes?", "I'm here!", "Did you call me?", "Here I am!", "How can I help?", "You poked me!", "What's up?", "I'm listening!"]],
     annoy: ["annoy", ["Stop poking me!", "That's enough!", "I'm tired of being tapped!", "I'll move away for a bit!", "Your fingers never rest!", "Let me rest!", "I'm counting to three!", "I'm not a button, friend!"]],
@@ -218,8 +218,8 @@
     tagStart: ["joy", ["Let's play tag! Three… two… one!", "I'll catch you! Three… two… one!", "Ready? Three… two… one!"]],
     tagGot: ["joy", ["Got you! Your turn!", "Tagged!", "Now you chase me!"]],
     buddyWant: ["neutral", ["What about me?", "Is there any left for me?", "That smells good!", "Just a small piece for me?"]],
-    arrive: ["joy", ["I heard there are nice friends here!", "Hi! Can I play with you?", "I'm here! I'm Jamra."]],
-    welcome: ["joy", ["Welcome, Jamra!", "A new friend!", "Glad you're here!"]],
+    arrive: ["joy", ["I heard there are nice friends here!", "Hi! Can I play with you?", "I'm here! I'm Proton."]],
+    welcome: ["joy", ["Welcome, Proton!", "A new friend!", "Glad you're here!"]],
     ph_morning: ["joy", ["Good morning! A nice day for breakfast.", "Morning! Had your coffee yet?", "Mornings are calm, I like them."]],
     ph_noon: ["neutral", ["It's nearly lunchtime!", "The sun is strong, find somewhere with AC.", "Hot afternoon today."]],
     ph_evening: ["calm", ["Good evening! Karak time.", "Evenings are nice for a walk.", "It's getting a little cooler."]],
@@ -228,9 +228,9 @@
     favYes: ["joy", ["Ooh, {f}! That's my favourite!", "How did you know I love {f}?", "The best {f} in the world!"]],
     favHint: ["neutral", ["Thanks! But I like {f} more.", "Tasty, but {f} would be even better.", "You know what I love? {f}!"]],
     thanksFood: ["joy", ["Thanks for the {f}!", "Delicious!", "How kind of you!"]],
-    hsStart: ["joy", ["Mawja is hiding! Can you find her?", "Hide and seek! Where's Mawja?", "Mawja is hiding somewhere…"]],
+    hsStart: ["joy", ["Neutrino is hiding! Can you find him?", "Hide and seek! Where's Neutrino?", "Neutrino is hiding somewhere…"]],
     hsFound: ["joy", ["You found me!", "How did you know where I was?", "You're good at this!"]],
-    hsYou: ["joy", ["Well done! You found her.", "Sharp eyes!", "Mawja can't hide from you!"]],
+    hsYou: ["joy", ["Well done! You found him.", "Sharp eyes!", "Neutrino can't hide from you!"]],
     hsLost: ["joy", ["You didn't find me!", "I was here all along!", "I win this time!"]],
     gotStar: ["joy", ["A star! You have {s} now.", "{s} stars collected!", "New star, {s} in total."]],
     unlock: ["joy", ["You unlocked a new colour for your character!", "A new colour is waiting for you!", "Congrats! A new colour opened up."]],
@@ -253,7 +253,7 @@
     cHowGood: ["plain", ["I'm good, thanks for asking! And you?", "Great, now that you're here. And you?", "Very happy today! And you?"]],
     cHowTired: ["plain", ["A little sleepy… and you?", "A bit tired, but fine. And you?"]],
     cHowGrumpy: ["plain", ["I was a bit grumpy, but your question cheered me up.", "Better now that you asked."]],
-    cName: ["plain", ["My name is Dilmo!", "I'm Dilmo, your Hakolah companion.", "Dilmo, and these are my friends."]],
+    cName: ["plain", ["My name is Boson!", "I'm Boson, your Hakolah companion.", "Boson, and these are my friends."]],
     cAge: ["plain", ["I'm {v} old. I was born on 28 October 2026.", "Just {v} old, young but I know lots of places."]],
     cHome: ["plain", ["I live here in Hakolah, in Bahrain.", "This playground is my home, and sometimes behind the bush."]],
     cPraise: ["plain", ["Thank you! You're making me blush.", "You're even nicer, {n}!", "That made my day."]],
@@ -274,12 +274,12 @@
     cFriendCalled: ["plain", ["Yes, {n}?", "You called? I'm here!", "Hi, {n}!"]],
     cHuh: ["plain", ["I didn't quite get that… want me to suggest a place to eat?", "Not sure what you mean. Looking for somewhere to eat?"]],
     cHuh2: ["plain", ["I didn't get that, but it sounded nice! Shall we play?", "Didn't quite catch that… play tag?"]],
-    pName: ["plain", ["I'm {w}! Dilmo's friend, {a}.", "My name is {w}, {a}!"]],
+    pName: ["plain", ["I'm {w}! Boson's friend, {a}.", "My name is {w}, {a}!"]],
     pHow: ["plain", ["I'm {w} and I'm fine, thanks {n}!", "Doing great! And you?"]],
-    pAge: ["plain", ["My age? That's a secret between me and Dilmo!", "A little younger than Dilmo, I think!"]],
-    pHome: ["plain", ["I live here in Dilmo's playground, on Hakolah.", "This playground is home, with my friends."]],
+    pAge: ["plain", ["My age? That's a secret between me and Boson!", "A little younger than Boson, I think!"]],
+    pHome: ["plain", ["I live here in Boson's playground, on Hakolah.", "This playground is home, with my friends."]],
     pLikes: ["plain", ["I love {f}, and my colour is {c}!", "My favourite food is {f}, will you feed me?"]],
-    pFriends: ["plain", ["My best friend is Dilmo, and I like playing with everyone.", "We're all friends here, and now you are too!"]],
+    pFriends: ["plain", ["My best friend is Boson, and I like playing with everyone.", "We're all friends here, and now you are too!"]],
     dNew: ["plain", ["Newest on Hakolah: «{p}», more below.", "Just added: «{p}», and other new places below."]],
     dWhich: ["plain", ["Which place do you mean? Type its name.", "Tell me the place's name and I'll check."]],
     dHours: ["plain", ["«{p}»: {h}", "Hours for «{p}»: {h}"]],
@@ -334,7 +334,7 @@
     mrx: spring(4.3, .2, .65), mry: spring(5.7, .2, .65), mx: spring(0, .12, .75)
   };
   var mood = { joy: .2, startle: 0, dizzy: 0, annoy: 0, sleepy: 0, shy: 0, tickle: 0, curious: 0, fear: 0, sad: 0, love: 0, conf: 0, heart: 0 };
-  var FK = null, hbPulse = 0, lastDraw = 0;  // Dilmo's face kit (made at start), his heartbeat pulse
+  var FK = null, hbPulse = 0, lastDraw = 0;  // Boson's face kit (made at start), his heartbeat pulse
   var W = 0, WH = 0, ground = 0, pos = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 };
   // the 3D world (dilmo3d.js): DZ = the arena's depth while it is open (0 when flat), D3 = the renderer. Positions stay in world px
   // with z for depth; sv(b) = where a body sits on the stage, in world px, with the on-screen size of one px there (identity when flat),
@@ -611,7 +611,7 @@
     music.apply();
   });
   // ---- background music (the owner took them all, with a pick in the menu, 2026-11-02): composed while it plays, so it never loops:
-  // slow chords drifting between near neighbours, sparse notes on top, never a beat; it steps back while Dilmo talks or sings ----
+  // slow chords drifting between near neighbours, sparse notes on top, never a beat; it steps back while Boson talks or sings ----
   var music = (function () {
     var KAL = [[1, 1, 1], [5.4, .12, .14], [11.9, .04, .06]], MAR = [[1, 1, 1], [3.93, .3, .28], [9.2, .1, .1]], PENT = [0, 2, 4, 7, 9];
     var CH = { C: [48, 55, 64, 71], Am: [45, 52, 60, 67], F: [41, 48, 57, 64], Dm: [38, 45, 53, 64], G: [43, 50, 57, 64], Em: [40, 47, 55, 62] };
@@ -1024,19 +1024,19 @@
 
   // ---- friends: smaller orbs with their own colour, voice and temperament ----
   var FRIENDS = [
-    { id: "shams", name: T("شمس", "Shams"), c1: "#f6cf6a", c2: "#e0a82e", c3: "#a8740f", r: 30, pitch: 620, energy: 1.25, shy: false, harm: 2, fav: "karak" },
-    { id: "mawja", name: T("موجة", "Mawja"), c1: "#8cc4ec", c2: "#4a90c8", c3: "#24547d", r: 26, pitch: 360, energy: .7, shy: true, harm: -3, fav: "samosa" },
-    { id: "jamra", name: T("جمرة", "Jamra"), c1: "#f2a58f", c2: "#e07a5f", c3: "#9c4630", r: 28, pitch: 500, energy: 1, shy: false, harm: 4, fav: "burger" },
+    { id: "shams", name: T("فوتون", "Photon"), c1: "#f6cf6a", c2: "#e0a82e", c3: "#a8740f", r: 30, pitch: 620, energy: 1.25, shy: false, harm: 2, fav: "karak" },
+    { id: "mawja", name: T("نيوترينو", "Neutrino"), c1: "#8cc4ec", c2: "#4a90c8", c3: "#24547d", r: 26, pitch: 360, energy: .7, shy: true, harm: -3, fav: "samosa" },
+    { id: "jamra", name: T("بروتون", "Proton"), c1: "#f2a58f", c2: "#e07a5f", c3: "#9c4630", r: 28, pitch: 500, energy: 1, shy: false, harm: 4, fav: "burger" },
     // only on wide screens: a phone stage has room for three friends at most
-    { id: "lulua", name: T("لؤلؤة", "Lulua"), c1: "#fbe3ec", c2: "#eaa6c0", c3: "#b0607f", r: 25, pitch: 700, energy: 1.1, shy: false, harm: 7, fav: "sweets", wide: true },
-    { id: "ramla", name: T("رملة", "Ramla"), c1: "#f6e6c2", c2: "#d9b46a", c3: "#9a7634", r: 33, pitch: 300, energy: .6, shy: false, harm: -5, fav: "machboos", wide: true },
-    { id: "najma", name: T("نجمة", "Najma"), c1: "#c4c8f7", c2: "#6b73d9", c3: "#3a3f91", r: 24, pitch: 760, energy: 1.4, shy: false, harm: 9, fav: "juice", wide: true },
-    { id: "ghaima", name: T("غيمة", "Ghaima"), c1: "#f4f6f9", c2: "#c9d1db", c3: "#8592a3", r: 29, pitch: 420, energy: .8, shy: true, harm: -1, fav: "pizza", wide: true }
+    { id: "lulua", name: T("كوارك", "Quark"), c1: "#fbe3ec", c2: "#eaa6c0", c3: "#b0607f", r: 25, pitch: 700, energy: 1.1, shy: false, harm: 7, fav: "sweets", wide: true },
+    { id: "ramla", name: T("نيوترون", "Neutron"), c1: "#f6e6c2", c2: "#d9b46a", c3: "#9a7634", r: 33, pitch: 300, energy: .6, shy: false, harm: -5, fav: "machboos", wide: true },
+    { id: "najma", name: T("إلكترون", "Electron"), c1: "#c4c8f7", c2: "#6b73d9", c3: "#3a3f91", r: 24, pitch: 760, energy: 1.4, shy: false, harm: 9, fav: "juice", wide: true },
+    { id: "ghaima", name: T("فرميون", "Fermion"), c1: "#f4f6f9", c2: "#c9d1db", c3: "#8592a3", r: 29, pitch: 420, energy: .8, shy: true, harm: -1, fav: "pizza", wide: true }
   ];
   var ABOUT = EN ? { shams: ["full of energy", "gold"], mawja: ["a little shy", "blue"], jamra: ["always up for a chase", "coral"], lulua: ["sweet and chatty", "pearl pink"],
       ramla: ["big, slow and calm", "sand"], najma: ["the fastest of us all", "night blue"], ghaima: ["quiet, I drift around", "cloud grey"] }
-    : { shams: ["نشيطة جداً", "ذهبي"], mawja: ["خجولة قليلاً", "أزرق"], jamra: ["أحبّ المطاردة دائماً", "مرجاني"], lulua: ["لطيفة وأحبّ الكلام", "وردي لؤلؤي"],
-      ramla: ["كبيرة وهادئة وبطيئة", "رملي"], najma: ["الأسرع بيننا", "أزرق ليلي"], ghaima: ["هادئة، أتنقّل بخفّة", "رمادي غيمي"] };
+    : { shams: ["نشيط جداً", "ذهبي"], mawja: ["خجول قليلاً", "أزرق"], jamra: ["أحبّ المطاردة دائماً", "مرجاني"], lulua: ["لطيف وأحبّ الكلام", "وردي لؤلؤي"],
+      ramla: ["كبير وهادئ وبطيء", "رملي"], najma: ["الأسرع بيننا", "أزرق ليلي"], ghaima: ["هادئ، أتنقّل بخفّة", "رمادي غيمي"] };
   var WIDE = false;  // decided once the stage is measured
   function friendHere(f, i) { return f.wide ? WIDE : i < 2 || thirdArrived; }
   var DIALOGS = EN ? [
@@ -1085,7 +1085,7 @@
       var p = toStage(e), l = blocal(b, p.x, p.y); stir(); e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId); b.sy = .85; b.sx = 1.1;
       var w0 = D3 ? D3.unscr(p.x, p.y, b) : p;
       b.drag = { ox: w0.x - b.x, oy: w0.y - b.y, oz: D3 ? w0.z - b.z : 0, sx: p.x, sy: p.y, moved: false, vx: 0, vy: 0, vz: 0, lx: l.x, ly: l.y };
-      // grabbed near the edge: that's a cheek to pull, like Dilmo's
+      // grabbed near the edge: that's a cheek to pull, like Boson's
       b.cheek = Math.hypot(l.x, l.y) > r * .6 ? { a: Math.atan2(l.y, l.x), gx: l.x, gy: l.y, px: 0, py: 0, side: Math.abs(l.x) > Math.abs(l.y) } : null;
     });
     el.addEventListener("pointermove", function (e) {
@@ -1093,7 +1093,7 @@
       var p = toStage(e), now = performance.now();
       if (b.cheek) {
         var l = blocal(b, p.x, p.y), cx = l.x - b.cheek.gx, cy = l.y - b.cheek.gy, len = Math.hypot(cx, cy) || 1;
-        if (len > 110 * sc) { b.cheek = null; d.slipped = true; b.joy = 1; sfx("snap"); b.svx += .06; b.svy -= .05; if (!f.player) bsay(b, line("slip")); }  // slips back, like Dilmo's
+        if (len > 110 * sc) { b.cheek = null; d.slipped = true; b.joy = 1; sfx("snap"); b.svx += .06; b.svy -= .05; if (!f.player) bsay(b, line("slip")); }  // slips back, like Boson's
         else {
           var k = 34 * sc * Math.tanh(len / (45 * sc)) / len; b.cheek.px = cx * k; b.cheek.py = cy * k; sfx("squeak", Math.min(1, len / (60 * sc)));
           if (len > 14 * sc && !f.player && now - (b.pinchAt || 0) > 3500) { b.pinchAt = now; bsay(b, line(b.cheek.side ? "cheek" : "stretch")); }
@@ -1208,7 +1208,7 @@
     }
     return best;
   }
-  // free floor ahead of b in direction dir before it would touch Dilmo or a friend (the visitor walks through)
+  // free floor ahead of b in direction dir before it would touch Boson or a friend (the visitor walks through)
   function gapAhead(b, ux, uz) {  // (ux, uz): a unit direction on the floor; a plain -1/1 means along x
     uz = uz || 0;
     var L = buddies.filter(function (x) { return x !== b && (!x.f.player || b.mode === "follow"); }).map(function (x) { return { x: x.x, y: x.y, z: x.z, r: x.f.r }; });  // followers don't walk into you
@@ -1223,7 +1223,7 @@
     return a && c ? (Math.random() < .5 ? -1 : 1) : a ? -1 : c ? 1 : 0;
   }
   function slot(b, mode) { return buddies.filter(function (x) { return x.mode === mode; }).indexOf(b); }
-  // the nearest body standing almost on top of this one (Dilmo, a friend or the visitor), if any
+  // the nearest body standing almost on top of this one (Boson, a friend or the visitor), if any
   function crowd(b) {
     var L = buddies.filter(function (x) { return x !== b; }).map(function (x) { return { x: x.x, y: x.y, z: x.z, r: x.f.r }; });
     if (!mainAway) L.push({ x: pos.x, y: pos.y, z: pos.z, r: R });
@@ -1385,7 +1385,7 @@
         if (!D3) continue;  // flat: the visitor walks past others, like NPCs in a platformer
         // the 3D arena: your character shoulders them aside and carries them a little (it never bounces off them)
         var pl = A.b && A.b.f.player ? A : B, ot = pl === A ? B : A, sg = pl === A ? 1 : -1, ov = min - d, fpv = D3.viewNow() === "first";
-        var share = fpv ? .3 : ot.main ? .45 : .9;  // first person: a body is solid (you never end up inside it); Dilmo is heavier
+        var share = fpv ? .3 : ot.main ? .45 : .9;  // first person: a body is solid (you never end up inside it); Boson is heavier
         if (!ot.fixed) {
           var sid = ot.b && t < (ot.b.sideUntil || 0), pvn = Math.hypot(pl.o.vx, pl.o.vz) || 1, pa = sid ? (nx * pl.o.vx + nz * pl.o.vz) / pvn : 0, mx2 = nx - pa * pl.o.vx / pvn, mz2 = nz - pa * pl.o.vz / pvn;  // mid side-step: pushed only sideways
           ot.o.x += sg * mx2 * ov * share; ot.o.z += sg * mz2 * ov * share;
@@ -1482,7 +1482,7 @@
   }
 
   // ---- faces: eyes with lids, a mouth that smiles or frowns, brows, blush, a tint, and little signs ----
-  // one kit for everyone, drawn in Dilmo's units (r = 48) and scaled by k = r / 48
+  // one kit for everyone, drawn in Boson's units (r = 48) and scaled by k = r / 48
   var SVGNS = "http://www.w3.org/2000/svg";
   function mkS(tag, cls, parent, before) { var e = document.createElementNS(SVGNS, tag); e.setAttribute("class", cls); parent.insertBefore(e, before || null); return e; }
   function faceKit(faceG, bodyG) {
@@ -1877,7 +1877,7 @@
     var box = document.getElementById("cast-list"); box.textContent = "";
     castItems().forEach(function (k, i) {
       var on = k === "main" ? !mainAway : others().some(function (x) { return x.f.id === k; });
-      var bt = document.createElement("button"); bt.type = "button"; bt.id = "cast-" + i; bt.textContent = k === "main" ? T("دلمو", "Dilmo") : FRIENDS.filter(function (f) { return f.id === k; })[0].name;
+      var bt = document.createElement("button"); bt.type = "button"; bt.id = "cast-" + i; bt.textContent = k === "main" ? T("بوزون", "Boson") : FRIENDS.filter(function (f) { return f.id === k; })[0].name;
       bt.setAttribute("aria-pressed", String(on));
       bt.addEventListener("click", function () { toggleCast(k, !on); renderCast(); });
       box.appendChild(bt);
@@ -1950,8 +1950,8 @@
       pastry: "pastries", breakfast: "breakfast", grill: "grills", fish: "seafood", chicken: "chicken", juice: "juice", sandwich: "sandwiches" }
     : { karak: "الكرك", samosa: "السمبوسة", burger: "البرجر", shawarma: "الشاورما", machboos: "المجبوس", coffee: "القهوة", tea: "الشاي", pizza: "البيتزا", sweets: "الحلويات",
       pastry: "المعجنات", breakfast: "الفطور", grill: "المشويات", fish: "المأكولات البحرية", chicken: "الدجاج", juice: "العصائر", sandwich: "السندويشات" };
-  var CALLS = { main: ["دلمو", "dilmo"], shams: ["شمس", "shams"], mawja: ["موجه", "mawja"], jamra: ["جمره", "jamra"], lulua: ["لؤلؤه", "لولوه", "لولو", "lulua", "lulu"],
-    ramla: ["رمله", "ramla"], najma: ["نجمه", "najma"], ghaima: ["غيمه", "ghaima"] };
+  var CALLS = { main: ["بوزون", "boson"], shams: ["فوتون", "photon"], mawja: ["نيوترينو", "neutrino"], jamra: ["بروتون", "proton"], lulua: ["كوارك", "quark"],
+    ramla: ["نيوترون", "neutron"], najma: ["الكترون", "electron"], ghaima: ["فرميون", "fermion"] };
   // words that point to a section of the site rather than to a place
   var KINDS = { restaurants: ["مطعم", "مطاعم", "اكل", "غدا", "عشا", "restaurant", "restaurants", "food", "eat", "lunch", "dinner"],
     cafes: ["كافيه", "كافي", "مقهي", "قهوه", "cafe", "cafes", "coffee"], bakeries: ["مخبز", "مخابز", "خبز", "bakery", "bakeries", "bread"],
@@ -2215,7 +2215,7 @@
       var d = 5 - wd;  // Bahrain's weekend: Friday and Saturday
       return line("c_weekendIn", { v: d === 1 ? T("يوم واحد", "1 day") : d === 2 ? T("يومان", "2 days") : T(num(d) + " أيام", d + " days") });
     }
-    if (intent === "age") {  // his real age, counted from the day the Dilmo page went up
+    if (intent === "age") {  // his real age, counted from the day the Boson page went up
       var dd = Math.floor((now - Date.UTC(2026, 9, 27, 21)) / 864e5), mm = Math.floor(dd / 30.44);
       // ponytail: days then months only; add years once he turns one
       return line("cAge", { v: dd < 60 ? (dd < 1 ? T("أقل من يوم", "less than a day") : dd === 1 ? T("يوم واحد", "1 day") : dd === 2 ? T("يومان", "2 days") : T(num(dd) + (dd <= 10 ? " أيام" : " يوماً"), dd + " days"))
@@ -2317,7 +2317,7 @@
     else if (me.likes.length) { key = "cMemLikeAgain"; v.f = FOOD_NAME[pick(me.likes)]; }
     if (key) say(line(key, v), "recall", 1000);
   }
-  // a friend answering questions about itself, as itself (not as Dilmo)
+  // a friend answering questions about itself, as itself (not as Boson)
   function persona(b, u, n) {
     var f = b.f, a = ABOUT[f.id] || ["", ""], v = { w: f.name, a: a[0], c: a[1], f: FOOD_NAME[f.fav] || "", n: n };
     switch (u.intent) {
@@ -2387,10 +2387,10 @@
   }
   function renderTrain() {
     if (!TRAIN) return;
-    if (!trainEl) { trainEl = el("section", "train"); trainEl.setAttribute("aria-label", T("تدريب دلمو", "Train Dilmo")); document.querySelector(".tips").before(trainEl); }
+    if (!trainEl) { trainEl = el("section", "train"); trainEl.setAttribute("aria-label", T("تدريب بوزون", "Train Boson")); document.querySelector(".tips").before(trainEl); }
     var d = trainData(), mine = lessons();
     trainEl.textContent = "";
-    trainEl.appendChild(el("h2", null, T("تدريب دلمو", "Train Dilmo")));
+    trainEl.appendChild(el("h2", null, T("تدريب بوزون", "Train Boson")));
     // preview every expression on everyone at once (the owner checks them here)
     var fx = el("div", "train-faces"); fx.appendChild(el("span", "train-note", T("معاينة التعابير: ", "Preview expressions: ")));
     [["joy", "فرح", "Happy"], ["anger", "غضب", "Angry"], ["shy", "خجل", "Shy"], ["conf", "حيرة", "Confused"], ["fear", "خوف", "Afraid"], ["heart", "نبض متسارع", "Racing heart"], ["sad", "حزن", "Sad"], ["love", "حب", "Love"]].forEach(function (x) {
@@ -2399,7 +2399,7 @@
       fx.appendChild(b);
     });
     trainEl.appendChild(fx);
-    if (!player) trainEl.appendChild(el("p", "train-note", T("ادخل بشخصيتك أولاً، ثم كلّم دلمو وقيّم ردوده هنا.", "Join with your character first, then talk to Dilmo and rate his answers here.")));
+    if (!player) trainEl.appendChild(el("p", "train-note", T("ادخل بشخصيتك أولاً، ثم كلّم بوزون وقيّم ردوده هنا.", "Join with your character first, then talk to Boson and rate his answers here.")));
     else if (!lastEx) trainEl.appendChild(el("p", "train-note", T("اكتب له أي شيء في المحادثة، وسيظهر رده هنا لتقيّمه.", "Type anything to him in the chat; his answer shows up here for you to rate.")));
     else {
       var box = el("div", "train-last");
@@ -2439,7 +2439,7 @@
   function teachForm() {
     var f = el("form", "train-form");
     var lab = el("label", null, T("الرد الصحيح", "The right answer")), ta = el("textarea"); ta.rows = 2; ta.maxLength = 160; ta.required = true;
-    ta.placeholder = T("اكتب ما كان يجب أن يقوله دلمو ({n} = اسم الزائر)", "What Dilmo should have said ({n} = the visitor's name)");
+    ta.placeholder = T("اكتب ما كان يجب أن يقوله بوزون ({n} = اسم الزائر)", "What Boson should have said ({n} = the visitor's name)");
     lab.appendChild(ta); f.appendChild(lab);
     // the message's own words, to choose which ones must be there for this answer
     var words = terms(lastEx.u).map(function (a) { return a[0]; }).filter(function (w, i, a) { return a.indexOf(w) === i; });
@@ -2824,7 +2824,7 @@
     }
     x.font = "700 12px Cairo, sans-serif"; x.textAlign = "center"; x.fillStyle = tok("--muted");
     buddies.forEach(function (b) { var sb = sv(b); x.fillText(b.tag.textContent, sb.x, sb.y - b.f.r * sb.s - 10); });
-    var ex = EN ? 16 : W - 16; x.direction = EN ? "ltr" : "rtl"; x.textAlign = EN ? "left" : "right"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 4; x.fillStyle = "#fff"; x.font = "800 16px Cairo, sans-serif"; x.fillText(T("هكوله · دلمو", "Hakolah · Dilmo"), ex, 30);
+    var ex = EN ? 16 : W - 16; x.direction = EN ? "ltr" : "rtl"; x.textAlign = EN ? "left" : "right"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 4; x.fillStyle = "#fff"; x.font = "800 16px Cairo, sans-serif"; x.fillText(T("هكوله · بوزون", "Hakolah · Boson"), ex, 30);
     x.font = "600 11px Cairo, sans-serif"; x.fillText(clock.textContent, ex, 48); x.shadowBlur = 0;
     return c;
   }
@@ -2841,10 +2841,10 @@
   addEventListener("keydown", function (e) { if (e.key === "Escape") photoModal.hidden = true; });
 
   // ---- the 3D world (dilmo3d.js, loaded only when asked): it draws, everything else stays here. A portal opens around
-  //      Dilmo and the other world shows through the hole as it grows; the 2D bodies cross-fade out underneath (CSS .is3d) ----
+  //      Boson and the other world shows through the hole as it grows; the 2D bodies cross-fade out underneath (CSS .is3d) ----
   var view3 = null, d3Busy = false, d3Btn = document.getElementById("d3-btn"), d3Ask = document.getElementById("d3-ask"), portalEl = document.getElementById("portal");
   var mainCols = null, mainColsAt = -1e4;
-  function mainColours() {  // Dilmo's three gradient colours, from the theme (re-read now and then: the theme can change)
+  function mainColours() {  // Boson's three gradient colours, from the theme (re-read now and then: the theme can change)
     var t = performance.now();
     if (!mainCols || t - mainColsAt > 500) {
       mainColsAt = t; var mst = orb.querySelectorAll("stop"), cs = getComputedStyle(stage);
@@ -2863,11 +2863,11 @@
     return window.Dilmo3D ? Promise.resolve() : new Promise(function (res, rej) { var s = document.createElement("script"); s.src = d3Btn.dataset.src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
   }
   var depthPad = document.querySelector(".pp-depth"), viewBtn = document.getElementById("d3-view"), viewMode = "orbit";
-  // the views: the whole arena, behind a character, through its eyes, and through Dilmo's eyes looking at you (V on the keyboard)
+  // the views: the whole arena, behind a character, through its eyes, and through Boson's eyes looking at you (V on the keyboard)
   function viewName(m) {
     var me = !!player;
-    return { orbit: T("عام", "overview"), third: me ? T("من خلف شخصيتك", "behind you") : T("من خلف دلمو", "behind Dilmo"),
-      first: me ? T("بعين شخصيتك", "your eyes") : T("بعين دلمو", "Dilmo's eyes"), second: T("بعين دلمو نحوك", "Dilmo looking at you") }[m];
+    return { orbit: T("عام", "overview"), third: me ? T("من خلف شخصيتك", "behind you") : T("من خلف بوزون", "behind Boson"),
+      first: me ? T("بعين شخصيتك", "your eyes") : T("بعين بوزون", "Boson's eyes"), second: T("بعين بوزون نحوك", "Boson looking at you") }[m];
   }
   function setView(m) {
     viewMode = m; if (view3) view3.setView(m);
@@ -3067,7 +3067,7 @@
   }
   function wire3d() {
     view3.onLost = function () { if (view3 && !d3Busy) portal(false); };
-    view3.onTap = function (e) {  // a tap on the lawn: Dilmo bounds over to that spot (first person: whatever is under the crosshair)
+    view3.onTap = function (e) {  // a tap on the lawn: Boson bounds over to that spot (first person: whatever is under the crosshair)
       stir();
       if (D3 && D3.viewNow() === "first" && (D3.locked() || e.pointerType !== "mouse")) { useCrosshair(); return; }
       var p = toStage(e), g = D3 && D3.ground(p.x, p.y);

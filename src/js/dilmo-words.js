@@ -1,4 +1,4 @@
-/* قاموس دلمو الموسَّع: مواضيع الحديث، ومعلومات ثابتة عن البحرين، ومرادفات باللهجة وبالأحرف اللاتينية (Arabizi).
+/* قاموس بوزون الموسَّع: مواضيع الحديث، ومعلومات ثابتة عن البحرين، ومرادفات باللهجة وبالأحرف اللاتينية (Arabizi).
    يتحمّل عند أول محادثة فقط (dilmo.js يضيفه لقاموسه). لا ذكاء اصطناعي: كلمات مفتاحية → ردود مكتوبة مسبقاً.
    المعلومات هنا ثابتة ومعروفة فقط؛ أي معلومة متغيّرة (الطقس الآن، الأسعار) تأتي من بيانات الموقع أو لا تُقال. */
 window.DILMO_WORDS = {
@@ -99,7 +99,7 @@ window.DILMO_WORDS = {
     t_help: ["plain", ["أستطيع أن أبحث لك عن مطعم أو كافيه، وأخبرك بساعات أي مكان أو رقمه أو موقعه أو أسعار منيوه، وأتذكّر اسمك وما تحب، وأخبرك بالوقت وأحسب لك. جرّب: وين أحصل كرك؟", "اسألني: وين آكل؟ أو: متى يفتح مكان ما؟ أو: بكم الكرك في مكان ما؟ وأستطيع أن أحسب وأخبرك بالوقت أيضاً."]],
     t_hakolah: ["plain", ["هكوله دليل لأماكن البحرين: مطاعم ومقاهٍ ومخابز ومحلات وأماكن للزيارة، وكل مكان فيه متحقَّق منه قبل نشره.", "هكوله يساعدك تعرف وين تروح ووين تاكل في البحرين، بمعلومات متحقَّق منها."]],
     t_maker: ["plain", ["صنعني فريق هكوله في البحرين.", "أنا من هكوله، صُنعت في البحرين لأرافق زوّار الموقع."]],
-    t_robot: ["plain", ["لا، لا أستخدم ذكاءً اصطناعياً. أفهم كلمات وجملاً تعلّمتها، وأبحث في بيانات هكوله نفسها.", "أنا دلمو! لستُ ذكاءً اصطناعياً، بل أعرف كلمات كثيرة وأماكن هكوله كلها."]],
+    t_robot: ["plain", ["لا، لا أستخدم ذكاءً اصطناعياً. أفهم كلمات وجملاً تعلّمتها، وأبحث في بيانات هكوله نفسها.", "أنا بوزون! لستُ ذكاءً اصطناعياً، بل أعرف كلمات كثيرة وأماكن هكوله كلها."]],
     t_dilmoLikes: ["plain", ["أحبّ الأخضر لأنه لوني، وأحبّ الكرك والقفز والغناء حين أكون مرتاحاً.", "أكلتي المفضّلة؟ كل ما تطعمني إياه! لكن الكرك له مكانة خاصة."]],
     t_friends: ["plain", ["أصدقائي: شمس النشيطة، وموجة الخجولة، وجمرة التي تزورنا حين تكبر صداقتنا. وعلى الشاشات الكبيرة تجد معنا لؤلؤة ورملة ونجمة وغيمة.", "شمس تحب الكرك، وموجة تحب السمبوسة، وجمرة تحب البرجر."]],
     t_sorry: ["plain", ["لا بأس، سامحتك!", "حصل خير، لا تقلق.", "أنا لا أزعل طويلاً."]],
@@ -134,7 +134,7 @@ window.DILMO_WORDS = {
     f_name: ["plain", ["«البحرين» تعني بحرين اثنين، ويُقال إن المقصود الماء العذب والماء المالح، فقد كانت تنبع فيها عيون عذبة وسط البحر."]],
     f_fort: ["plain", ["قلعة البحرين موقع أثري مُدرج في قائمة التراث العالمي لليونسكو منذ ٢٠٠٥، وكانت عاصمة لحضارة دلمون.", "قلعة البحرين من أجمل أماكن الزيارة، خصوصاً وقت الغروب."]],
     f_tree: ["plain", ["شجرة الحياة شجرة وحيدة في الصحراء جنوب البحرين، عمرها نحو ٤٠٠ سنة، ولا أحد يعرف تماماً من أين تشرب الماء!"]],
-    f_dilmun: ["plain", ["دلمون حضارة قديمة جداً كانت في البحرين قبل آلاف السنين، وكانت مركزاً للتجارة. واسمي دلمو قريب منها!"]],
+    f_dilmun: ["plain", ["دلمون حضارة قديمة جداً كانت في البحرين قبل آلاف السنين، وكانت مركزاً للتجارة."]],
     f_causeway: ["plain", ["جسر الملك فهد يربط البحرين بالسعودية، وطوله نحو ٢٥ كيلومتراً، وافتُتح سنة ١٩٨٦."]],
     f_pearls: ["plain", ["البحرين مشهورة تاريخياً بالغوص على اللؤلؤ، و«طريق اللؤلؤ» في المحرق مُدرج في التراث العالمي لليونسكو."]],
     f_f1: ["plain", ["سباق جائزة البحرين الكبرى للفورمولا ١ يقام على حلبة البحرين الدولية في الصخير منذ ٢٠٠٤."]],
@@ -155,7 +155,7 @@ window.DILMO_WORDS = {
     t_help: ["plain", ["I can find you a restaurant or cafe, tell you a place's hours, number, location or menu prices, remember your name and what you like, tell the time and do sums. Try: where can I get karak?", "Ask me: where should I eat? or: when does a place open? or: how much is karak at a place? I can also do maths and tell the time."]],
     t_hakolah: ["plain", ["Hakolah is a guide to places in Bahrain: restaurants, cafes, bakeries, shops and places to visit, each one checked before it's published.", "Hakolah helps you find where to go and where to eat in Bahrain, with checked information."]],
     t_maker: ["plain", ["The Hakolah team in Bahrain made me.", "I'm from Hakolah, made in Bahrain to keep visitors company."]],
-    t_robot: ["plain", ["No, I don't use AI. I understand words and phrases I've learned, and I search Hakolah's own data.", "I'm Dilmo! Not an AI, but I know lots of words and every place on Hakolah."]],
+    t_robot: ["plain", ["No, I don't use AI. I understand words and phrases I've learned, and I search Hakolah's own data.", "I'm Boson! Not an AI, but I know lots of words and every place on Hakolah."]],
     t_dilmoLikes: ["plain", ["I love green because it's my colour, and I love karak, jumping and singing when I'm relaxed.", "My favourite food? Whatever you feed me! But karak is special."]],
     t_friends: ["plain", ["My friends: lively Shams, shy Mawja, and Jamra, who visits when our friendship grows. On big screens Lulua, Ramla, Najma and Ghaima join us too.", "Shams loves karak, Mawja loves samosas, and Jamra loves burgers."]],
     t_sorry: ["plain", ["It's okay, you're forgiven!", "No worries at all.", "I never stay upset for long."]],
@@ -190,7 +190,7 @@ window.DILMO_WORDS = {
     f_name: ["plain", ["«Bahrain» means two seas, often explained as fresh water and salt water: freshwater springs used to rise in the middle of the sea."]],
     f_fort: ["plain", ["Bahrain Fort (Qal'at al-Bahrain) has been a UNESCO World Heritage Site since 2005, and was once a capital of the Dilmun civilisation.", "Bahrain Fort is one of the best places to visit, especially at sunset."]],
     f_tree: ["plain", ["The Tree of Life stands alone in the desert in southern Bahrain, about 400 years old, and nobody is quite sure where it gets its water!"]],
-    f_dilmun: ["plain", ["Dilmun was a very old civilisation in Bahrain thousands of years ago, a centre of trade. And my name, Dilmo, comes close to it!"]],
+    f_dilmun: ["plain", ["Dilmun was a very old civilisation in Bahrain thousands of years ago, a centre of trade."]],
     f_causeway: ["plain", ["The King Fahd Causeway links Bahrain to Saudi Arabia. It's about 25 km long and opened in 1986."]],
     f_pearls: ["plain", ["Bahrain is historically famous for pearl diving, and the Pearling Path in Muharraq is a UNESCO World Heritage Site."]],
     f_f1: ["plain", ["The Formula 1 Bahrain Grand Prix has been held at the Bahrain International Circuit in Sakhir since 2004."]],
