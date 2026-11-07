@@ -798,46 +798,6 @@ const LINK_META = {
 // دايماً أول زر وبتنسيق أساسي (بارز)، والباقي أزرار ثانوية بعده
 const LINK_ORDER = ["website", "phone", "maps", "instagram", "menu"];
 
-/* ===== ترتيب "قريب مني" حسب المسافة ===== */
-function haversineKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function formatDistance(km) {
-  return km < 1
-    ? `${Math.round(km * 1000)} ${t("unit_meters")}`
-    : `${km.toFixed(1)} ${t("unit_km")}`;
-}
-
-/*
-  أقرب فرع للزائر. العنصر متعدد الفروع (مثل سلسلة مطاعم) يحمل مصفوفة
-  branches، فنحسب المسافة لكل فرع ونرجّع الأقرب — بدل ما نقيس لفرع واحد
-  ثابت فيطلع ترتيب "قريب مني" مضلّلاً. العنصر بفرع واحد يستخدم lat/lng.
-  يرجّع null لو ما عنده أي موقع.
-*/
-function nearestBranch(item, userCoords) {
-  const points =
-    Array.isArray(item.branches) && item.branches.length
-      ? item.branches
-      : item.lat != null && item.lng != null
-        ? [{ label: "", lat: item.lat, lng: item.lng }]
-        : [];
-  if (!points.length) return null;
-
-  let best = null;
-  for (const p of points) {
-    const km = haversineKm(userCoords.lat, userCoords.lng, p.lat, p.lng);
-    if (!best || km < best.km) best = { km, label: p.label || "" };
-  }
-  return best;
-}
-
 /* ===== مشاركة عبر واتساب ===== */
 const SITE_ORIGIN = "https://hakolah.com/";
 const SITE_ROOT_PATH = "/";
@@ -1139,43 +1099,6 @@ async function shareText(text, trackParams, card) {
   }
 }
 
-/* مصدر اللحم بالبطاقة التفاعلية — نفس بناء item-card.njk (عنصر <details>
-   أصلي بلا جافاسكربت للفتح)، بس نضيف هنا وصفاً لعُمر المعلومة يُحسب لحظة
-   العرض. الحساب هنا لا وقت البناء عمداً: لو ما رُفع الموقع من شهور، الوصف
-   المبني وقت النشر يصير كذباً، أما المحسوب بالمتصفح فيبقى صحيحاً دايماً. */
-function meatSourceAgeLabel(checked) {
-  if (!checked) return "";
-  const days = (Date.now() - new Date(checked).getTime()) / 86400000;
-  if (!Number.isFinite(days) || days < 0) return "";
-  if (days < 30) return t("meat_source_age_recent");
-  if (days < 365) return t("meat_source_age_months");
-  return t("meat_source_age_old");
-}
-
-function buildMeatSourceHtml(item) {
-  const meat = item.meatSource;
-  if (!meat || !meat.text) return "";
-  const isEn = window.SITE_LANG === "en";
-  const text = (isEn && meat.text_en) || meat.text;
-  const viaKey = {
-    asked: "meat_source_via_asked",
-    instagram: "meat_source_via_instagram",
-    menu: "meat_source_via_menu",
-  }[meat.via];
-  const parts = [];
-  if (viaKey) parts.push(t(viaKey));
-  if (meat.checked)
-    parts.push(`${t("meat_source_checked")}: <span dir="ltr">${escapeHtml(meat.checked)}</span>`);
-  const age = meatSourceAgeLabel(meat.checked);
-  if (age) parts.push(age);
-  return `
-      <details class="meat-source">
-        <summary>🥩 ${t("meat_source_label")}</summary>
-        <p class="meat-source-text">${escapeHtml(text)}</p>
-        <p class="meat-source-meta">${parts.join(" · ")}</p>
-      </details>`;
-}
-
 function buildActionsHtml(item) {
   // صفحة التفاصيل زر أساسي، والباقي (هاتف/خريطة/منيو...) يبقى ثانوي جنبه
   let detailHtml = "";
@@ -1183,10 +1106,7 @@ function buildActionsHtml(item) {
     const href = window.SITE_LANG === "en" && item.detailUrlEn ? item.detailUrlEn : item.detailUrl;
     detailHtml = `<a class="btn" href="${href}">${ICON_SVG["menu-book"]} ${t("read_details")}</a>`;
   }
-  // قائمة الطعام التفاعلية تحل محل زر صورة المنيو العادي، لا تظهران معاً
-  const hasStructuredMenu = item.menuCount > 0 || (Array.isArray(item.menuItems) && item.menuItems.length > 0);
-  const links = { ...(item.links || (item.url ? { website: item.url } : {})) };
-  if (hasStructuredMenu) delete links.menu;
+  const links = item.links || (item.url ? { website: item.url } : {});
   const orderedKeys = Object.keys(links)
     .filter((key) => links[key])
     .sort((a, b) => LINK_ORDER.indexOf(a) - LINK_ORDER.indexOf(b));
@@ -1215,10 +1135,6 @@ function buildActionsHtml(item) {
       return `<a class="${cls}" href="${safeUrl(url)}" target="_blank" rel="noopener noreferrer">${meta.icon} ${escapeHtml(label)}</a>`;
     })
     .join("");
-  if (hasStructuredMenu) {
-    const cls = orderedKeys.length || detailHtml ? "btn secondary" : "btn";
-    html += `<button type="button" class="${cls} menu-open-btn">${ICON_SVG["menu-book"]} ${t("link_menu")}</button>`;
-  }
   return detailHtml + html;
 }
 
@@ -1282,7 +1198,7 @@ function sectionBadge(section) {
 }
 
 /* ===== بناء بطاقة عنصر واحدة ===== */
-function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel = "") {
+function buildItemCard(section, item, index = 0) {
   const card = document.createElement("div");
   // نفس منطق item-card.njk بالضبط — أي تغيير هنا لازم ينعكس هناك، وإلا اختلف
   // شكل البطاقة قبل تشغيل جافاسكربت وبعده (وبوّابة التطابق بالبناء تكشفها)
@@ -1322,10 +1238,8 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
       ${itemHours(item) ? `<p class="item-hours">${ICON_SVG.schedule} ${escapeHtml(itemHours(item))}</p>` : ""}
       <div class="item-meta">
         ${item.isNew ? `<span class="tag new-tag">${t("new_badge")}</span>` : ""}
-        ${distanceKm !== null ? `<span class="tag distance-tag">${ICON_SVG["location-pin"]} ${formatDistance(distanceKm)}${branchLabel ? ` — ${t("nearest_branch")} ${escapeHtml(branchLabel)}` : ""}</span>` : ""}
         ${(item.tags || []).map((tag) => `<span class="tag">${tagIcon(tag) ? `<span class="tag-icon" aria-hidden="true">${escapeHtml(tagIcon(tag))}</span>` : ""}${escapeHtml(tagLabel(tag))}</span>`).join("")}
       </div>
-      ${buildMeatSourceHtml(item)}
       <div class="item-actions">
         ${buildActionsHtml(item)}
       </div>
@@ -1380,14 +1294,13 @@ function buildItemCard(section, item, index = 0, distanceKm = null, branchLabel 
     });
   }
 
-  wireItemActions(card, item);
+  wireItemActions(card);
 
   return card;
 }
 
-// أزرار buildActionsHtml اللي تحتاج JS (نسخ الرقم، المنيو التفاعلي) — مشتركة بين
-// بطاقة القائمة ونتيجة "اختار لي"
-function wireItemActions(root, item) {
+// أزرار buildActionsHtml اللي تحتاج JS (نسخ الرقم)
+function wireItemActions(root) {
   root.querySelectorAll(".phone-copy-btn").forEach((phoneBtn) => {
     phoneBtn.addEventListener("click", async () => {
       const phone = phoneBtn.dataset.phone;
@@ -1401,13 +1314,6 @@ function wireItemActions(root, item) {
       playSound("copy");
     });
   });
-  const menuBtn = root.querySelector(".menu-open-btn");
-  if (menuBtn) {
-    menuBtn.addEventListener("click", () => {
-      playSound("open");
-      openMenuOverlay(item);
-    });
-  }
 }
 
 /* ===== عرض قسم كامل: بحث + فلاتر + شبكة بطاقات =====
@@ -1473,7 +1379,6 @@ function renderSection(section, typeFilter) {
   const grid = document.querySelector(".card-grid");
   const searchInput = document.querySelector(".search-box");
   const filtersWrap = document.querySelector(".filters");
-  const nearMeBtn = document.querySelector(".near-me-btn");
 
   if (!grid) return;
 
@@ -1496,8 +1401,6 @@ function renderSection(section, typeFilter) {
   let filtersExpanded = false;
   // قانون هيك: الجوال يعرض أهم ٥ فلاتر بس (الشاشة الأولى كانت ١٣ زراً)، والباقي ورا «عرض المزيد»
   const FILTER_CHIP_LIMIT = matchMedia("(max-width: 700px)").matches ? 5 : 10;
-  let userCoords = null;
-  let sortByDistance = false;
 
   function renderFilters() {
     if (!filtersWrap) return;
@@ -1578,27 +1481,9 @@ function renderSection(section, typeFilter) {
       return score > 0;
     });
 
-    let ranked = filtered.map((item) => {
-      const near = sortByDistance && userCoords ? nearestBranch(item, userCoords) : null;
-      return {
-        item,
-        distanceKm: near ? near.km : null,
-        branchLabel: near ? near.label : "",
-      };
-    });
-
-    ranked =
-      sortByDistance && userCoords
-        ? ranked.sort((a, b) => {
-            if (a.distanceKm === null && b.distanceKm === null) return 0;
-            if (a.distanceKm === null) return 1;
-            if (b.distanceKm === null) return -1;
-            return a.distanceKm - b.distanceKm;
-          })
-        : ranked.sort(
-            (a, b) =>
-              (query ? relevance.get(b.item) - relevance.get(a.item) : 0) || pinRank(b.item) - pinRank(a.item)
-          );
+    const ranked = filtered.sort(
+      (a, b) => (query ? relevance.get(b) - relevance.get(a) : 0) || pinRank(b) - pinRank(a)
+    );
 
     if (ranked.length === 0) {
       const isSectionEmpty = items.length === 0;
@@ -1618,61 +1503,11 @@ function renderSection(section, typeFilter) {
       return;
     }
 
-    ranked.forEach(({ item, distanceKm, branchLabel }, index) =>
-      grid.appendChild(buildItemCard(section, item, index, distanceKm, branchLabel))
-    );
+    ranked.forEach((item, index) => grid.appendChild(buildItemCard(section, item, index)));
   }
 
   const sharedQuery = new URLSearchParams(location.search).get("q");
   if (sharedQuery && searchInput) searchInput.value = sharedQuery;
-
-  // قسم ما فيه ولا عنصر بموقع (روابط، مقالات…): الزر يطلب صلاحية الموقع بلا فايدة — نشيله
-  const hasLocations = items.some(
-    (item) => (item.lat != null && item.lng != null) || item.branches?.length
-  );
-  if (nearMeBtn && !hasLocations) nearMeBtn.remove();
-  else if (nearMeBtn) {
-    nearMeBtn.addEventListener("click", () => {
-      if (sortByDistance) {
-        sortByDistance = false;
-        nearMeBtn.classList.remove("active");
-        nearMeBtn.setAttribute("aria-pressed", "false");
-        nearMeBtn.textContent = t("near_me");
-        renderGrid();
-        playSound("off");
-        return;
-      }
-      if (!navigator.geolocation) {
-        showToast(t("geolocation_unsupported"));
-        return;
-      }
-      nearMeBtn.textContent = t("near_me_locating");
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          sortByDistance = true;
-          nearMeBtn.classList.add("active");
-          nearMeBtn.setAttribute("aria-pressed", "true");
-          nearMeBtn.textContent = t("near_me_active");
-          renderGrid();
-          playSound("on");
-          // بالجوال القائمة تحت الشاشة: ننزل لأول بطاقة ونقول كم وحدة ترتّبت، عشان يبان إن شي تغيّر
-          const sorted = grid.querySelectorAll(".distance-tag").length;
-          showToast(t("near_me_sorted").replace("{n}", sorted));
-          const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-          window.scrollTo({
-            top: grid.getBoundingClientRect().top + window.scrollY - 140,
-            behavior: reduce ? "auto" : "smooth",
-          });
-        },
-        () => {
-          showToast(t("geolocation_denied"));
-          nearMeBtn.textContent = t("near_me");
-        },
-        { enableHighAccuracy: false, timeout: 10000 }
-      );
-    });
-  }
 
   renderFilters();
   renderGrid();
@@ -1682,102 +1517,6 @@ function renderSection(section, typeFilter) {
     searchInput.addEventListener("input", renderGrid);
     initSearchSuggestions(searchInput, items, renderGrid);
   }
-}
-
-/* ===== كشف "اختار لي" بشاشة كاملة — انظر تعليق CSS .picker-reveal-overlay
-   لتفاصيل الفكرة. القطع الكبيرة (عنوان/صورة/هاتف/موقع/تصنيفات) تضل هي
-   النتيجة النهائية فوق الشاشة كاملة، ما ترجع لبطاقة صغيرة بعدها — وتحتها
-   أزرار التواصل الفعلية (اتصال/موقع/إنستقرام) وزر إعادة المحاولة والإغلاق */
-/* يخفي عن قارئ الشاشة كل عناصر body الظاهرة خلف حاجز شاشة كاملة (اختار لي/
-   القائمة) وقت فتحه — بدونه يقدر قارئ الشاشة "يقرأ" الهيدر/الفوتر/المحتوى
-   المخفي بصرياً خلف الحاجز. لا يغيّر أي شيء مرئياً (aria-hidden بلا أثر على
-   العرض) ولا يلمس عنصراً مخفياً بالفعل (يدعم حواري متداخلة: فتح حاجز القائمة
-   فوق حاجز "اختار لي" المفتوح يخفي الحاجز الأول أيضاً، ويرجعه ظاهراً لقارئ
-   الشاشة عند إغلاق حاجز القائمة فقط، لا كل شيء دفعة وحدة). يرجّع دالة إرجاع
-   خاصة بنفس العناصر اللي أخفاها فعلياً. */
-function hideBackgroundFromAT(overlay) {
-  const hidden = [];
-  Array.from(document.body.children).forEach((el) => {
-    if (el === overlay || el.tagName === "SCRIPT" || el.hasAttribute("aria-hidden")) return;
-    el.setAttribute("aria-hidden", "true");
-    // inert (مدعوم بكل المتصفحات الحديثة) يمنع أيضاً وصول Tab/التركيز لهذي
-    // العناصر أثناء فتح الحاجز — بدونه كان ممكن لمستخدم لوحة مفاتيح يخرج
-    // بـTab من الحاجز لمحتوى الصفحة الخلفي (ظل بصرياً مخفياً خلف الحاجز، بس
-    // ما زال بترتيب التركيز). لا يغيّر أي سلوك فأرة/لمس (الحاجز يغطي الشاشة
-    // كاملة أصلاً بـz-index أعلى فيعترض كل نقرة قبل وصولها للخلفية).
-    el.setAttribute("inert", "");
-    hidden.push(el);
-  });
-  return () =>
-    hidden.forEach((el) => {
-      el.removeAttribute("aria-hidden");
-      el.removeAttribute("inert");
-    });
-}
-
-/* ===== بطاقة القائمة التفاعلية — حاجز بشاشة كاملة (.picker-reveal-overlay)
-   ببطاقة بسيطة: اسم وسعر بس بلا صور — قرار صريح من صاحب الموقع. ===== */
-function openMenuOverlay(item) {
-  // نحفظ العنصر اللي كان عليه التركيز ونرجّع له بعد الإغلاق
-  const trigger = document.activeElement;
-  const overlay = document.createElement("div");
-  overlay.className = "picker-reveal-overlay menu-overlay";
-  overlay.setAttribute("role", "dialog");
-  overlay.setAttribute("aria-modal", "true");
-  overlay.setAttribute("aria-label", `${t("link_menu")} — ${itemTitle(item)}`);
-  document.body.appendChild(overlay);
-  document.body.style.overflow = "hidden";
-  const restoreBackground = hideBackgroundFromAT(overlay);
-
-  function close() {
-    overlay.remove();
-    document.body.style.overflow = "";
-    restoreBackground();
-    document.removeEventListener("keydown", onKeydown);
-    if (trigger && document.contains(trigger) && typeof trigger.focus === "function") {
-      trigger.focus();
-    }
-  }
-  function onKeydown(e) {
-    if (e.key === "Escape") close();
-  }
-  document.addEventListener("keydown", onKeydown);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) close();
-  });
-
-  const closeBtn = document.createElement("button");
-  closeBtn.className = "btn secondary picker-reveal-close";
-  closeBtn.textContent = "✕";
-  closeBtn.setAttribute("aria-label", t("daily_pick_close"));
-  closeBtn.addEventListener("click", () => {
-    playSound("close");
-    close();
-  });
-  overlay.appendChild(closeBtn);
-  closeBtn.focus();
-
-  const card = document.createElement("div");
-  card.className = "menu-card";
-  card.innerHTML = `
-    <h3>${escapeHtml(item.icon || "🍽️")} ${escapeHtml(itemTitle(item))}</h3>
-    <ul class="menu-items" aria-live="polite"><li aria-busy="true">…</li></ul>
-  `;
-  overlay.appendChild(card);
-  // الأصناف تتحمّل عند الفتح (js/menus.js) — القائمة تظهر فوراً بنقاط تحميل ثم تتعبّى
-  window
-    .loadMenus()
-    .catch(() => {})
-    .then(() => {
-      const rows = window
-        .menuOf(item)
-        .map((mi) => {
-          const name = window.SITE_LANG === "en" && mi.name_en ? mi.name_en : mi.name;
-          return `<li><span class="menu-item-name">${escapeHtml(name)}</span>${mi.price ? `<span class="menu-item-price">${escapeHtml(mi.price)}</span>` : ""}</li>`;
-        })
-        .join("");
-      card.querySelector(".menu-items").innerHTML = rows;
-    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
