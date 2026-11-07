@@ -273,7 +273,7 @@
         "section": {{ (section or "") | json | safe }},
         "typeFilter": {{ (typeFilter or "") | json | safe }}
       },
-      "i18n": {{ i18n | json | safe }}
+      "i18n": { {{ lang | json | safe }}: {{ i18nJs[lang] | json | safe }} }
     }
   </script>
   <script src="{{ '/js/bootstrap.js' | url }}?v={{ buildVersion }}"></script>
