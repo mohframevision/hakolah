@@ -147,15 +147,14 @@
     <div class="header-inner">
       <a href="{{ (('/en/index.html' if lang == 'en' else '/index.html')) | url }}" class="logo"><span class="dot">●</span>{% if lang == "en" %}<span class="logo-word">Hako<span class="logo-tail">lah</span></span>{% else %}<span class="logo-word">هكو<span class="logo-tail">له</span></span>{% endif %}</a>
       <nav class="main-nav" id="main-nav">
-        {% set homeUrl = '/en/index.html' if lang == 'en' else '/index.html' %}
-        <a href="{{ homeUrl | url }}" class="nav-home{% if navActive == "home" %} active{% endif %}"{% if navActive == "home" %} aria-current="page"{% endif %}>{{ t.nav_home }}</a>
+        {# الرئيسية (الشعار والشريط السفلي) وبوزون (أيقونته والشريط السفلي) لا تتكرّر هنا؛
+           والأماكن في الشريط السفلي على الشاشات التي تظهر فيها هذه القائمة #}
         {% for entry in sections %}{% if not entry.creators and not (('/' + entry.slug + '.html') | toriluUrl) %}
         <a href="{{ (('/en/' if lang == 'en' else '/') + entry.slug + '.html') | url }}"{% if navActive == entry.slug %} class="active" aria-current="page"{% endif %}>{{ entry.navLabel_en if lang == 'en' else entry.navLabel }}</a>
         {% endif %}{% endfor %}
-        <a href="{{ toriluHome }}">{{ 'Places guide' if lang == 'en' else 'دليل الأماكن' }}</a>
+        <a class="nav-wide" href="{{ toriluHome }}">{{ 'Places guide' if lang == 'en' else 'دليل الأماكن' }}</a>
         {% set onCreators = navActive in ["creators", "links-tools", "ai-experiments"] %}
         <a href="{{ (('/en/creators.html' if lang == 'en' else '/creators.html')) | url }}"{% if onCreators %} class="active" aria-current="page"{% endif %}>{{ 'For Creators' if lang == 'en' else 'للمبدعين' }}</a>
-        <a class="nav-only-mobile{% if navActive == "dilmo" %} active{% endif %}"{% if navActive == "dilmo" %} aria-current="page"{% endif %} href="{{ (("/en/dilmo.html" if lang == "en" else "/dilmo.html")) | url }}">{{ icon("dilmo", 16) }} {{ "Boson" if lang == "en" else "بوزون" }}</a>
       </nav>
       <div class="header-actions">
         <a class="icon-btn{% if navActive == "sounds" %} active{% endif %}"{% if navActive == "sounds" %} aria-current="page"{% endif %} href="{{ (('/en/sounds.html' if lang == 'en' else '/sounds.html')) | url }}" title="{{ t.nav_sounds }}" aria-label="{{ t.nav_sounds }}">{{ icon("music") }}</a>

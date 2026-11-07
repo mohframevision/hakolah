@@ -458,11 +458,6 @@ img {
   display: none;
 }
 
-/* روابط تظهر داخل القائمة على الجوال فقط (مقابلها أيقونات بالهيدر على الشاشات الأكبر) */
-.nav-only-mobile {
-  display: none;
-}
-
 /* الأيقونة الفعّالة (الصفحة الحالية) تاخذ نفس تمييز رابط القائمة النشط */
 .icon-btn.active {
   background: var(--color-primary-fill);
@@ -535,6 +530,10 @@ img {
     text-align: center;
     justify-content: center;
   }
+  /* «دليل الأماكن» موجود في الشريط السفلي الظاهر بنفس هذه الشاشات */
+  .main-nav .nav-wide {
+    display: none;
+  }
 }
 
 /* شاشات الجوال: نصغّر الأزرار ونستخدم اختصار اللغة (EN / ع) بدل الاسم الكامل،
@@ -573,9 +572,6 @@ img {
      لها بضغطة وحدة لا حفر داخل قائمة منسدلة */
   .header-actions .icon-btn:not(.icon-btn-picker) {
     display: none;
-  }
-  .main-nav .nav-only-mobile {
-    display: block;
   }
 }
 
@@ -8408,14 +8404,6 @@ li {
   padding: 14px 30px;
   font-size: 1.05rem;
   border-radius: var(--radius-pill);
-}
-
-/* قانون هيك: بالكمبيوتر الشعار نفسه يرجّع للرئيسية (العُرف المعروف)، فرابطها بالقائمة
-   تكرار — نشيله ويبقى بقائمة الجوال المنسدلة والشريط السفلي */
-@media (min-width: 1301px) {
-  .main-nav .nav-home {
-    display: none;
-  }
 }
 
 /* شارات الدليل بصفحة المكان: أكبر شوي من البطاقة */
