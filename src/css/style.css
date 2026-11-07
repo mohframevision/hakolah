@@ -620,12 +620,6 @@ img {
     color: var(--color-primary);
   }
 
-  /* .nav-toggle.open يلف 90 درجة — مصمم لأيقونة مربعة بالهيدر (☰ لوحدها)،
-     مو لزر الشريط السفلي اللي فيه نص تحت الأيقونة. نلغي الدوران هنا بس */
-  .bottom-nav-menu.open {
-    transform: none;
-    background: none;
-  }
 
   .bottom-nav-icon {
     font-size: 1.35rem;
@@ -687,100 +681,18 @@ img {
   font-size: 1.2rem;
 }
 
-/* .hero .hero-stats لا .hero-stats وحدها: قاعدة ".hero p" أعلاه أقوى وكانت تكبّر
-   الخط وتلغي الهامش فتلصق الكبسولة بالسطر اللي فوقها وتلفّها على سطرين */
-.hero .hero-stats {
-  display: inline-flex;
-  margin: 18px auto 0;
-  padding: 6px 16px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: var(--color-primary);
-  font-weight: 700;
-  font-size: 0.88rem;
-}
 
-.hero .hero-stats:empty {
-  display: none;
-}
 
-.hero-search {
-  margin: 36px auto 0;
-  max-width: 520px;
-}
 
-/* ===== شريط اختيار اليوم + الأكثر إعجاباً (الصفحة الرئيسية) — سكرول أفقي واحد
-   يقدر الزائر يتصفح فيه بطاقة اختيار اليوم وبطاقات الأكثر إعجاباً جنب بعض ===== */
-.home-carousel-section {
-  padding: 8px 0 32px;
-}
 
-.home-carousel {
-  display: flex;
-  align-items: stretch;
-  gap: 16px;
-  overflow-x: auto;
-  overflow-y: visible;
-  scroll-snap-type: x mandatory;
-  padding: 6px 4px 14px;
-  margin: 0 -4px;
-  /* الأطراف تتلاشى بدل ما تنقص البطاقة بخط مستقيم، والحشوة الجانبية تخلي
-     أول وآخر بطاقة خارج منطقة التلاشي لما يوصل لها الزائر */
-  padding-inline: 32px;
-  scroll-padding-inline: 32px;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) transparent;
-}
 
-.home-carousel::-webkit-scrollbar {
-  height: 6px;
-}
 
-.home-carousel::-webkit-scrollbar-track {
-  background: transparent;
-}
 
-.home-carousel::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border-radius: var(--radius-pill);
-}
 
-.carousel-item {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  flex: 0 0 auto;
-  width: min(300px, 82vw);
-  scroll-snap-align: start;
-}
 
-.carousel-item .item-card {
-  margin: 0;
-  flex: 1;
-}
 
-.carousel-label {
-  display: block;
-  text-align: center;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  margin-bottom: 8px;
-}
 
-.featured-pick-frame {
-  display: flex;
-  flex: 1;
-  padding: 3px;
-  border-radius: calc(var(--radius) + 3px);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-}
 
-.featured-pick-frame .item-card {
-  margin: 0;
-}
 
 /* ===== صندوق البحث ===== */
 /* يلتصق تحت الهيدر عند التمرير — بصفحة فيها ٤٠ بطاقة، الوصول للبحث بدونه
@@ -872,49 +784,15 @@ img {
   background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
-/* ===== مؤشر "استكشفت X من Y قسم" (الرئيسية) ===== */
-.explore-progress {
-  max-width: 420px;
-  margin: 0 auto;
-  text-align: center;
-}
 
-.explore-progress-text {
-  font-size: 0.88rem;
-  color: var(--color-text-muted);
-  margin: 0 0 8px;
-}
 
-.explore-progress-bar {
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--color-border);
-  overflow: hidden;
-}
 
-.explore-progress-fill {
-  height: 100%;
-  /* العرض يُضبط من JS عبر CSSOM (element.style.width) وليس بسمة style بالـ HTML
-     — سمة style المضمّنة ممنوعة بسياسة CSP، أما CSSOM فمسموح */
-  width: 0;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
-  border-radius: var(--radius-pill);
-  transition: width 0.4s ease;
-}
 
 /* بديل عن style="grid-column: 1/-1" المضمّنة بحالات "لا توجد نتائج" */
 .empty-state.full-row {
   grid-column: 1 / -1;
 }
 
-/* ===== شبكة الأقسام في الرئيسية ===== */
-.section-grid {
-  display: grid;
-  /* 220 لا 240: تتسع 5 أعمدة فتنقسم البطاقات العشر صفّين كاملين بدل 4+4+2 */
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 28px;
-  padding: 16px 0 60px;
-}
 
 .section-card {
   position: relative;
@@ -929,22 +807,6 @@ img {
   animation: cardIn 0.5s ease both;
 }
 
-.section-card.explored::after {
-  content: "✓";
-  position: absolute;
-  top: 12px;
-  inset-inline-end: 12px;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #fff;
-  background: var(--color-primary-fill);
-  border-radius: var(--radius-pill);
-}
 
 .section-card:nth-child(1) {
   animation-delay: 0.02s;
@@ -1026,54 +888,17 @@ img {
   max-width: 900px;
 }
 
-/* تنبيه أقسام الأكل: الموقع ليس موقع تقييمات — سطر هادئ تحت الوصف مع رابط السياسة */
-.page-header p.review-note {
-  margin-top: 10px;
-  font-size: 0.85rem;
-}
 
-.review-note a {
-  color: var(--color-primary);
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
 
 .article-share-btn {
   margin-top: 4px;
 }
 
-/* ===== صفحة تجريبية welcome.html — اتجاه "المحتوى أولاً" ===== */
-.welcome-picks {
-  max-width: 420px;
-  margin: 0 auto;
-}
 
-.welcome-pick {
-  display: none;
-}
 
-.welcome-pick.active {
-  display: flex;
-}
 
-.welcome-actions {
-  margin: 16px 0 20px;
-}
 
-.welcome-disclosure {
-  text-align: center;
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-  margin: 0 0 32px;
-}
 
-.welcome-sections-heading {
-  text-align: center;
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 16px;
-}
 
 .breadcrumb {
   font-size: 0.85rem;
@@ -1089,58 +914,11 @@ img {
   margin-top: 8px;
 }
 
-.detail-video {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  margin-top: 16px;
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: #000;
-}
 
-.detail-video iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
 
-/* ===== زر قريب مني ===== */
-.near-me-btn {
-  margin-top: 10px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  padding: 8px 18px;
-  border-radius: var(--radius-pill);
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  font-family: inherit;
-  transition:
-    background 0.18s ease,
-    color 0.18s ease,
-    border-color 0.18s ease;
-}
 
-.near-me-btn:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
 
-.near-me-btn.active {
-  background: var(--color-primary-fill);
-  color: #fff;
-  border-color: var(--color-primary-fill);
-}
 
-.tag.distance-tag {
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-  color: var(--color-primary);
-  font-weight: 800;
-}
 
 /* ===== الفلاتر ===== */
 .filters {
@@ -1239,10 +1017,6 @@ img {
   color: var(--color-text);
 }
 
-.type-tip {
-  color: var(--color-text-muted);
-  font-size: 0.95rem;
-}
 
 @keyframes cardIn {
   from {
@@ -1530,18 +1304,6 @@ a.photo-credit:hover {
   color: #f472b6;
 }
 
-.video-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  vertical-align: middle;
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  padding: 2px 9px;
-  border-radius: var(--radius-pill);
-}
 
 .item-card .item-desc {
   color: var(--color-text-muted);
@@ -1892,87 +1654,19 @@ a.photo-credit:hover {
 
 /* ===== إشعار الكوكيز ===== */
 
-/* ===== تذكير "اختيار اليوم" — بطاقة صغيرة بزاوية الشاشة، مو حاجز كامل
-   العرض، وواضح إنها تُغلق بسهولة (زر ✕) ===== */
-.daily-pick-reminder {
-  display: none;
-  position: fixed;
-  bottom: 16px;
-  inset-inline-end: 16px;
-  z-index: 60;
-  max-width: 260px;
-  padding: 14px;
-  padding-inline-start: 34px;
-  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card-hover);
-}
 
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .daily-pick-reminder {
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-  }
-}
 
-.daily-pick-reminder.open {
-  display: block;
-}
 
-.daily-pick-reminder p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--color-text);
-}
 
-.daily-pick-reminder a {
-  color: var(--color-primary);
-  font-weight: 700;
-}
 
-.daily-pick-reminder-close {
-  position: absolute;
-  top: 8px;
-  inset-inline-start: 10px;
-  background: none;
-  border: none;
-  font-size: 0.95rem;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  padding: 4px;
-}
 
-.daily-pick-reminder-close:hover {
-  color: var(--color-text);
-}
 
 /* الشريط السفلي (.bottom-nav) يظهر بنفس نقطة الكسر ويحجز 60px من الأسفل —
    لازم القاعدتين هنا (بعد التعريف الأصلي) عشان يفوزوا بترتيب الـ cascade،
    قاعدة بنفس التخصيصية بمدية استعلام أسبق بالملف تُهزَم لو التعريف الأصلي
    بلا استعلام جاء بعدها بالملف */
-@media (max-width: 1300px) {
 
-  .daily-pick-reminder {
-    bottom: 76px;
-  }
-}
 
-/* ===== صفحة الإحصائيات ===== */
-.stats-embed {
-  width: 100%;
-  max-width: 960px;
-  margin: 20px auto 60px;
-  aspect-ratio: 16 / 10;
-}
-
-.stats-embed iframe {
-  width: 100%;
-  height: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-}
 
 /* ===== صفحات نصية (سياسة الخصوصية / حول) ===== */
 .prose {
@@ -2139,321 +1833,25 @@ a.photo-credit:hover {
 }
 
 /* ===== اختار لي (اختيار عشوائي) ===== */
-/* شبكة خلايا متساوية (3 أعمدة = صفّين للأقسام الستة) بدل flex-wrap اللي كان
-   يعطي كل بطاقة عرض نصّها فتطلع صفوف بأعراض مختلفة */
-.picker-categories {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 10px 0 30px;
-}
 
-.picker-category {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 18px 22px;
-  min-width: 110px;
-  border-radius: var(--radius);
-  border: 1px solid transparent;
-  box-shadow: var(--shadow-card);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-weight: 700;
-  font-size: 0.92rem;
-  cursor: pointer;
-  font-family: inherit;
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
 
-@media (max-width: 600px) {
-  .picker-category {
-    min-width: 0;
-    padding: 14px 6px;
-    font-size: 0.85rem;
-  }
-}
 
-.picker-area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin: -14px auto 22px;
-  font-weight: 700;
-}
 
-.picker-area select {
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: var(--radius);
-  /* --color-border-strong بدل --color-border العادي: هذا الحد هو الوسيلة
-     الوحيدة لتمييز حدود القائمة بالحالة العادية (بلا تركيز) — WCAG 1.4.11 */
-  border: 1px solid var(--color-border-strong);
-  box-shadow: var(--shadow-card);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font: inherit;
-  font-weight: 600;
-  max-width: 70vw;
-}
 
-.picker-category-icon {
-  font-size: 1.8rem;
-}
 
-.picker-category:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-card-hover);
-}
 
-.picker-category.active {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-}
 
-.picker-spin-btn {
-  font-size: 1.15rem;
-  padding: 16px 42px;
-  border-radius: var(--radius-pill);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-primary) 35%, transparent);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.18s ease;
-}
 
-.picker-spin-btn:not(:disabled):hover {
-  transform: translateY(-2px) scale(1.03);
-}
 
-.picker-spin-btn:not(:disabled):active {
-  transform: scale(0.96);
-}
 
-.picker-spin-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  box-shadow: none;
-}
 
-/* ===== "اختار لي": رحلة فوق البحر (picker.js) =====
-   المشهد كله داخل .picker-stage، وهو container: مقاسات الشبابيك بـcqw/cqh فتتبع حجم
-   المشهد لا الشاشة. الحركة كلها transform من JS؛ هنا الألوان والأشكال بس. ألوان المنظر
-   ثابتة (منظر لا واجهة)، والوضع الداكن = نفس المكان بالليل (.trip-night). */
-.picker-stage {
-  --frame: #16362c;
-  --rim: #24503f;
-  --sky1: #7fc3e8;
-  --sky2: #bfe3f2;
-  --sky3: #fde7c8;
-  --sun: #fffbea;
-  --sunA: rgba(255, 244, 214, 0.7);
-  --sunB: rgba(255, 226, 180, 0.2);
-  --sea1: #3d9cc4;
-  --sea2: #1f6f99;
-  --sea3: #15567a;
-  --isl: #6a9cae;
-  --wv1: #8fd0ea;
-  --wv2: #bfe6f5;
-  --cl: #fff;
-  --cl1: #f4f8fb;
-  --cl2: #dfe9f1;
-  /* halation: الضوء "ينزف" بلون أحمر برتقالي على الحواف الداكنة — ظلال ثابتة */
-  --halo: rgba(255, 120, 70, 0.28);
-  position: relative;
-  container-type: size;
-  height: clamp(460px, calc(74vh / var(--page-zoom, 1)), 780px);
-  margin-bottom: 40px;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  isolation: isolate;
-  background: var(--frame);
-}
 
-.picker-stage.trip-night {
-  --frame: #0c1d18;
-  --rim: #1d3f33;
-  --sky1: #0b1630;
-  --sky2: #1b2c52;
-  --sky3: #3a3f6b;
-  --sea1: #18385a;
-  --sea2: #0f2742;
-  --sea3: #0a1b30;
-  --isl: #26364f;
-  --wv1: #2f5b80;
-  --wv2: #4a7aa0;
-  --halo: rgba(255, 140, 110, 0.14);
-}
 
-/* أشكال الشبابيك وألوان إطاراتها: كل مركبة بفتحة مختلفة (border-radius بس، بلا صور) */
-.picker-stage[data-vehicle="car"] {
-  --frame: #23262b;
-  --rim: #3a3f46;
-}
-.picker-stage[data-vehicle="boat"] {
-  --frame: #1d3557;
-  --rim: #c9a24a;
-  --sx: calc(50% - min(86cqw, 72cqh) * 0.22);
-  --sy: calc(46% - min(86cqw, 72cqh) * 0.28);
-}
-.picker-stage[data-vehicle="plane"] {
-  --frame: #dfe3e8;
-  --rim: #c3c9d0;
-  --sky1: #4f9fd8;
-  --sky2: #9fd0f0;
-  --sky3: #e6f3fb;
-  --sx: calc(50% - min(62cqw, 50cqh) * 0.14);
-  --sy: calc(46% - 70cqh * 0.3);
-}
-.picker-stage.trip-night[data-vehicle="car"] {
-  --frame: #121417;
-  --rim: #2a2e33;
-}
-.picker-stage.trip-night[data-vehicle="boat"] {
-  --frame: #0f1d33;
-  --rim: #8c7136;
-}
-.picker-stage.trip-night[data-vehicle="plane"] {
-  --frame: #2a2e34;
-  --rim: #3a4048;
-  --sky1: #070f24;
-  --sky2: #15254a;
-  --sky3: #2a3560;
-  --cl: #4a5672;
-  --cl1: #39445e;
-  --cl2: #232c42;
-}
 
-.trip-scene,
-.trip-view {
-  position: absolute;
-  inset: 0;
-}
-.trip-scene {
-  overflow: hidden;
-}
-.trip-view {
-  inset: -3%;
-  will-change: transform;
-}
 
-.trip-sky {
-  position: absolute;
-  inset: 0 0 38% 0;
-  background: linear-gradient(var(--sky1), var(--sky2) 70%, var(--sky3));
-}
-.trip-sea {
-  position: absolute;
-  inset: 62% 0 0 0;
-  background: linear-gradient(var(--sea1), var(--sea2) 60%, var(--sea3));
-}
 
-/* الشمس ناعمة بلا قرص واضح؛ مركزها محسوب على فتحة كل شباك فتبان داخلها دايماً */
-.trip-sun {
-  position: absolute;
-  left: var(--sx, 24%);
-  top: var(--sy, 20%);
-  translate: -50% -50%;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--sun) 0%, var(--sun) 8%, var(--sunA) 20%, var(--sunB) 40%, rgba(255, 220, 170, 0) 70%);
-}
-.trip-night .trip-sun {
-  width: 62px;
-  height: 62px;
-  background: var(--trip-moon) center / 100% 100% no-repeat;
-  box-shadow: 0 0 30px 5px rgba(205, 215, 255, 0.14);
-}
 
-/* الطبقات المتحركة: شريط عريض يتحرك بـtransform بس (طبقة GPU، بلا إعادة رسم) */
-.trip-band {
-  position: absolute;
-  left: 0;
-  width: 200%;
-  will-change: transform;
-}
-.trip-band svg {
-  float: left;
-  width: 50%;
-  height: 100%;
-}
-.trip-islands {
-  top: calc(62% - 34px);
-  height: 36px;
-}
-.trip-waves1 {
-  top: 64%;
-  height: 40px;
-  opacity: 0.55;
-}
-.trip-waves2 {
-  top: 76%;
-  height: 60px;
-  opacity: 0.45;
-}
-.trip-fg {
-  top: 0;
-  height: 100%;
-  z-index: 5;
-  display: none;
-}
-.picker-stage:is([data-vehicle="train"], [data-vehicle="car"]) .trip-fg {
-  display: block;
-}
 
-.trip-cards,
-.trip-lane-shadows,
-.trip-lane {
-  position: absolute;
-  inset: 0;
-}
-.trip-lane .off {
-  display: none;
-}
-/* كل حارة (طبقة عمق) تتحرك كوحدة وحدة؛ البطاقات ثابتة داخلها */
-.trip-lane {
-  will-change: transform;
-}
-.trip-card {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 170px;
-  height: 104px;
-  margin: -52px 0 0 -85px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: 8px 12px;
-  border-radius: var(--radius);
-  color: #fff;
-  text-align: center;
-  background: linear-gradient(135deg, oklch(0.56 0.12 var(--h)), oklch(0.44 0.1 calc(var(--h) + 40)));
-  box-shadow:
-    0 10px 24px rgba(0, 40, 60, 0.25),
-    0 0 16px 2px var(--halo);
-  /* التمايل: نفس sin(t/900) بخاصية translate المستقلة — على المعالج الرسومي بلا JS */
-  animation: tripBob 2827ms cubic-bezier(0.37, 0, 0.63, 1) infinite alternate both;
-}
-/* قيم ثابتة لكل حارة (7px × عمقها): var() داخل keyframes يمنع تشغيلها على المعالج
-   الرسومي ويرجعها للخيط الرئيسي كل إطار */
-.trip-lane[data-z="0"] .trip-card {
-  animation-name: tripBob0;
-}
-.trip-lane[data-z="1"] .trip-card {
-  animation-name: tripBob1;
-}
 @keyframes tripBob {
   from {
     translate: 0 -7px;
@@ -2478,151 +1876,10 @@ a.photo-credit:hover {
     translate: 0 2.45px;
   }
 }
-/* أثر السرعة: ذيل شفاف خلف البطاقة بدل filter: blur */
-.trip-card::after {
-  content: "";
-  position: absolute;
-  inset: 38% -90% 38% 96%;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
-  opacity: var(--trail, 0);
-}
-.trip-card-icon {
-  font-size: 30px;
-  line-height: 1.1;
-}
-.trip-card-title {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-/* ظل البطاقة على الماء: بيضاوي ثابت، أرخص من أي blur */
-.trip-shadow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 120px;
-  height: 14px;
-  margin: -7px 0 0 -60px;
-  border-radius: 50%;
-  background: radial-gradient(rgba(0, 30, 50, 0.35), rgba(0, 30, 50, 0) 70%);
-}
 
-/* مشهد الطيارة: غيوم وبساط غيوم بدل البحر */
-.trip-clouds,
-.trip-carpet {
-  position: absolute;
-  inset: 0;
-  display: none;
-}
-.trip-carpet {
-  inset: 62% 0 0 0;
-  background: linear-gradient(var(--cl1) 45%, var(--cl2));
-}
-.picker-stage[data-vehicle="plane"] :is(.trip-clouds, .trip-carpet) {
-  display: block;
-}
-.picker-stage[data-vehicle="plane"] :is(.trip-islands, .trip-sea, .trip-waves1, .trip-waves2, .trip-shadow) {
-  display: none;
-}
-.trip-cloud {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 220px;
-  height: 100px;
-  margin: -50px 0 0 -110px;
-  will-change: transform;
-}
-.trip-cloud svg {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-/* القريبة بنفس لون البساط وبلا ظل، فتذوب فيه وتكسّر حافته المستقيمة */
-.trip-cnear .trip-cloud svg > ellipse {
-  display: none;
-}
-.trip-cnear .trip-cloud g {
-  fill: var(--cl1);
-}
 
-/* جدار المركبة: SVG بحجم المشهد فيه فتحة بشكل الشباك بالضبط (picker.js يرسمها من
-   border-radius الشباك نفسه). كان box-shadow بانتشار 2000px = طبقة ~4300×4450px */
-.trip-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  fill: var(--frame);
-  will-change: transform, opacity;
-}
 
-/* إطار الشباك: الحافة والظل الداخلي (inset، ما يكبّر الطبقة) */
-.trip-window {
-  position: absolute;
-  inset: 7% 5% 17% 5%;
-  border-radius: 42px;
-  pointer-events: none;
-  box-shadow:
-    inset 0 0 0 10px var(--rim),
-    inset 0 8px 30px rgba(0, 0, 0, 0.25);
-  will-change: transform, opacity;
-}
-.trip-window::before,
-.trip-window::after {
-  content: "";
-  position: absolute;
-  border-radius: inherit;
-}
-.trip-window::before {
-  inset: 10px;
-  background: linear-gradient(115deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 35%);
-}
-.trip-window::after {
-  inset: 0;
-  box-shadow: 0 0 26px 4px var(--halo);
-}
-.picker-stage[data-vehicle="car"] .trip-window {
-  inset: 9% 6% 19% 6%;
-  border-radius: 40px 160px 26px 26px;
-}
-.picker-stage[data-vehicle="boat"] .trip-window {
-  inset: auto;
-  left: 50%;
-  top: 46%;
-  width: min(86cqw, 72cqh);
-  aspect-ratio: 1;
-  translate: -50% -50%;
-  border-radius: 50%;
-}
-.picker-stage[data-vehicle="plane"] .trip-window {
-  inset: auto;
-  left: 50%;
-  top: 46%;
-  width: min(62cqw, 50cqh);
-  height: 70cqh;
-  translate: -50% -50%;
-  border-radius: 46% / 32%;
-}
 
-/* حبيبات الفيلم: بلاطة ضجيج تتولد مرة وحدة، وطبقتها تنط بخطوات (steps) — بلا
-   mix-blend-mode ولا إعادة رسم، فتكلفتها شبه صفر حتى على الأجهزة القديمة */
-.trip-grain {
-  position: absolute;
-  inset: -128px;
-  z-index: 20;
-  pointer-events: none;
-  opacity: 0.06;
-  background-image: var(--trip-grain);
-  animation: tripGrain 0.5s steps(1) infinite;
-  will-change: transform;
-}
 @keyframes tripGrain {
   25% {
     transform: translate(-37px, 22px);
@@ -2634,188 +1891,17 @@ a.photo-credit:hover {
     transform: translate(-53px, -11px);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .trip-grain,
-  .trip-card {
-    animation: none;
-  }
-}
 
-.trip-bar {
-  -webkit-tap-highlight-color: transparent;
-  position: absolute;
-  inset: auto 0 0 0;
-  z-index: 21;
-  height: 15%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-.trip-bar .picker-spin-btn {
-  padding: 12px 34px;
-  font-size: 1.05rem;
-}
-.trip-round {
-  width: 48px;
-  height: 48px;
-  flex: none;
-  border-radius: 50%;
-  border: 2px solid var(--green-500);
-  background: rgba(255, 255, 255, 0.12);
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-}
-.trip-round:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.trip-round:focus-visible {
-  outline: 3px solid #fde7c8;
-  outline-offset: 3px;
-}
 
-/* النتيجة: بطاقة وحدة بلون البطاقة الفائزة، والأزرار بعرضها */
-.trip-result {
-  position: absolute;
-  left: 50%;
-  top: 44%;
-  z-index: 22;
-  width: min(380px, calc(100% - 32px));
-  translate: -50% -50%;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: 0 30px 70px rgba(0, 30, 50, 0.35);
-}
-.trip-result-top {
-  padding: 20px 18px 14px;
-  text-align: center;
-  color: #fff;
-  background: linear-gradient(135deg, oklch(0.56 0.12 var(--h)), oklch(0.44 0.1 calc(var(--h) + 40)));
-}
-.trip-result-icon {
-  font-size: 52px;
-  line-height: 1.1;
-}
-.trip-result-top h2 {
-  margin: 4px 0 0;
-  font-size: 1.45rem;
-  text-wrap: balance;
-}
-.trip-result-meta {
-  margin: 12px 18px 0;
-  text-align: center;
-  font-weight: 600;
-  color: var(--color-text-muted);
-}
-.trip-result-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 14px 18px 10px;
-}
-.trip-result-actions .btn {
-  flex: 1 1 40%;
-  justify-content: center;
-  padding-inline: 12px;
-  white-space: nowrap;
-}
-.trip-result-actions .btn.secondary {
-  background: transparent;
-  color: var(--color-primary);
-  border: 2px solid var(--color-primary);
-}
-.trip-again {
-  -webkit-tap-highlight-color: transparent;
-  display: block;
-  margin: 0 auto 14px;
-  padding: 6px 12px;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-weight: 700;
-  color: var(--color-primary);
-  text-decoration: underline;
-  cursor: pointer;
-}
 
-/* ===== خطة اليوم ===== */
-.plan-actions {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: var(--space-6);
-}
 
-.plan-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-6);
-  padding-bottom: var(--space-6);
-}
 
-.plan-step {
-  width: 100%;
-  max-width: 460px;
-  position: relative;
-  animation: cardIn 0.45s ease both;
-}
 
-/* خط واصل بين المراحل يوضّح أنها مسار متسلسل لا قائمة منفصلة */
-.plan-step:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  bottom: calc(var(--space-6) * -1);
-  inset-inline-start: 50%;
-  width: 2px;
-  height: var(--space-6);
-  background: linear-gradient(to bottom, var(--color-primary), transparent);
-}
 
-.plan-step-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-  font-weight: 800;
-  color: var(--color-text-muted);
-}
 
-.plan-step-icon {
-  font-size: 1.35rem;
-}
 
-.plan-step-label {
-  font-size: 1.05rem;
-}
 
-/* ===== حاجز بشاشة كاملة (قائمة المنيو التفاعلية — openMenuOverlay بـmain.js) ===== */
-.picker-reveal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-  padding: 70px 24px 40px;
-  overflow-y: auto;
-  background: color-mix(in srgb, var(--color-bg) 90%, transparent);
-  animation: overlayIn 0.3s ease both;
-}
 
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .picker-reveal-overlay {
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-  }
-}
 
 @keyframes overlayIn {
   from {
@@ -2826,12 +1912,6 @@ a.photo-credit:hover {
   }
 }
 
-.picker-reveal-close {
-  position: fixed;
-  top: 16px;
-  inset-inline-end: 16px;
-  z-index: 91;
-}
 
 /* ===== أهداف اللمس على الجوال =====
    إرشاد WCAG 2.5.8 وأدلة أبل/قوقل: أي شي يُضغط لازم يكون ٤٤×٤٤ بكسل على
@@ -2868,42 +1948,8 @@ a.photo-credit:hover {
   }
 }
 
-/* ===== اقتباس "ليش أوصي فيه" — رأي شخصي بارز بصفحة المقال، منفصل بصرياً عن
-   المعلومات الموضوعية (الفروع/الطلب...) اللي بالأسفل. حقل اختياري بلوحة
-   التحكم (recommendation)؛ يختفي كلياً لو ما عبّاه صاحب الموقع ===== */
-.recommend-quote {
-  position: relative;
-  max-width: 1000px;
-  margin: 20px 0 28px;
-  padding: 22px 28px 22px 52px;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-primary) 7%, transparent),
-    color-mix(in srgb, var(--color-accent) 5%, transparent)
-  );
-  border-inline-start: 3px solid var(--color-primary);
-  border-radius: 4px var(--radius) var(--radius) 4px;
-  font-size: 1.05rem;
-  font-weight: 600;
-  line-height: 1.8;
-  color: var(--color-text);
-}
 
-.recommend-quote::before {
-  content: "\201C";
-  position: absolute;
-  top: 6px;
-  inset-inline-start: 16px;
-  font-size: 2.6rem;
-  line-height: 1;
-  color: var(--color-primary);
-  opacity: 0.4;
-  font-family: Georgia, serif;
-}
 
-[dir="rtl"] .recommend-quote::before {
-  content: "\201D";
-}
 
 /* ===== توهّج دخول خفيف لبطاقة تدخل مجال الرؤية أثناء التمرير — انظر main.js
    (cardRevealObserver) للسبب اللي خلّى هذا على transition لا animation ===== */
@@ -3017,110 +2063,22 @@ a.photo-credit:hover {
 }
 
 /* لوحة التحليل الموسيقي — تُملأ بالجافاسكربت بعد كل تشغيلة */
-/* ===== مصدر اللحم (بطاقات المطاعم) ===== */
-.meat-source {
-  margin: 8px 0 4px;
-  font-size: 0.85rem;
-}
 
-.meat-source summary {
-  cursor: pointer;
-  font-weight: 700;
-  color: var(--color-primary);
-  padding: 4px 0;
-  list-style: none;
-}
 
-.meat-source summary::-webkit-details-marker {
-  display: none;
-}
 
-.meat-source summary::after {
-  content: " ▾";
-  font-size: 0.75rem;
-}
 
-.meat-source[open] summary::after {
-  content: " ▴";
-}
 
-.meat-source-text {
-  margin: 4px 0 2px;
-  color: var(--color-text);
-}
 
-.meat-source-meta {
-  margin: 0;
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  line-height: 1.6;
-}
 
-/* ===== قائمة الطعام التفاعلية — نسخة <details> بلا جافاسكربت (بطاقات
-   مطاعم/كافيهات)، نفس أسلوب مصدر اللحم أعلاه بالضبط ===== */
-.menu-list {
-  margin: 8px 0 4px;
-  font-size: 0.85rem;
-}
 
-.menu-list summary {
-  cursor: pointer;
-  font-weight: 700;
-  color: var(--color-primary);
-  padding: 4px 0;
-  list-style: none;
-}
 
-.menu-list summary::-webkit-details-marker {
-  display: none;
-}
 
-.menu-list summary::after {
-  content: " ▾";
-  font-size: 0.75rem;
-}
 
-.menu-list[open] summary::after {
-  content: " ▴";
-}
 
-.menu-items {
-  margin: 4px 0 0;
-  padding: 0;
-  list-style: none;
-}
 
-.menu-items li {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 5px 0;
-  border-bottom: 1px dashed var(--color-border);
-  color: var(--color-text);
-}
 
-.menu-items li:last-child {
-  border-bottom: none;
-}
 
-.menu-item-price {
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
 
-/* ===== بطاقة القائمة المنبثقة (بعد تشغيل الجافاسكربت) — تستخدم نفس حاجز
-   الشاشة الكاملة .picker-reveal-overlay الموجود أصلاً، بلا تكرار CSS ===== */
-.menu-card {
-  background: var(--color-surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card);
-  padding: 22px;
-  width: min(92vw, 420px);
-  max-height: 76vh;
-  overflow-y: auto;
-  animation: menuCardIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
 
 @keyframes menuCardIn {
   from {
@@ -3133,20 +2091,8 @@ a.photo-credit:hover {
   }
 }
 
-.menu-card h3 {
-  margin: 0 0 12px;
-  text-align: center;
-}
 
-.menu-card .menu-items {
-  font-size: 0.95rem;
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .menu-card {
-    animation: none;
-  }
-}
 
 .beep-analysis:empty {
   display: none;
@@ -4004,14 +2950,6 @@ a.photo-credit:hover {
   font-weight: 700;
 }
 
-/* فلترة أقسام الرئيسية */
-.section-filter {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin: 28px 0 4px;
-}
 
 
 /* زر اختيار الملفات فوق تذكير "اختيار اليوم" (60): التذكير ترويج، وهذا
@@ -4509,12 +3447,6 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   list-style: none;
 }
 
-.beep-more > summary {
-  justify-content: center;
-  padding: 4px;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-}
 
 .beep-panel > summary::-webkit-details-marker,
 .beep-more > summary::-webkit-details-marker {
@@ -4558,9 +3490,6 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   margin: 0 12px 10px;
 }
 
-.beep-more[open] > p {
-  margin-top: 6px;
-}
 
 /* الأبعاد الأربعة كمفاتيح مقطّعة: سطر لكل بُعد بدل كبسولات متفرقة */
 .beep-panel .beep-params {
@@ -4771,13 +3700,6 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   direction: ltr;
 }
 
-.beep-play-octave {
-  direction: ltr; /* Z يسار وX يمين مثل الكيبورد نفسه */
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-}
 
 /* ١١ مفتاح أبيض بعرض متساوٍ، والسوداء فوق الحدود بينها (--i = ترتيبها) */
 .beep-play-keys {
@@ -5184,15 +4106,7 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   }
 }
 
-/* صف الأوكتاف صار فيه زر التسجيل ووقته: نمنع كسر النص ونخفي الوقت وهو فاضي */
-.beep-play-octave {
-  flex-wrap: wrap;
-  justify-content: center;
-}
 
-.beep-play-octave .filter-chip {
-  white-space: nowrap;
-}
 
 .beep-rec-time:empty {
   display: none;
@@ -6652,9 +5566,6 @@ html[lang="en"] .instrument-btn.is-new::after {
 /* أفقي بالجوال: الشريط السريع رموز فقط، وعنوانا "طريقة العزف" و"الإعدادات" بسطر
    واحد — عشان المفاتيح تبقى كاملة بالشاشة بلا تمرير مثل قبل */
 @media (orientation: landscape) and (max-height: 520px) {
-  html.touch .beep-quickbar .qb-text {
-    display: none;
-  }
 
   /* صف إضافي فوق المفاتيح (الشريط السريع) = ٢٤px أقل من الحساب الأصلي */
   html.touch .sounds-tool .beep-play-keys {
@@ -6669,9 +5580,6 @@ html[lang="en"] .instrument-btn.is-new::after {
     width: auto;
   }
 
-  html.touch .sounds-tool .beep-quickbar {
-    gap: 6px;
-  }
 }
 
 @media (orientation: landscape) and (max-height: 520px) and (max-width: 720px) {
@@ -7889,10 +6797,6 @@ li {
   text-wrap: pretty;
 }
 
-/* أرقام تتغير (إعجابات، تقدّم الاستكشاف) بعرض ثابت فما يتحرك اللي جنبها */
-.explore-progress-text {
-  font-variant-numeric: tabular-nums;
-}
 
 /* أزرار البطاقة على الماوس: منطقة ضغط ٤٠ بكسل (كانت ٢٣–٣٥). اللمس عنده قاعدته الأقوى (٤٤) فوق
    (@media (pointer: coarse))، فما نلمسه هنا عشان ما نصغّره */
@@ -8397,20 +7301,7 @@ li {
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-/* قانون هيك: الرئيسية كان ما فيها إجراء أساسي — زر واحد بارز تحت العنوان */
-.hero .hero-cta {
-  display: table;
-  margin: 18px auto 0;
-  padding: 14px 30px;
-  font-size: 1.05rem;
-  border-radius: var(--radius-pill);
-}
 
-/* شارات الدليل بصفحة المكان: أكبر شوي من البطاقة */
-.detail-badges {
-  margin: 6px 0 0;
-  font-size: 1.15rem;
-}
 
 /* الجوال: نصوص البطاقة الصغيرة كانت ١١٫٦ بكسل — أقلها ١٣، ومسار التنقل بارتفاع يناسب الإبهام */
 @media (max-width: 700px) {
@@ -8653,63 +7544,6 @@ li {
   }
 }
 
-/* ===== البحث: حقل الهيدر =====
-   حقل ظاهر (لا أيقونة فقط) على الشاشات العريضة؛ يتحول لأيقونة على الضيقة لأن تبويب
-   «بحث» موجود بالشريط السفلي هناك */
-.header-search {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  height: var(--control-height);
-  width: var(--control-height);
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--control-radius);
-  background: var(--color-bg);
-  color: var(--color-text-muted);
-  font-size: 0.88rem;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.header-search:hover,
-.header-search.active {
-  border-color: var(--color-primary);
-  color: var(--color-text);
-}
-.header-search-text {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 190px;
-}
-.header-search-kbd {
-  font-size: 0.75rem;
-  padding: 0 6px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xs);
-  color: var(--color-text-muted);
-}
-/* أيقونة افتراضياً (القائمة تأخذ عرض الهيدر كله)، وحقل كامل بنصّه على الشاشات العريضة فقط */
-.header-search-text,
-.header-search-kbd {
-  display: none;
-}
-@media (min-width: 1920px) {
-  .header-search {
-    width: auto;
-    padding: 0 var(--space-3);
-    justify-content: flex-start;
-  }
-  /* أضيق قليلاً منذ أيقونة بوزون: بعرض أكبر كانت القائمة تنزلق أفقياً (خاصة بالإنجليزي) */
-  .header-search-text {
-    max-width: 130px;
-  }
-  .header-search-text,
-  .header-search-kbd {
-    display: inline;
-  }
-}
 
 /* ===== صندوق البحث (الرئيسية وصفحة البحث) ===== */
 .search-box {
@@ -8726,10 +7560,6 @@ li {
 .search-box:focus-within {
   border-color: var(--color-primary);
 }
-.search-box-icon {
-  display: inline-flex;
-  color: var(--color-text-muted);
-}
 .search-box input {
   flex: 1;
   min-width: 0;
@@ -8741,44 +7571,10 @@ li {
   font-size: 1.02rem;
   padding: 10px 0;
 }
-.search-mic,
-.search-go {
-  flex: none;
-  border: 0;
-  cursor: pointer;
-  font: inherit;
-}
-.search-mic {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: inline-grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
-}
-.search-mic.listening {
-  background: var(--color-danger);
-  color: #fff;
-  animation: mic-pulse 1s ease-in-out infinite;
-}
 @keyframes mic-pulse {
   50% {
     box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-danger) 25%, transparent);
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .search-mic.listening {
-    animation: none;
-  }
-}
-.search-go {
-  height: 40px;
-  padding: 0 var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--color-primary-fill);
-  color: #fff;
-  font-weight: 700;
 }
 
 .chip-row {
@@ -8789,72 +7585,7 @@ li {
 .chip-row .filter-chip {
   text-decoration: none;
 }
-.link-btn {
-  border: 0;
-  background: none;
-  color: var(--color-primary);
-  font: inherit;
-  font-size: 0.88rem;
-  cursor: pointer;
-  padding: 0;
-}
 
-/* ===== صفحة البحث ===== */
-.search-page {
-  max-width: 760px;
-  margin: var(--space-4) auto var(--space-6);
-}
-.search-status {
-  min-height: 1.4em;
-  margin: var(--space-2) var(--space-1);
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-}
-.search-block {
-  margin-top: var(--space-5);
-}
-.search-block h2,
-.search-group h2 {
-  font-size: 1.02rem;
-  margin: 0 0 var(--space-3);
-}
-.search-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-.search-recent {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.search-recent li {
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--color-border);
-}
-.search-recent-q {
-  flex: 1;
-  text-align: start;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: var(--color-text);
-  padding: 10px 2px;
-  cursor: pointer;
-}
-.search-recent-x {
-  border: 0;
-  background: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  padding: 10px;
-}
-.search-note {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  margin: var(--space-2) 0 0;
-}
 .mini-sections {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
@@ -8880,119 +7611,6 @@ li {
 .mini-section:hover {
   border-color: var(--color-primary);
 }
-.search-tabs {
-  display: flex;
-  gap: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: var(--space-3);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.search-tab {
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 0.92rem;
-  color: var(--color-text-muted);
-  padding: var(--space-2) 0;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.search-tab.on {
-  color: var(--color-primary);
-  font-weight: 700;
-  border-bottom-color: var(--color-primary);
-}
-.search-tab span {
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-#searchSort:not(:empty) {
-  margin-bottom: var(--space-3);
-}
-.search-group {
-  margin-bottom: var(--space-5);
-}
-.search-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  margin-bottom: var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  text-decoration: none;
-}
-.search-row:hover {
-  border-color: var(--color-primary);
-}
-.search-row-icon {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  display: grid;
-  place-items: center;
-  font-size: 1.45rem;
-  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface));
-}
-.search-row-text {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-.search-row-text small {
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.search-row mark {
-  background: color-mix(in srgb, #f5c542 45%, transparent);
-  color: inherit;
-  border-radius: 3px;
-  padding: 0 2px;
-}
-.search-price {
-  flex: none;
-  padding: 5px 9px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
-  font-weight: 700;
-  font-size: 0.8rem;
-  direction: ltr;
-}
-.search-more {
-  margin: var(--space-1) var(--space-1) 0;
-  /* «+8» كان 17px عرضاً: أقل من حد اللمس (WCAG 2.5.8 = 24px) */
-  min-width: 44px;
-  min-height: 44px;
-}
-.search-none {
-  text-align: center;
-  padding: var(--space-5) var(--space-3);
-  display: grid;
-  gap: var(--space-3);
-  justify-items: center;
-}
-.search-none-title {
-  font-weight: 700;
-  font-size: 1.05rem;
-  margin: 0;
-}
-.search-none p {
-  margin: 0;
-  color: var(--color-text-muted);
-}
-.search-none .chip-row {
-  justify-content: center;
-}
 
 /* ===== الرئيسية الجديدة ===== */
 .home-title {
@@ -9000,17 +7618,6 @@ li {
   margin: var(--space-4) 0 var(--space-3);
   color: var(--color-text-muted);
   font-weight: 600;
-}
-.home-search {
-  max-width: 760px;
-}
-.home-hint {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  margin: var(--space-2) var(--space-1) var(--space-3);
-}
-.home-chips {
-  margin-bottom: var(--space-4);
 }
 .home-pick {
   display: flex;
@@ -9044,116 +7651,6 @@ li {
 }
 .home-row {
   margin-top: var(--space-5);
-}
-.home-row-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: var(--space-3);
-}
-.home-row-head h2 {
-  font-size: 1.05rem;
-  margin: 0;
-}
-.home-row-head a {
-  /* مساحة لمس 44px بلا ما يكبر الشريط: الحشوة تُعوَّض بهامش سالب */
-  padding: 10px 12px;
-  margin: -10px -12px;
-  font-size: 0.85rem;
-  color: var(--color-primary);
-  text-decoration: none;
-}
-.home-cards {
-  display: flex;
-  gap: var(--space-3);
-  overflow-x: auto;
-  padding-bottom: var(--space-2);
-  scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
-}
-.home-card {
-  position: relative;
-  flex: none;
-  width: 160px;
-  scroll-snap-align: start;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  overflow: hidden;
-  color: var(--color-text);
-  text-decoration: none;
-}
-.home-card:hover {
-  border-color: var(--color-primary);
-}
-.home-card-icon {
-  display: grid;
-  place-items: center;
-  height: 88px;
-  font-size: 2.2rem;
-  background: var(--tint, #eee);
-}
-:root[data-theme="dark"] .home-card-icon {
-  background: color-mix(in srgb, var(--tint, #eee) 14%, var(--color-surface));
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .home-card-icon {
-    background: color-mix(in srgb, var(--tint, #eee) 14%, var(--color-surface));
-  }
-}
-/* صورة حقيقية (معالم، مقالات) تعبّي رأس البطاقة، ورسمة النوع (ألوان مائية) فوق لون البطاقة الهادئ:
-   بالفاتح بياض الورق يذوب باللون (multiply)، وبالداكن تبقى على ورقة بيضاء مثل الملصق */
-.home-card-icon.photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.home-card-icon.illus img {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-  mix-blend-mode: multiply;
-}
-:root[data-theme="dark"] .home-card-icon.illus {
-  background: #fff;
-}
-:root[data-theme="dark"] .home-card-icon.illus img {
-  mix-blend-mode: normal;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .home-card-icon.illus {
-    background: #fff;
-  }
-  :root:not([data-theme="light"]) .home-card-icon.illus img {
-    mix-blend-mode: normal;
-  }
-}
-.home-card-text {
-  display: grid;
-  gap: 2px;
-  padding: var(--space-2) var(--space-3) var(--space-3);
-  font-size: 0.88rem;
-}
-.home-card-text b,
-.home-card-text small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.home-card-text small {
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-}
-.home-card-badge {
-  position: absolute;
-  inset-inline-start: 8px;
-  top: 8px;
-  padding: 1px 8px;
-  border-radius: var(--radius-xs);
-  background: #e8743b;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 700;
 }
 
 /* نص للقارئ الشاشة فقط — h1 دلالي بصفحات بلا عنوان مرئي (مثل البحث)، بلا أي تغيير بصري */
@@ -9442,67 +7939,7 @@ a.conv-download {
   font-weight: 600;
 }
 
-/* ===== قسم الأعمال + المنيو الرقمي ===== */
-.biz-grid, .menu-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); margin: 8px 0 18px; }
-.biz-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 20px; }
-.biz-card > span { font-size: 1.8rem; }
-.biz-card h3 { margin: 8px 0 6px; font-size: 1.05rem; }
-.biz-card p { margin: 0; color: var(--color-text-muted); font-size: 0.92rem; line-height: 1.7; }
-.biz-note { color: var(--color-text-muted); font-size: 0.9rem; }
-.biz-contact { margin: 26px 0 40px; padding: 22px; border-radius: var(--radius); background: var(--color-surface); border: 1px solid var(--color-border); }
-.biz-contact h2 { margin: 0 0 6px; font-size: 1.15rem; }
-.biz-contact p { margin: 0 0 14px; color: var(--color-text-muted); }
-.reveal-num { margin-inline-start: 12px; font-weight: 700; letter-spacing: 0.5px; }
-.menu-group { font-size: 1.1rem; margin: 22px 0 6px; }
-.menu-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: var(--radius); background: var(--color-surface); border: 1px solid var(--color-border); }
-.menu-item.on { border-color: var(--color-primary); }
-.menu-item-text { display: flex; flex-direction: column; gap: 2px; }
-.menu-item-text small { color: var(--color-text-muted); }
-.menu-step { display: flex; align-items: center; gap: 10px; }
-.menu-step button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: 1.2rem; cursor: pointer; }
-.menu-step button[data-step="1"] { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
-.qty-n { min-width: 1.2em; text-align: center; font-weight: 700; }
-.cart-bar { position: sticky; bottom: 70px; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding: 12px 16px; border-radius: var(--radius); background: var(--color-surface); border: 1px solid var(--color-primary); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); }
-.menu-demo-note { color: var(--color-text-muted); font-size: 0.85rem; margin-top: 14px; }
 
-/* بطاقة التواصل: الصفحة خلفها تتغبّش */
-.contact-card { width: min(420px, calc(100vw - 40px)); margin: auto; border: 0; border-radius: var(--radius-xl); padding: 26px 22px 22px; background: var(--color-surface); color: var(--color-text); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35); }
-.contact-card::backdrop { background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-.contact-card h2 { margin: 0 0 16px; font-size: 1.2rem; text-align: center; }
-.contact-close { position: absolute; top: 12px; inset-inline-end: 12px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--color-bg); color: var(--color-text); cursor: pointer; }
-.contact-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-top: 10px; border-radius: var(--radius); background: var(--color-bg); color: inherit; text-decoration: none; border: 1px solid var(--color-border); }
-.contact-row:hover { border-color: var(--color-primary); }
-.contact-ic { font-size: 1.5rem; }
-.contact-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.contact-tx small { color: var(--color-text-muted); }
-.contact-tx b { overflow-wrap: break-word; font-size: 0.92rem; }
 
 /* ===== عرض المنيو الحي (صفحة الأعمال) ===== */
-.biz-demo { display: flex; align-items: center; justify-content: center; gap: 48px; flex-wrap: wrap; margin: 10px 0 28px; }
-.biz-demo-text { flex: 1 1 280px; max-width: 420px; }
-.biz-demo-text h2 { margin: 0 0 8px; }
-.biz-demo-text p { color: var(--color-text-muted); }
-.demo-phone { position: relative; width: 300px; height: 580px; border: 10px solid #121a17; border-radius: 46px; background: var(--color-bg); box-shadow: 0 30px 60px rgba(20, 40, 30, 0.28); overflow: hidden; flex: none; }
-.demo-phone::before { content: ""; position: absolute; top: 8px; left: 50%; margin-left: -42px; width: 84px; height: 20px; border-radius: var(--radius-md); background: #121a17; z-index: 6; }
-.demo-screen { position: absolute; inset: 0; }
-.demo-menu { position: absolute; inset: 0; overflow-y: auto; padding: 36px 12px 70px; transition: opacity 0.5s; scrollbar-width: none; }
-.demo-menu.hid { opacity: 0; }
-.demo-menu .menu-group { font-size: 0.95rem; margin: 14px 0 4px; }
-.demo-menu .menu-grid { grid-template-columns: 1fr; gap: 8px; margin: 4px 0; }
-.demo-menu .menu-item { padding: 10px 12px; }
-.demo-menu .menu-item-text b { font-size: 0.9rem; }
-.demo-menu .menu-step button { width: 30px; height: 30px; }
-.demo-menu .cart-bar { position: sticky; bottom: 0; margin-top: 12px; flex-wrap: wrap; padding: 8px 12px; font-size: 0.8rem; }
-.demo-menu .cart-bar .btn { padding: 8px 12px; font-size: 0.8rem; }
-.demo-phone.playing .demo-menu { pointer-events: none; }
-.demo-qr { position: absolute; inset: 0; z-index: 45; display: grid; place-content: center; justify-items: center; gap: 14px; background: var(--color-surface); transition: opacity 0.5s; text-align: center; padding: 0 20px; }
-.demo-qr.off { opacity: 0; pointer-events: none; }
-.demo-qr small { color: var(--color-text-muted); }
-.demo-qr-box { position: relative; width: 150px; height: 150px; border-radius: var(--radius); overflow: hidden; background: conic-gradient(from 0deg, var(--color-text) 0 25%, transparent 0 50%, var(--color-text) 0 75%, transparent 0) 0 0 / 30px 30px, var(--color-bg); outline: 12px solid var(--color-bg); }
-.demo-qr-box i { position: absolute; left: 0; right: 0; height: 4px; background: var(--color-primary); box-shadow: 0 0 14px var(--color-primary); animation: demo-scan 1.2s ease-in-out infinite alternate; }
 @keyframes demo-scan { from { top: 4%; } to { top: 92%; } }
-.demo-msg { position: absolute; left: 12px; right: 12px; bottom: 16px; z-index: 50; padding: 12px 14px; border-radius: var(--radius); background: #d3eadf; color: #16241f; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25); animation: support-in 0.4s ease; }
-.demo-msg b { font-size: 0.8rem; }
-.demo-msg pre { margin: 6px 0 0; white-space: pre-wrap; font: inherit; font-size: 0.82rem; line-height: 1.5; }
-.demo-cursor { position: absolute; z-index: 60; left: 0; top: 0; width: 22px; height: 22px; margin: -4px 0 0 -4px; border-radius: 50%; background: rgba(27, 77, 62, 0.35); border: 2px solid var(--color-primary); transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
-.demo-cursor.press { scale: 0.7; }

@@ -228,8 +228,6 @@ main.container:has(.dilmo) { max-width: none; }
 .dilmo .play { scroll-margin-top: calc(var(--header-h, 64px) + 8px); }
 /* the world inside is wider than the stage: never let focus or a key scroll it sideways (clip, not hidden, can't be scrolled at all) */
 .dilmo .play { overflow: clip; }
-/* the site's daily-pick toast would sit on top of the playground */
-body:has(.dilmo) .daily-pick-reminder { display: none !important; }
 
 /* phones: the stage and the move buttons fill the screen between the header and the bottom nav;
    the cast/sound/photo row and the rest move below, and the colour rows scroll sideways instead of wrapping */
