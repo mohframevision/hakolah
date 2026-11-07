@@ -1,3 +1,4 @@
+/* global makeRoomImpulse */
 (function () {
   var stage = document.getElementById("play"), orb = document.getElementById("orb");
   var shadowEl = document.getElementById("orb-shadow"), bub = document.getElementById("orb-say");
@@ -371,9 +372,7 @@
       ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = volGain();
       var comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4; master.connect(comp); comp.connect(ac.destination);
       kit = ac.createGain(); kit.gain.value = 3.3; kit.connect(master);  // the sound kit is mixed at full scale; master keeps the old .3 headroom
-      verb = ac.createConvolver(); var vn = ac.sampleRate * 1.8, vb = ac.createBuffer(2, vn, ac.sampleRate);
-      for (var c = 0; c < 2; c++) { var vd = vb.getChannelData(c); for (var vi = 0; vi < vn; vi++) vd[vi] = (Math.random() * 2 - 1) * Math.pow(1 - vi / vn, 3.2); }
-      verb.buffer = vb; verb.connect(kit);
+      verb = ac.createConvolver(); verb.buffer = makeRoomImpulse(ac, 1.8, 3.2); verb.connect(kit);
       NB = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); var nd = NB.getChannelData(0); for (var ni = 0; ni < nd.length; ni++) nd[ni] = Math.random() * 2 - 1;
       setTimeout(function () { music.apply(); }, 0);
       // soft echo for the melodic notes
@@ -697,9 +696,7 @@
     function start(id, want) {
       if (!mvol) {
         mvol = ac.createGain(); mvol.gain.value = mg(); mvol.connect(kit);
-        mverb = ac.createConvolver(); var n = ac.sampleRate * 4, b = ac.createBuffer(2, n, ac.sampleRate);
-        for (var c = 0; c < 2; c++) { var d = b.getChannelData(c); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.5); }
-        mverb.buffer = b; mverb.connect(mvol);
+        mverb = ac.createConvolver(); mverb.buffer = makeRoomImpulse(ac, 4, 2.5); mverb.connect(mvol);
       }
       var bus = ac.createGain(), send = ac.createGain(), now = ac.currentTime;
       bus.gain.setValueAtTime(.0001, now); bus.gain.exponentialRampToValueAtTime(1, now + 3); send.gain.value = .55;

@@ -336,12 +336,12 @@ function getAudioContext() {
 }
 
 // صدى غرفة: نبضة ضجيج تخفت أُسّياً بدل ملف impulse — يعطي إحساس "مساحة"
-function makeRoomImpulse(ctx, seconds) {
+function makeRoomImpulse(ctx, seconds, decay = 3.5) {
   const len = Math.floor(ctx.sampleRate * seconds);
   const buf = ctx.createBuffer(2, len, ctx.sampleRate);
   for (let c = 0; c < 2; c++) {
     const d = buf.getChannelData(c);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.5);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
   }
   return buf;
 }
