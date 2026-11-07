@@ -31,15 +31,6 @@ function tagIcon(tag) {
   return (typeof TAG_ICONS !== "undefined" && TAG_ICONS[tag]) || "";
 }
 
-// اسم القسم بلغة الصفحة الحالية — يقرأ title_en المولّد ببناء data.js من
-// sections/*.md مباشرة (مو قاموس ثابت هنا)، فقسم جديد يُضاف من لوحة التحكم
-// يظهر باسمه الإنجليزي تلقائياً بدون تعديل هذا الملف
-function sectionLabel(section) {
-  const meta = SITE_DATA[section];
-  if (!meta) return section;
-  return window.SITE_LANG === "en" ? meta.title_en || meta.title : meta.title;
-}
-
 /* ===== تخزين آمن: Safari بوضع "منع كل الكوكيز" وبعض أوضاع الخصوصية ترمي استثناء
    بمجرد لمس localStorage. بدون هذا الغلاف كان الاستثناء يوقف تهيئة الموقع كلها
    (القائمة ما تنفتح، والرئيسية بلا بطاقات). القراءة الفاشلة = null، والكتابة

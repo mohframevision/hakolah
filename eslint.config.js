@@ -49,7 +49,7 @@ module.exports = [
         "error",
         {
           varsIgnorePattern:
-            "^(renderSection|sectionLabel|audioBufferToWav|audioBufferToMp3|lsSet)$",
+            "^(renderSection|audioBufferToWav|audioBufferToMp3|lsSet)$",
         },
       ],
     },
@@ -58,7 +58,7 @@ module.exports = [
     files: ["src/js/converter.js", "src/js/expense.js", "src/js/typing.js"],
     languageOptions: {
       globals: Object.fromEntries(
-        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "showToast", "nearestBranch", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder", "itemDesc", "escapeHtml", "safeUrl", "levenshtein"].map((n) => [n, "readonly"])
+        ["t", "itemTitle", "playSound", "playClickSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "showToast", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder", "itemDesc", "escapeHtml", "safeUrl", "levenshtein"].map((n) => [n, "readonly"])
       ),
     },
   },

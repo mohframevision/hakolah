@@ -28,10 +28,9 @@ const PRECACHE = [
   // نفس روابط base.njk حرفياً (مع ?v=النسخة): هكذا تتطابق بالكاش بلا تجاهل للمعاملات
   BASE + "css/style.css?v=" + VERSION,
   BASE + "theme.css?v=" + VERSION,
-  // الأربعة مطلوبة لعرض أي صفحة: بلا data.js تطلع الصفحة بلا بطاقات
+  // الثلاثة مطلوبة لعرض أي صفحة؛ data.js لصفحات الأقسام وبوزون فقط فيُخزَّن عند تصفّحها
   BASE + "js/theme-init.js",
   BASE + "js/bootstrap.js?v=" + VERSION,
-  BASE + "js/data.js?v=" + VERSION,
   BASE + "js/main.js?v=" + VERSION,
   BASE + "assets/fonts/cairo-arabic.woff2",
 ];
