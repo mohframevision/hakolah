@@ -1958,7 +1958,9 @@
       box.appendChild(bt);
     });
     // only the action that would change something: nobody left to send away / everyone already here
-    document.getElementById("cast-solo").hidden = !any; document.getElementById("cast-all").hidden = all;
+    var solo = document.getElementById("cast-solo"), back = document.getElementById("cast-all"), f = document.activeElement;
+    solo.hidden = !any; back.hidden = all;
+    if (f === solo || f === back) if (f.hidden) (f === solo ? back : solo).focus();  // keyboard focus moves to the one still shown, not to the page
   }
   document.getElementById("cast-solo").addEventListener("click", function () { castItems().forEach(function (k) { toggleCast(k, false); }); renderCast(); });
   document.getElementById("cast-all").addEventListener("click", function () {
