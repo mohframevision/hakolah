@@ -60,6 +60,14 @@ async function run() {
     process.exit(1);
   }
 
+  // لون لوحة التحكم (theme.css المولَّد من theme.json) يُلحق بآخر style.css: نفس ترتيب التطبيق
+  // (بعد القيم الافتراضية) بلا ملف ثانٍ يؤخّر رسم كل صفحة
+  const themeCss = path.join(SITE_DIR, "theme.css");
+  if (fs.existsSync(themeCss)) {
+    fs.appendFileSync(path.join(SITE_DIR, "css", "style.css"), "\n" + fs.readFileSync(themeCss, "utf8"));
+    fs.rmSync(themeCss);
+  }
+
   let cssCount = 0;
   let jsCount = 0;
   let htmlCount = 0;

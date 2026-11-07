@@ -27,7 +27,6 @@ const PRECACHE = [
   OFFLINE_EN,
   // نفس روابط base.njk حرفياً (مع ?v=النسخة): هكذا تتطابق بالكاش بلا تجاهل للمعاملات
   BASE + "css/style.css?v=" + VERSION,
-  BASE + "theme.css?v=" + VERSION,
   // الثلاثة مطلوبة لعرض أي صفحة؛ data.js لصفحات الأقسام وبوزون فقط فيُخزَّن عند تصفّحها
   BASE + "js/theme-init.js",
   BASE + "js/bootstrap.js?v=" + VERSION,

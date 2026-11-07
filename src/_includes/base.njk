@@ -97,10 +97,6 @@
      بجسم الصفحة (detail-item.njk)، هذا فقط يبدأ تحميله أبكر. #}
   {% if image %}<link rel="preload" as="image" href="{{ image }}" fetchpriority="high" />{% endif %}
   <link rel="stylesheet" href="{{ '/css/style.css' | url }}?v={{ buildVersion }}" />
-  {# لون الموقع من لوحة التحكم (مجموعة "شكل الموقع") — ملف خارجي منفصل عمداً،
-     لأن سياسة CSP (style-src) ما تسمح بوسم <style> مضمّن، بس تسمح بملف من
-     نفس الموقع. يُحمَّل بعد style.css مباشرة فيتغلّب على قيمته الافتراضية. #}
-  <link rel="stylesheet" href="{{ '/theme.css' | url }}?v={{ buildVersion }}" />
   {# ملف تنسيق خاص بصفحة (مثل menu.css لقوالب المنيو وخطوطها) — بس بالصفحات اللي تطلبه #}
   {% if pageCss %}<link rel="stylesheet" href="{{ ('/css/' + pageCss + '.css') | url }}?v={{ buildVersion }}" />{% endif %}
 
