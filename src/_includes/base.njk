@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% from "icon.njk" import icon %}
+{% from "icon.njk" import icon, iconSprite %}
 {% set lang = lang or "ar" %}
 {% set t = i18n[lang] %}
 {# دليل الأماكن انتقل إلى توريلو (torilu.js): صفحاته هنا صفحة تحويل فقط #}
@@ -176,6 +176,7 @@
 
   <main class="container" id="main-content">
     {{ content | safe }}
+    {% if section %}{{ iconSprite() }}{% endif %}
   </main>
 
   <footer class="site-footer">
