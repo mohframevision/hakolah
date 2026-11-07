@@ -2578,6 +2578,13 @@
   var tramp = { cx: 0, hw: 75, hd: 55, top: 0, z: 0, s: 0, v: 0, px: 0, pz: 0, cur: 0, d: "" }, tN = 0, TK = .45, TC = .094, TMAX = 38, TRIM = 10;
   function inBox(x, z, m) { return Math.abs(x - tramp.cx) < tramp.hw + m && (!D3 || Math.abs(z - tramp.z) < tramp.hd + m); }
   function onTramp(o) { return o.tN >= tN - 1; }
+  // the first time anyone uses a prop (once ever, per browser): the friend nearest to it, not the one on it, says so
+  function firstUse(key, o, cx, ar, en) {
+    if (store[key]) return;
+    store[key] = 1; saveStore();
+    var fr = others().filter(function (x) { return x !== o; }).sort(function (p, q) { return Math.abs(p.x - cx) - Math.abs(q.x - cx); })[0], ln = T(ar, en);
+    if (fr) bsay(fr, ln); else say(ln);
+  }
   function trampStep(o, r, dt, t, edge) {  // after o has moved this step; edge: how far in from the frame the bed starts (the ball bounces off the pads too)
     var a = tramp.hw - edge, c = tramp.hd - edge, was = onTramp(o) && Math.abs(o.x - tramp.cx) < a + 14 && (!D3 || Math.abs(o.z - tramp.z) < c + 14);  // (a body set down elsewhere is not on it)
     if (was) {  // the bed holds you: sliding into its edge stops you there
@@ -2597,11 +2604,7 @@
         var sq = Math.min(v, 18);
         if (o === pos) { sp.sy.vel -= sq * .012; sp.sx.vel += sq * .009; } else if (o.f) { o.svy -= sq * .012; o.svx += sq * .009; }
       }
-      if (v > 3 && !store.trampSaid && o !== ball) {  // the first time anyone bounces: one friend says so
-        store.trampSaid = 1; saveStore();
-        var fr = others().filter(function (x) { return x !== o; }).sort(function (p, q) { return Math.abs(p.x - tramp.cx) - Math.abs(q.x - tramp.cx); })[0], ln = T("منصّة القفز! من يقفز أعلى؟", "A trampoline! Who can bounce the highest?");
-        if (fr) bsay(fr, ln); else say(ln);
-      }
+      if (v > 3 && o !== ball) firstUse("trampSaid", o, tramp.cx, "منصّة القفز! من يقفز أعلى؟", "A trampoline! Who can bounce the highest?");
     }
     if (s > TMAX) { o.y = tramp.top + TMAX - r; s = TMAX; if (o.vy > 0) o.vy = 0; }  // bottomed out on its stops
     o.tPeak = Math.max(o.tPeak || 0, s);
@@ -2691,11 +2694,7 @@
       swPin(o);
       if (hard > 2) { sfx("swing", hard); var sq = Math.min(hard, 14); if (o === pos) { sp.sy.vel -= sq * .01; sp.sx.vel += sq * .008; } else if (o.f) { o.svy -= sq * .01; o.svx += sq * .008; } }
       if (o.f && !o.f.player && /^(wander|swing)$/.test(o.mode)) { if (o.mode !== "swing") o.next = t + 5000 + Math.random() * 5000; o.mode = "swing"; o.tx = o.tz = null; }
-      if (!store.swingSaid) {  // the first time anyone sits on it: one friend says so
-        store.swingSaid = 1; saveStore();
-        var fr = others().filter(function (x) { return x !== o; }).sort(function (p, q) { return Math.abs(p.x - s.cx) - Math.abs(q.x - s.cx); })[0], ln = T("أرجوحة! من يصل إلى الغيوم؟", "A swing! Who can reach the clouds?");
-        if (fr) bsay(fr, ln); else say(ln);
-      }
+      firstUse("swingSaid", o, s.cx, "أرجوحة! من يصل إلى الغيوم؟", "A swing! Who can reach the clouds?");
       return true;
     }
     // a bump: out to the seat's surface, then an impulse along the contact normal (the seat only moves along its path)
@@ -2790,11 +2789,7 @@
       o.vx += jt / m * tx2; o.vy += jt / m * ty2; ssTurn(-jt * armt * iT);
       if (!was && -vn > 2 && o !== ball && ny <= -.5) {
         var sq = Math.min(-vn, 18); if (o === pos) { sp.sy.vel -= sq * .012; sp.sx.vel += sq * .009; } else if (o.f) { o.svy -= sq * .012; o.svx += sq * .009; }
-        if (!store.seesawSaid) {  // the first time anyone gets on it: one friend says so
-          store.seesawSaid = 1; saveStore();
-          var fr = others().filter(function (x) { return x !== o; }).sort(function (p, q) { return Math.abs(p.x - s.cx) - Math.abs(q.x - s.cx); })[0], ln = T("أرجوحة التوازن! اجلس في طرف، وأنا في الآخر.", "A seesaw! You take one end, I'll take the other.");
-          if (fr) bsay(fr, ln); else say(ln);
-        }
+        firstUse("seesawSaid", o, s.cx, "أرجوحة التوازن! اجلس في طرف، وأنا في الآخر.", "A seesaw! You take one end, I'll take the other.");
       }
     }
     if (top) {  // where its new velocity takes it from where it was (so standing still on the slope doesn't creep), then out of the plank
