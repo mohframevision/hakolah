@@ -176,6 +176,12 @@
   display: none;
 }
 
+/* سمة hidden تخفي دائماً، أياً كان display الذي يعطيه كلاس العنصر — قاعدة واحدة
+   بدل نسخة [hidden] لكل عنصر يُخفى ويُظهر بالجافاسكربت */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
   /* رفع القياس الأساسي 16px → 17px يكبّر كل نص وكل مسافة مبنية على rem
@@ -3007,10 +3013,6 @@ a.photo-credit:hover {
 
 /* سمة hidden لحالها ما تكفي: ‎.beep-keys‎ تضبط display:flex بنفس تخصيصية
    قاعدة المتصفح الافتراضية، وقواعد الصفحة تغلبها */
-.beep-keys-scroll[hidden],
-.beep-keys[hidden] {
-  display: none;
-}
 
 .beep-experiment-hint {
   font-size: 0.85rem;
@@ -3247,9 +3249,6 @@ a.photo-credit:hover {
   margin-bottom: 16px;
 }
 
-.conv-options[hidden] {
-  display: none;
-}
 
 .conv-option-note {
   flex-basis: 100%;
@@ -3358,9 +3357,6 @@ a.photo-credit:hover {
   gap: 8px;
 }
 
-.conv-option[hidden] {
-  display: none;
-}
 
 .conv-option-label {
   font-size: 0.85rem;
@@ -4021,9 +4017,6 @@ a.photo-credit:hover {
   margin: 28px 0 4px;
 }
 
-.section-card[hidden] {
-  display: none;
-}
 
 /* زر اختيار الملفات فوق تذكير "اختيار اليوم" (60): التذكير ترويج، وهذا
    الفعل الأساسي بصفحة الأداة — وكان يبلع الضغطة فيبدو المحوّل معطّلاً */
@@ -4149,9 +4142,6 @@ a.photo-credit:hover {
   border-radius: var(--radius);
 }
 
-.beep-staff-wrap[hidden] {
-  display: none;
-}
 
 .beep-params-title {
   margin: 0;
@@ -4927,9 +4917,6 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   gap: 12px;
 }
 
-.sounds-pane[hidden] {
-  display: none;
-}
 
 .sounds-lesson .beep-param-note {
   text-align: start;
@@ -5006,9 +4993,6 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   }
 }
 
-.beep-play-octave #beepFullscreen[hidden] {
-  display: none;
-}
 
 .sounds-tool:fullscreen {
   overflow-y: auto;
@@ -5191,9 +5175,6 @@ html.touch .sounds-top .beep-volume.is-floating.is-folded {
   gap: 8px;
 }
 
-.beep-rec-take[hidden] {
-  display: none;
-}
 
 .beep-rec-take .filter-chip:disabled {
   opacity: 0.5;
@@ -5386,12 +5367,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   color: var(--color-text-muted);
 }
 
-.instrument-none[hidden],
-.instrument-btn[hidden],
-.instrument-group[hidden],
-.ip-row[hidden] {
-  display: none;
-}
 
 /* ===== قائمة الآلات المنسدلة (على طريقة BandLab) ===== */
 .instrument-slot {
@@ -5406,9 +5381,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   max-width: 560px;
 }
 
-.instrument-dd[hidden] {
-  display: none;
-}
 
 .instrument-bar {
   display: flex;
@@ -5514,14 +5486,8 @@ html[lang="en"] .instrument-btn.is-new::after {
   animation: ipIn 0.14s ease-out;
 }
 
-.instrument-pop[hidden] {
-  display: none;
-}
 
 /* display:flex على .custom-sound كان يلغي سمة hidden فيبقى القسم ظاهراً دايماً */
-.custom-sound[hidden] {
-  display: none;
-}
 
 .instrument-pop.up {
   bottom: calc(100% + 6px);
@@ -5835,9 +5801,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   z-index: 3;
 }
 
-.beep-playhead[hidden] {
-  display: none;
-}
 
 /* ===== لوحة المسارات ===== */
 .beep-board {
@@ -6115,9 +6078,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   background: rgba(0, 0, 0, 0.18);
 }
 
-.beep-drums[hidden] {
-  display: none;
-}
 
 .beep-setting {
   display: flex;
@@ -6333,9 +6293,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   background: rgba(0, 0, 0, 0.25);
 }
 
-.beep-editor[hidden] {
-  display: none;
-}
 
 .beep-editor-bar {
   display: flex;
@@ -6601,9 +6558,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   background: rgba(0, 0, 0, 0.25);
 }
 
-.mix-tone-curve[hidden] {
-  display: none;
-}
 
 .mix-tone-curve line {
   stroke: var(--color-text-muted);
@@ -6743,11 +6697,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   background: rgba(0, 0, 0, 0.3);
 }
 
-.beep-video[hidden],
-.beep-video video[hidden],
-.beep-video-missing[hidden] {
-  display: none;
-}
 
 .beep-video video {
   width: 100%;
@@ -6803,9 +6752,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   touch-action: none;
 }
 
-.beep-film[hidden] {
-  display: none;
-}
 
 .beep-gutter.has-film {
   padding-top: 59px; /* المسطرة ١٨ + الإطارات ٤٠ + الحد */
@@ -7223,9 +7169,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px calc(100% / var(--whites, 14))), #0b2019; /* خط عند حد كل مفتاح أبيض؛ لون ثابت لأنها تطلع برا البطاقة على الجوال */
 }
 
-.song-lane[hidden] {
-  display: none;
-}
 
 /* المسار كله يتحرك بتحويل واحد كل إطار؛ أسفله = خط الضرب */
 .song-track {
@@ -7311,9 +7254,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   text-align: center;
 }
 
-.song-tracks[hidden] {
-  display: none;
-}
 
 /* نطاق أغنية عريض (أكثر من ٣ أوكتافات): المفاتيح تنضغط داخل عرض الشاشة وأسماؤها أصغر */
 .beep-play-keys.dense .pk-white,
@@ -7389,9 +7329,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   color: var(--color-text-muted);
 }
 
-.song-timeline[hidden] {
-  display: none;
-}
 
 .song-timeline input[type="range"] {
   flex: 1 1 140px;
@@ -7462,10 +7399,6 @@ html[lang="en"] .instrument-btn.is-new::after {
   margin-top: 8px;
 }
 
-.song-write[hidden],
-.song-chips[hidden] {
-  display: none;
-}
 
 .song-chips {
   max-height: 160px;
@@ -7868,9 +7801,6 @@ main.container:has(.sounds-tool) {
   white-space: nowrap;
 }
 
-.song-loop[hidden] {
-  display: none;
-}
 
 .song-loop input {
   width: 3.4em;
@@ -8839,9 +8769,6 @@ li {
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   color: var(--color-primary);
 }
-.search-mic[hidden] {
-  display: none;
-}
 .search-mic.listening {
   background: var(--color-danger);
   color: #fff;
@@ -8897,11 +8824,6 @@ li {
 }
 .search-block {
   margin-top: var(--space-5);
-}
-.search-block[hidden],
-#searchEmpty[hidden],
-#searchResults[hidden] {
-  display: none;
 }
 .search-block h2,
 .search-group h2 {
@@ -9134,9 +9056,6 @@ li {
 }
 .home-row {
   margin-top: var(--space-5);
-}
-.home-row[hidden] {
-  display: none;
 }
 .home-row-head {
   display: flex;
@@ -9556,7 +9475,6 @@ a.conv-download {
 .menu-step button[data-step="1"] { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 .qty-n { min-width: 1.2em; text-align: center; font-weight: 700; }
 .cart-bar { position: sticky; bottom: 70px; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding: 12px 16px; border-radius: var(--radius); background: var(--color-surface); border: 1px solid var(--color-primary); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); }
-.cart-bar[hidden] { display: none; }
 .menu-demo-note { color: var(--color-text-muted); font-size: 0.85rem; margin-top: 14px; }
 
 /* بطاقة التواصل: الصفحة خلفها تتغبّش */
@@ -9596,9 +9514,7 @@ a.conv-download {
 .demo-qr-box i { position: absolute; left: 0; right: 0; height: 4px; background: var(--color-primary); box-shadow: 0 0 14px var(--color-primary); animation: demo-scan 1.2s ease-in-out infinite alternate; }
 @keyframes demo-scan { from { top: 4%; } to { top: 92%; } }
 .demo-msg { position: absolute; left: 12px; right: 12px; bottom: 16px; z-index: 50; padding: 12px 14px; border-radius: var(--radius); background: #d3eadf; color: #16241f; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25); animation: support-in 0.4s ease; }
-.demo-msg[hidden] { display: none; }
 .demo-msg b { font-size: 0.8rem; }
 .demo-msg pre { margin: 6px 0 0; white-space: pre-wrap; font: inherit; font-size: 0.82rem; line-height: 1.5; }
 .demo-cursor { position: absolute; z-index: 60; left: 0; top: 0; width: 22px; height: 22px; margin: -4px 0 0 -4px; border-radius: 50%; background: rgba(27, 77, 62, 0.35); border: 2px solid var(--color-primary); transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
-.demo-cursor[hidden] { display: none; }
 .demo-cursor.press { scale: 0.7; }
