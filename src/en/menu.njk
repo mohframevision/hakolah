@@ -4,7 +4,6 @@ pagination:
   size: 1
   alias: m
 layout: "base.njk"
-pageCss: "menu"
 lang: "en"
 permalink: "en/menu/{{ m.fileSlug }}.html"
 eleventyComputed:
@@ -12,10 +11,3 @@ eleventyComputed:
   noindex: "{{ m.data.demo }}"
   langSwitchUrl: "/menu/{{ m.fileSlug }}.html"
 ---
-{% set t = i18n[lang or "ar"] %}
-{% set ar = lang != "en" %}
-<div class="breadcrumb"><a href="{{ ('/en/index.html' if not ar else '/index.html') | url }}">{{ t.nav_home }}</a> / {{ "منيو" if ar else "Menu" }}</div>
-{% if m.data.demo %}<p class="menu-demo-note">{{ "نموذج تجريبي لمنيو هكوله الرقمي" if ar else "A demo of Hakolah's digital menu" }} · {{ m.data.category if ar else m.data.category_en }}</p>{% endif %}
-{% set hmTag = "h1" %}
-{% include "menu-body.njk" %}
-<script src="{{ ('/js/menu.js') | url }}?v={{ buildVersion }}"></script>

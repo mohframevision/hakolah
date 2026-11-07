@@ -8,20 +8,3 @@ navActive: "plan"
 langSwitchUrl: "/plan.html"
 noindex: true
 ---
-{# ⚠️ Feature hidden for now — see the note in src/plan.njk for why and how
-   to re-enable. Reachable by direct URL only, and excluded from the sitemap. #}
-{% set t = i18n[lang or "ar"] %}
-<div class="breadcrumb"><a href="{{ '/en/index.html' | url }}">{{ t.nav_home }}</a> / {{ t.plan_title }}</div>
-<section class="page-header">
-  <h1>🗓️ {{ t.plan_title }}</h1>
-  <p>{{ t.plan_intro }}</p>
-</section>
-
-<div class="text-center plan-actions">
-  <button type="button" class="btn" id="dayPlanBtn">{{ t.plan_regenerate }}</button>
-  <button type="button" class="btn secondary hidden" id="dayPlanShare">📤 {{ t.plan_share }}</button>
-</div>
-
-<div class="plan-stage" id="dayPlanStage"></div>
-
-{# إعلان كازاسوق (ألعاب) انشال من الدليل المحلي: ما يناسب نيّة زائر المطاعم والمحلات #}

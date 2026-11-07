@@ -60,7 +60,7 @@ module.exports = [
     languageOptions: { globals: { initRandomPicker: "readonly" } },
   },
   {
-    files: ["src/js/picker.js", "src/js/converter.js", "src/js/expense.js", "src/js/typing.js", "src/js/search.js", "src/js/home.js"],
+    files: ["src/js/converter.js", "src/js/expense.js", "src/js/typing.js"],
     languageOptions: {
       globals: Object.fromEntries(
         ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "showToast", "nearestBranch", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder", "itemDesc", "escapeHtml", "safeUrl", "levenshtein"].map((n) => [n, "readonly"])
