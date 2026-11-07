@@ -1948,14 +1948,17 @@
     if (key === "main") setMain(on); else if (on) addFriend(key); else removeFriend(key);
   }
   function renderCast() {
-    var box = document.getElementById("cast-list"); box.textContent = "";
+    var box = document.getElementById("cast-list"), any = false, all = true; box.textContent = "";
     castItems().forEach(function (k, i) {
       var on = k === "main" ? !mainAway : others().some(function (x) { return x.f.id === k; });
+      any = any || on; all = all && on;
       var bt = document.createElement("button"); bt.type = "button"; bt.id = "cast-" + i; bt.textContent = k === "main" ? T("بوزون", "Boson") : FRIENDS.filter(function (f) { return f.id === k; })[0].name;
       bt.setAttribute("aria-pressed", String(on));
       bt.addEventListener("click", function () { toggleCast(k, !on); renderCast(); });
       box.appendChild(bt);
     });
+    // only the action that would change something: nobody left to send away / everyone already here
+    document.getElementById("cast-solo").hidden = !any; document.getElementById("cast-all").hidden = all;
   }
   document.getElementById("cast-solo").addEventListener("click", function () { castItems().forEach(function (k) { toggleCast(k, false); }); renderCast(); });
   document.getElementById("cast-all").addEventListener("click", function () {
