@@ -273,8 +273,9 @@
     }
   </script>
   <script src="{{ '/js/bootstrap.js' | url }}?v={{ buildVersion }}"></script>
-  {# بيانات الأقسام: يقرأها فقط عرض القسم (main.js) وبحث بوزون — باقي الصفحات لا تحمّلها #}
-  {% if section or pageScript == "dilmo" %}<script src="{{ '/js/data.js' | url }}?v={{ buildVersion }}"></script>{% endif %}
+  {# بيانات الأقسام لصفحات الأقسام (main.js)، وبيانات الأماكن لبحث بوزون — باقي الصفحات لا تحمّل شيئاً منهما #}
+  {% if section %}<script src="{{ '/js/data.js' | url }}?v={{ buildVersion }}"></script>
+  {% elif pageScript == "dilmo" %}<script src="{{ '/js/places.js' | url }}?v={{ buildVersion }}"></script>{% endif %}
   <script src="{{ '/js/main.js' | url }}?v={{ buildVersion }}"></script>
   {# سكربت خاص بصفحة وحدة (مثل صوتيات هكوله) — ما ينزل مع بقية الصفحات #}
   {% if pageScript %}<script src="{{ ('/js/' + pageScript + '.js') | url }}?v={{ buildVersion }}"></script>{% endif %}

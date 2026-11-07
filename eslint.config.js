@@ -38,7 +38,6 @@ module.exports = [
         TAG_ICONS: "readonly",
         AREA_NAMES: "readonly",
         PRICE_TAGS: "readonly",
-        SEARCH_DATA: "readonly",
       },
     },
     rules: {

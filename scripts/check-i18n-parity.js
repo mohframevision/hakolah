@@ -113,10 +113,10 @@ for (const ar of arPages) {
 }
 
 section("3. ترجمة المحتوى (content translation)");
-const dataJs = fs.readFileSync(path.join(SITE, "js/data.js"), "utf8");
-// data.js يعرّف `const SITE_DATA = {...}` — نحوّله لتعبير يرجع الكائن مباشرة
-// (eval عادي ما يسرّب const للنطاق الخارجي)
-const SITE_DATA = new Function(dataJs + "\nreturn SITE_DATA;")();
+// data.js (الأقسام الحيّة) وplaces.js (الأماكن) يعرّف كلٌّ منهما `const SITE_DATA = {...}` — نحوّل كلاً
+// لتعبير يرجع الكائن مباشرة (eval عادي ما يسرّب const للنطاق الخارجي) ونفحصهما معاً
+const readSiteData = (f) => new Function(fs.readFileSync(path.join(SITE, f), "utf8") + "\nreturn SITE_DATA;")();
+const SITE_DATA = { ...readSiteData("js/data.js"), ...readSiteData("js/places.js") };
 // قاموس ترجمة التصنيفات — مصدر واحد يستخدمه القوالب وقت البناء وmain.js بالمتصفح
 const TAGS_EN = require(path.resolve("src/_data/tags_en.js"));
 let items = 0;
