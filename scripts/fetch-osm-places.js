@@ -16,7 +16,8 @@ const fs = require("fs");
 const path = require("path");
 
 const OUT = path.join(__dirname, "..", "osm-places.csv");
-const SITE_DATA_PATH = path.join(__dirname, "..", "_site", "js", "data.js");
+// الأماكن في places.js منذ فصلها عن data.js (الأقسام الحيّة) — نقرأ الاثنين
+const SITE_DATA_PATHS = ["data.js", "places.js"].map((f) => path.join(__dirname, "..", "_site", "js", f));
 
 const QUERY = `[out:json][timeout:120];
 area["ISO3166-1"="BH"][admin_level=2]->.bh;
@@ -57,10 +58,11 @@ function csvCell(v) {
 async function main() {
   // ما هو موجود بالموقع أصلاً، حتى نعلّم المكرّر بدل ما يراجعه المستخدم مرتين
   const existing = new Map();
-  if (fs.existsSync(SITE_DATA_PATH)) {
-    const SITE_DATA = new Function(
-      fs.readFileSync(SITE_DATA_PATH, "utf8") + "\nreturn SITE_DATA;"
-    )();
+  if (SITE_DATA_PATHS.every((p) => fs.existsSync(p))) {
+    const SITE_DATA = Object.assign(
+      {},
+      ...SITE_DATA_PATHS.map((p) => new Function(fs.readFileSync(p, "utf8") + "\nreturn SITE_DATA;")())
+    );
     for (const [slug, sec] of Object.entries(SITE_DATA)) {
       for (const item of sec.items || []) {
         for (const n of [item.title, item.title_en]) {
@@ -69,7 +71,7 @@ async function main() {
       }
     }
   } else {
-    console.warn("تحذير: لم يُعثر على _site/js/data.js — شغّل البناء أولاً لتعليم المكرّر.");
+    console.warn("تحذير: لم يُعثر على _site/js/data.js أو places.js — شغّل البناء أولاً لتعليم المكرّر.");
   }
 
   console.log("جاري الجلب من OpenStreetMap…");
