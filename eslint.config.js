@@ -42,28 +42,23 @@ module.exports = [
       },
     },
     rules: {
-      // renderSection/renderFavoritesPage/initRandomPicker/renderFeaturedPick تُستدعى من
+      // renderSection تُستدعى من
       // <script> مضمّن بقوالب Nunjucks (base.njk) وليس من داخل main.js نفسه، فتبدو "غير
       // مستخدمة" لـ ESLint
       "no-unused-vars": [
         "error",
         {
           varsIgnorePattern:
-            "^(renderSection|renderFavoritesPage|initRandomPicker|openPickerReveal|sectionLabel|audioBufferToWav|audioBufferToMp3|lsSet|renderFeaturedPick|initPushNotifications|renderTrendingSection|renderExploreProgress)$",
+            "^(renderSection|sectionLabel|audioBufferToWav|audioBufferToMp3|lsSet)$",
         },
       ],
     },
   },
   {
-    // main.js وملفات الصفحات (picker/converter/expense/typing) بنفس الصفحة بلا وحدات: كل واحد يستخدم دوال الثاني العامة
-    files: ["src/js/main.js"],
-    languageOptions: { globals: { initRandomPicker: "readonly" } },
-  },
-  {
     files: ["src/js/converter.js", "src/js/expense.js", "src/js/typing.js"],
     languageOptions: {
       globals: Object.fromEntries(
-        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "playSuccessSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "showToast", "nearestBranch", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder", "itemDesc", "escapeHtml", "safeUrl", "levenshtein"].map((n) => [n, "readonly"])
+        ["t", "itemTitle", "sectionLabel", "playSound", "playClickSound", "isSoundEnabled", "getAudioContext", "tagLabel", "LINK_META", "buildActionsHtml", "wireItemActions", "showToast", "nearestBranch", "lsGet", "lsSet", "audioBufferToWav", "audioBufferToMp3", "loadLameEncoder", "itemDesc", "escapeHtml", "safeUrl", "levenshtein"].map((n) => [n, "readonly"])
       ),
     },
   },

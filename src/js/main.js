@@ -501,10 +501,6 @@ function playClickSound() {
   playSound("tap");
 }
 
-function playSuccessSound() {
-  playSound("success");
-}
-
 function initSoundToggle() {
   const btn = document.querySelector(".sound-toggle");
   if (!btn) return;
@@ -603,40 +599,6 @@ function initThemeToggle() {
     }
     apply(next);
     playClickSound();
-  });
-}
-
-/* ===== تذكير "اختيار اليوم" (بديل خفيف عن الإشعارات لا يعتمد على أي خدمة
-   خارجية) — لو الزائر ما زار الصفحة الرئيسية اليوم بعد وهو يتصفح صفحة ثانية
-   بالموقع، يظهر له تذكير صغير وغير مزعج. مو إشعار حقيقي (ما يوصله وهو خارج
-   الموقع)، بس يكمّل أي قناة توصيل ثانية لاحقاً بدل ما يكون بديل عنها ===== */
-function initDailyPickReminder() {
-  const SEEN_KEY = "daily_pick_seen_date";
-  const DISMISSED_KEY = "daily_pick_reminder_dismissed";
-  const today = new Date().toISOString().slice(0, 10);
-
-  if (document.getElementById("homeCarousel")) {
-    // إذا الزائر بالصفحة الرئيسية أصلاً، يعتبر اختيار اليوم "مشاهَد"
-    lsSet(SEEN_KEY, today);
-    return;
-  }
-
-  if (lsGet(SEEN_KEY) === today) return;
-  if (ssGet(DISMISSED_KEY)) return;
-  // مرة وحدة باليوم (أول صفحة فرعية فقط) — كانت تطلع بكل صفحة وتغطي البطاقات
-  const SHOWN_KEY = "daily_pick_reminder_shown";
-  if (lsGet(SHOWN_KEY) === today) return;
-
-  const banner = document.getElementById("dailyPickReminder");
-  const closeBtn = document.getElementById("dailyPickReminderClose");
-  if (!banner || !closeBtn) return;
-
-  lsSet(SHOWN_KEY, today);
-  banner.classList.add("open");
-
-  closeBtn.addEventListener("click", () => {
-    ssSet(DISMISSED_KEY, "1");
-    banner.classList.remove("open");
   });
 }
 
@@ -1448,25 +1410,6 @@ function wireItemActions(root, item) {
   }
 }
 
-/* ===== تتبّع الأقسام اللي تصفّحها الزائر (محلياً، بدون تسجيل دخول) — يغذّي
-   مؤشر "استكشفت X من Y قسم" بالرئيسية (مبدأ Zeigarnik: العقل ما ينسى الشي الناقص) ===== */
-const EXPLORED_KEY = "site_explored_sections_v1";
-
-function getExploredSections() {
-  try {
-    return JSON.parse(lsGet(EXPLORED_KEY)) || {};
-  } catch {
-    return {};
-  }
-}
-
-function markSectionExplored(section) {
-  const explored = getExploredSections();
-  if (explored[section]) return;
-  explored[section] = true;
-  lsSet(EXPLORED_KEY, JSON.stringify(explored));
-}
-
 /* ===== عرض قسم كامل: بحث + فلاتر + شبكة بطاقات =====
    typeFilter (اختياري): يقصر القسم على عناصر تاجها يحتوي هالقيمة — تستخدمه
    صفحة نوع محل السيارات (car-shop-type.njk) عشان تعرض غسيل بس مثلاً، بدل
@@ -1526,8 +1469,6 @@ function flyInCards(grid) {
 function renderSection(section, typeFilter) {
   const data = SITE_DATA[section];
   if (!data) return;
-
-  markSectionExplored(section);
 
   const grid = document.querySelector(".card-grid");
   const searchInput = document.querySelector(".search-box");
@@ -1743,174 +1684,6 @@ function renderSection(section, typeFilter) {
   }
 }
 
-/* ===== عرض صفحة المفضلة (تجميع من كل الأقسام) ===== */
-function renderFavoritesPage() {
-  const grid = document.querySelector(".card-grid");
-  if (!grid) return;
-
-  const favs = getFavorites();
-  const collected = [];
-
-  Object.keys(SITE_DATA).forEach((section) => {
-    const sectionFavs = favs[section] || {};
-    SITE_DATA[section].items.forEach((item) => {
-      if (sectionFavs[item.id]) {
-        collected.push({ section, item });
-      }
-    });
-  });
-
-  grid.innerHTML = "";
-
-  if (collected.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state full-row">
-        <span class="icon">♡</span>
-        <p>${t("favorites_empty_html")}</p>
-      </div>
-    `;
-    return;
-  }
-
-  collected.forEach(({ section, item }, index) =>
-    grid.appendChild(buildItemCard(section, item, index))
-  );
-}
-
-/* ===== اختيار اليوم: عنصر واحد ثابت طوال اليوم، يتغيّر تلقائياً كل يوم
-   (نفس الاختيار لكل الزوار بنفس اليوم — يعتمد على تاريخ اليوم كبذرة ثابتة،
-   بدون عشوائية حقيقية ولا خادم، فيدور على كل العناصر بالتناوب بمرور الأيام) ===== */
-// مفتاح اختيار اليوم — يستعمله شريط "أحدث الإضافات" ليتفادى تكرار نفس
-// البطاقة مرّتين بنفس الصف
-let FEATURED_PICK_KEY = "";
-
-function renderFeaturedPick() {
-  const container = document.getElementById("homeCarousel");
-  if (!container) return;
-
-  const allItems = [];
-  Object.keys(SITE_DATA).forEach((section) => {
-    (SITE_DATA[section].items || []).forEach((item) => {
-      allItems.push({ section, item });
-    });
-  });
-
-  if (allItems.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <span class="icon">🎯</span>
-        <p>${t("stay_tuned")}</p>
-      </div>
-    `;
-    return;
-  }
-
-  const daysSinceEpoch = Math.floor(Date.now() / 86400000);
-  const { section, item } = allItems[daysSinceEpoch % allItems.length];
-  FEATURED_PICK_KEY = `${section}:${item.id}`;
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "carousel-item";
-  wrapper.innerHTML = `<span class="carousel-label">🎯 ${t("daily_pick_label")}</span><div class="featured-pick-frame"></div>`;
-  wrapper.querySelector(".featured-pick-frame").appendChild(buildItemCard(section, item, 0));
-  container.prepend(wrapper);
-}
-
-function renderNewestSection() {
-  const container = document.getElementById("homeCarousel");
-  if (container) renderNewestItems(container);
-}
-
-function renderNewestItems(container) {
-  const all = [];
-  Object.keys(SITE_DATA).forEach((section) => {
-    (SITE_DATA[section].items || []).forEach((item) => {
-      if (item.hideFromNewest) return;
-      if (item.addedAt && `${section}:${item.id}` !== FEATURED_PICK_KEY)
-        all.push({ section, item });
-    });
-  });
-  if (!all.length) return;
-
-  all
-    .sort((a, b) => b.item.addedAt - a.item.addedAt)
-    .slice(0, 6)
-    .forEach(({ section, item }, index) => {
-      const wrapper = document.createElement("div");
-      wrapper.className = "carousel-item";
-      wrapper.innerHTML = `<span class="carousel-label">🆕 ${t("newest_label")}</span>`;
-      wrapper.appendChild(buildItemCard(section, item, index));
-      container.appendChild(wrapper);
-    });
-}
-
-/* ===== رقم حقيقي بالهيرو (الصفحة الرئيسية) — عدد العناصر الفعلي بكل
-   الأقسام، محسوب من SITE_DATA (المولَّد من ملفات src/<section>/*.md وقت
-   البناء) لا رقم مكتوب يدوياً — فيتحدّث تلقائياً كل ما أضفنا محل جديد بدون
-   الحاجة نعدّل أي نص بالموقع ===== */
-function renderSiteStats() {
-  const el = document.getElementById("siteStatsLine");
-  if (!el) return;
-
-  const total = Object.values(SITE_DATA).reduce(
-    (sum, section) => sum + (section.items || []).length,
-    0
-  );
-  if (total === 0) return;
-
-  el.textContent = `${t("site_stats_prefix")} ${total} ${t("site_stats_suffix")}`;
-}
-
-/* ===== مؤشر "استكشفت X من Y قسم" (الصفحة الرئيسية) — يشجع الزائر يكمل تصفح
-   باقي الأقسام بدل ما يوقف بقسم وحد (مبدأ Zeigarnik) ===== */
-function renderExploreProgress() {
-  const container = document.getElementById("exploreProgress");
-  if (!container) return;
-
-  const totalSections = Object.keys(SITE_DATA);
-  const explored = getExploredSections();
-  const exploredSections = totalSections.filter((s) => explored[s]);
-  const total = totalSections.length;
-  const count = exploredSections.length;
-
-  if (total === 0) return;
-
-  document.querySelectorAll(".section-card[data-section]").forEach((card) => {
-    if (explored[card.dataset.section]) card.classList.add("explored");
-  });
-
-  if (count === 0) {
-    container.innerHTML = "";
-    return;
-  }
-
-  const percent = Math.round((count / total) * 100);
-  const isComplete = count >= total;
-
-  container.innerHTML = `
-    <p class="explore-progress-text">
-      ${
-        isComplete
-          ? t("explore_complete")
-          : `🧭 ${t("explore_progress_verb")} ${count} ${t("explore_progress_of")} ${total} ${t("explore_progress_sections")}`
-      }
-    </p>
-    <div class="explore-progress-bar"><div class="explore-progress-fill"></div></div>
-  `;
-
-  // العرض يُضبط عبر CSSOM بعد الإدراج — سمة style مضمّنة بالـ HTML ممنوعة
-  // بسياسة CSP (style-src-attr)، أما ضبط الخاصية بجافاسكربت فمسموح
-  const fill = container.querySelector(".explore-progress-fill");
-  if (fill) fill.style.width = `${percent}%`;
-}
-
-/* عدّاد الزيارات القديم (‎/track و/stats بالـ Worker) أُزيل — Google Analytics
-   المركّب أصلاً يعدّ الزيارات بدقة أعلى وبلا حدود، بينما كان العدّاد القديم
-   يكتب مرتين لكل زيارة على Cloudflare KV، وحصة الخطة المجانية 1000 كتابة
-   باليوم فقط — أي 500 زيارة صفحة يومياً تستهلك الحصة كلها وتوقف معها
-   الإعجابات واشتراكات الإشعارات (يتشاركون نفس الحصة). */
-
-/* ===== اختار لي: اختيار عشوائي من أي قسم بأنيميشن سلوت مشين ===== */
 /* ===== كشف "اختار لي" بشاشة كاملة — انظر تعليق CSS .picker-reveal-overlay
    لتفاصيل الفكرة. القطع الكبيرة (عنوان/صورة/هاتف/موقع/تصنيفات) تضل هي
    النتيجة النهائية فوق الشاشة كاملة، ما ترجع لبطاقة صغيرة بعدها — وتحتها
@@ -2007,123 +1780,9 @@ function openMenuOverlay(item) {
     });
 }
 
-/* ===== خطة اليوم =====
-   يقترح مساراً كاملاً ليوم واحد من نفس بيانات الموقع، بلا أي محتوى جديد.
-
-   قرار تصميمي مهم: المراحل مبنية على **الأقسام** لا على التصنيفات. فحص
-   البيانات الفعلي أظهر أن التصنيفات الدقيقة شبه غائبة (تصنيف "إفطار" مثلاً
-   غير مستخدم بأي كافيه إطلاقاً، و"قهوة مختصة" على كافيه واحد فقط)، فبناء
-   المراحل عليها كان بينتج خططاً فاضية أو مكررة. الأقسام مضمونة الامتلاء.
-
-   كل مرحلة تتخطى نفسها بهدوء لو قسمها فاضي، فالميزة تشتغل مهما كان المحتوى،
-   وتتحسّن تلقائياً مع كل عنصر يُضاف بلا أي تعديل هنا. */
-const DAY_PLAN_STEPS = [
-  { key: "morning", icon: "🥐", from: ["bakeries", "cafes"] },
-  { key: "activity", icon: "📍", from: ["places"] },
-  { key: "lunch", icon: "🍽️", from: ["restaurants"] },
-  { key: "evening", icon: "☕", from: ["cafes"] },
-];
-
-function buildDayPlan() {
-  const used = new Set();
-  const steps = [];
-
-  for (const step of DAY_PLAN_STEPS) {
-    // نجمع كل عناصر الأقسام المسموحة لهذي المرحلة، ونستبعد المستخدَم سابقاً
-    // حتى ما يتكرر نفس المكان مرتين بنفس الخطة
-    const pool = [];
-    for (const slug of step.from) {
-      for (const item of SITE_DATA[slug]?.items || []) {
-        const id = `${slug}:${item.id}`;
-        if (!used.has(id)) pool.push({ slug, item, id });
-      }
-    }
-    if (!pool.length) continue;
-    const chosen = pool[Math.floor(Math.random() * pool.length)];
-    used.add(chosen.id);
-    steps.push({ ...step, ...chosen });
-  }
-  return steps;
-}
-
-function renderDayPlan() {
-  const stage = document.getElementById("dayPlanStage");
-  const btn = document.getElementById("dayPlanBtn");
-  const shareBtn = document.getElementById("dayPlanShare");
-  if (!stage || !btn) return;
-
-  let current = [];
-
-  function draw() {
-    current = buildDayPlan();
-    stage.innerHTML = "";
-
-    if (!current.length) {
-      stage.innerHTML = `<div class="empty-state full-row"><span class="icon">🧭</span><p>${t("empty_section")}</p></div>`;
-      if (shareBtn) shareBtn.classList.add("hidden");
-      return;
-    }
-
-    current.forEach((step, i) => {
-      const row = document.createElement("div");
-      row.className = "plan-step";
-      row.style.animationDelay = `${i * 90}ms`;
-
-      const head = document.createElement("div");
-      head.className = "plan-step-head";
-      head.innerHTML = `<span class="plan-step-icon">${step.icon}</span><span class="plan-step-label">${t("plan_" + step.key)}</span>`;
-      row.appendChild(head);
-
-      row.appendChild(buildItemCard(step.slug, step.item, i));
-      stage.appendChild(row);
-    });
-
-    if (shareBtn) shareBtn.classList.remove("hidden");
-    playSuccessSound();
-  }
-
-  btn.addEventListener("click", () => {
-    playClickSound();
-    draw();
-  });
-
-  if (shareBtn) {
-    shareBtn.addEventListener("click", () => {
-      const lines = current.map((s) => `${s.icon} ${t("plan_" + s.key)}: ${itemTitle(s.item)}`);
-      const text = `${t("plan_share_title")}\n\n${lines.join("\n")}\n\n${SITE_ORIGIN}${window.SITE_LANG === "en" ? "en/" : ""}plan.html`;
-      shareText(
-        text,
-        { section: "plan" },
-        {
-          icon: "🗓️",
-          title: t("plan_title"),
-          subtitle: current.map((s) => itemTitle(s.item)).join(" · "),
-        }
-      );
-      playSound("share");
-    });
-  }
-
-  draw();
-}
-
-function initWelcomePicker() {
-  const picks = document.querySelectorAll(".welcome-pick");
-  const nextBtn = document.getElementById("welcomeNextBtn");
-  if (!picks.length || !nextBtn) return;
-  let i = 0;
-  nextBtn.addEventListener("click", () => {
-    playClickSound();
-    picks[i].classList.remove("active");
-    i = (i + 1) % picks.length;
-    picks[i].classList.add("active");
-  });
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
   initSoundToggle();
-  initDailyPickReminder();
   initNavToggle();
   initHeaderScroll();
   initInstallPrompt();
@@ -2141,16 +1800,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // إعدادات الصفحة (#site-config) عشان تشتغل سياسة CSP بدون unsafe-inline
   const page = window.PAGE || {};
   if (page.section) renderSection(page.section, page.typeFilter);
-  if (page.favorites) renderFavoritesPage();
-  if (page.picker) initRandomPicker();
-  if (page.plan) renderDayPlan();
-  if (page.welcome) initWelcomePicker();
-  if (page.home) {
-    renderFeaturedPick();
-    renderNewestSection();
-    renderExploreProgress();
-    renderSiteStats();
-  }
 });
 
 /* ===== عن الموقع: بطاقة هكوله المعلّقة (بندول بسيط) =====
