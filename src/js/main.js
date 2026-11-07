@@ -1210,7 +1210,7 @@ function buildItemCard(section, item, index = 0) {
   const isLongDesc = desc.length > 100;
 
   card.innerHTML = `
-    ${item.image ? `<img class="item-photo" src="${escapeHtml(item.image)}" alt="${escapeHtml(title)}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async" />${item.imageCredit ? `<a class="photo-credit card" dir="ltr" href="${escapeHtml(item.imageCreditUrl)}" target="_blank" rel="noopener">📷 ${escapeHtml(item.imageCredit)}</a>` : ""}` : ""}
+    ${item.image ? `<img class="item-photo" src="${escapeHtml(item.image)}" alt="${escapeHtml(title)}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async" />${item.imageCredit ? (item.imageCreditUrl ? `<a class="photo-credit card" dir="ltr" href="${escapeHtml(item.imageCreditUrl)}" target="_blank" rel="noopener">📷 ${escapeHtml(item.imageCredit)}</a>` : `<span class="photo-credit card" dir="ltr">📷 ${escapeHtml(item.imageCredit)}</span>`) : ""}` : ""}
     ${item.sponsored ? `<span class="sponsored-badge">${t("sponsored_badge")}</span>` : item.featured ? `<span class="featured-badge">${t("featured_badge")}</span>` : ""}
     <div class="item-body">
       ${sectionBadge(section)}
