@@ -2,6 +2,7 @@
 title: "Code Became a Material You Shape: The Real Story Behind Hakolah's Experiments"
 icon: "🧪"
 desc: "A popular idea says code has become a material anyone can shape, programmers or not. We tested it in Hakolah's Experiments section. Writing code got faster, but judgment and testing were still entirely our job."
+dateAdded: 2026-09-13
 langSwitchUrl: "/guides/code-as-material.html"
 aiDisclosure: "This article was written with AI assistance (Claude). Human input level: the site owner sent the AI a popular passage about the future of coding and AI, and asked for its opinion on it. He then asked to connect it to the site's actual experience with its Experiments section and turn it into an article. The AI wrote the piece drawing on real details from building the four experiments across earlier sessions."
 image: /assets/guides/code-as-material.jpg

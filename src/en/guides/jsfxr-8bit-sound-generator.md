@@ -2,6 +2,7 @@
 title: "A Free Tool to Generate 8-bit Sound Effects"
 icon: "🔊"
 desc: A free browser-based tool, no install required, that generates classic video-game-style (8-bit) sound effects in seconds and exports them as ready-to-use WAV files.
+dateAdded: 2026-08-03
 langSwitchUrl: "/guides/jsfxr-8bit-sound-generator.html"
 aiDisclosure: "This article was researched and written with AI assistance. The level of human review wasn't documented in detail at the time of writing."
 image: /assets/guides/jsfxr-8bit-sound-generator.jpg

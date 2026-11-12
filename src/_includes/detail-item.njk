@@ -58,6 +58,7 @@ layout: base.njk
   "headline": {{ title | json | safe }},
   "description": {{ desc | json | safe }},
   "inLanguage": "{{ lang }}",
+  {% if dateAdded %}"datePublished": {{ dateAdded | json | safe }},{% endif %}
   {% if image %}"image": {{ (site.origin + image) | json | safe }},{% endif %}
   "isPartOf": {
     "@type": "WebSite",

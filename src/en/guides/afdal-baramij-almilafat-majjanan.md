@@ -2,6 +2,7 @@
 title: "Best Free Apps to Find, Convert and Compress Files on Your PC"
 icon: "🗂️"
 desc: A lost file, a huge video, or a file that won't open? A practical guide to the best free apps that solve everyday file problems in minutes.
+dateAdded: 2026-10-21
 langSwitchUrl: "/guides/afdal-baramij-almilafat-majjanan.html"
 aiDisclosure: "This article was researched and written with AI assistance, based on the site owner's review of the app list."
 image: /assets/guides/afdal-baramij-almilafat-majjanan.jpg

@@ -135,3 +135,42 @@ for (const i of ogImageIssues.slice(0, 30)) console.log(`  ${i}`);
 
 console.log(`\n== صفحات بلا meta viewport: ${viewportIssues.length} ==`);
 for (const i of viewportIssues.slice(0, 30)) console.log(`  ${i}`);
+
+// فحص صلاحية روابط hreflang (alternate) — يتأكد أن كل href بـ<link rel="alternate" hreflang>
+// يشير فعلياً لملف موجود بـ_site، لا لصفحة محذوفة/منقولة. يُضاف 2026-11-11 (زاوية SEO).
+function urlToFsPath(urlStr) {
+  try {
+    const u = new URL(urlStr);
+    let p = u.pathname;
+    if (p.startsWith(BASE_PREFIX)) p = p.slice(BASE_PREFIX.length);
+    if (p === "" || p === "/") p = "/index.html";
+    if (p.endsWith("/")) p += "index.html";
+    return path.join(SITE, decodeURIComponent(p));
+  } catch {
+    return null;
+  }
+}
+
+const hreflangTagRe = /<link rel="alternate" hreflang="([^"]*)" href="([^"]*)"\s*\/?>/g;
+const brokenHreflang = [];
+const missingHreflang = [];
+for (const f of files) {
+  const html = fs.readFileSync(f, "utf8");
+  const rel = path.relative(SITE, f);
+  const noindex = /<meta name="robots" content="noindex/.test(html);
+  const tags = [...html.matchAll(hreflangTagRe)];
+  if (tags.length === 0 && !noindex) missingHreflang.push(rel);
+  for (const m of tags) {
+    const [, hreflang, href] = m;
+    const fsPath = urlToFsPath(href);
+    if (!fsPath || !fs.existsSync(fsPath)) {
+      brokenHreflang.push(`${rel}: hreflang="${hreflang}" href="${href}" -> غير موجود`);
+    }
+  }
+}
+
+console.log(`\n== روابط hreflang مكسورة (تشير لصفحة غير موجودة): ${brokenHreflang.length} ==`);
+for (const i of brokenHreflang.slice(0, 30)) console.log(`  ${i}`);
+
+console.log(`\n== صفحات قابلة للفهرسة بلا أي وسم hreflang: ${missingHreflang.length} ==`);
+for (const i of missingHreflang.slice(0, 30)) console.log(`  ${i}`);

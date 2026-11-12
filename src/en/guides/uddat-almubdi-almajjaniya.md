@@ -2,6 +2,7 @@
 title: "The Free Creator's Toolkit: Which Free App Replaces Which Paid One"
 icon: "🎨"
 desc: "Each free app replaces one piece of an Adobe app. This guide shows which app covers which piece, and which two to pair for design, photos and video."
+dateAdded: 2026-10-21
 langSwitchUrl: "/guides/uddat-almubdi-almajjaniya.html"
 aiDisclosure: "This article was researched and written with AI assistance, based on the site owner's review of the app list."
 image: /assets/guides/uddat-almubdi-almajjaniya.jpg

@@ -2,6 +2,7 @@
 title: "Is AI Weakening Our Brains? A Scientific Look at the MIT Study and the \"Neural Connectivity\" Panic"
 icon: "🧠"
 desc: "A critical read of the viral claims about MIT's study on ChatGPT and the brain: where the science ends and the distortion starts, what \"cognitive debt\" means, and how to use AI without dulling your thinking."
+dateAdded: 2026-09-02
 langSwitchUrl: "/guides/ai-cognitive-debt-mit-study.html"
 aiDisclosure: "This article was written with AI assistance (Claude and Gemini). Human input level: the user shared an image of a viral post and asked how accurate it was; the AI researched the original study, verified the claimed figures, and wrote the article."
 image: /assets/guides/ai-cognitive-debt-mit-study.jpg

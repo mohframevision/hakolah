@@ -2,6 +2,7 @@
 title: "Seven Habits for Using AI Like a Top CEO"
 icon: "🧭"
 desc: "Notes on a video about how highly productive people work with AI: seven simple habits in how you talk to it, with examples, ways to apply them, and illustrations."
+dateAdded: 2026-10-16
 langSwitchUrl: "/guides/ai-like-a-top-ceo.html"
 aiDisclosure: "This article was written with AI assistance (Claude). Human input level: the site owner sent the video and asked for it to be turned into an article; the AI transcribed the video's audio automatically, then summarized and rewrote it, and designed its illustrations in code. The figures quoted are the video creator's claims and were not independently verified."
 image: /assets/guides/ai-like-a-top-ceo.jpg

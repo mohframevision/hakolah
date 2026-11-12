@@ -1,4 +1,4 @@
-// فاحص حجم الحزمة (js/data.js الرئيسي + main.js) بعد البناء + كشف تكرار
+// فاحص حجم الحزمة (js/data.js + js/places.js + js/menus.js + main.js) بعد البناء + كشف تكرار
 // menuItems الكامل بين ملفات مختلفة (فروع نفس المحل غالباً تنسخ نفس المنيو
 // حرفياً بكل ملف — كل فرع يضيف نسخة كاملة أخرى لنفس البيانات بـdata.js
 // المحمَّل بلا شرط بكل صفحة بالموقع، فالتكرار هنا مكلف أداءً أكثر من تكرار
@@ -82,8 +82,9 @@ function scanDuplicateMenus() {
 }
 
 function main() {
-  console.log("== حجم الحزمة (js/data.js الرئيسي + js/menus.js + main.js) ==");
-  reportFileSize("js/data.js", path.join(SITE_DIR, "js", "data.js"));
+  console.log("== حجم الحزمة (js/data.js + js/places.js + js/menus.js + main.js) ==");
+  reportFileSize("js/data.js (صفحات الأقسام الحيّة)", path.join(SITE_DIR, "js", "data.js"));
+  reportFileSize("js/places.js (الأماكن، بصفحة بوزون فقط)", path.join(SITE_DIR, "js", "places.js"));
   reportFileSize("js/menus.js (يتحمّل عند الحاجة فقط)", path.join(SITE_DIR, "js", "menus.js"));
   reportFileSize("js/main.js", path.join(SITE_DIR, "js", "main.js"));
   console.log("\n== تكرار menuItems كامل بين ملفات مختلفة (فروع محتملة) ==");

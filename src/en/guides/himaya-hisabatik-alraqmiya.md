@@ -2,6 +2,7 @@
 title: "How to Protect Your Accounts and Data in the Age of AI-Powered Hacking"
 icon: "🛡️"
 desc: "A simple practical guide: what to do and what to avoid to lower the risk of your accounts and data being stolen, plus what the Hakolah site collects and what it doesn't."
+dateAdded: 2026-10-22
 langSwitchUrl: "/guides/himaya-hisabatik-alraqmiya.html"
 aiDisclosure: "This article was written with AI assistance (Claude). Human contribution: the site owner sent a video on the topic and asked for a useful article for readers; the AI transcribed it, drafted the advice, and checked the site's actual settings for the Hakolah section. The breach news cited in the video is the video maker's own claims and wasn't independently verified."
 image: /assets/guides/himaya-hisabatik-alraqmiya.jpg
