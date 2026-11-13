@@ -4,6 +4,9 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+  # أسعار محوّل العملات: إعادة بناء كل يوم عمل بعد نشر البنك المركزي الأوروبي أسعاره
+  schedule:
+    - cron: "30 16 * * 1-5"
 
 permissions:
   contents: read
@@ -34,6 +37,10 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Fetch exchange rates
+        # فشل الجلب لا يوقف النشر: يبقى fx.json المرفوع، والصفحة تعرض تاريخه
+        run: node scripts/update-fx.js || echo "ECB fetch failed; keeping committed fx.json"
 
       - name: Build site
         run: npm run build
